@@ -1,0 +1,25 @@
+C:\Users\Stefan\Documents\A A C_Compiler_Assembler - A 16 bits 0 CSharp Assembly Text\C_Compiler_CSharp\C_Compiler_CSharp\bin\Debug\C_Compiler_CSharp.exe.config
+C:\Users\Stefan\Documents\A A C_Compiler_Assembler - A 16 bits 0 CSharp Assembly Text\C_Compiler_CSharp\C_Compiler_CSharp\obj\Debug\C_Compiler_CSharp.exe
+C:\Users\Stefan\Documents\A A C_Compiler_Assembler - A 16 bits 0 CSharp Assembly Text\C_Compiler_CSharp\C_Compiler_CSharp\obj\Debug\C_Compiler_CSharp.pdb
+C:\Users\Stefan\Documents\A A C_Compiler_Assembler - A 16 bits 0 CSharp 28 april\C_Compiler_CSharp\C_Compiler_CSharp\bin\Debug\C_Compiler_CSharp.exe.config
+C:\Users\Stefan\Documents\A A C_Compiler_Assembler - A 16 bits 0 CSharp 28 april\C_Compiler_CSharp\C_Compiler_CSharp\obj\Debug\C_Compiler_CSharp.exe
+C:\Users\Stefan\Documents\A A C_Compiler_Assembler - A 16 bits 0 CSharp 28 april\C_Compiler_CSharp\C_Compiler_CSharp\obj\Debug\C_Compiler_CSharp.pdb
+C:\Users\Stefan\Documents\A A C_Compiler_Assembler - A 16 bits 0 CSharp 7 maj\C_Compiler_CSharp\C_Compiler_CSharp\bin\Debug\C_Compiler_CSharp.exe.config
+C:\Users\Stefan\Documents\A A C_Compiler_Assembler - A 16 bits 0 CSharp 7 maj\C_Compiler_CSharp\C_Compiler_CSharp\obj\Debug\C_Compiler_CSharp.exe
+C:\Users\Stefan\Documents\A A C_Compiler_Assembler - A 16 bits 0 CSharp 7 maj\C_Compiler_CSharp\C_Compiler_CSharp\obj\Debug\C_Compiler_CSharp.pdb
+C:\Users\Stefan\Documents\A A C_Compiler_Assembler - A 16 bits 0 CSharp 9 maj\C_Compiler_CSharp\C_Compiler_CSharp\bin\Debug\C_Compiler_CSharp.exe.config
+C:\Users\Stefan\Documents\A A C_Compiler_Assembler - A 16 bits 0 CSharp 9 maj\C_Compiler_CSharp\C_Compiler_CSharp\obj\Debug\C_Compiler_CSharp.exe
+C:\Users\Stefan\Documents\A A C_Compiler_Assembler - A 16 bits 0 CSharp 9 maj\C_Compiler_CSharp\C_Compiler_CSharp\obj\Debug\C_Compiler_CSharp.pdb
+C:\Users\Stefan\Documents\A A C_Compiler_Assembler - A 16 bits 0 CSharp\C_Compiler_CSharp\C_Compiler_CSharp\bin\Debug\C_Compiler_CSharp.exe.config
+C:\Users\Stefan\Documents\A A C_Compiler_Assembler - A 16 bits 0 CSharp\C_Compiler_CSharp\C_Compiler_CSharp\bin\Debug\C_Compiler_CSharp.exe
+C:\Users\Stefan\Documents\A A C_Compiler_Assembler - A 16 bits 0 CSharp\C_Compiler_CSharp\C_Compiler_CSharp\bin\Debug\C_Compiler_CSharp.pdb
+C:\Users\Stefan\Documents\A A C_Compiler_Assembler - A 16 bits 0 CSharp\C_Compiler_CSharp\C_Compiler_CSharp\bin\Debug\QUT.ShiftReduceParser.dll
+C:\Users\Stefan\Documents\A A C_Compiler_Assembler - A 16 bits 0 CSharp\C_Compiler_CSharp\C_Compiler_CSharp\obj\Debug\C_Compiler_CSharp.exe
+C:\Users\Stefan\Documents\A A C_Compiler_Assembler - A 16 bits 0 CSharp\C_Compiler_CSharp\C_Compiler_CSharp\obj\Debug\C_Compiler_CSharp.pdb
+C:\Users\Stefan\Documents\A A C_Compiler_Assembler - A 16 bits 0 CSharp\C_Compiler_CSharp\C_Compiler_CSharp\obj\Debug\C_Compiler_CSharp.csprojResolveAssemblyReference.cache
+C:\Users\Stefan\Documents\A A A C_Compiler_Assembler - CSharp\C_Compiler_CSharp\C_Compiler_CSharp\bin\Debug\C_Compiler_CSharp.exe.config
+C:\Users\Stefan\Documents\A A A C_Compiler_Assembler - CSharp\C_Compiler_CSharp\C_Compiler_CSharp\obj\Debug\C_Compiler_CSharp.exe
+C:\Users\Stefan\Documents\A A A C_Compiler_Assembler - CSharp\C_Compiler_CSharp\C_Compiler_CSharp\obj\Debug\C_Compiler_CSharp.pdb
+C:\Users\Stefan\Documents\A A A C_Compiler_Assembler - CSharp\C_Compiler_CSharp\C_Compiler_CSharp\bin\Debug\C_Compiler_CSharp.exe
+C:\Users\Stefan\Documents\A A A C_Compiler_Assembler - CSharp\C_Compiler_CSharp\C_Compiler_CSharp\bin\Debug\C_Compiler_CSharp.pdb
+C:\Users\Stefan\Documents\A A A C_Compiler_Assembler - CSharp\C_Compiler_CSharp\C_Compiler_CSharp\bin\Debug\QUT.ShiftReduceParser.dll

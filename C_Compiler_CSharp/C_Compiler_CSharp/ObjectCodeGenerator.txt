@@ -1,0 +1,2830 @@
+using System;
+using System.Linq;
+using System.Collections.Generic;
+
+namespace CCompiler {
+  public class ObjectCodeGenerator {
+    private IDictionary<Symbol,Track> m_trackMap = new Dictionary<Symbol,Track>();
+    private ISet<Track> m_trackSet = new HashSet<Track>(); // ListSetXXX
+    private IDictionary<int,int> m_middleToObjectMap = new Dictionary<int,int>();
+    private IDictionary<int,int> m_objectToByteMap = new Dictionary<int,int>();
+    private List<ObjectCode> m_objectCodeList;
+
+    private int m_floatStackSize = 0;
+    private bool m_returnFloat = false;
+    private Stack<int> m_recordSizeStack = new Stack<int>();
+    private Stack<IDictionary<Symbol, Track>> m_trackMapStack = new Stack<IDictionary<Symbol, Track>>();
+  
+    public void Generate(StaticSymbol functionStaticSymbol, List<MiddleCode> middleCodeList) {
+      GenerateObjectCodeList(middleCodeList);
+      GenerateTrackSet();
+      new RegisterAllocator(m_trackSet, m_objectCodeList);
+      GenerateJumpInfo();
+      GenerateTargetByteList(functionStaticSymbol.ByteList, functionStaticSymbol.AccessMap,
+                             functionStaticSymbol.CallMap, functionStaticSymbol.ReturnSet);
+    }
+  
+    public void AddObjectCode(ObjectOperator objectOp) {
+      AddObjectCode(objectOp, null, null, null);
+    }
+  
+    public void AddObjectCode(ObjectOperator objectOp, object operand0) {
+      AddObjectCode(objectOp, operand0, null, null);
+    }
+  
+    public void AddObjectCode(ObjectOperator objectOp, object operand0,
+                              object operand1) {
+      AddObjectCode(objectOp, operand0, operand1, null);
+    }
+  
+    public void AddObjectCode(ObjectOperator objectOp, object operand0,
+                              object operand1, object operand2) {
+      /*ObjectCode o = new ObjectCode(objectOp, operand0, operand1, operand2);
+      m_objectCodeList.Add(o);
+      Console.WriteLine(o);*/
+      m_objectCodeList.Add(new ObjectCode(objectOp, operand0, operand1, operand2));
+    }
+  
+    public void GenerateObjectCodeList(List<MiddleCode> middleCodeList) {
+      if (m_objectCodeList == null) {
+        m_objectCodeList = new List<ObjectCode>();
+      }
+    
+      for (int index = 0; index < middleCodeList.Count; ++index) {
+        MiddleCode middleCode = middleCodeList[index];
+        //Start.CurrentTable = middleCode.SymbolTable();
+        m_middleToObjectMap.Add(index, m_objectCodeList.Count);
+
+        switch (middleCode.Operator) {
+          /*case MiddleOperator.FunctionStart:
+            //GenerateFunctionStart(middleCode, index);
+            break;*/
+
+          case MiddleOperator.CallHeader:
+            GenerateCallHeader(middleCode);
+            break;
+
+          case MiddleOperator.Call:
+            GenerateFunctionCall(middleCode, index);
+            break;
+
+          case MiddleOperator.PostCall:
+            GenerateFunctionPostCall(middleCode);
+            break;
+
+          case MiddleOperator.Return:
+            GenerateReturn(middleCode);
+            break;
+
+          case MiddleOperator.Exit:
+            GenerateExit(middleCode);
+            break;
+
+          case MiddleOperator.Goto:
+            GenerateGoto(middleCode);
+            break;
+
+          case MiddleOperator.LoadToRegister:
+            GenerateLoadToRegister(middleCode);
+            break;
+
+          case MiddleOperator.SaveFromRegister:
+            GenerateSaveFromRegister(middleCode);
+            break;
+
+          /*case MiddleOperator.LoadStatusByte:
+            GenerateLoadStatusByte(middleCode);
+            break;*/
+
+          case MiddleOperator.SaveFromFlagByte:
+            GenerateSaveFromFlagByte(middleCode);
+            break;
+
+          /*case MiddleOperator.SaveTemporary:
+            GenerateSaveTemporary(middleCode);
+            break;*/
+
+          case MiddleOperator.JumpRegister:
+            GenerateJumpRegister(middleCode);
+            break;
+
+          case MiddleOperator.Interrupt:
+            GenerateInterrupt(middleCode);
+            break;
+
+          case MiddleOperator.Assign: {
+              Symbol symbol = (Symbol) middleCode.GetOperand(1);
+
+              if (symbol.Type.IsStructOrUnion()) {
+                GenerateStructUnionAssign(middleCode, index);
+              }
+              else {
+                GenerateIntegralAssign(middleCode);
+              }
+            }
+            break;
+        
+          case MiddleOperator.BitwiseAnd:
+          case MiddleOperator.BitwiseIOr:
+          case MiddleOperator.BitwiseXOr:
+          case MiddleOperator.ShiftLeft:
+          case MiddleOperator.ShiftRight:
+            GenerateIntegralAdditionBitwiseShift(middleCode);
+            break;
+          
+          case MiddleOperator.BinaryAdd:
+          case MiddleOperator.BinarySubtract: {
+              Symbol resultSymbol = (Symbol) middleCode.GetOperand(1);
+
+              if (resultSymbol.Type.IsFloating()) {
+                GenerateFloatingBinary(middleCode);
+              }
+              else {
+                GenerateIntegralAdditionBitwiseShift(middleCode);
+              }
+            }
+            break;
+
+          case MiddleOperator.SignedMultiply:
+          case MiddleOperator.SignedDivide:
+          case MiddleOperator.SignedModulo:
+          case MiddleOperator.UnsignedMultiply:
+          case MiddleOperator.UnsignedDivide:
+          case MiddleOperator.UnsignedModulo: {
+              Symbol symbol = (Symbol) middleCode.GetOperand(1);
+
+              if (symbol.Type.IsFloating()) {
+                GenerateFloatingBinary(middleCode);
+              }
+              else {
+                GenerateIntegralMultiply(middleCode);
+              }
+            }
+            break;
+          
+          case MiddleOperator.Equal:
+          case MiddleOperator.NotEqual:
+          case MiddleOperator.SignedLessThan:
+          case MiddleOperator.SignedLessThanEqual:
+          case MiddleOperator.SignedGreaterThan:
+          case MiddleOperator.SignedGreaterThanEqual:
+          case MiddleOperator.UnsignedLessThan:
+          case MiddleOperator.UnsignedLessThanEqual:
+          case MiddleOperator.UnsignedGreaterThan:
+          case MiddleOperator.UnsignedGreaterThanEqual: {
+              Symbol symbol = (Symbol) middleCode.GetOperand(1);
+
+              if (symbol.Type.IsFloating()) {
+                GenerateFloatingRelation(middleCode, index);
+              }
+              else {
+                GenerateIntegralRelation(middleCode, index);
+              }
+            }
+            break;
+        
+          case MiddleOperator.Increment:
+          case MiddleOperator.Decrement:
+            GenerateIntegralIncrementDecrement(middleCode);
+            break;
+
+          case MiddleOperator.UnaryAdd:
+          case MiddleOperator.UnarySubtract:
+          case MiddleOperator.BitwiseNot: {
+              Symbol symbol = (Symbol) middleCode.GetOperand(1);
+
+              if (symbol.Type.IsFloating()) {
+                GenerateFloatingUnary(middleCode);
+              }
+              else {
+                GenerateIntegralUnary(middleCode);
+              }
+            }
+            break;
+          
+          case MiddleOperator.Address:
+            GenerateAddress(middleCode);
+            break;
+
+          case MiddleOperator.Deref:
+            GenerateDeref(middleCode);
+            break;
+
+          case MiddleOperator.DecreaseStack:
+            Assert.Error((--m_floatStackSize) >= 0);
+            break;
+
+          case MiddleOperator.CheckTrackMapFloatStack:
+            Assert.Error((m_trackMap.Count == 0) && (m_floatStackSize == 0));
+            break;
+
+          case MiddleOperator.PushZero:
+            PushSymbol(new Symbol(Type.DoubleType, (decimal) 0));
+            //GeneratePushZero(middleCode);
+            break;
+
+          case MiddleOperator.PushOne:
+            PushSymbol(new Symbol(Type.DoubleType, (decimal) 1));
+            //GeneratePushOne(middleCode);
+            break;
+
+          case MiddleOperator.PushFloat:
+            PushSymbol((Symbol) middleCode.GetOperand(0));
+            //GeneratePushFloat(middleCode);
+            break;
+
+          case MiddleOperator.TopFloat:
+            TopPopSymbol((Symbol) middleCode.GetOperand(0), TopOrPop.Top);
+            //GenerateTopFloat(middleCode);
+            break;
+          
+          case MiddleOperator.PopFloat:
+            TopPopSymbol((Symbol) middleCode.GetOperand(0), TopOrPop.Pop);
+            //GeneratePopFloat(middleCode);
+            break;
+
+          /*case MiddleOperator.PopEmpty:
+            TopPopSymbol(null, TopOrPop.Pop);
+            //GeneratePopEmpty(middleCode);
+            break;*/
+
+          case MiddleOperator.IntegralToIntegral:
+            GenerateIntegralToIntegral(middleCode, index);
+            break;
+
+          case MiddleOperator.IntegralToFloating:
+            GenerateIntegralToFloating(middleCode);
+            break;
+
+          case MiddleOperator.FloatingToIntegral:
+            GenerateFloatingToIntegral(middleCode);
+            break;
+
+          case MiddleOperator.Parameter: {
+              Symbol symbol = (Symbol) middleCode.GetOperand(1);
+
+              if (symbol.Type.IsFloating()) {
+                GenerateFloatingParameter(middleCode);
+              }
+              else if (symbol.Type.IsStructOrUnion()) {
+                GenerateStructUnionParameter(middleCode, index);
+              }
+              else {
+                GenerateIntegralParameter(middleCode);
+              }
+            }
+            break;
+          
+          case MiddleOperator.GetReturnValue: {
+              Symbol symbol = (Symbol) middleCode.GetOperand(0);
+
+              if (symbol.Type.IsStructOrUnion()) {
+                GenerateStructUnionGetReturnValue(middleCode);
+              }
+              else if (symbol.Type.IsFloating()) {
+                Assert.Error((++m_floatStackSize) <= Start.FloatingStackMaxSize,
+                             null, Message.Floating_stack_overflow);
+              }
+              else {
+                GenerateIntegralGetReturnValue(middleCode);
+              }
+            }
+            break;
+          
+          case MiddleOperator.SetReturnValue: {
+              Symbol symbol = (Symbol) middleCode.GetOperand(1);
+
+              if (symbol.Type.IsStructOrUnion()) {
+                GenerateStructUnionSetReturnValue(middleCode);
+              }
+              else if (symbol.Type.IsFloating()) {
+                Assert.Error((--m_floatStackSize) == 0);
+              }
+              else {
+                GenerateIntegralSetReturnValue(middleCode);
+              }
+            }
+            break;
+
+          case MiddleOperator.Dot:
+          //case MiddleOperator.ClearRegisters:
+          case MiddleOperator.FunctionEnd:
+          case MiddleOperator.Empty:
+            break;
+          
+          default:
+            Assert.Error(Enum.GetName(typeof(MiddleOperator), middleCode.Operator),
+                         Message.Object_code_switch_default);
+            break;
+        }
+      }
+    }
+
+    private void GenerateTrackSet() {
+      for (int index = 0; index < m_objectCodeList.Count; ++index) {
+        ObjectCode objectCode = m_objectCodeList[index];
+     
+        object operand0 = objectCode.GetOperand(0),
+               operand1 = objectCode.GetOperand(1),
+               operand2 = objectCode.GetOperand(2);
+
+        if (objectCode.Operator == ObjectOperator.set_track_size) {
+          Track track = (Track) operand0;
+        
+          if (operand1 is int) {
+            int size = (int) operand1;
+            track.Size = size;
+            objectCode.Operator = ObjectOperator.empty;
+          }
+          else {
+            int size = ((Track) operand1).Size;
+            track.Size = size;
+            objectCode.Operator = ObjectOperator.empty;
+          }
+        }
+        else {
+          CheckTrack(operand0, 0, index);
+          CheckTrack(operand1, 1, index);
+          CheckTrack(operand2, 2, index);
+        }
+      }
+    }
+
+    private void CheckTrack(object operand, int position, int index) {
+      if (operand is Track) {
+        Track track = (Track) operand;
+      
+        if (!m_trackSet.Contains(track)) {
+          m_trackSet.Add(track);
+        }
+      
+        track.AddCode(position, index);
+      }
+    }
+    
+    // ------------------------------------------------------------------------
+
+    private Track SetPointer(Track track, Symbol symbol) {
+      if (track.Pointer) {
+        return track;
+      }
+
+      if (track.Register == null) {
+        track.Pointer = true;
+        return track;
+      }
+      
+      if (!RegisterAllocator.m_pointerRegisterSetWithoutEllipse.Contains(track.Register.Value)) {
+        Track newTrack = new Track(symbol);
+        AddObjectCode(ObjectOperator.mov, newTrack, track);
+
+        if (m_trackMap.ContainsKey(symbol)) {
+          m_trackMap[symbol] = newTrack;
+        }
+
+        m_trackSet.Add(newTrack);
+        return newTrack;
+      }
+      else {
+        return track;
+      }
+    }
+
+    /*public void AddToTrackMap(Symbol symbol, Track track) {
+      Assert.Error(symbol != null);
+
+      if (symbol.IsTemporary()) {
+        m_trackMap.Add(symbol, track);
+      }
+
+      m_trackSet.Add(track);
+    }*/
+  
+    public Register BaseRegister(Symbol symbol) {
+      Assert.Error((symbol == null) || symbol.IsAutoOrRegister());
+    
+      if (Start.CurrentFunction.Type.IsEllipse() && ((symbol == null) || !symbol.IsParameter())) {
+        return ObjectCode.EllipseRegister;
+      }
+      else {
+        return ObjectCode.FrameRegister;
+      }
+    }
+
+    /*public void GenerateFunctionStart(MiddleCode middleCode, int index) {
+      if (Start.CheckStackHeap) {
+        AddObjectCode(ObjectOperator.comment, "Check Stack and Heap");
+        AddObjectCode(ObjectOperator.mov, Register.ax,
+                      Start.CurrentTable.CurrentOffset);
+        AddObjectCode(ObjectOperator.register_return, Register.bx, index + 1);
+
+        if (Start.CurrentFunction.Type.IsEllipse()) {
+          AddObjectCode(ObjectOperator.call, Start.CheckStackHeapFunctionEllipse);
+        }
+        else {
+          AddObjectCode(ObjectOperator.call, Start.CheckStackHeapFunctionRegular);
+        }
+      }
+    }*/
+
+    public void GenerateCallHeader(MiddleCode middleCode) {
+      ISet<Symbol> integralSet = (ISet<Symbol>) middleCode.GetOperand(1);
+      Assert.Error(integralSet.SequenceEqual(m_trackMap.Keys), Message.Integral_set_does_not_equals_track_map_key_set);
+      int stackSize = (int) middleCode.GetOperand(2);
+      Assert.Error(stackSize == m_floatStackSize, Message.Stack_size);
+
+      Register baseRegister = BaseRegister(null);
+      int recordOffset = (int) middleCode.GetOperand(0);
+
+      foreach (KeyValuePair<Symbol, Track> pair in m_trackMap) {
+        Symbol symbol = pair.Key;
+        symbol.Offset = recordOffset;
+        Track track = pair.Value;
+        AddObjectCode(ObjectOperator.mov, baseRegister, symbol.Offset, track);
+        recordOffset += symbol.Type.Size();
+      }
+
+      for (int count = 0; count < m_floatStackSize; ++count) {
+        AddObjectCode(ObjectOperator.fstp_qword, baseRegister, recordOffset);
+        recordOffset += Type.QuarterWordSize;
+      }
+
+      m_recordSizeStack.Push(recordOffset);
+      m_trackMapStack.Push(m_trackMap);
+      m_trackMap = new Dictionary<Symbol, Track>();
+    }
+
+    public void GenerateFunctionCall(MiddleCode middleCode, int index) {
+      int recordSize = m_recordSizeStack.Peek();
+      Symbol calleeSymbol = (Symbol) middleCode.GetOperand(0);
+      int extraSize = (int) middleCode.GetOperand(1);
+
+      Type calleeType = calleeSymbol.Type.IsFunction() ? calleeSymbol.Type :
+                        calleeSymbol.Type.PointerType;
+
+      bool callerEllipse = Start.CurrentFunction.Type.IsEllipse(),
+           calleeEllipse = calleeType.IsEllipse();
+
+      if (callerEllipse) {
+        AddObjectCode(ObjectOperator.address_return, ObjectCode.EllipseRegister,
+                      recordSize + SymbolTable.ReturnAddressOffset, index + 1);
+
+        AddObjectCode(ObjectOperator.mov,ObjectCode.EllipseRegister,
+                             recordSize + SymbolTable.RegularFrameOffset,
+                             ObjectCode.FrameRegister);
+        AddObjectCode(ObjectOperator.mov,ObjectCode.EllipseRegister,
+                             recordSize + SymbolTable.EllipseFrameOffset,
+                             ObjectCode.EllipseRegister);
+
+        AddObjectCode(ObjectOperator.mov, ObjectCode.FrameRegister,
+                                       ObjectCode.EllipseRegister, null);
+        AddObjectCode(ObjectOperator.add, ObjectCode.FrameRegister,
+                                       recordSize, null);
+
+        if (calleeEllipse) {
+          AddObjectCode(ObjectOperator.add, ObjectCode.EllipseRegister,
+                                         recordSize + extraSize, null);
+        }
+      }
+      else {
+        AddObjectCode(ObjectOperator.address_return, ObjectCode.FrameRegister,
+                      recordSize + SymbolTable.ReturnAddressOffset, index + 1);
+
+        AddObjectCode(ObjectOperator.mov, ObjectCode.FrameRegister,
+                                       recordSize + SymbolTable.RegularFrameOffset,
+                                       ObjectCode.FrameRegister);
+
+        AddObjectCode(ObjectOperator.add, ObjectCode.FrameRegister,
+                                       recordSize, null);
+
+        if (calleeEllipse) {
+          AddObjectCode(ObjectOperator.mov, ObjectCode.EllipseRegister,
+                                         ObjectCode.FrameRegister);
+          if (extraSize != 0) {
+            AddObjectCode(ObjectOperator.add, ObjectCode.EllipseRegister,  extraSize);
+          }
+        }
+      }
+
+      if (calleeSymbol.Type.IsFunction()) {
+        AddObjectCode(ObjectOperator.call, calleeSymbol.UniqueName, null, null);
+        m_returnFloat = calleeSymbol.Type.ReturnType.IsFloating();
+      }
+      else {
+        Track track = LoadValueToRegister(calleeSymbol);
+        AddObjectCode(ObjectOperator.long_jmp, track, null, null);
+        m_returnFloat = calleeSymbol.Type.PointerType.ReturnType.IsFloating();
+      }            
+    }
+  
+    public void GenerateFunctionPostCall(MiddleCode middleCode) {
+      Register baseRegister = BaseRegister(null);
+      m_trackMap = m_trackMapStack.Pop();
+
+      foreach (KeyValuePair<Symbol,Track> pair in m_trackMap) {
+        Symbol symbol = pair.Key;
+        Track track = pair.Value;
+        AddObjectCode(ObjectOperator.mov, track, baseRegister, symbol.Offset);
+      }
+
+      if (m_floatStackSize > 0) {
+        int recordSize = m_recordSizeStack.Pop();
+
+        if (m_returnFloat) {
+          AddObjectCode(ObjectOperator.fstp_qword, baseRegister, recordSize);
+        }
+
+        int recordOffset = recordSize;
+        for (int count = 0; count < m_floatStackSize; ++count) {
+          recordOffset -= Type.QuarterWordSize;
+          AddObjectCode(ObjectOperator.fld_qword, baseRegister, recordOffset);
+        }
+
+        if (m_returnFloat) {
+          AddObjectCode(ObjectOperator.fld_qword, baseRegister, recordSize);
+        }
+      }
+      else {
+        m_recordSizeStack.Pop();
+      }
+    }
+
+    public Track LoadValueToRegister(Symbol symbol) {
+      return LoadValueToRegister(symbol, null);
+    }
+
+    public Track LoadValueToRegister(Symbol symbol, Register? register) {
+      if (register != null) {
+        CheckRegister(symbol, register);
+      }
+
+      Track track;
+      if (m_trackMap.TryGetValue(symbol,out track)) {
+        m_trackMap.Remove(symbol);
+
+        if ((register != null) && (track.Register != null) &&
+            !ObjectCode.RegisterOverlap(register, track.Register)) {
+          Track newTrack = new Track(symbol, register);
+          m_trackSet.Add(newTrack);
+          AddObjectCode(ObjectOperator.set_track_size, newTrack, track);
+          AddObjectCode(ObjectOperator.mov, newTrack, track);
+          track = newTrack;
+        }
+        else if (register != null) {
+          track.Register = register;
+        }
+
+        return track;
+      }
+      else {
+        track = new Track(symbol, register);
+        m_trackSet.Add(track);
+
+        if ((symbol.Value is long) || symbol.Type.IsFunctionArrayStringStructOrUnion()) {
+          AddObjectCode(ObjectOperator.mov, track, ValueOrAddress(symbol));
+        }
+        else {
+          AddObjectCode(ObjectOperator.mov, track, Base(symbol), Offset(symbol));
+        }
+
+        return track;
+      }
+    }
+
+    /*private void LoadValueToTrack(Track track, Symbol symbol) {
+      if (symbol.Value is long) {
+        int intValue = (int) ((long) symbol.Value);
+        AddObjectCode(ObjectOperator.mov, track, intValue);
+      }
+      else if (symbol.Type.IsFunctionArrayStringStructOrUnion()) {
+        if (symbol.IsAutoOrRegister()) {
+          AddObjectCode(ObjectOperator.mov, track, Base(symbol));
+          AddObjectCode(ObjectOperator.add, track, Offset(symbol));
+        }
+        else {
+          AddObjectCode(ObjectOperator.mov, track, symbol.UniqueName);
+        }
+      }
+      else {
+        AddObjectCode(ObjectOperator.mov, track, Base(symbol), Offset(symbol));
+      }
+    }*/
+
+    public bool CheckRegister(Symbol symbol, Register? register) {
+      foreach (KeyValuePair<Symbol,Track> entry in m_trackMap) {
+        Symbol oldSymbol = entry.Key;
+        Track oldTrack = entry.Value;
+
+        if (!oldSymbol.Equals(symbol) &&
+            ObjectCode.RegisterOverlap(register, oldTrack.Register)) {
+          Track newTrack = new Track(oldSymbol);
+          m_trackSet.Add(newTrack);
+          newTrack.Pointer = oldTrack.Pointer;
+          AddObjectCode(ObjectOperator.set_track_size, newTrack, oldTrack);
+          AddObjectCode(ObjectOperator.mov, newTrack, oldTrack);
+          m_trackMap[oldSymbol] = newTrack;
+          return true;
+        }
+      }
+
+      return false;
+    }
+  
+    /*public void GeneratePostCallX(MiddleCode middleCode) {
+      int record = (int) middleCode.GetOperand(0);
+      Symbol calleeSymbol = (Symbol) middleCode.GetOperand(1);
+      int stackSize = (int) middleCode.GetOperand(3);
+
+      if (stackSize > 0) {
+        Symbol returnSymbol = null;
+
+        if (calleeSymbol.Type.ReturnType.IsFloating()) {
+          returnSymbol = new Symbol(Type.LongDoubleType);
+          returnSymbol.Offset = record;
+          TopPopSymbol(returnSymbol, TopOrPop.Pop);
+        }
+
+        for (int stackIndex = 0; stackIndex < stackSize; ++stackIndex) {
+          Symbol stackSymbol = new Symbol(Type.LongDoubleType);
+          stackSymbol.Offset = record - ((stackIndex + 1) * Type.QuarterWordSize);
+          PushSymbol(stackSymbol);
+        }
+
+        if (calleeSymbol.Type.ReturnType.IsFloating()) {
+          PushSymbol(returnSymbol);
+        }
+      }
+
+      m_trackMap.Clear();
+    }*/
+
+    public void GenerateReturn(MiddleCode middleCode) {
+      Assert.Error(m_floatStackSize == 0);
+      Track track = new Track(Type.UnsignedIntegerType, null);
+      AddObjectCode(ObjectOperator.mov, track,
+                    ObjectCode.FrameRegister, SymbolTable.ReturnAddressOffset);                
+      AddObjectCode(ObjectOperator.mov, ObjectCode.EllipseRegister,
+                    ObjectCode.FrameRegister, SymbolTable.EllipseFrameOffset);
+      AddObjectCode(ObjectOperator.mov, ObjectCode.FrameRegister,
+                    ObjectCode.FrameRegister, SymbolTable.RegularFrameOffset);
+      AddObjectCode(ObjectOperator.jmp, track);
+    }
+  
+    public void GenerateExit(MiddleCode middleCode) {
+      Symbol exitSymbol = (Symbol) middleCode.GetOperand(0);
+
+      if (exitSymbol == null) {
+        AddObjectCode(ObjectOperator.mov, Register.al, 0x00);
+      }
+      else {
+        LoadValueToRegister(exitSymbol, Register.al);
+        //m_trackMap.Remove(exitSymbol);
+      }
+
+      AddObjectCode(ObjectOperator.mov, Register.ah, 0x4C);
+      AddObjectCode(ObjectOperator.interrupt, 33);
+    }
+
+    public void GenerateGoto(MiddleCode middleCode) {
+      AddObjectCode(ObjectOperator.long_jmp, null, null, middleCode.GetOperand(0));
+    }
+
+    public void GenerateLoadToRegister(MiddleCode middleCode) {
+      Register register = (Register) middleCode.GetOperand(0);
+      Symbol symbol = (Symbol) middleCode.GetOperand(1);
+      LoadValueToRegister(symbol, register);
+      //m_trackMap.Remove(symbol);
+    }
+
+    public void GenerateSaveFromRegister(MiddleCode middleCode) {
+      Symbol symbol = (Symbol) middleCode.GetOperand(0);
+      Register register = (Register) middleCode.GetOperand(1);
+      //Track track = new Track(symbol, register);
+      //AddToTrackMap(symbol, track);
+      //SaveFromRegister(track, symbol);
+      AddObjectCode(ObjectOperator.mov, Base(symbol), Offset(symbol), register);
+      //m_trackMap.Remove(symbol);
+    }
+  
+    /*public void GenerateLoadStatusByte(MiddleCode middleCode) {
+      AddObjectCode(ObjectOperator.lahf);
+    }*/
+  
+    public void GenerateSaveFromFlagByte(MiddleCode middleCode) {
+      AddObjectCode(ObjectOperator.sahf);
+      AddObjectCode(ObjectOperator.mov, Register.al, Register.ah);
+    }
+
+    /*public void GenerateSaveTemporary(MiddleCode middleCode) {
+      Symbol tempSymbol = (Symbol) middleCode.GetOperand(0);
+      Track tempTrack = m_trackMap[tempSymbol];
+      m_trackMap.Remove(tempSymbol);
+      //SaveFromRegister(tempTrack, tempSymbol);
+      AddObjectCode(ObjectOperator.mov, Base(tempSymbol), Offset(tempSymbol), tempTrack);
+    }*/
+  
+    public void GenerateJumpRegister(MiddleCode middleCode) {
+      Register jumpRegister = (Register) middleCode.GetOperand(0);
+      AddObjectCode(ObjectOperator.jmp, jumpRegister);
+    }
+
+    public void GenerateInterrupt(MiddleCode middleCode) {
+      int intValue = int.Parse(middleCode.GetOperand(0).ToString());
+      AddObjectCode(ObjectOperator.interrupt, intValue);
+      m_trackMap.Clear();
+    }
+
+    // x += y; => x = x + y;
+    // x += 1; => x = x + 1; => ++x;
+    // t1 = x + y;
+  
+    public void GenerateIntegralAssign(MiddleCode middleCode) {
+      Symbol resultSymbol = (Symbol) middleCode.GetOperand(0),
+             assignSymbol = (Symbol) middleCode.GetOperand(1);
+      if (resultSymbol.IsTemporary() && (resultSymbol.AddressSymbol == null)) {
+        Track resultTrack;
+
+        if (m_trackMap.TryGetValue(resultSymbol, out resultTrack)) {
+          m_trackMap.Remove(resultSymbol);
+          Track twinTrack = new Track(resultSymbol, resultTrack.Register);
+          resultTrack.TwinTrack = twinTrack;
+          twinTrack.TwinTrack = resultTrack;
+          Assert.Error(resultTrack.Register == twinTrack.Register);
+          resultTrack = twinTrack;
+        }
+        else {
+          resultTrack = new Track(resultSymbol);
+          m_trackSet.Add(resultTrack);
+        }
+
+        m_trackMap.Add(resultSymbol, resultTrack);
+
+        Track assignTrack;
+        if (m_trackMap.TryGetValue(assignSymbol, out assignTrack)) {
+          m_trackMap.Remove(assignSymbol);
+          m_trackMap[resultSymbol] = assignTrack;
+        }
+        else if ((assignSymbol.Value is long) || assignSymbol.Type.IsArrayFunctionOrString()) {
+          AddObjectCode(ObjectOperator.mov, resultTrack, ValueOrAddress(assignSymbol));
+        }
+        else {
+          AddObjectCode(ObjectOperator.mov, resultTrack, Base(assignSymbol), Offset(assignSymbol));
+        }
+      }
+      else {
+        if ((assignSymbol.Value is long) ||
+            (assignSymbol.IsStaticOrExtern() && assignSymbol.Type.IsArrayFunctionOrString())) {
+          ObjectOperator sizeOperator =
+            ObjectCode.OperatorToSize(ObjectOperator.mov, assignSymbol.Type.Size());
+          AddObjectCode(sizeOperator, Base(resultSymbol), Offset(resultSymbol), ValueOrAddress(assignSymbol));
+        }
+        else {
+          object b = Base(resultSymbol);
+          Track assignTrack = LoadValueToRegister(assignSymbol);
+          AddObjectCode(ObjectOperator.mov, b, Offset(resultSymbol), assignTrack);
+        }
+      }
+    }
+  
+    /*public void SaveFromRegister(Track track, Symbol symbol) {
+      AddObjectCode(ObjectOperator.mov, Base(symbol), Offset(symbol), track);
+    }
+
+    public void SaveFromRegister(Track track, Symbol symbol) {
+      if (symbol.AddressSymbol != null) {
+        Track addressTrack = LoadValueToRegister(symbol.AddressSymbol);
+        //addressTrack.SetPointer();
+        addressTrack = SetPointer(addressTrack, symbol.AddressSymbol);
+        AddObjectCode(ObjectOperator.mov, addressTrack, symbol.AddressOffset, track);
+      }
+      else if (symbol.IsAutoOrRegister()) {
+        AddObjectCode(ObjectOperator.mov, BaseRegister(symbol), symbol.Offset, track);
+      }
+      else {
+        AddObjectCode(ObjectOperator.mov, symbol.UniqueName, 0, track);
+      }
+    }*/
+
+    public static IDictionary<MiddleOperator,ObjectOperator>
+                           m_middleToIntegralBinaryTargetMap =
+                           new Dictionary<MiddleOperator,ObjectOperator>();
+
+    public static IDictionary<int,Register> LeftMultiplyMap = new Dictionary<int,Register>();
+
+    public static IDictionary<Pair<MiddleOperator, int>, Register>
+                    ResultMultiplyMap = new Dictionary<Pair<MiddleOperator, int>, Register>();
+
+    public static IDictionary<Pair<MiddleOperator, int>, Register>
+                    ClearMultiplyMap = new Dictionary<Pair<MiddleOperator, int>, Register>();
+
+    public static IDictionary<MiddleOperator, ObjectOperator>
+                    m_middleToIntegralUnaryTargetMap = new Dictionary<MiddleOperator, ObjectOperator>();
+
+    public static IDictionary<Sort, ObjectOperator> m_floatPushMap = new Dictionary<Sort, ObjectOperator>();
+
+    public static IDictionary<Sort,ObjectOperator> m_floatTopMap = new Dictionary<Sort,ObjectOperator>(),
+                                                  m_floatPopMap = new Dictionary<Sort,ObjectOperator>();
+
+    public static IDictionary<Pair<int, int>, int>
+                    m_maskMap = new Dictionary<Pair<int, int>, int>();
+
+    public static IDictionary<MiddleOperator,ObjectOperator>
+                    m_middleToFloatingBinaryTargetMap = new Dictionary<MiddleOperator,ObjectOperator>();
+
+    public static IDictionary<MiddleOperator,ObjectOperator>
+                    m_middleToFloatingRelationTargetMap = new Dictionary<MiddleOperator,ObjectOperator>();
+
+    public static IDictionary<MiddleOperator,ObjectOperator>
+                    m_middleToFloatingUnaryTargetMap = new Dictionary<MiddleOperator,ObjectOperator>();
+
+    public static IDictionary<ObjectOperator,ObjectOperator>
+                    m_inverseMap = new Dictionary<ObjectOperator,ObjectOperator>();
+
+    static ObjectCodeGenerator() {
+      m_middleToIntegralBinaryTargetMap.
+        Add(MiddleOperator.Assign, ObjectOperator.mov);
+      m_middleToIntegralBinaryTargetMap.
+        Add(MiddleOperator.Parameter, ObjectOperator.mov);
+      m_middleToIntegralBinaryTargetMap.
+        Add(MiddleOperator.Compare, ObjectOperator.cmp);
+      m_middleToIntegralBinaryTargetMap.
+        Add(MiddleOperator.BinaryAdd, ObjectOperator.add);
+      m_middleToIntegralBinaryTargetMap.
+        Add(MiddleOperator.BinarySubtract, ObjectOperator.sub);
+      m_middleToIntegralBinaryTargetMap.
+        Add(MiddleOperator.BitwiseAnd, ObjectOperator.and);
+      m_middleToIntegralBinaryTargetMap.
+        Add(MiddleOperator.BitwiseIOr, ObjectOperator.or);
+      m_middleToIntegralBinaryTargetMap.
+        Add(MiddleOperator.BitwiseXOr, ObjectOperator.xor);
+      m_middleToIntegralBinaryTargetMap.
+        Add(MiddleOperator.ShiftLeft, ObjectOperator.shl);
+      m_middleToIntegralBinaryTargetMap.
+        Add(MiddleOperator.ShiftRight, ObjectOperator.shr);
+
+      m_middleToIntegralBinaryTargetMap.
+        Add(MiddleOperator.Equal, ObjectOperator.jne);
+      m_middleToIntegralBinaryTargetMap.
+        Add(MiddleOperator.NotEqual, ObjectOperator.je);
+      m_middleToIntegralBinaryTargetMap.
+        Add(MiddleOperator.SignedLessThan, ObjectOperator.jge);
+      m_middleToIntegralBinaryTargetMap.
+        Add(MiddleOperator.SignedLessThanEqual,ObjectOperator.jg);
+      m_middleToIntegralBinaryTargetMap.
+        Add(MiddleOperator.SignedGreaterThan, ObjectOperator.jle);
+      m_middleToIntegralBinaryTargetMap.
+        Add(MiddleOperator.SignedGreaterThanEqual ,ObjectOperator.jl);
+      m_middleToIntegralBinaryTargetMap.
+        Add(MiddleOperator.UnsignedLessThan, ObjectOperator.jae);
+      m_middleToIntegralBinaryTargetMap.
+        Add(MiddleOperator.UnsignedLessThanEqual, ObjectOperator.ja);
+      m_middleToIntegralBinaryTargetMap.
+        Add(MiddleOperator.UnsignedGreaterThan, ObjectOperator.jbe);
+      m_middleToIntegralBinaryTargetMap.
+        Add(MiddleOperator.UnsignedGreaterThanEqual, ObjectOperator.jb);
+
+      LeftMultiplyMap.Add(Type.ByteSize, Register.al);
+      LeftMultiplyMap.Add(Type.WordSize, Register.ax);
+      LeftMultiplyMap.Add(Type.DoubleWordSize, Register.eax);
+
+      ResultMultiplyMap.Add(new Pair<MiddleOperator, int>(MiddleOperator.SignedMultiply, Type.ByteSize),
+                            Register.al);
+      ResultMultiplyMap.Add(new Pair<MiddleOperator, int>(MiddleOperator.SignedMultiply, Type.WordSize),
+                            Register.ax);
+      ResultMultiplyMap.Add(new Pair<MiddleOperator, int>(MiddleOperator.SignedMultiply, Type.DoubleWordSize),
+                            Register.eax);
+      ResultMultiplyMap.Add(new Pair<MiddleOperator, int>(MiddleOperator.UnsignedMultiply, Type.ByteSize),
+                            Register.al);
+      ResultMultiplyMap.Add(new Pair<MiddleOperator, int>(MiddleOperator.UnsignedMultiply, Type.WordSize),
+                            Register.ax);
+      ResultMultiplyMap.Add(new Pair<MiddleOperator, int>(MiddleOperator.UnsignedMultiply, Type.DoubleWordSize),
+                            Register.eax);
+
+      ResultMultiplyMap.Add(new Pair<MiddleOperator, int>(MiddleOperator.SignedDivide, Type.ByteSize),
+                            Register.al);
+      ResultMultiplyMap.Add(new Pair<MiddleOperator, int>(MiddleOperator.SignedDivide, Type.WordSize),
+                            Register.ax);
+      ResultMultiplyMap.Add(new Pair<MiddleOperator, int>(MiddleOperator.SignedDivide, Type.DoubleWordSize),
+                            Register.eax);
+      ResultMultiplyMap.Add(new Pair<MiddleOperator, int>(MiddleOperator.UnsignedDivide, Type.ByteSize),
+                            Register.al);
+      ResultMultiplyMap.Add(new Pair<MiddleOperator, int>(MiddleOperator.UnsignedDivide, Type.WordSize),
+                            Register.ax);
+      ResultMultiplyMap.Add(new Pair<MiddleOperator, int>(MiddleOperator.UnsignedDivide, Type.DoubleWordSize),
+                            Register.eax);
+
+      ResultMultiplyMap.Add(new Pair<MiddleOperator, int>(MiddleOperator.SignedModulo, Type.ByteSize),
+                            Register.ah);
+      ResultMultiplyMap.Add(new Pair<MiddleOperator, int>(MiddleOperator.SignedModulo, Type.WordSize),
+                            Register.dx);
+      ResultMultiplyMap.Add(new Pair<MiddleOperator, int>(MiddleOperator.SignedModulo, Type.DoubleWordSize),
+                            Register.edx);
+      ResultMultiplyMap.Add(new Pair<MiddleOperator, int>(MiddleOperator.UnsignedModulo, Type.ByteSize),
+                            Register.ah);
+      ResultMultiplyMap.Add(new Pair<MiddleOperator, int>(MiddleOperator.UnsignedModulo, Type.WordSize),
+                            Register.dx);
+      ResultMultiplyMap.Add(new Pair<MiddleOperator, int>(MiddleOperator.UnsignedModulo, Type.DoubleWordSize),
+                            Register.edx);
+
+      ClearMultiplyMap.Add(new Pair<MiddleOperator, int>(MiddleOperator.SignedMultiply, Type.ByteSize),
+                            Register.ah);
+      ClearMultiplyMap.Add(new Pair<MiddleOperator, int>(MiddleOperator.SignedMultiply, Type.WordSize),
+                            Register.dx);
+      ClearMultiplyMap.Add(new Pair<MiddleOperator, int>(MiddleOperator.SignedMultiply, Type.DoubleWordSize),
+                            Register.edx);
+      ClearMultiplyMap.Add(new Pair<MiddleOperator, int>(MiddleOperator.UnsignedMultiply, Type.ByteSize),
+                            Register.ah);
+      ClearMultiplyMap.Add(new Pair<MiddleOperator, int>(MiddleOperator.UnsignedMultiply, Type.WordSize),
+                            Register.dx);
+      ClearMultiplyMap.Add(new Pair<MiddleOperator, int>(MiddleOperator.UnsignedMultiply, Type.DoubleWordSize),
+                            Register.edx);
+
+      ClearMultiplyMap.Add(new Pair<MiddleOperator, int>(MiddleOperator.SignedDivide, Type.ByteSize),
+                            Register.ah);
+      ClearMultiplyMap.Add(new Pair<MiddleOperator, int>(MiddleOperator.SignedDivide, Type.WordSize),
+                            Register.dx);
+      ClearMultiplyMap.Add(new Pair<MiddleOperator, int>(MiddleOperator.SignedDivide, Type.DoubleWordSize),
+                            Register.edx);
+      ClearMultiplyMap.Add(new Pair<MiddleOperator, int>(MiddleOperator.UnsignedDivide, Type.ByteSize),
+                            Register.ah);
+      ClearMultiplyMap.Add(new Pair<MiddleOperator, int>(MiddleOperator.UnsignedDivide, Type.WordSize),
+                            Register.dx);
+      ClearMultiplyMap.Add(new Pair<MiddleOperator, int>(MiddleOperator.UnsignedDivide, Type.DoubleWordSize),
+                            Register.edx);
+
+      ClearMultiplyMap.Add(new Pair<MiddleOperator, int>(MiddleOperator.SignedModulo, Type.ByteSize),
+                            Register.ah);
+      ClearMultiplyMap.Add(new Pair<MiddleOperator, int>(MiddleOperator.SignedModulo, Type.WordSize),
+                            Register.dx);
+      ClearMultiplyMap.Add(new Pair<MiddleOperator, int>(MiddleOperator.SignedModulo, Type.DoubleWordSize),
+                            Register.edx);
+      ClearMultiplyMap.Add(new Pair<MiddleOperator, int>(MiddleOperator.UnsignedModulo, Type.ByteSize),
+                            Register.ah);
+      ClearMultiplyMap.Add(new Pair<MiddleOperator, int>(MiddleOperator.UnsignedModulo, Type.WordSize),
+                            Register.dx);
+      ClearMultiplyMap.Add(new Pair<MiddleOperator, int>(MiddleOperator.UnsignedModulo, Type.DoubleWordSize),
+                            Register.edx);
+
+      m_middleToIntegralUnaryTargetMap.
+        Add(MiddleOperator.UnaryAdd, ObjectOperator.empty);
+      m_middleToIntegralUnaryTargetMap.
+        Add(MiddleOperator.BitwiseNot, ObjectOperator.not);
+      m_middleToIntegralUnaryTargetMap.
+        Add(MiddleOperator.UnarySubtract, ObjectOperator.neg);
+      m_middleToIntegralUnaryTargetMap.
+        Add(MiddleOperator.Increment, ObjectOperator.inc);
+      m_middleToIntegralUnaryTargetMap.
+        Add(MiddleOperator.Decrement, ObjectOperator.dec);
+      m_middleToIntegralUnaryTargetMap.
+        Add(MiddleOperator.SignedMultiply, ObjectOperator.imul);
+      m_middleToIntegralUnaryTargetMap.
+        Add(MiddleOperator.SignedDivide, ObjectOperator.idiv);
+      m_middleToIntegralUnaryTargetMap.
+        Add(MiddleOperator.SignedModulo, ObjectOperator.idiv);
+      m_middleToIntegralUnaryTargetMap.
+        Add(MiddleOperator.UnsignedMultiply, ObjectOperator.mul);
+      m_middleToIntegralUnaryTargetMap.
+        Add(MiddleOperator.UnsignedDivide, ObjectOperator.div);
+      m_middleToIntegralUnaryTargetMap.
+        Add(MiddleOperator.UnsignedModulo, ObjectOperator.div);
+
+      m_floatPushMap.Add(Sort.Signed_Int, ObjectOperator.fild_word);
+      m_floatPushMap.Add(Sort.Unsigned_Int, ObjectOperator.fild_word);
+      m_floatPushMap.Add(Sort.Signed_Long_Int, ObjectOperator.fild_dword);
+      m_floatPushMap.Add(Sort.Unsigned_Long_Int, ObjectOperator.fild_dword);
+      m_floatPushMap.Add(Sort.Float, ObjectOperator.fld_dword);
+      m_floatPushMap.Add(Sort.Double, ObjectOperator.fld_qword);
+      m_floatPushMap.Add(Sort.Long_Double, ObjectOperator.fld_qword);
+
+      m_floatTopMap.Add(Sort.Signed_Int, ObjectOperator.fist_word);
+      m_floatTopMap.Add(Sort.Unsigned_Int, ObjectOperator.fist_word);
+      m_floatTopMap.Add(Sort.Pointer, ObjectOperator.fist_word);
+      m_floatTopMap.Add(Sort.Signed_Long_Int, ObjectOperator.fist_dword);
+      m_floatTopMap.Add(Sort.Unsigned_Long_Int, ObjectOperator.fist_dword);
+      m_floatTopMap.Add(Sort.Float, ObjectOperator.fst_dword);
+      m_floatTopMap.Add(Sort.Double, ObjectOperator.fst_qword);
+      m_floatTopMap.Add(Sort.Long_Double, ObjectOperator.fst_qword);
+  
+      m_floatPopMap.Add(Sort.Signed_Int, ObjectOperator.fistp_word);
+      m_floatPopMap.Add(Sort.Unsigned_Int, ObjectOperator.fistp_word);
+      m_floatPopMap.Add(Sort.Pointer, ObjectOperator.fistp_word);
+      m_floatPopMap.Add(Sort.Signed_Long_Int, ObjectOperator.fistp_dword);
+      m_floatPopMap.Add(Sort.Unsigned_Long_Int, ObjectOperator.fistp_dword);
+      m_floatPopMap.Add(Sort.Float, ObjectOperator.fstp_dword);
+      m_floatPopMap.Add(Sort.Double, ObjectOperator.fstp_qword);
+      m_floatPopMap.Add(Sort.Long_Double, ObjectOperator.fstp_qword);    
+
+      m_maskMap.Add(new Pair<int,int>(1,2), 0x00FF);
+      m_maskMap.Add(new Pair<int,int>(1,4), 0x000000FF);
+      m_maskMap.Add(new Pair<int,int>(2,4), 0x0000FFFF);  
+
+      m_middleToFloatingBinaryTargetMap.
+        Add(MiddleOperator.BinaryAdd, ObjectOperator.fadd);
+      m_middleToFloatingBinaryTargetMap.
+        Add(MiddleOperator.BinarySubtract, ObjectOperator.fsub);
+      m_middleToFloatingBinaryTargetMap.
+        Add(MiddleOperator.SignedMultiply, ObjectOperator.fmul);
+      m_middleToFloatingBinaryTargetMap.
+        Add(MiddleOperator.SignedDivide, ObjectOperator.fdiv);
+
+      m_middleToFloatingRelationTargetMap.
+        Add(MiddleOperator.Equal, ObjectOperator.jne);
+      m_middleToFloatingRelationTargetMap.
+        Add(MiddleOperator.NotEqual, ObjectOperator.je);
+      m_middleToFloatingRelationTargetMap.
+        Add(MiddleOperator.SignedLessThan, ObjectOperator.jbe);
+      m_middleToFloatingRelationTargetMap.
+        Add(MiddleOperator.SignedLessThanEqual, ObjectOperator.jb);
+      m_middleToFloatingRelationTargetMap.
+        Add(MiddleOperator.SignedGreaterThan, ObjectOperator.jae);
+      m_middleToFloatingRelationTargetMap.
+        Add(MiddleOperator.SignedGreaterThanEqual, ObjectOperator.ja);
+
+      m_middleToFloatingUnaryTargetMap.
+        Add(MiddleOperator.UnaryAdd,ObjectOperator.empty);
+      m_middleToFloatingUnaryTargetMap.
+        Add(MiddleOperator.BitwiseNot,ObjectOperator.empty);
+      m_middleToFloatingUnaryTargetMap.
+        Add(MiddleOperator.UnarySubtract, ObjectOperator.fchs);
+
+      m_inverseMap.Add(ObjectOperator.je, ObjectOperator.jne);
+      m_inverseMap.Add(ObjectOperator.jne, ObjectOperator.je);
+      m_inverseMap.Add(ObjectOperator.jl, ObjectOperator.jge);
+      m_inverseMap.Add(ObjectOperator.jle, ObjectOperator.jg);
+      m_inverseMap.Add(ObjectOperator.jg, ObjectOperator.jle);
+      m_inverseMap.Add(ObjectOperator.jge, ObjectOperator.jl);
+      m_inverseMap.Add(ObjectOperator.ja, ObjectOperator.jbe);
+      m_inverseMap.Add(ObjectOperator.jae, ObjectOperator.jb);
+      m_inverseMap.Add(ObjectOperator.jb, ObjectOperator.jae);
+      m_inverseMap.Add(ObjectOperator.jbe, ObjectOperator.ja);
+    }
+
+    /*public static IDictionary<MiddleOperator,ObjectOperator>
+                    m_middleToFloatingRelationTargetMap = new Dictionary<MiddleOperator,ObjectOperator>();
+
+    static ObjectCodeGenerator() {
+      m_middleToFloatingRelationTargetMap.
+        Add(MiddleOperator.Equal, ObjectOperator.jne);
+      m_middleToFloatingRelationTargetMap.
+        Add(MiddleOperator.NotEqual, ObjectOperator.je);
+      m_middleToFloatingRelationTargetMap.
+        Add(MiddleOperator.SignedLessThan, ObjectOperator.jbe);
+      m_middleToFloatingRelationTargetMap.
+        Add(MiddleOperator.SignedLessThanEqual, ObjectOperator.jb);
+      m_middleToFloatingRelationTargetMap.
+        Add(MiddleOperator.SignedGreaterThan, ObjectOperator.jae);
+      m_middleToFloatingRelationTargetMap.
+        Add(MiddleOperator.SignedGreaterThanEqual, ObjectOperator.ja);
+    }
+
+    public void GenerateFloatingRelation(MiddleCode middleCode, int index) {
+      int target = (int) middleCode.Operand(0);
+      AddObjectCode(ObjectOperator.fcompp);
+      AddObjectCode(ObjectOperator.fstsw, Register.ax);
+      AddObjectCode(ObjectOperator.sahf);
+      ObjectOperator objectOperator =
+        m_middleToFloatingRelationTargetMap[middleCode.Operator];
+      AddObjectCode(objectOperator, null, null, index + 1);
+      AddObjectCode(ObjectOperator.long_jmp, null, null, target);
+    }
+
+    public static IDictionary<MiddleOperator,ObjectOperator>
+                    m_middleToFloatingUnaryTargetMap = new Dictionary<MiddleOperator,ObjectOperator>();
+  
+    static ObjectCodeGenerator() {
+      m_middleToFloatingUnaryTargetMap.
+        Add(MiddleOperator.UnaryAdd,ObjectOperator.empty);
+      m_middleToFloatingUnaryTargetMap.
+        Add(MiddleOperator.BitwiseNot,ObjectOperator.empty);
+      m_middleToFloatingUnaryTargetMap.
+        Add(MiddleOperator.UnarySubtract, ObjectOperator.fchs);
+    }*/
+
+    public void GenerateFloatingRelation(MiddleCode middleCode, int index) {
+      Assert.Error((m_floatStackSize -= 2) >= 0);
+      int target = (int) middleCode.GetOperand(0);
+      AddObjectCode(ObjectOperator.fcompp);
+      AddObjectCode(ObjectOperator.fstsw, Register.ax);
+      AddObjectCode(ObjectOperator.sahf);
+      ObjectOperator objectOperator =
+        m_middleToFloatingRelationTargetMap[middleCode.Operator];
+      AddObjectCode(objectOperator, null, null, index + 1);
+      AddObjectCode(ObjectOperator.long_jmp, null, null, target);
+    }
+
+    /*public static IDictionary<MiddleOperator,ObjectOperator>
+                    m_middleToFloatingRelationTargetMap = new Dictionary<MiddleOperator,ObjectOperator>();
+
+    public static IDictionary<MiddleOperator,ObjectOperator>
+                    m_middleToFloatingUnaryTargetMap = new Dictionary<MiddleOperator,ObjectOperator>();
+  
+    static ObjectCodeGenerator() {
+      m_middleToFloatingRelationTargetMap.
+        Add(MiddleOperator.Equal, ObjectOperator.jne);
+      m_middleToFloatingRelationTargetMap.
+        Add(MiddleOperator.NotEqual, ObjectOperator.je);
+      m_middleToFloatingRelationTargetMap.
+        Add(MiddleOperator.SignedLessThan, ObjectOperator.jbe);
+      m_middleToFloatingRelationTargetMap.
+        Add(MiddleOperator.SignedLessThanEqual, ObjectOperator.jb);
+      m_middleToFloatingRelationTargetMap.
+        Add(MiddleOperator.SignedGreaterThan, ObjectOperator.jae);
+      m_middleToFloatingRelationTargetMap.
+        Add(MiddleOperator.SignedGreaterThanEqual, ObjectOperator.ja);
+    }
+
+    static ObjectCodeGenerator() {
+      m_middleToFloatingUnaryTargetMap.
+        Add(MiddleOperator.UnaryAdd,ObjectOperator.empty);
+      m_middleToFloatingUnaryTargetMap.
+        Add(MiddleOperator.BitwiseNot,ObjectOperator.empty);
+      m_middleToFloatingUnaryTargetMap.
+        Add(MiddleOperator.UnarySubtract, ObjectOperator.fchs);
+    }
+
+    public void GenerateIntegralAdditionBitwiseShiftx(MiddleCode middleCode) {
+      Symbol resultSymbol = (Symbol) middleCode.GetOperand(0),
+             leftSymbol = (Symbol) middleCode.GetOperand(1),
+             rightSymbol = (Symbol) middleCode.GetOperand(2);
+    }*/
+
+    public void GenerateIntegralAdditionBitwiseShift(MiddleCode middleCode) {
+      Symbol resultSymbol = (Symbol) middleCode.GetOperand(0),
+             leftSymbol = (Symbol) middleCode.GetOperand(1),
+             rightSymbol = (Symbol) middleCode.GetOperand(2);
+
+      if (resultSymbol.Equals(leftSymbol) && !resultSymbol.IsTemporary()) {
+        GenerateCompoundIntegralBinary(middleCode.Operator, leftSymbol, rightSymbol);
+      }
+      else {
+        GenerateSimpleIntegralBinary(middleCode.Operator, resultSymbol, leftSymbol, rightSymbol);
+      }
+    }
+  
+    public void GenerateCompoundIntegralBinary(MiddleOperator middleOperator,
+                                               Symbol leftSymbol, Symbol rightSymbol) {
+      ObjectOperator objectOperator = m_middleToIntegralBinaryTargetMap[middleOperator];
+      Assert.Error(!m_trackMap.ContainsKey(leftSymbol));
+
+      if ((rightSymbol.Value is long) ||
+          (rightSymbol.IsStaticOrExtern() && rightSymbol.Type.IsArrayFunctionOrString())) {
+        ObjectOperator sizeOperator =
+          ObjectCode.OperatorToSize(objectOperator, leftSymbol.Type.Size());
+        AddObjectCode(sizeOperator, Base(leftSymbol), Offset(leftSymbol), ValueOrAddress(rightSymbol));
+      }
+      else if (MiddleCode.IsShift(middleOperator)) {
+        Track rightTrack = LoadValueToRegister(rightSymbol, ObjectCode.ShiftRegister);
+        AddObjectCode(ObjectOperator.mov, Base(leftSymbol), Offset(leftSymbol), rightTrack);
+      }
+      else {
+        Track rightTrack = LoadValueToRegister(rightSymbol);
+        AddObjectCode(ObjectOperator.mov, Base(leftSymbol), Offset(leftSymbol), rightTrack);
+      }
+
+      /*if (rightSymbol.Value is long) {
+        ObjectOperator sizeOperator =
+          ObjectCode.OperatorToSize(objectOperator, leftSymbol.Type.Size());
+        int rightValue = (int) ((long) rightSymbol.Value);
+        AddObjectCode(sizeOperator, Base(leftSymbol), Offset(leftSymbol), rightValue);
+      }
+      else if (MiddleCode.IsShift(middleOperator)) {
+        Track rightTrack = LoadValueToRegister(rightSymbol, ObjectCode.ShiftRegister);
+        AddObjectCode(ObjectOperator.mov, Base(leftSymbol), Offset(leftSymbol), rightTrack);
+      }
+      else if (rightSymbol.IsStaticOrExtern() && rightSymbol.Type.IsArrayFunctionOrString()) {
+        ObjectOperator sizeOperator =
+          ObjectCode.OperatorToSize(objectOperator, leftSymbol.Type.Size());
+        AddObjectCode(sizeOperator, Base(leftSymbol), Offset(leftSymbol), rightSymbol.UniqueName);
+      }
+      else {
+        Track rightTrack = LoadValueToRegister(rightSymbol);
+        AddObjectCode(ObjectOperator.mov, Base(leftSymbol), Offset(leftSymbol), rightTrack);
+      }*/
+    }
+
+    public void GenerateSimpleIntegralBinary(MiddleOperator middleOperator, Symbol resultSymbol,
+                                             Symbol leftSymbol, Symbol rightSymbol) {
+      ObjectOperator objectOperator = m_middleToIntegralBinaryTargetMap[middleOperator];
+      Track leftTrack = LoadValueToRegister(leftSymbol), rightTrack;
+
+      if (m_trackMap.TryGetValue(rightSymbol, out rightTrack)) {
+        AddObjectCode(objectOperator, leftTrack, rightTrack);
+        m_trackMap.Remove(rightSymbol);
+      }
+      else if ((rightSymbol.Value is long) || rightSymbol.Type.IsArrayFunctionOrString()) {
+        AddObjectCode(objectOperator, leftTrack, ValueOrAddress(rightSymbol));
+      }
+      else if (MiddleCode.IsShift(middleOperator)) {
+        rightTrack = LoadValueToRegister(rightSymbol, ObjectCode.ShiftRegister);
+        AddObjectCode(objectOperator, leftTrack, rightTrack);
+      }
+      else {
+        AddObjectCode(objectOperator, leftTrack, Base(rightSymbol), Offset(rightSymbol));
+      }
+
+      if (resultSymbol.IsTemporary() && (resultSymbol.AddressSymbol == null)) {
+        //AddToTrackMap(resultSymbol, leftTrack);
+        m_trackMap[resultSymbol] = leftTrack;
+      }
+      else {
+        AddObjectCode(ObjectOperator.mov, Base(resultSymbol), Offset(resultSymbol), leftTrack);
+      }
+    }
+
+    public void GenerateIntegralRelationBinary(Symbol leftSymbol, Symbol rightSymbol) {
+      Track leftTrack = null, rightTrack = null;
+      m_trackMap.TryGetValue(leftSymbol, out leftTrack);
+      m_trackMap.TryGetValue(rightSymbol, out rightTrack);
+
+      if ((leftTrack == null) && (rightTrack == null)) {
+        if ((leftSymbol.AddressSymbol != null) ||
+            (leftSymbol.IsStaticOrExtern() && !leftSymbol.Type.IsArrayFunctionOrString()) ||
+            (leftSymbol.IsAutoOrRegister() && !leftSymbol.Type.IsArray())) {
+          ObjectOperator sizeOperator =
+            ObjectCode.OperatorToSize(ObjectOperator.cmp, leftSymbol.Type.Size());
+          
+          if ((rightSymbol.Value is long) ||
+              (rightSymbol.IsStaticOrExtern() && rightSymbol.Type.IsArrayFunctionOrString())) {
+            AddObjectCode(sizeOperator, Base(leftSymbol), Offset(leftSymbol), ValueOrAddress(rightSymbol));
+            return;
+          }
+        }
+
+        if (rightSymbol.IsAutoOrRegister() && rightSymbol.Type.IsArray()) {
+          rightTrack = LoadValueToRegister(rightSymbol);
+        }
+        else {
+          leftTrack = LoadValueToRegister(leftSymbol);
+        }
+      }
+
+      if (leftTrack != null) {
+        if (rightSymbol.Type.IsArray()) {
+          rightTrack = LoadValueToRegister(rightSymbol);
+        }
+
+        if ((rightSymbol.Value is long) ||
+            (rightSymbol.IsStaticOrExtern() && rightSymbol.Type.IsArrayFunctionOrString())) {
+          AddObjectCode(ObjectOperator.cmp, leftTrack, ValueOrAddress(rightSymbol)); // cmp ax, 123
+        }
+        else if (rightTrack != null) {
+          AddObjectCode(ObjectOperator.cmp, leftTrack, rightTrack); // cmp ax, bx
+          m_trackMap.Remove(rightSymbol);
+        }
+        else {
+          AddObjectCode(ObjectOperator.cmp, leftTrack, Base(rightSymbol), Offset(rightSymbol)); // cmp ax, [bp + 2]
+        }
+      
+        m_trackMap.Remove(leftSymbol);
+      }
+      else { // rightTrack != null
+        Assert.Error(!(leftSymbol.Value is long));
+
+        if ((leftSymbol.IsStaticOrExtern() && leftSymbol.Type.IsArrayFunctionOrString()) ||
+             (leftSymbol.IsAutoOrRegister() && leftSymbol.Type.IsArray())) {
+          leftTrack = LoadValueToRegister(leftSymbol);
+          AddObjectCode(ObjectOperator.cmp, leftTrack, rightTrack);
+        }
+        else {
+          AddObjectCode(ObjectOperator.cmp, Base(leftSymbol), Offset(leftSymbol), rightTrack);
+        }
+
+        m_trackMap.Remove(rightSymbol);
+      }
+    }
+
+    /*public static IDictionary<int,Register> LeftMultiplyMap = new Dictionary<int,Register>();
+
+    static ObjectCodeGenerator() {
+      LeftMultiplyMap.Add(Type.ByteSize, Register.al);
+      LeftMultiplyMap.Add(Type.IntegerSize, Register.ax);
+      LeftMultiplyMap.Add(Type.LongSize, Register.eax);
+    }
+  
+    public static IDictionary<Pair<MiddleOperator,int>,Register>
+                    ResultMultiplyMap = new Dictionary<Pair<MiddleOperator,int>,Register>();
+
+    static ObjectCodeGenerator() {
+      ResultMultiplyMap.Add(new Pair<MiddleOperator,int>(MiddleOperator.SignedMultiply, Type.ByteSize),
+                            Register.al);
+      ResultMultiplyMap.Add(new Pair<MiddleOperator,int>(MiddleOperator.SignedMultiply,Type.IntegerSize),
+                            Register.ax);
+      ResultMultiplyMap.Add(new Pair<MiddleOperator,int>(MiddleOperator.SignedMultiply, Type.LongSize),
+                            Register.eax);
+      ResultMultiplyMap.Add(new Pair<MiddleOperator,int>(MiddleOperator.UnsignedMultiply, Type.ByteSize),
+                            Register.al);
+      ResultMultiplyMap.Add(new Pair<MiddleOperator,int>(MiddleOperator.UnsignedMultiply,Type.IntegerSize),
+                            Register.ax);
+      ResultMultiplyMap.Add(new Pair<MiddleOperator,int>(MiddleOperator.UnsignedMultiply, Type.LongSize),
+                            Register.eax);
+
+      ResultMultiplyMap.Add(new Pair<MiddleOperator,int>(MiddleOperator.SignedDivide, Type.ByteSize),
+                            Register.al);
+      ResultMultiplyMap.Add(new Pair<MiddleOperator,int>(MiddleOperator.SignedDivide, Type.IntegerSize),
+                            Register.ax);
+      ResultMultiplyMap.Add(new Pair<MiddleOperator,int>(MiddleOperator.SignedDivide, Type.LongSize),
+                            Register.eax);
+      ResultMultiplyMap.Add(new Pair<MiddleOperator,int>(MiddleOperator.UnsignedDivide, Type.ByteSize),
+                            Register.al);
+      ResultMultiplyMap.Add(new Pair<MiddleOperator,int>(MiddleOperator.UnsignedDivide, Type.IntegerSize),
+                            Register.ax);
+      ResultMultiplyMap.Add(new Pair<MiddleOperator,int>(MiddleOperator.UnsignedDivide, Type.LongSize),
+                            Register.eax);
+    
+      ResultMultiplyMap.Add(new Pair<MiddleOperator,int>(MiddleOperator.SignedModulo, Type.ByteSize),
+                            Register.ah);
+      ResultMultiplyMap.Add(new Pair<MiddleOperator,int>(MiddleOperator.SignedModulo, Type.IntegerSize),
+                            Register.dx);
+      ResultMultiplyMap.Add(new Pair<MiddleOperator,int>(MiddleOperator.SignedModulo, Type.LongSize),
+                            Register.edx);
+      ResultMultiplyMap.Add(new Pair<MiddleOperator,int>(MiddleOperator.UnsignedModulo, Type.ByteSize),
+                            Register.ah);
+      ResultMultiplyMap.Add(new Pair<MiddleOperator,int>(MiddleOperator.UnsignedModulo, Type.IntegerSize),
+                            Register.dx);
+      ResultMultiplyMap.Add(new Pair<MiddleOperator,int>(MiddleOperator.UnsignedModulo, Type.LongSize),
+                            Register.edx);
+    }
+  
+    public static IDictionary<Pair<MiddleOperator,int>,Register>
+                    ExtraMultiplyMap = new Dictionary<Pair<MiddleOperator,int>,Register>();
+  
+    static ObjectCodeGenerator() {
+      ExtraMultiplyMap.Add(new Pair<MiddleOperator,int>(MiddleOperator.SignedMultiply, Type.ByteSize),
+                            Register.ah);
+      ExtraMultiplyMap.Add(new Pair<MiddleOperator,int>(MiddleOperator.SignedMultiply,Type.IntegerSize),
+                            Register.dx);
+      ExtraMultiplyMap.Add(new Pair<MiddleOperator,int>(MiddleOperator.SignedMultiply, Type.LongSize),
+                            Register.edx);
+      ExtraMultiplyMap.Add(new Pair<MiddleOperator,int>(MiddleOperator.UnsignedMultiply, Type.ByteSize),
+                            Register.ah);
+      ExtraMultiplyMap.Add(new Pair<MiddleOperator,int>(MiddleOperator.UnsignedMultiply,Type.IntegerSize),
+                            Register.dx);
+      ExtraMultiplyMap.Add(new Pair<MiddleOperator,int>(MiddleOperator.UnsignedMultiply, Type.LongSize),
+                            Register.edx);
+    
+      ExtraMultiplyMap.Add(new Pair<MiddleOperator,int>(MiddleOperator.SignedDivide, Type.ByteSize),
+                            Register.ah);
+      ExtraMultiplyMap.Add(new Pair<MiddleOperator,int>(MiddleOperator.SignedDivide, Type.IntegerSize),
+                            Register.dx);
+      ExtraMultiplyMap.Add(new Pair<MiddleOperator,int>(MiddleOperator.SignedDivide, Type.LongSize),
+                            Register.edx);
+      ExtraMultiplyMap.Add(new Pair<MiddleOperator,int>(MiddleOperator.UnsignedDivide, Type.ByteSize),
+                            Register.ah);
+      ExtraMultiplyMap.Add(new Pair<MiddleOperator,int>(MiddleOperator.UnsignedDivide, Type.IntegerSize),
+                            Register.dx);
+      ExtraMultiplyMap.Add(new Pair<MiddleOperator,int>(MiddleOperator.UnsignedDivide, Type.LongSize),
+                            Register.edx);
+
+      ExtraMultiplyMap.Add(new Pair<MiddleOperator,int>(MiddleOperator.SignedModulo, Type.ByteSize),
+                            Register.ah);
+      ExtraMultiplyMap.Add(new Pair<MiddleOperator,int>(MiddleOperator.SignedModulo, Type.IntegerSize),
+                            Register.dx);
+      ExtraMultiplyMap.Add(new Pair<MiddleOperator,int>(MiddleOperator.SignedModulo, Type.LongSize),
+                            Register.edx);
+      ExtraMultiplyMap.Add(new Pair<MiddleOperator,int>(MiddleOperator.UnsignedModulo, Type.ByteSize),
+                            Register.ah);
+      ExtraMultiplyMap.Add(new Pair<MiddleOperator,int>(MiddleOperator.UnsignedModulo, Type.IntegerSize),
+                            Register.dx);
+      ExtraMultiplyMap.Add(new Pair<MiddleOperator,int>(MiddleOperator.UnsignedModulo, Type.LongSize),
+                            Register.edx);
+    }*/
+
+    private object ValueOrAddress(Symbol symbol) {
+      if (symbol.Value is long) {
+        return  ((int) ((long) symbol.Value));
+      }
+      else if (symbol.IsAutoOrRegister()) {
+        Track track = new Track(symbol);
+        m_trackSet.Add(track);
+        AddObjectCode(ObjectOperator.mov, track, Base(symbol));
+        AddObjectCode(ObjectOperator.add, track, Offset(symbol));
+        return track;
+      }
+      else {
+        return symbol.UniqueName;
+      }
+    }
+
+    private object Base(Symbol symbol) {
+      if (symbol.AddressSymbol != null) {
+        Track addressTrack = LoadValueToRegister(symbol.AddressSymbol);
+        addressTrack = SetPointer(addressTrack, symbol.AddressSymbol);
+        return addressTrack;
+      }
+      else if (symbol.IsStaticOrExtern()) {
+        return symbol.UniqueName;
+      }
+      else { //resultSymbol.IsAutoOrRegister()
+        return BaseRegister(symbol);
+      }
+    }
+
+    private object Offset(Symbol symbol) {
+      if (symbol.AddressSymbol != null) {
+        return symbol.AddressOffset;
+      }
+      else if (symbol.IsStaticOrExtern()) {
+        return 0;
+      }
+      else { //resultSymbol.IsAutoOrRegister()
+        return symbol.Offset;
+      }
+    }
+
+    /*public void GenerateAssign(Symbol resultSymbol, Symbol assignSymbol) {
+      if (resultSymbol.IsTemporary() && (resultSymbol.AddressSymbol == null)) {
+        Track resultTrack;
+
+        if (m_trackMap.TryGetValue(resultSymbol, out resultTrack)) {
+          m_trackMap.Remove(resultSymbol);
+          Track twinTrack = new Track(resultSymbol, resultTrack.Register);
+          resultTrack.TwinTrack = twinTrack;
+          twinTrack.TwinTrack = resultTrack;
+          Assert.Error(resultTrack.Register == twinTrack.Register);
+          resultTrack = twinTrack;
+        }
+        else {
+          resultTrack = new Track(resultSymbol);
+          m_trackSet.Add(resultTrack);
+        }
+
+        m_trackMap.Add(resultSymbol, resultTrack);
+
+        Track assignTrack;
+        if (m_trackMap.TryGetValue(assignSymbol, out assignTrack)) {
+          //AddObjectCode(ObjectOperator.mov, resultTrack, m_trackMap[assignSymbol]);
+          m_trackMap.Remove(assignSymbol);
+          m_trackMap[resultSymbol] = assignTrack;
+        }
+        else if (assignSymbol.Value is long) {
+          int assignValue = (int) ((long) assignSymbol.Value);
+          AddObjectCode(ObjectOperator.mov, resultTrack, assignValue);
+        }
+        else if (assignSymbol.IsStaticOrExtern() && assignSymbol.Type.IsArrayFunctionOrString()) {
+          AddObjectCode(ObjectOperator.mov, resultTrack, assignSymbol.UniqueName);
+        }
+        else {
+          AddObjectCode(ObjectOperator.mov, resultTrack, Base(assignSymbol), Offset(assignSymbol));
+        }
+      }
+      else {
+        if (assignSymbol.Value is long) {
+          int assignValue = (int) ((long)assignSymbol.Value);
+          ObjectOperator sizeOperator =
+            ObjectCode.OperatorToSize(ObjectOperator.mov, assignSymbol.Type.Size());
+          AddObjectCode(sizeOperator, Base(resultSymbol), Offset(resultSymbol), assignValue);
+        }
+        else if (assignSymbol.IsStaticOrExtern() && assignSymbol.Type.IsArrayFunctionOrString()) {
+          ObjectOperator sizeOperator =
+            ObjectCode.OperatorToSize(ObjectOperator.mov, assignSymbol.Type.Size());
+          AddObjectCode(sizeOperator, Base(resultSymbol), Offset(resultSymbol), assignSymbol.UniqueName);
+        }
+        else {
+          object b = Base(resultSymbol);
+          Track assignTrack = LoadValueToRegister(assignSymbol);
+          AddObjectCode(ObjectOperator.mov, b, Offset(resultSymbol), assignTrack);
+        }
+      }
+    }*/
+    
+    /*public void GenerateAssigny(Symbol resultSymbol, Symbol assignSymbol) {
+      if (resultSymbol.IsAutoOrRegister() && (resultSymbol.Offset == 0) &&
+         (resultSymbol.AddressSymbol == null)) {
+        if (m_trackMap.ContainsKey(resultSymbol)) {
+          Track resultTrack = m_trackMap[resultSymbol];
+          LoadValueToTrack(resultTrack, assignSymbol);
+          m_trackMap.Remove(assignSymbol);
+        }
+        else {
+          Track assignTrack = LoadValueToRegister(assignSymbol);
+          //m_trackMap.Remove(assignSymbol);
+          AddToTrackMap(resultSymbol, assignTrack);
+        }
+      }
+      else {
+        object resultBase;
+        int resultOffset;
+
+        if (resultSymbol.AddressSymbol != null) {
+          Track addressTrack = LoadValueToRegister(resultSymbol.AddressSymbol);
+          //addressTrack.SetPointer();
+          addressTrack = SetPointer(addressTrack, resultSymbol.AddressSymbol);
+          resultBase = addressTrack;
+          resultOffset = resultSymbol.AddressOffset;
+        }
+        else if (resultSymbol.IsAutoOrRegister()) {
+          resultBase = BaseRegister(resultSymbol);
+          resultOffset = resultSymbol.Offset;
+        }
+        else {
+          resultBase = resultSymbol.UniqueName;
+          resultOffset = 0;
+        }
+      
+        if (m_trackMap.ContainsKey(assignSymbol)) {
+          Track assignTrack = m_trackMap[assignSymbol];
+          AddObjectCode(ObjectOperator.mov, resultBase, resultOffset, assignTrack);
+          m_trackMap.Remove(assignSymbol);
+        }
+        else if (assignSymbol.Type.IsIntegralOrPointer() &&
+                 assignSymbol.IsValue()) {
+          ObjectOperator sizeOperator =
+            ObjectCode.OperatorToSize(ObjectOperator.mov, assignSymbol.Type.Size());
+          AddObjectCode(sizeOperator, resultBase, resultOffset, (int) (((long) assignSymbol.Value)));
+        }
+        else if (assignSymbol.IsStaticOrExtern() &&
+                 assignSymbol.Type.IsArrayFunctionOrString()) {
+          ObjectOperator sizeOperator =
+            ObjectCode.OperatorToSize(ObjectOperator.mov, Type.PointerSize);
+          AddObjectCode(sizeOperator, resultBase, resultOffset, assignSymbol.UniqueName);
+        }
+        else {
+          object assignBase;
+          int assignOffset;
+
+          if (assignSymbol.Value is StaticValue) {
+            StaticValue staticValue = (StaticValue) assignSymbol.Value;
+            assignBase = staticValue.UniqueName;
+            assignOffset = staticValue.Offset();
+          }
+          else if (assignSymbol.AddressSymbol != null) {
+            Track addressTrack = LoadValueToRegister(assignSymbol.AddressSymbol);
+            //addressTrack.SetPointer();
+            addressTrack = SetPointer(addressTrack, assignSymbol.AddressSymbol);
+            assignBase = addressTrack;
+            assignOffset = assignSymbol.AddressOffset;
+          }
+          else if (assignSymbol.IsAutoOrRegister()) {
+            assignBase = BaseRegister(assignSymbol);
+            assignOffset = assignSymbol.Offset;
+          }
+          else {
+            assignBase = assignSymbol.UniqueName;
+            assignOffset = 0;
+          }
+
+          if (assignSymbol.Type.IsArrayStringOrFunction()) {
+            AddObjectCode(ObjectOperator.mov, resultBase, resultOffset, assignBase);
+
+            if (assignOffset > 0) {
+              ObjectOperator AddOperator =
+                ObjectCode.OperatorToSize(ObjectOperator.add, Type.PointerSize);
+              AddObjectCode(AddOperator, resultBase, resultOffset, assignOffset);
+            }
+            else if (assignOffset < 0) {
+              ObjectOperator subOperator =
+                ObjectCode.OperatorToSize(ObjectOperator.sub, Type.PointerSize);
+              AddObjectCode(subOperator, resultBase, resultOffset, -assignOffset);
+            }
+          }
+          else {
+            Track assignTrack = new Track(assignSymbol);
+            m_trackSet.Add(assignTrack);
+            AddObjectCode(ObjectOperator.mov, assignTrack, assignBase, assignOffset);
+            AddObjectCode(ObjectOperator.mov, resultBase, resultOffset, assignTrack);
+          }
+        }
+      }
+    }*/
+  
+    public void GenerateUnary(MiddleOperator middleOperator, Symbol resultSymbol,
+                              Symbol unarySymbol) {
+      ObjectOperator objectOperator =
+        m_middleToIntegralUnaryTargetMap[middleOperator];
+
+      if ((resultSymbol == null) || resultSymbol.Equals(unarySymbol)) { // ++i; i = -i;
+        ObjectOperator sizeOperator =
+          ObjectCode.OperatorToSize(objectOperator, unarySymbol.Type.Size());
+        AddObjectCode(sizeOperator, Base(unarySymbol), Offset(unarySymbol));
+      }
+      else {
+        Track unaryTrack = LoadValueToRegister(unarySymbol);
+        AddObjectCode(objectOperator, unaryTrack);
+        m_trackMap[resultSymbol] = unaryTrack;
+      }
+    }
+
+    /*public void GenerateUnary(MiddleOperator middleOperator, Symbol resultSymbol,
+                              Symbol unarySymbol) {
+      ObjectOperator objectOperator =
+        m_middleToIntegralUnaryTargetMap[middleOperator];
+
+      if (resultSymbol == null) {
+        ObjectOperator sizeOperator =
+          ObjectCode.OperatorToSize(objectOperator, unarySymbol.Type.Size());
+        AddObjectCode(sizeOperator, Base(unarySymbol), Offset(unarySymbol));
+      }
+      else {
+        Track unaryTrack = LoadValueToRegister(unarySymbol);
+        AddObjectCode(objectOperator, unaryTrack);
+      
+        if (resultSymbol.IsTemporary() && (resultSymbol.AddressSymbol == null)) {
+          m_trackMap[resultSymbol] = unaryTrack;
+        }
+        else {
+          AddObjectCode(ObjectOperator.mov, Base(resultSymbol), Offset(resultSymbol), unaryTrack);
+        }
+      }
+    }*/
+  
+    /*public void GenerateUnary(MiddleOperator middleOperator, Symbol resultSymbol,
+                              Symbol unarySymbol) {
+      ObjectOperator objectOperator =
+        m_middleToIntegralUnaryTargetMap[middleOperator];
+
+      if (resultSymbol == null) {
+        ObjectOperator sizeOperator =
+          ObjectCode.OperatorToSize(objectOperator, unarySymbol.Type.Size());
+        AddObjectCode(sizeOperator, Base(unarySymbol), Offset(unarySymbol));
+
+        if (unarySymbol.AddressSymbol != null) {
+          Track AddressTrack = LoadValueToRegister(unarySymbol.AddressSymbol);
+          AddObjectCode(sizeOperator, AddressTrack, unarySymbol.AddressOffset);
+        }
+        else if (unarySymbol.IsAutoOrRegister()) {
+          AddObjectCode(sizeOperator, BaseRegister(unarySymbol), unarySymbol.Offset);
+        }
+        else {
+          AddObjectCode(sizeOperator, unarySymbol.UniqueName, 0);
+        }
+      }
+      else {
+        Track unaryTrack = LoadValueToRegister(unarySymbol);
+        AddObjectCode(objectOperator, unaryTrack);
+      
+        if (resultSymbol.IsTemporary() && (resultSymbol.AddressSymbol == null)) {
+          m_trackMap[resultSymbol] = unaryTrack;
+        }
+        else {
+          AddObjectCode(ObjectOperator.mov, Base(resultSymbol), Offset(resultSymbol), unaryTrack);
+        }
+      }
+    }*/
+
+    /* i = (a + 2) * (b + 2);
+
+       mov ax, [a]
+       add ax, 2
+     
+       mov cx, [b]
+       add cx, 2
+
+       empty ax; left
+       mul cx
+       empty dx; clear
+       empty ax; result
+    */
+
+    public void GenerateIntegralMultiply(MiddleCode middleCode) {
+      Symbol leftSymbol = (Symbol) middleCode.GetOperand(1);
+      Register leftRegister = LeftMultiplyMap[leftSymbol.Type.Size()];
+      Track leftTrack = LoadValueToRegister(leftSymbol, leftRegister);
+      AddObjectCode(ObjectOperator.empty, leftTrack);
+
+      Pair<MiddleOperator,int> pair = new Pair<MiddleOperator, int>(middleCode.Operator, leftSymbol.Type.Size());
+      Register clearRegister = ClearMultiplyMap[pair];
+      Track clearTrack = new Track(leftSymbol, clearRegister);
+      m_trackSet.Add(clearTrack);
+      AddObjectCode(ObjectOperator.xor, clearTrack, clearTrack);
+
+      Symbol rightSymbol = (Symbol) middleCode.GetOperand(2);
+      ObjectOperator objectOperator =
+        m_middleToIntegralUnaryTargetMap[middleCode.Operator];
+
+      if (rightSymbol.IsTemporary() && (rightSymbol.AddressSymbol == null)) {
+        Track rightTrack = LoadValueToRegister(rightSymbol);
+        AddObjectCode(objectOperator, rightTrack);
+      }
+      else {
+        ObjectOperator sizeOperator =
+          ObjectCode.OperatorToSize(objectOperator, rightSymbol.Type.Size());
+        AddObjectCode(sizeOperator, Base(rightSymbol), Offset(rightSymbol));
+      }
+
+      Symbol resultSymbol = (Symbol) middleCode.GetOperand(0);
+      Register resultRegister = ResultMultiplyMap[pair];
+      Track resultTrack = new Track(resultSymbol, resultRegister);
+      m_trackSet.Add(resultTrack);
+      AddObjectCode(ObjectOperator.empty, resultTrack);
+
+      if (resultSymbol.IsTemporary() && (resultSymbol.AddressSymbol == null)) {
+        m_trackMap[resultSymbol] = resultTrack;
+      }
+      else {
+        AddObjectCode(ObjectOperator.mov, Base(resultSymbol), Offset(resultSymbol), resultRegister);
+      }
+    }
+
+    public void GenerateIntegralMultiplyX(MiddleCode middleCode) {
+      Symbol leftSymbol = (Symbol) middleCode.GetOperand(1);
+      Register leftRegister = LeftMultiplyMap[leftSymbol.Type.Size()];
+
+      LoadValueToRegister(leftSymbol, leftRegister);
+      //m_trackMap.Remove(leftSymbol);
+
+      Symbol resultSymbol = (Symbol) middleCode.GetOperand(0);          
+      Pair<MiddleOperator,int> resultPair =
+        new Pair<MiddleOperator,int>(middleCode.Operator, resultSymbol.Type.Size());
+      Register resultRegister = ResultMultiplyMap[resultPair];
+
+      Register ClearRegister = ClearMultiplyMap[resultPair];
+      AddObjectCode(ObjectOperator.xor, ClearRegister, ClearRegister, null);
+
+      Track leftTrack = new Track(leftSymbol, leftRegister);
+      leftTrack.AddCode(Track.Clear, m_objectCodeList.Count);
+      m_trackSet.Add(leftTrack);
+
+      Track resultTrack = new Track(resultSymbol, resultRegister);
+
+      if (resultRegister != leftRegister) {
+        resultTrack.AddCode(Track.Clear, m_objectCodeList.Count);
+        m_trackSet.Add(resultTrack);
+      }
+
+      if (resultSymbol.IsTemporary()) {
+        m_trackMap[resultSymbol] = resultTrack;
+        //AddToTrackMap(resultSymbol, resultTrack);
+      }
+
+      if ((ClearRegister != leftRegister) &&
+          (ClearRegister != resultRegister)) {
+        Track ClearTrack = new Track(resultSymbol, ClearRegister);
+        ClearTrack.AddCode(Track.Clear, m_objectCodeList.Count);
+        m_trackSet.Add(ClearTrack);
+      }
+
+  //          Register extraRegister = ExtraMultiplyMap[resultPair);
+  //          pair = LookupRegister(extraRegister);
+  //          if ((pair != null) && (pair.First != null) &&
+  //              (pair.First != leftSymbol)) {
+  //            saveFromRegister(pair.Second, pair.First);
+  //            m_trackMap.Remove(pair.First);
+  //          }
+
+      //ObjectOperator objectOperator =
+      //  m_middleToIntegralMultiplyTargetMap[middleCode.Operator);
+      Symbol rightSymbol = (Symbol) middleCode.GetOperand(2);
+
+      //Track rightTrack = LoadValueToRegister(rightSymbol);
+      //AddObjectCode(objectOperator, rightTrack);
+      //GenerateUnary(objectOperator, rightSymbol);
+      GenerateUnary(middleCode.Operator, null, rightSymbol);
+      //m_trackMap.Remove(rightSymbol);
+    }
+
+    public void GenerateIntegralRelation(MiddleCode middleCode, int index) {
+      GenerateIntegralRelationBinary((Symbol) middleCode.GetOperand(1), (Symbol) middleCode.GetOperand(2));
+      ObjectOperator objectOperator = m_middleToIntegralBinaryTargetMap[middleCode.Operator];
+      AddObjectCode(objectOperator, null, null, index + 1);
+      int target = (int) middleCode.GetOperand(0);
+      AddObjectCode(ObjectOperator.long_jmp, null, null, target);
+    }
+
+    public void GenerateIntegralIncrementDecrement(MiddleCode middleCode) {
+      GenerateUnary(middleCode.Operator, (Symbol) middleCode.GetOperand(0),
+                    (Symbol) middleCode.GetOperand(1));
+    }
+
+    /*public static IDictionary<MiddleOperator,ObjectOperator>
+                    m_middleToIntegralUnaryTargetMap = new Dictionary<MiddleOperator,ObjectOperator>();
+  
+    static ObjectCodeGenerator() {
+      m_middleToIntegralUnaryTargetMap.
+        Add(MiddleOperator.UnaryAdd,ObjectOperator.empty);
+      m_middleToIntegralUnaryTargetMap.
+        Add(MiddleOperator.BitwiseNot,ObjectOperator.not);
+      m_middleToIntegralUnaryTargetMap.
+        Add(MiddleOperator.UnarySubtract, ObjectOperator.neg);
+      m_middleToIntegralUnaryTargetMap.
+        Add(MiddleOperator.Increment, ObjectOperator.inc);
+      m_middleToIntegralUnaryTargetMap.
+        Add(MiddleOperator.Decrement, ObjectOperator.dec);
+      m_middleToIntegralUnaryTargetMap.
+        Add(MiddleOperator.SignedMultiply, ObjectOperator.imul);
+      m_middleToIntegralUnaryTargetMap.
+        Add(MiddleOperator.SignedDivide, ObjectOperator.idiv);
+      m_middleToIntegralUnaryTargetMap.
+        Add(MiddleOperator.SignedModulo, ObjectOperator.idiv);
+      m_middleToIntegralUnaryTargetMap.
+        Add(MiddleOperator.UnsignedMultiply, ObjectOperator.mul);
+      m_middleToIntegralUnaryTargetMap.
+        Add(MiddleOperator.UnsignedDivide, ObjectOperator.div);
+      m_middleToIntegralUnaryTargetMap.
+        Add(MiddleOperator.UnsignedModulo, ObjectOperator.div);
+    }*/
+
+    // neg word [bp + 2]
+  
+    public void GenerateIntegralUnary(MiddleCode middleCode) {
+      GenerateUnary(middleCode.Operator, (Symbol) middleCode.GetOperand(0),
+                    (Symbol) middleCode.GetOperand(1));
+    }
+
+    public void GenerateAddress(MiddleCode middleCode) {
+      Symbol resultSymbol = (Symbol) middleCode.GetOperand(0),
+             addressSymbol = (Symbol) middleCode.GetOperand(1);
+
+      Track track = LoadAddressToRegister(addressSymbol);
+      m_trackMap[resultSymbol] = track;
+      //AddToTrackMap(resultSymbol, track);
+      m_trackMap.Remove(addressSymbol);
+    }
+
+    public void GenerateDeref(MiddleCode middleCode) {
+      Symbol resultSymbol = (Symbol) middleCode.GetOperand(0);
+      Track addressTrack = LoadValueToRegister(resultSymbol.AddressSymbol);
+      m_trackMap.Add(resultSymbol.AddressSymbol, addressTrack);
+
+      /*if (resultSymbol.AddressSymbol.IsTemporary()) {
+        m_trackMap.Add(resultSymbol.AddressSymbol, addressTrack);
+      }
+      else {
+        m_trackMap.Add(resultSymbol.AddressSymbol, addressTrack);
+
+        if (Start.CurrentFunction.Name.Equals("frexp") && resultSymbol.AddressSymbol.Name.Equals("p")) {
+          int i = 1;
+        }
+      }*/
+
+      //AddToTrackMap(resultSymbol.AddressSymbol, addressTrack);
+      //m_trackMap[resultSymbol.AddressSymbol] = addressTrack;
+    }
+
+    public Track LoadAddressToRegister(Symbol symbol) {
+      return LoadAddressToRegister(symbol, null);
+    }
+  
+    public Track LoadAddressToRegister(Symbol symbol, Register? register) {
+      Symbol addressSymbol = symbol.AddressSymbol;
+    
+      if (addressSymbol != null) {
+        Track addressTrack = LoadValueToRegister(addressSymbol);
+        addressTrack = SetPointer(addressTrack, addressSymbol);
+
+        if ((register != null) && (addressTrack.Register == null) &&
+            !ObjectCode.RegisterOverlap(register, addressTrack.Register)) {
+          Track newAddressTrack = new Track(symbol, register);
+          m_trackSet.Add(newAddressTrack);
+          newAddressTrack.Pointer = true;
+          AddObjectCode(ObjectOperator.set_track_size, newAddressTrack, addressTrack);
+          AddObjectCode(ObjectOperator.mov, newAddressTrack, addressTrack);
+          addressTrack = newAddressTrack;
+        }
+        else if (register != null) {
+          addressTrack.Register = register;
+        }
+
+        return addressTrack;
+      }
+      else {
+        Symbol pointerSymbol = new Symbol(new Type(symbol.Type));
+        Track addressTrack = new Track(pointerSymbol, register);
+        m_trackSet.Add(addressTrack);
+        addressTrack = SetPointer(addressTrack, pointerSymbol);
+
+        if (symbol.IsAutoOrRegister()) {
+          AddObjectCode(ObjectOperator.mov, addressTrack, BaseRegister(symbol));
+          AddObjectCode(ObjectOperator.add, addressTrack, symbol.Offset);
+        }
+        else {
+          AddObjectCode(ObjectOperator.mov, addressTrack, symbol.UniqueName);
+        }
+
+        return addressTrack;
+      }
+    }
+
+    /*public void GeneratePushZero(MiddleCode middleCode) {
+      Assert.Error((++m_floatStackSize) <= Start.FloatingStackMaxSize, "floating stack overflow");
+      AddObjectCode(ObjectOperator.fldz);
+    }
+
+    public void GeneratePushOne(MiddleCode middleCode) {
+      Assert.Error((++m_floatStackSize) <= Start.FloatingStackMaxSize, "floating stack overflow");
+      AddObjectCode(ObjectOperator.fld1);
+    }
+
+    public void GeneratePushFloat(MiddleCode middleCode) {
+      Symbol symbol = (Symbol) middleCode.GetOperand(0);
+      PushSymbol(symbol);
+    }*/
+
+    /*public static IDictionary<Sort,ObjectOperator> m_floatPushMap = new Dictionary<Sort,ObjectOperator>();
+  
+    static ObjectCodeGenerator() {
+      m_floatPushMap.Add(Sort.Signed_Int, ObjectOperator.fild_word);
+      m_floatPushMap.Add(Sort.Unsigned_Int, ObjectOperator.fild_word);
+      m_floatPushMap.Add(Sort.Signed_Long_Int, ObjectOperator.fild_dword);
+      m_floatPushMap.Add(Sort.Unsigned_Long_Int, ObjectOperator.fild_dword);
+      m_floatPushMap.Add(Sort.Float, ObjectOperator.fld_dword);
+      m_floatPushMap.Add(Sort.Double, ObjectOperator.fld_qword);
+      m_floatPushMap.Add(Sort.Long_Double, ObjectOperator.fld_qword);
+    }*/
+
+    public void PushSymbol(Symbol symbol) {
+      Assert.Error((++m_floatStackSize) <= Start.FloatingStackMaxSize, Message.Floating_stack_overflow);
+      ObjectOperator objectOperator = m_floatPushMap[symbol.Type.Sort];
+      Track track;
+
+      if (((symbol.Value is long) && (((long)symbol.Value) == 0)) ||
+          ((symbol.Value is decimal) && (((decimal) symbol.Value) == 0))) {
+        AddObjectCode(ObjectOperator.fldz);
+      }
+      else if (((symbol.Value is long) && (((long) symbol.Value) == 1)) ||
+               ((symbol.Value is decimal) && (((decimal) symbol.Value) == 1))) {
+        AddObjectCode(ObjectOperator.fld1);
+      }
+      else if ((symbol.Value is long) || (symbol.Value is decimal)) {
+        AddObjectCode(objectOperator, symbol.UniqueName, 0);
+      }
+      else if (symbol.Type.IsFunctionArrayStringStructOrUnion()) { // XXX
+        if (symbol.IsAutoOrRegister()) {
+          AddObjectCode(ObjectOperator.mov, Start.IntegralStorageName, 0, BaseRegister(symbol));
+          ObjectOperator addObjectOp = ObjectCode.OperatorToSize(ObjectOperator.add, Type.PointerSize);
+          AddObjectCode(addObjectOp, Start.IntegralStorageName, 0, symbol.Offset);
+        }
+        else {
+          ObjectOperator movObjectOp = ObjectCode.OperatorToSize(ObjectOperator.mov, Type.PointerSize);
+          AddObjectCode(movObjectOp, Start.IntegralStorageName, 0, symbol.UniqueName);
+        }
+
+        AddObjectCode(objectOperator, Start.IntegralStorageName, 0);
+      }
+      else if (m_trackMap.TryGetValue(symbol, out track)) {
+        m_trackMap.Remove(symbol);
+        AddObjectCode(ObjectOperator.mov, Start.IntegralStorageName, 0, track);
+        AddObjectCode(objectOperator, Start.IntegralStorageName, 0);
+      }
+      else {
+        AddObjectCode(objectOperator, Base(symbol), Offset(symbol));
+      }
+    }
+
+    /*public void PushSymbol(Symbol symbol) {
+      Assert.Error((++m_floatStackSize) <= Start.FloatingStackMaxSize, Message.Floating_stack_overflow);
+      ObjectOperator objectOperator = m_floatPushMap[symbol.Type.Sort];
+
+      if (((symbol.Value is long) && (((long) symbol.Value) == 0)) ||
+          ((symbol.Value is decimal) && (((decimal) symbol.Value) == 0))) {
+        AddObjectCode(ObjectOperator.fldz);
+      }
+      else if (((symbol.Value is long) && (((long) symbol.Value) == 1)) ||
+               ((symbol.Value is decimal) && (((decimal) symbol.Value) == 1))) {
+        AddObjectCode(ObjectOperator.fld1);
+      }
+
+      if (symbol.HasValue()) {
+        if (symbol.Type.IsIntegralOrPointer()) {
+          long value = (long) symbol.Value;
+
+          if (value.Equals(((long) 0))) {
+            AddObjectCode(ObjectOperator.fldz);
+          }
+          if (value.Equals(((long) 1))) {
+            AddObjectCode(ObjectOperator.fld1);
+          }
+          else {
+            AddObjectCode(objectOperator, symbol.UniqueName, 0);
+          }
+        }
+        else {
+          decimal value = (decimal) symbol.Value;
+
+          if (value == 0) {
+            AddObjectCode(ObjectOperator.fldz);
+          }
+          else if (value == 1) {
+            AddObjectCode(ObjectOperator.fld1);
+          }
+          else {
+            AddObjectCode(objectOperator, symbol.UniqueName, 0);
+          }
+        }
+      }
+      else if (symbol.Type.IsFunctionArrayStringStructOrUnion()) {
+        if (symbol.IsAutoOrRegister()) {
+          ObjectOperator movObjectOp = ObjectCode.OperatorToSize(ObjectOperator.mov, Type.PointerSize);
+          AddObjectCode(movObjectOp, Start.IntegralStorageName, 0, BaseRegister(symbol));
+          ObjectOperator AddObjectOp = ObjectCode.OperatorToSize(ObjectOperator.add, Type.PointerSize);
+          AddObjectCode(AddObjectOp, Start.IntegralStorageName, 0, symbol.Offset);
+        }
+        else {
+          AddObjectCode(objectOperator, Start.IntegralStorageName, 0, symbol.UniqueName);
+        }
+
+        AddObjectCode(objectOperator, Start.IntegralStorageName, 0);
+      }
+      else if (m_trackMap.ContainsKey(symbol)) {
+        Track track = m_trackMap[symbol];
+        m_trackMap.Remove(symbol);
+        AddObjectCode(ObjectOperator.mov, Start.IntegralStorageName, 0, track);
+        AddObjectCode(objectOperator, Start.IntegralStorageName, 0);
+      }
+      else if (symbol.AddressSymbol != null) {
+        Track addressTrack = LoadValueToRegister(symbol.AddressSymbol);
+        //addressTrack.SetPointer();
+        addressTrack = SetPointer(addressTrack, symbol.AddressSymbol);
+        AddObjectCode(objectOperator, addressTrack, symbol.AddressOffset);
+      }
+      else if (symbol.IsAutoOrRegister()) {
+        if (symbol.Offset == 0) {
+          AddObjectCode(objectOperator, Start.IntegralStorageName, 0);
+          Track track = new Track(symbol);
+          AddObjectCode(ObjectOperator.mov, track, Start.IntegralStorageName, 0);
+        }
+        else {
+          AddObjectCode(objectOperator, BaseRegister(symbol), symbol.Offset);
+        }
+      }
+      else {
+        AddObjectCode(objectOperator, symbol.UniqueName, 0);
+      }
+    }*/
+
+    /*public void GenerateTopFloat(MiddleCode middleCode) {
+      Symbol symbol = (Symbol) middleCode.GetOperand(0);
+      TopPopSymbol(symbol, TopOrPop.Top);
+    }
+
+    public void GeneratePopFloat(MiddleCode middleCode) {
+      Symbol symbol = (Symbol) middleCode.GetOperand(0);
+      TopPopSymbol(symbol, TopOrPop.Pop);
+    }
+
+    public void GeneratePopEmpty(MiddleCode middleCode) {
+      AddObjectCode(ObjectOperator.fistp_word, Start.IntegralStorageName, 0);    
+    }*/
+
+    /*public static IDictionary<Sort,ObjectOperator> m_floatTopMap = new Dictionary<Sort,ObjectOperator>(),
+                                                  m_floatPopMap = new Dictionary<Sort,ObjectOperator>();
+  
+    static ObjectCodeGenerator() {
+      m_floatTopMap.Add(Sort.Signed_Int, ObjectOperator.fist_word);
+      m_floatTopMap.Add(Sort.Unsigned_Int, ObjectOperator.fist_word);
+      m_floatTopMap.Add(Sort.Pointer, ObjectOperator.fist_word);
+      m_floatTopMap.Add(Sort.Signed_Long_Int, ObjectOperator.fist_dword);
+      m_floatTopMap.Add(Sort.Unsigned_Long_Int, ObjectOperator.fist_dword);
+      m_floatTopMap.Add(Sort.Float, ObjectOperator.fst_dword);
+      m_floatTopMap.Add(Sort.Double, ObjectOperator.fst_qword);
+      m_floatTopMap.Add(Sort.Long_Double, ObjectOperator.fst_qword);
+  
+      m_floatPopMap.Add(Sort.Signed_Int, ObjectOperator.fistp_word);
+      m_floatPopMap.Add(Sort.Unsigned_Int, ObjectOperator.fistp_word);
+      m_floatPopMap.Add(Sort.Pointer, ObjectOperator.fistp_word);
+      m_floatPopMap.Add(Sort.Signed_Long_Int, ObjectOperator.fistp_dword);
+      m_floatPopMap.Add(Sort.Unsigned_Long_Int, ObjectOperator.fistp_dword);
+      m_floatPopMap.Add(Sort.Float, ObjectOperator.fstp_dword);
+      m_floatPopMap.Add(Sort.Double, ObjectOperator.fstp_qword);
+      m_floatPopMap.Add(Sort.Long_Double, ObjectOperator.fstp_qword);    
+    }*/
+  
+    public enum TopOrPop {Top, Pop};
+    
+/*    public void PopSymbol(Symbol symbol) {
+      TopPopSymbol(symbol, TopOrPop.Pop);
+    }*/
+  
+    public void TopPopSymbol(Symbol symbol, TopOrPop topOrPop) {
+      if (symbol == null) {
+        Assert.Error(topOrPop == TopOrPop.Pop);
+        AddObjectCode(ObjectOperator.fistp_word, Start.IntegralStorageName, 0);
+      }
+      else {
+        ObjectOperator objectOperator;
+
+        if (topOrPop == TopOrPop.Pop) {
+          objectOperator = m_floatPopMap[symbol.Type.Sort];
+          Assert.Error((--m_floatStackSize) >= 0);
+        }
+        else {
+          objectOperator = m_floatTopMap[symbol.Type.Sort];
+        }
+    
+        if (symbol.IsTemporary() && (symbol.AddressSymbol == null) && (symbol.Offset == 0)) {
+          AddObjectCode(objectOperator, Start.IntegralStorageName, 0);
+          Track track = new Track(symbol);
+          m_trackSet.Add(track);
+          AddObjectCode(ObjectOperator.mov, track, Start.IntegralStorageName, 0);
+          m_trackMap[symbol] = track;
+        }
+        else {
+          AddObjectCode(objectOperator, Base(symbol), Offset(symbol));
+        }
+      }
+    }
+
+    /*public static IDictionary<Pair<int,int>,int>
+                    m_maskMap = new Dictionary<Pair<int,int>,int>();
+
+    static ObjectCodeGenerator() {
+      m_maskMap.Add(new Pair<int,int>(1,2), 0x00FF);
+      m_maskMap.Add(new Pair<int,int>(1,4), 0x000000FF);
+      m_maskMap.Add(new Pair<int,int>(2,4), 0x0000FFFF);  
+    }*/
+  
+    public void GenerateIntegralToIntegral(MiddleCode middleCode, int index) {
+      Symbol toSymbol = (Symbol) middleCode.GetOperand(0),
+             fromSymbol = (Symbol) middleCode.GetOperand(1);
+
+      Type toType = toSymbol.Type, fromType = fromSymbol.Type;
+      int toSize = toType.Size(), fromSize = fromType.Size();
+
+      Track track = LoadValueToRegister(fromSymbol);
+      AddObjectCode(ObjectOperator.set_track_size, track, toSize);
+
+      if (fromSize != toSize) {
+        if (fromSize < toSize) {
+          int mask = m_maskMap[new Pair<int,int>(fromSize, toSize)];
+          AddObjectCode(ObjectOperator.and, track, mask, null);
+        }
+
+        if (fromType.IsSigned() && toType.IsSigned()) {
+          AddObjectCode(ObjectOperator.set_track_size, track, fromSize);
+          AddObjectCode(ObjectOperator.cmp, track, 0, null);
+          AddObjectCode(ObjectOperator.jge, null, null, index + 1);
+          AddObjectCode(ObjectOperator.neg, track);
+          AddObjectCode(ObjectOperator.set_track_size, track, toSize);
+          AddObjectCode(ObjectOperator.neg, track);
+        }
+      }
+
+      m_trackMap[toSymbol] = track;
+      //AddToTrackMap(toSymbol, track);
+      //m_trackMap.Remove(fromSymbol);
+    }
+
+    public void GenerateIntegralToFloating(MiddleCode middleCode) {
+      Symbol fromSymbol = (Symbol) middleCode.GetOperand(1);
+      PushSymbol(fromSymbol);
+    }
+  
+    public void GenerateFloatingToIntegral(MiddleCode middleCode) {
+      Symbol toSymbol = (Symbol) middleCode.GetOperand(0);
+      TopPopSymbol(toSymbol, TopOrPop.Pop);
+    }
+
+    public void GenerateIntegralParameter(MiddleCode middleCode) {
+      Symbol fromSymbol = (Symbol) middleCode.GetOperand(1);
+      int recordSize = m_recordSizeStack.Peek(),
+          paramOffset = (int) middleCode.GetOperand(2);
+
+      Symbol toSymbol;
+      if (fromSymbol.Type.IsArray()) {
+        toSymbol = new Symbol(new Type(fromSymbol.Type.ArrayType));
+      }
+      else if (fromSymbol.Type.IsFunction()) {
+        toSymbol = new Symbol(new Type(fromSymbol.Type));
+      }
+      else {
+        toSymbol = new Symbol(fromSymbol.Type);
+      }
+      toSymbol.Offset = recordSize + paramOffset;
+
+      if (fromSymbol.Value is long) {
+        ObjectOperator sizeOperator =
+          ObjectCode.OperatorToSize(ObjectOperator.mov, toSymbol.Type.Size());
+        int fromValue = (int) ((long) fromSymbol.Value);
+        AddObjectCode(sizeOperator, Base(toSymbol), Offset(toSymbol), fromValue);
+      }
+      else if (fromSymbol.IsStaticOrExtern() && fromSymbol.Type.IsArrayFunctionOrString()) {
+        ObjectOperator sizeOperator =
+          ObjectCode.OperatorToSize(ObjectOperator.mov, toSymbol.Type.Size());
+        AddObjectCode(sizeOperator, Base(toSymbol), Offset(toSymbol), fromSymbol.UniqueName);
+      }
+      else if (fromSymbol.IsAutoOrRegister() && fromSymbol.Type.IsArray()) {
+        AddObjectCode(ObjectOperator.mov, Base(toSymbol), Offset(toSymbol), Base(fromSymbol));
+        ObjectOperator sizeOperator =
+          ObjectCode.OperatorToSize(ObjectOperator.add, toSymbol.Type.Size());
+        AddObjectCode(sizeOperator, Base(toSymbol), Offset(toSymbol), Offset(fromSymbol));
+      }
+      else {
+        Track fromTrack = LoadValueToRegister(fromSymbol);
+        AddObjectCode(ObjectOperator.mov, Base(toSymbol), Offset(toSymbol), fromTrack);
+        m_trackMap.Remove(fromSymbol);
+      }
+    }
+
+    /*public void GenerateIntegralParameter(MiddleCode middleCode) {
+      Symbol fromSymbol = (Symbol) middleCode.GetOperand(1);
+      int recordSize = m_recordSizeStack.Peek(),
+          paramOffset = (int) middleCode.GetOperand(2);
+      Symbol toSymbol = new Symbol(fromSymbol.Type);
+      toSymbol.Offset = recordSize + paramOffset;
+      GenerateParameter(toSymbol, fromSymbol);
+      m_trackMap.Remove(fromSymbol);
+      m_trackMap.Remove(toSymbol);
+    }*/
+
+    public void GenerateIntegralGetReturnValue(MiddleCode middleCode) {
+      Symbol returnSymbol = (Symbol) middleCode.GetOperand(0);
+      Register returnRegister =
+        ObjectCode.RegisterToSize(ObjectCode.ReturnValueRegister, returnSymbol.Type.Size());
+      Track returnTrack = new Track(returnSymbol, returnRegister);
+      m_trackMap[returnSymbol] = returnTrack;
+      //AddToTrackMap(returnSymbol, returnTrack);
+    }
+
+    public void GenerateIntegralSetReturnValue(MiddleCode middleCode) {
+      Symbol returnSymbol = (Symbol) middleCode.GetOperand(1);
+      Register returnRegister =
+        ObjectCode.RegisterToSize(ObjectCode.ReturnValueRegister, returnSymbol.Type.Size());
+      LoadValueToRegister(returnSymbol, returnRegister);
+      m_trackMap.Remove(returnSymbol);
+    }
+
+    /*public static IDictionary<MiddleOperator,ObjectOperator>
+                    m_middleToFloatingBinaryTargetMap = new Dictionary<MiddleOperator,ObjectOperator>();
+  
+    static ObjectCodeGenerator() {
+      m_middleToFloatingBinaryTargetMap.
+        Add(MiddleOperator.BinaryAdd, ObjectOperator.fadd);
+      m_middleToFloatingBinaryTargetMap.
+        Add(MiddleOperator.BinarySubtract, ObjectOperator.fsub);
+      m_middleToFloatingBinaryTargetMap.
+        Add(MiddleOperator.SignedMultiply, ObjectOperator.fmul);
+      m_middleToFloatingBinaryTargetMap.
+        Add(MiddleOperator.SignedDivide, ObjectOperator.fdiv);
+    }*/
+
+    public void GenerateFloatingBinary(MiddleCode middleCode) {
+      Assert.Error((--m_floatStackSize) >= 0);
+      AddObjectCode(m_middleToFloatingBinaryTargetMap[middleCode.Operator]);
+    }
+
+    /*public static IDictionary<MiddleOperator,ObjectOperator>
+                    m_middleToFloatingRelationTargetMap = new Dictionary<MiddleOperator,ObjectOperator>();
+
+    static ObjectCodeGenerator() {
+      m_middleToFloatingRelationTargetMap.
+        Add(MiddleOperator.Equal, ObjectOperator.jne);
+      m_middleToFloatingRelationTargetMap.
+        Add(MiddleOperator.NotEqual, ObjectOperator.je);
+      m_middleToFloatingRelationTargetMap.
+        Add(MiddleOperator.SignedLessThan, ObjectOperator.jbe);
+      m_middleToFloatingRelationTargetMap.
+        Add(MiddleOperator.SignedLessThanEqual, ObjectOperator.jb);
+      m_middleToFloatingRelationTargetMap.
+        Add(MiddleOperator.SignedGreaterThan, ObjectOperator.jae);
+      m_middleToFloatingRelationTargetMap.
+        Add(MiddleOperator.SignedGreaterThanEqual, ObjectOperator.ja);
+    }
+
+    public void GenerateFloatingRelation(MiddleCode middleCode, int index) {
+      int target = (int) middleCode.Operand(0);
+      AddObjectCode(ObjectOperator.fcompp);
+      AddObjectCode(ObjectOperator.fstsw, Register.ax);
+      AddObjectCode(ObjectOperator.sahf);
+      ObjectOperator objectOperator =
+        m_middleToFloatingRelationTargetMap[middleCode.Operator];
+      AddObjectCode(objectOperator, null, null, index + 1);
+      AddObjectCode(ObjectOperator.long_jmp, null, null, target);
+    }
+
+    public static IDictionary<MiddleOperator,ObjectOperator>
+                    m_middleToFloatingUnaryTargetMap = new Dictionary<MiddleOperator,ObjectOperator>();
+  
+    static ObjectCodeGenerator() {
+      m_middleToFloatingUnaryTargetMap.
+        Add(MiddleOperator.UnaryAdd,ObjectOperator.empty);
+      m_middleToFloatingUnaryTargetMap.
+        Add(MiddleOperator.BitwiseNot,ObjectOperator.empty);
+      m_middleToFloatingUnaryTargetMap.
+        Add(MiddleOperator.UnarySubtract, ObjectOperator.fchs);
+    }*/
+
+    public void GenerateFloatingUnary(MiddleCode middleCode) {
+      AddObjectCode(m_middleToFloatingUnaryTargetMap[middleCode.Operator]);
+    }
+
+    public void GenerateFloatingParameter(MiddleCode middleCode) {
+      Symbol paramSymbol = (Symbol) middleCode.GetOperand(1);
+      Symbol saveSymbol = new Symbol(paramSymbol.Type);
+      int recordSize = m_recordSizeStack.Peek(),
+          paramOffset = (int) middleCode.GetOperand(2);
+      saveSymbol.Offset = recordSize + paramOffset;
+      TopPopSymbol(saveSymbol, TopOrPop.Pop);
+    }
+
+    public void GenerateStructUnionAssign(MiddleCode middleCode, int index) {
+      Symbol targetSymbol = (Symbol) middleCode.GetOperand(0),
+             sourceSymbol = (Symbol) middleCode.GetOperand(1);
+
+      Track targetAddressTrack = LoadAddressToRegister(targetSymbol),
+            sourceAddressTrack = LoadAddressToRegister(sourceSymbol);
+
+      GenerateMemoryCopy(targetAddressTrack, sourceAddressTrack,
+                         targetSymbol.Type.Size(), index);
+    }
+
+    public void GenerateStructUnionParameter(MiddleCode middleCode, int index) {
+      Symbol sourceSymbol = (Symbol) middleCode.GetOperand(1);
+      Symbol targetSymbol = new Symbol(Type.PointerTypeX);
+
+      int recordSize = m_recordSizeStack.Peek(),
+          paramOffset = (int) middleCode.GetOperand(2);
+      targetSymbol.Offset = recordSize + paramOffset;
+
+      Track sourceAddressTrack = LoadAddressToRegister(sourceSymbol);
+      Track targetAddressTrack = LoadAddressToRegister(targetSymbol);
+
+      GenerateMemoryCopy(targetAddressTrack, sourceAddressTrack,
+                         targetSymbol.Type.Size(), index);    
+    }
+
+    public void GenerateStructUnionGetReturnValue(MiddleCode middleCode) {
+      Symbol targetSymbol = (Symbol) middleCode.GetOperand(0);
+      CheckRegister(targetSymbol, ObjectCode.ReturnPointerRegister);
+      Track targetAddressTrack =
+        new Track(targetSymbol.AddressSymbol, ObjectCode.ReturnPointerRegister);
+      m_trackMap[targetSymbol.AddressSymbol] = targetAddressTrack;
+    }
+
+    public void GenerateStructUnionSetReturnValue(MiddleCode middleCode) {
+      Symbol returnSymbol = (Symbol) middleCode.GetOperand(1);
+      LoadAddressToRegister(returnSymbol, ObjectCode.ReturnPointerRegister);
+    }
+  
+          // x = x + 1
+          // x = 1 + x
+          // x += 1
+          // x++
+        
+          // $1 = y + z
+          // x = $1
+          // x = y + z
+        
+          // $1 = -y
+          // x = $1
+          // x = -y
+        
+          // x = -x -> neg [bp + 10]
+
+  
+    // ------------------------------------------------------------------------
+  
+    public void GenerateMemoryCopy(Track targetAddressTrack,
+                                   Track sourceAddressTrack, int size, int index) {
+      Type countType = (size < 256) ? Type.UnsignedCharType : Type.UnsignedIntegerType;
+      Track countTrack = new Track(countType, null),
+            valueTrack = new Track(Type.UnsignedCharType, null);
+
+      AddObjectCode(ObjectOperator.mov, countTrack, size);
+      //string labelText = Start.CurrentFunction.UniqueName + Start.SeparatorId +
+      //                   index +  Start.SeparatorId + "Loop";
+      int labelIndex = m_objectCodeList.Count;
+      //AddObjectCode(ObjectOperator.label, labelText);
+      AddObjectCode(ObjectOperator.mov, valueTrack, sourceAddressTrack, 0);
+      AddObjectCode(ObjectOperator.mov, targetAddressTrack, 0, valueTrack);
+      AddObjectCode(ObjectOperator.inc, sourceAddressTrack);
+      AddObjectCode(ObjectOperator.inc, targetAddressTrack);
+      AddObjectCode(ObjectOperator.dec, countTrack);
+      AddObjectCode(ObjectOperator.cmp, countTrack, 0, null);
+      AddObjectCode(ObjectOperator.jne, null, labelIndex);//, labelText);
+    }
+
+    // ------------------------------------------------------------------------
+  
+    public void AddInitializationCode() {
+      m_objectCodeList = new List<ObjectCode>();
+      //AddObjectCode(ObjectOperator.comment, "Initialize Stack Pointer", null, null);
+      AddObjectCode(ObjectOperator.mov, ObjectCode.FrameRegister, Start.StackTopName, null);
+
+      //AddObjectCode(ObjectOperator.comment, "Initialize Heap Pointer", null, null);
+      AddObjectCode(ObjectOperator.mov_word, null, 65534, 65534);
+
+      //AddObjectCode(ObjectOperator.comment, "Initialize FPU Control Word, truncate mode => set bit 10 and 11.", null, null);
+      AddObjectCode(ObjectOperator.fstcw, ObjectCode.FrameRegister, 0, null);
+      AddObjectCode(ObjectOperator.or_word, ObjectCode.FrameRegister, 0, 0x0C00);
+      AddObjectCode(ObjectOperator.fldcw, ObjectCode.FrameRegister, 0, null);
+    }
+
+    public void AddArgumentCode() {
+      List<sbyte> byteList = new List<sbyte>();
+      IDictionary<int,string> accessMap = new Dictionary<int,string>();
+      //Symbol pathSymbol = new Symbol(Start.PathName, Storage.Static, Type.StringType, Start.PathText);
+      //Start.CurrentTable.AddSymbol(pathSymbol);
+
+      GenerateInitializer.GenerateByteList(Type.StringType, Start.PathText, byteList, accessMap);
+      StaticSymbol staticSymbol = new StaticSymbol(Start.PathName, byteList, accessMap);
+      Start.StaticSet.Add(staticSymbol);
+
+      /*string label1 = Start.SeparatorId + "Initialize" + Start.SeparatorId + "1",
+             label2 = Start.SeparatorId + "Initialize" + Start.SeparatorId + "2",
+             label3 = Start.SeparatorId + "Initialize" + Start.SeparatorId + "3",
+             label4 = Start.SeparatorId + "Initialize" + Start.SeparatorId + "4",
+             label5 = Start.SeparatorId + "Initialize" + Start.SeparatorId + "5";*/
+           
+      //AddObjectCode(ObjectOperator.comment,"Initialize Argument List",null,null);
+      AddObjectCode(ObjectOperator.mov, Register.si, Register.bp, null);
+      AddObjectCode(ObjectOperator.mov_word, Register.bp, 0, Start.PathName);
+      AddObjectCode(ObjectOperator.add, Register.bp, 2, null);
+      AddObjectCode(ObjectOperator.mov, Register.ax, 1, null);
+      AddObjectCode(ObjectOperator.mov, Register.bx, 129, null);
+    
+      //AddObjectCode(ObjectOperator.label, label1, null, null);
+      AddObjectCode(ObjectOperator.cmp_byte, Register.bx, 0, 32);
+      AddObjectCode(ObjectOperator.je, null, m_objectCodeList.Count+5);//, label2);
+      AddObjectCode(ObjectOperator.cmp_byte, Register.bx, 0, 13);
+      AddObjectCode(ObjectOperator.je, null, m_objectCodeList.Count + 17);//, label5);
+      AddObjectCode(ObjectOperator.inc, Register.bx, null, null);
+      AddObjectCode(ObjectOperator.long_jmp, null, m_objectCodeList.Count - 6);//, label1);
+
+      //AddObjectCode(ObjectOperator.label, label2, null, null);
+      AddObjectCode(ObjectOperator.cmp, Register.ax, 1, null);
+      AddObjectCode(ObjectOperator.je, null, m_objectCodeList.Count + 2);//,label3);
+      AddObjectCode(ObjectOperator.mov_byte, Register.bx, 0, 0);
+
+      //AddObjectCode(ObjectOperator.label, label3, null, null);
+      AddObjectCode(ObjectOperator.inc, Register.bx, null, null);
+      AddObjectCode(ObjectOperator.cmp_byte, Register.bx, 0, 32);
+      AddObjectCode(ObjectOperator.je, null, m_objectCodeList.Count - 3);//,label3);
+    
+      //AddObjectCode(ObjectOperator.label, label4, null, null);
+      AddObjectCode(ObjectOperator.mov, Register.bp, 0, Register.bx);
+      AddObjectCode(ObjectOperator.add, Register.bp, 2, null);
+      AddObjectCode(ObjectOperator.inc, Register.ax, null, null);
+      AddObjectCode(ObjectOperator.long_jmp, null, m_objectCodeList.Count - 19);//, label1);
+    
+      //AddObjectCode(ObjectOperator.label, label5, null, null);    
+      AddObjectCode(ObjectOperator.mov_byte, Register.bx, 0, 0);
+      AddObjectCode(ObjectOperator.mov_word, Register.bp, 0, 0);
+      AddObjectCode(ObjectOperator.add, Register.bp, 2, null);
+      AddObjectCode(ObjectOperator.mov, Register.bp, 6, Register.ax);
+      AddObjectCode(ObjectOperator.mov, Register.bp, 8, Register.si);
+    }
+  
+    /*public void GenerateStackHeapCheckFunction() {    
+      { //Symbol symbol = new Symbol(Start.StackOverflowName, Storage.Static, Type.StringType, Start.StackOverflowMessage);
+        //Start.CurrentTable.AddSymbol(symbol);
+      
+        List<sbyte> byteList = new List<sbyte>();
+        IDictionary<int, string> accessMap = new Dictionary<int, string>();
+        GenerateInitializer.GenerateByteList(Type.StringType, Start.StackOverflowMessage, byteList, accessMap);
+        StaticSymbol StaticSymbol = new StaticSymbol(Start.StackOverflowName, byteList, accessMap);
+        Start.StaticSet.Add(StaticSymbol);
+      }
+    
+      { m_objectCodeList = new List<ObjectCode>();
+        AddObjectCode(ObjectOperator.add, Register.ax, ObjectCode.FrameRegister, null);
+        string label = Start.CheckStackHeapFunctionRegular + Start.SeparatorId + "1";
+        AddObjectCode(ObjectOperator.jc, null, m_objectCodeList.Count + 4, label);
+        AddObjectCode(ObjectOperator.cmp, Register.ax, -2, null); // 65534
+        AddObjectCode(ObjectOperator.ja, null, m_objectCodeList.Count + 2, label);
+        AddObjectCode(ObjectOperator.jmp, Register.bx, null, null);
+
+        AddObjectCode(ObjectOperator.label, label, null, null);
+        AddObjectCode(ObjectOperator.mov, Register.ah, 0x40, null);
+        AddObjectCode(ObjectOperator.mov, Register.bx, 1, null);
+        AddObjectCode(ObjectOperator.mov, Register.cx, Start.StackOverflowMessage.Length, null);
+        AddObjectCode(ObjectOperator.mov, Register.dx, Start.StackOverflowName, null);
+        AddObjectCode(ObjectOperator.interrupt, 0x21, null, null);
+        AddObjectCode(ObjectOperator.mov, Register.ah, 0x4C, null);
+        AddObjectCode(ObjectOperator.mov, Register.al, -1, null);
+        AddObjectCode(ObjectOperator.interrupt,0x21,null,null);
+        GenerateJumpInfo();
+      
+        //Symbol symbol = new Symbol(Start.CheckStackHeapFunctionRegular);
+        //Start.CurrentTable.AddSymbol(symbol);
+        GenerateJumpInfo();
+
+        List<sbyte> byteList = new List<sbyte>();
+        IDictionary<int, string> accessMap = new Dictionary<int, string>(),
+                                 callMap = new Dictionary<int, string>();
+        ISet<int> returnSet = new HashSet<int>();
+        GenerateTargetByteList(byteList, accessMap, callMap, returnSet);
+        StaticSymbol staticSymbol = new StaticSymbol(Start.CheckStackHeapFunctionRegular, byteList, accessMap,callMap, returnSet);
+        Start.StaticSet.Add(staticSymbol);
+      }
+
+      { m_objectCodeList = new List<ObjectCode>();
+        AddObjectCode(ObjectOperator.add, Register.ax, ObjectCode.EllipseRegister, null);
+        string label = Start.CheckStackHeapFunctionEllipse + Start.SeparatorId + "1";
+        AddObjectCode(ObjectOperator.jc, null, m_objectCodeList.Count + 4, label);
+        AddObjectCode(ObjectOperator.cmp, Register.ax, -2, null); // 65534
+        AddObjectCode(ObjectOperator.ja, null, m_objectCodeList.Count + 2, label);
+        AddObjectCode(ObjectOperator.jmp, Register.bx, null, null);
+
+        AddObjectCode(ObjectOperator.label, label, null, null);
+        AddObjectCode(ObjectOperator.mov, Register.ah, 0x40, null);
+        AddObjectCode(ObjectOperator.mov, Register.bx, 1, null);
+        AddObjectCode(ObjectOperator.mov, Register.cx, Start.StackOverflowMessage.Length,null);
+        //Pair<string,int> pair = new Pair<>(Start.StackOverflowName, 0);
+        //AddObjectCode(ObjectOperator.mov, Register.dx, pair, null);
+        AddObjectCode(ObjectOperator.mov, Register.dx, Start.StackOverflowName, null);
+        AddObjectCode(ObjectOperator.interrupt, 0x21, null, null);
+        AddObjectCode(ObjectOperator.mov, Register.ah, 0x4C, null);
+        AddObjectCode(ObjectOperator.mov, Register.al, -1, null);
+        AddObjectCode(ObjectOperator.interrupt, 0x21, null, null);
+        GenerateJumpInfo();
+
+        //Symbol symbol = new Symbol(Start.CheckStackHeapFunctionEllipse);
+        //Start.CurrentTable.AddSymbol(symbol);
+        GenerateJumpInfo();
+//        GenerateTargetByteList(symbol.ByteList, symbol.AccessMap,
+//                               symbol.CallMap, symbol.ReturnSet);
+        List<sbyte> byteList = new List<sbyte>();
+        IDictionary<int, string> accessMap = new Dictionary<int, string>(),
+                                 callMap = new Dictionary<int, string>();
+        ISet<int> returnSet = new HashSet<int>();
+        GenerateTargetByteList(byteList, accessMap, callMap, returnSet);
+        StaticSymbol staticSymbol = new StaticSymbol(Start.CheckStackHeapFunctionEllipse, byteList, accessMap, callMap, returnSet);
+        Start.StaticSet.Add(staticSymbol);
+
+      }
+    }*/
+
+    // ----------------------------------------------------------------------
+  
+    private static int ByteListSize(ObjectCode objectCode) {
+      if (objectCode.Operator == ObjectOperator.empty) {
+        return 0;
+      }
+      else if (objectCode.IsCallRegular() || (objectCode.Operator == ObjectOperator.long_jmp)) {
+        return ((objectCode.GetOperand(0) is Track) ||
+                (objectCode.GetOperand(0) is Register))
+                ? ObjectCode.ShortJumpSize : ObjectCode.LongJumpSize;
+      }
+      else if (objectCode.IsRelation() || (objectCode.Operator == ObjectOperator.short_jmp)) {
+        return ObjectCode.RelationSize;
+      }
+      else {
+        return objectCode.ByteList().Count;
+      }
+    }
+
+    /*public static IDictionary<ObjectOperator,ObjectOperator>
+                    m_inverseMap = new Dictionary<ObjectOperator,ObjectOperator>();
+
+    static ObjectCodeGenerator() {
+      m_inverseMap.Add(ObjectOperator.je, ObjectOperator.jne);
+      m_inverseMap.Add(ObjectOperator.jne, ObjectOperator.je);
+      m_inverseMap.Add(ObjectOperator.jl, ObjectOperator.jge);
+      m_inverseMap.Add(ObjectOperator.jle, ObjectOperator.jg);
+      m_inverseMap.Add(ObjectOperator.jg, ObjectOperator.jle);
+      m_inverseMap.Add(ObjectOperator.jge, ObjectOperator.jl);
+      m_inverseMap.Add(ObjectOperator.ja, ObjectOperator.jbe);
+      m_inverseMap.Add(ObjectOperator.jae, ObjectOperator.jb);
+      m_inverseMap.Add(ObjectOperator.jb, ObjectOperator.jae);
+      m_inverseMap.Add(ObjectOperator.jbe, ObjectOperator.ja);
+    }*/
+  
+    private void GenerateJumpInfo() {
+      foreach (ObjectCode objectCode in m_objectCodeList) {
+        if ((objectCode.IsRelation() || objectCode.IsJump()) &&
+            (objectCode.GetOperand(2) is int)) {
+          int middleTarget = (int) objectCode.GetOperand(2);
+          objectCode.SetOperand(1, m_middleToObjectMap[middleTarget]);
+        }
+      }
+
+      while (true) {
+        int byteSize = 0;
+        m_objectToByteMap.Clear();
+        for (int line = 0; line < m_objectCodeList.Count; ++line) {
+          m_objectToByteMap.Add(line, byteSize);
+          byteSize += ByteListSize(m_objectCodeList[line]);
+        }
+        m_objectToByteMap.Add(m_objectCodeList.Count, byteSize);
+
+        bool update = false;
+        for (int line = 0; line < (m_objectCodeList.Count - 1); ++line) {
+          ObjectCode thisCode = m_objectCodeList[line],
+                     nextCode = m_objectCodeList[line + 1];
+        
+          if (thisCode.IsRelation() && nextCode.IsJump() &&
+              (thisCode.GetOperand(1) is int) &&
+              (nextCode.GetOperand(1) is int)) {
+            int thisTarget = (int) thisCode.GetOperand(1);
+            Assert.Error(thisTarget == (line + 2), Message.This_target);
+
+            int nextTarget = (int) nextCode.GetOperand(1);
+            int toByteAddress = m_objectToByteMap[nextTarget];
+            int forwardDistance = toByteAddress - m_objectToByteMap[line + 2];
+            int backwardDistance = toByteAddress - m_objectToByteMap[line + 1];
+
+            if ((backwardDistance >= -128) && (forwardDistance <= 127)) {
+              thisCode.Operator = m_inverseMap[thisCode.Operator];
+              thisCode.SetOperand(1, nextTarget);
+              thisCode.SetOperand(2, nextCode.GetOperand(2));
+              nextCode.Operator = ObjectOperator.empty;
+              update = true;
+              break;
+            }
+          }
+          else if ((thisCode.IsRelation() || thisCode.IsJump()) &&
+                   (thisCode.GetOperand(1) is int)) {
+            int thisTarget = (int) thisCode.GetOperand(1);
+          
+            int fromByteAddress = m_objectToByteMap[line + 1],
+                toByteAddress = m_objectToByteMap[thisTarget];
+            int byteDistance = toByteAddress - fromByteAddress;
+
+            if (byteDistance == 0) {          
+              thisCode.Operator = ObjectOperator.empty;
+              update = true;
+              break;
+            }
+            else if ((thisCode.Operator == ObjectOperator.long_jmp) &&
+                     (byteDistance >= -129) && (byteDistance <= 127)) {
+              thisCode.Operator = ObjectOperator.short_jmp;
+              update = true;
+              break;
+            }
+          }
+        }
+      
+        if (!update) {
+          break;
+        }
+      }
+
+      for (int line = 0; line < m_objectCodeList.Count; ++line) {
+        ObjectCode objectCode = m_objectCodeList[line];
+
+        if ((objectCode.IsRelation() || objectCode.IsJump()) &&
+            (objectCode.GetOperand(1) is int)) {
+          int objectTarget = (int) objectCode.GetOperand(1);
+          int fromByteAddress = m_objectToByteMap[line + 1],
+              toByteAddress = m_objectToByteMap[objectTarget];
+          objectCode.SetOperand(0, toByteAddress - fromByteAddress);
+        }      
+        /*else if (objectCode.Operator == ObjectOperator.register_return) {
+          int middleAddress = (int) objectCode.GetOperand(1);
+          int objectAddress = m_middleToObjectMap[middleAddress];
+          int byteAddress = m_objectToByteMap[objectAddress];
+          int nextAddress = m_objectToByteMap[line + 1];
+          int returnAddress = byteAddress - nextAddress + Type.PointerSize;
+          objectCode.SetOperand(1, returnAddress);
+        }*/
+        else if (objectCode.Operator == ObjectOperator.address_return) {
+          //objectCode.Operator = ObjectOperator.mov;
+          int middleAddress = (int)objectCode.GetOperand(2);
+          int objectAddress = m_middleToObjectMap[middleAddress];
+          int byteAddress = m_objectToByteMap[objectAddress];
+          int nextAddress = m_objectToByteMap[line + 1];
+          int returnAddress = byteAddress - nextAddress + Type.PointerSize;
+          objectCode.SetOperand(2, returnAddress);
+        }
+      }
+    }
+
+    // ------------------------------------------------------------------------
+  
+    private static int OperandSize(ObjectOperator objectOp, object operand) {
+      string name = Enum.GetName(typeof(ObjectOperator), objectOp);
+
+      if (name.Contains("mov_")) {
+        return ObjectCode.OperatorSize(objectOp);
+      }
+      else if (name.Contains("cmp_")) {
+        return Math.Max(1, ValueSize(operand));
+      }
+      else {
+        return ValueSize(operand);
+      }
+    }
+  
+    private static int ValueSize(object operand) {
+      return ValueSize(operand, false);
+    }
+  
+    private static int ValueSize(object operand, bool isCompare) {
+      if (operand is int) {
+        if (isCompare && (((int) operand) == 0)) {
+          return 1;
+        }
+      
+        return ObjectCode.ValueSize((int) operand);
+      }
+    
+      return 0;
+    }
+  
+    private void GenerateTargetByteList(List<sbyte> byteList, IDictionary<int,string> accessMap,
+                                        IDictionary<int,string> callMap, ISet<int> returnSet) {
+      int lastSize = 0;
+      for (int line = 0; line < m_objectCodeList.Count; ++line) {
+        ObjectCode objectCode = m_objectCodeList[line];
+        byteList.AddRange(objectCode.ByteList());
+        int codeSize = byteList.Count - lastSize;
+        lastSize = byteList.Count;
+    
+        ObjectOperator objectOp = objectCode.Operator;
+        object operand0 = objectCode.GetOperand(0),
+               operand1 = objectCode.GetOperand(1),
+               operand2 = objectCode.GetOperand(2);
+
+        /*if (objectCode.IsRelation() || objectCode.IsJump()) {
+          // Empty.
+        }
+        else if (objectCode.Operator == ObjectOperator.empty) {
+          // Empty.
+        }
+        else {*/
+        if ((objectCode.Operator == ObjectOperator.call) &&
+            (objectCode.GetOperand(0) is string)) {
+          string calleeName = (string) objectCode.GetOperand(0);
+          int address = byteList.Count - Type.PointerSize;
+          callMap.Add(address, calleeName);
+        }
+        else if (/*(objectCode.Operator == ObjectOperator.register_return) ||*/
+                  (objectCode.Operator == ObjectOperator.address_return)) {
+          int address = byteList.Count - Type.PointerSize;
+          returnSet.Add(address);
+        }
+        else if (operand0 is string) { // Add [g + 1], 2
+          string name = (string) operand0;
+          string nameX = Enum.GetName(typeof(ObjectOperator), objectOp);
+          bool isCompare = nameX.Contains("cmp");
+          int size = (nameX.Contains("mov") && (operand2 is int))? Type.PointerSize : ValueSize(operand2, isCompare);
+          //int size = objectOp.Name.Contains("_") ? Type.PointerSize : ValueSize(operand2);
+          int address = byteList.Count - Type.PointerSize - size;
+          accessMap.Add(address, name);
+        }
+        else if (operand1 is string) {
+          if (operand2 is int) { // mov ax, [g + 1]
+            int size = OperandSize(objectOp, operand2);
+            int address = byteList.Count - size - Type.PointerSize;
+            string name = (string) operand1;
+            accessMap.Add(address, name);
+          }
+          else {
+            int address = byteList.Count - Type.PointerSize; // mov ax, g
+            string name = (string) operand1;
+            accessMap.Add(address, name);
+          }
+        }
+        else if (operand2 is string) { // Add [bp + 2], g
+          string name = (string) operand2;
+          int address = byteList.Count - Type.PointerSize;
+          accessMap.Add(address, name);
+        }
+      }
+      //}
+    }
+  }
+}
+
+    /* e = x;     d => ax
+       a = b / c; b => ax  
+       d = e / f; d => ax
+       f = b;     b => ?
+
+       a -> b: yes
+       b -> a: no
+  
+       a -> e: yes
+       e -> a: no
+  
+       b -> d: no
+       d -> b: yes
+  
+       b1: 3ax
+       b2: 10, 11
+       d1: 8
+       d2: 9ax
+  
+       a: 6ax
+       b: 3ax, 10, 11
+       d: 8, 9ax
+       e: 1, 2, 7ax
+
+       1. mov ?, [x]
+       2. mov [e], ?
+  
+       3. mov ax, [b]    ; b => ax
+       4. mov ?, [c]
+       5. div ?
+       6. empty          ; a => ax
+  
+       7. empty          ; e => ax
+       8. mov ?, [f]
+       9. div ?          ; d => ax
+  
+       10. mov ?, [b]
+       11. mov [f], ?
+
+      // int 21       value
+      // int ax       GetRegister
+      // int [bx]     address
+    
+      // liveSet: stack  mov ax, [si + 2]; neg ax; int ax
+      //          static mov ax, [20]; neg ax
+      //        
+
+      // !liveSet: stack  neg [si + 2]
+      //           static neg [20]
+
+     1 sbyte: al * 8 => ah:al
+     2 bytes: ax * 16 => dx:ax
+     4 bytes: eax * 32 => edx:eax
+
+          // b = x;     b => ?
+          // ...
+          // d = e / f; e => ax
+          // ...
+          // a = b / c; b => ax
+
+     1 sbyte: ax / 8, div: al, mod: ah
+     2 bytes: dx:ax / 16, div: ax, mod: dx
+     4 bytes: edx:eax / 32, div eax, mod edx */

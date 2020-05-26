@@ -1,0 +1,64 @@
+﻿using System.IO;
+
+namespace CCompiler {
+  public class StaticSymbol {
+    private string m_uniqueName;
+
+    public StaticSymbol() {
+      // Empty.
+    }
+
+    public StaticSymbol(string uniqueName) {
+      m_uniqueName = uniqueName;
+    }
+
+    public override bool Equals(object obj) {
+      if (obj is StaticSymbol) {
+        return m_uniqueName.Equals(((StaticSymbol) obj).m_uniqueName);
+      }
+
+      return false;
+    }
+
+    public override int GetHashCode() {
+      return m_uniqueName.GetHashCode();
+    }
+
+    public string UniqueName {
+      get { return m_uniqueName; }
+    }
+
+    public virtual void Save(BinaryWriter outStream) {
+      outStream.Write(m_uniqueName);
+    }
+
+    public virtual void Load(BinaryReader inStream) {
+      m_uniqueName = inStream.ReadString();
+    }
+  }
+}
+
+    // global space:
+    //   int i;        => external linkage
+    //   extern int i; => external linkage
+    //   static int i; => no external linkage
+  
+    //   int f(int i);        => external linkage
+    //   extern int f(int i); => external linkage
+    //   static int f(int i); => no external linkage
+
+    //   int f(int i) {}        => external linkage
+    //   extern int f(int i) {} => external linkage
+    //   static int f(int i) {} => no external linkage
+
+    //   int x = 1;        => external linkage
+    //   static int x = 1; => external linkage
+    //   extern int x = 1; => external linkage
+  
+    // int  f() {}
+    // extern int  f() {}
+    // static int  f() {}
+
+    // int i;
+    // extern int i;      
+    // static int i;

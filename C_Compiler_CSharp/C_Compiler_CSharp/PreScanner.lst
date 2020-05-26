@@ -1,0 +1,93 @@
+
+// ==========================================================================
+//  GPLEX error listing for lex source file <PreScanner.gplex>
+// ==========================================================================
+//  Version:  1.2.2
+//  Machine:  STEFAN1968
+//  DateTime: 2019-06-05 14:59:53
+//  UserName: Stefan
+// ==========================================================================
+
+
+%namespace CCompiler_Pre
+
+%{
+   // Empty.
+%}
+
+OCTAL_VALUE (\+|\-)?[0][0-7]*([uU]|[sSlL]|[uU][sSlL]|[sSlL][uU])?
+DECIMAL_VALUE (\+|\-)?[1-9][0-9]*([uU]|[sSlL]|[uU][sSlL]|[sSlL][uU])?
+HEXADECIMAL_VALUE (\+|\-)?[0][xX][0-9a-fA-F]+([uU]|[sSlL]|[uU][sSlL]|[sSlL][uU])?
+FLOATING_VALUE (\+|\-)?(([0-9]+"."[0-9]*|"."[0-9]+)([eE][\+\-]?[0-9]+)?|[0-9]+[eE][\+\-]?[0-9]+)([fF]|[lL])?
+CHAR_VALUE \'("\n"|"\\\'"|[^\'])*\'
+STRING_VALUE \"("\n"|"\\\""|[^\"])*\"
+NAME [a-zA-Z_][a-zA-Z0-9_]*
+WHITE_SPACE [ \t\r\n\f]
+TOKEN [^a-zA-Z0-9()#,\"\' \t\r\n\f\0]+
+%%
+
+"(" { yylval.name = "("; return ((int) Tokens.LEFT_PAREN); }
+")" { yylval.name = ")"; return ((int) Tokens.RIGHT_PAREN); }
+"##" { yylval.name = "##"; return ((int) Tokens.DOUBLE_SHARP); }
+"#"  { yylval.name = "#"; return ((int) Tokens.SHARP); }
+"," { yylval.name = ","; return ((int) Tokens.COMMA); }
+EOF { /*CCompiler.Start.NewlineCount = 0;*/ yylval.name = ""; return ((int) Tokens.EOL); }
+
+{NAME} {
+  yylval.name = yytext;
+  return ((int) Tokens.NAME);
+}
+
+{OCTAL_VALUE} {
+  yylval.name = yytext;
+  return ((int) Tokens.TOKEN);
+}
+
+{DECIMAL_VALUE} {
+  yylval.name = yytext;
+  return ((int) Tokens.TOKEN);
+}
+
+{HEXADECIMAL_VALUE} {
+  yylval.name = yytext;
+  return ((int) Tokens.TOKEN);
+}
+
+{FLOATING_VALUE} {
+  yylval.name = yytext;
+  return ((int) Tokens.TOKEN);
+}
+
+{CHAR_VALUE} {
+  yylval.name = yytext;
+  return ((int) Tokens.TOKEN);
+}
+
+{STRING_VALUE} {
+  yylval.name = yytext;
+  return ((int) Tokens.STRING);
+}
+
+{TOKEN} {
+  yylval.name = yytext;
+  return ((int) Tokens.TOKEN);
+}
+
+{WHITE_SPACE} {
+  if (yytext.Equals("\n")) {
+    ++CCompiler.Start.NewlineCount;
+  }
+
+  CCompiler.Start.Whitespace = true;
+}
+
+. { if (yytext[0] == EOF) {
+      return ((int) Tokens.EOL);
+    }
+    else {
+      CCompiler.Assert.Error("<" + yytext + ">", "unknown character"); }
+    }
+  }// Error: Parser error <Syntax error, unexpected }> 
+// -------------------------------------------------
+// ==========================================================================
+
