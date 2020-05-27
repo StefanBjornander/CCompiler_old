@@ -1,4 +1,3 @@
-using System.IO;
 using System.Numerics;
 using System.Collections.Generic;
 
@@ -14,18 +13,6 @@ namespace CCompiler {
     public void Optimize() {
       ObjectToIntegerAddresses();
 
-      if (SymbolTable.CurrentFunction.Name.Equals("bsearch")) {
-        string name = "C:\\Users\\Stefan\\Documents\\A A C_Compiler_Assembler - A 16 bits\\StdIO\\" + SymbolTable.CurrentFunction.Name + ".middle";
-        StreamWriter streamWriter = new StreamWriter(name);
-
-        for (int index = 0; index < m_middleCodeList.Count; ++index) {
-          MiddleCode middleCode = m_middleCodeList[index];
-          streamWriter.WriteLine(index + ": " + middleCode.ToString());
-        }
-
-        streamWriter.Close();
-      }
-
       do {
         m_update = false;
         ClearGotoNextStatements();
@@ -35,22 +22,21 @@ namespace CCompiler {
         RemovePushPop();
         MergePopPushToTop();
         MergeTopPopToPop();
-        //MergeBinary();
-        //MergeDoubleAssign();
-        RemoveClearedCode();
+        //MergeBinary(); // XXX
+        //MergeDoubleAssign(); // XXX
         SematicOptimization();
+        OptimizeRelation();
+        OptimizeCommutative();
+        OptimizeBinary();
+        CheckIntegral(); // XXX
+        CheckFloating(); // XXX
+        RemoveClearedCode();
       } while (m_update);
-
-      OptimizeRelation();
-      OptimizeCommutative();
-      OptimizeBinary();
-      CheckIntegral();
-      CheckFloating();
-      RemoveClearedCode();
     }
 
     public void ObjectToIntegerAddresses() {
-      IDictionary<MiddleCode,int> addressMap = new Dictionary<MiddleCode,int>();
+      IDictionary<MiddleCode,int> addressMap =
+        new Dictionary<MiddleCode,int>();
     
       for (int index = 0; index < m_middleCodeList.Count; ++index) {
         addressMap.Add(m_middleCodeList[index], index);
@@ -59,7 +45,8 @@ namespace CCompiler {
       for (int index = 0; index < m_middleCodeList.Count; ++index) {
         MiddleCode sourceCode = m_middleCodeList[index];
       
-        if (sourceCode.IsGoto() || sourceCode.IsCarry() || sourceCode.IsRelation()) {
+        if (sourceCode.IsGoto() || sourceCode.IsCarry() ||
+            sourceCode.IsRelation()) {
           Assert.ErrorA(sourceCode[0] is MiddleCode);
           MiddleCode targetCode = (MiddleCode) sourceCode[0];
           Assert.ErrorA(addressMap.ContainsKey(targetCode));
@@ -96,25 +83,25 @@ namespace CCompiler {
     // 1. if a >= b goto 10
     // 2. Clear
 
-    public static IDictionary<MiddleOperator, MiddleOperator> InverseMap =
+    public static IDictionary<MiddleOperator, MiddleOperator> m_inverseMap =
       new Dictionary<MiddleOperator, MiddleOperator>();
 
-    public static IDictionary<MiddleOperator,MiddleOperator>
-                    m_swapMap = new Dictionary<MiddleOperator,MiddleOperator>();
+    public static IDictionary<MiddleOperator,MiddleOperator> m_swapMap =
+       new Dictionary<MiddleOperator,MiddleOperator>();
 
     static MiddleCodeOptimizer() {
-      InverseMap.Add(MiddleOperator.Equal, MiddleOperator.NotEqual);
-      InverseMap.Add(MiddleOperator.NotEqual, MiddleOperator.Equal);
-      InverseMap.Add(MiddleOperator.Carry, MiddleOperator.NotCarry);
-      InverseMap.Add(MiddleOperator.NotCarry, MiddleOperator.Carry);
-      InverseMap.Add(MiddleOperator.SignedLessThan, MiddleOperator.SignedGreaterThanEqual);
-      InverseMap.Add(MiddleOperator.SignedLessThanEqual, MiddleOperator.SignedGreaterThan);
-      InverseMap.Add(MiddleOperator.SignedGreaterThan, MiddleOperator.SignedLessThanEqual);
-      InverseMap.Add(MiddleOperator.SignedGreaterThanEqual, MiddleOperator.SignedLessThan);
-      InverseMap.Add(MiddleOperator.UnsignedLessThan, MiddleOperator.UnsignedGreaterThanEqual);
-      InverseMap.Add(MiddleOperator.UnsignedLessThanEqual, MiddleOperator.UnsignedGreaterThan);
-      InverseMap.Add(MiddleOperator.UnsignedGreaterThan, MiddleOperator.UnsignedLessThanEqual);
-      InverseMap.Add(MiddleOperator.UnsignedGreaterThanEqual, MiddleOperator.UnsignedLessThan);
+      m_inverseMap.Add(MiddleOperator.Equal, MiddleOperator.NotEqual);
+      m_inverseMap.Add(MiddleOperator.NotEqual, MiddleOperator.Equal);
+      m_inverseMap.Add(MiddleOperator.Carry, MiddleOperator.NotCarry);
+      m_inverseMap.Add(MiddleOperator.NotCarry, MiddleOperator.Carry);
+      m_inverseMap.Add(MiddleOperator.SignedLessThan, MiddleOperator.SignedGreaterThanEqual);
+      m_inverseMap.Add(MiddleOperator.SignedLessThanEqual, MiddleOperator.SignedGreaterThan);
+      m_inverseMap.Add(MiddleOperator.SignedGreaterThan, MiddleOperator.SignedLessThanEqual);
+      m_inverseMap.Add(MiddleOperator.SignedGreaterThanEqual, MiddleOperator.SignedLessThan);
+      m_inverseMap.Add(MiddleOperator.UnsignedLessThan, MiddleOperator.UnsignedGreaterThanEqual);
+      m_inverseMap.Add(MiddleOperator.UnsignedLessThanEqual, MiddleOperator.UnsignedGreaterThan);
+      m_inverseMap.Add(MiddleOperator.UnsignedGreaterThan, MiddleOperator.UnsignedLessThanEqual);
+      m_inverseMap.Add(MiddleOperator.UnsignedGreaterThanEqual, MiddleOperator.UnsignedLessThan);
 
       m_swapMap.Add(MiddleOperator.Equal, MiddleOperator.Equal);
       m_swapMap.Add(MiddleOperator.NotEqual, MiddleOperator.NotEqual);
@@ -139,13 +126,14 @@ namespace CCompiler {
         MiddleCode thisCode = m_middleCodeList[index],
                    nextCode = m_middleCodeList[index + 1];
 
-        if ((thisCode.IsRelation() || thisCode.IsCarry()) && nextCode.IsGoto()) {
+        if ((thisCode.IsRelation() || thisCode.IsCarry()) &&
+            nextCode.IsGoto()) {
           int target1 = (int) thisCode[0],
               target2 = (int) nextCode[0];
 
           if (target1 == (index + 2)) {
             MiddleOperator operator1 = thisCode.Operator;
-            thisCode.Operator = InverseMap[operator1];
+            thisCode.Operator = m_inverseMap[operator1];
             thisCode[0] = target2;
             nextCode.Clear();
             m_update = true;
@@ -201,25 +189,27 @@ namespace CCompiler {
   // --------------------------------------------------------------------------
 
     private void ClearUnreachableCode() {
-      ISet<int> visitedSet = new HashSet<int>();
+      ISet<MiddleCode> visitedSet = new HashSet<MiddleCode>();
       SearchReachableCode(0, visitedSet);
 
       for (int index = 0; index < (m_middleCodeList.Count - 1); ++index) {
-        if (!visitedSet.Contains(index)) {
+        MiddleCode middleCode = m_middleCodeList[index];
+        if (!visitedSet.Contains(middleCode)) {
           m_middleCodeList[index].Clear();
           m_update = true;
         }
       }
     }
     
-    private void SearchReachableCode(int index, ISet<int> visitedSet) {
+    private void SearchReachableCode(int index, ISet<MiddleCode> visitedSet) {
       for (; index < m_middleCodeList.Count; ++index) {
-        if (visitedSet.Contains(index)) {
+        MiddleCode middleCode = m_middleCodeList[index];
+
+        if (visitedSet.Contains(middleCode)) {
           return;
         }
 
-        visitedSet.Add(index);
-        MiddleCode middleCode = m_middleCodeList[index];
+        visitedSet.Add(middleCode);
 
         if (middleCode.IsRelation() || middleCode.IsCarry()) {
           int target = (int) middleCode[0];
@@ -237,7 +227,8 @@ namespace CCompiler {
         else if (middleCode.Operator == MiddleOperator.FunctionEnd) {
           Symbol funcSymbol = (Symbol) middleCode[0];
           Assert.Error(funcSymbol.Type.ReturnType.IsVoid(),
-                       funcSymbol.Name, Message.Reached_the_end_of_a_non__void_function);
+                       funcSymbol.Name,
+                       Message.Reached_the_end_of_a_non__void_function);
           return;
         }
       }
