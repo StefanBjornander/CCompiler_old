@@ -22,11 +22,13 @@ namespace CCompiler {
         RemovePushPop();
         MergePopPushToTop();
         MergeTopPopToPop();
+        //AssignFloat(); // XXX
         //MergeBinary(); // XXX
         //MergeDoubleAssign(); // XXX
         SematicOptimization();
-        OptimizeRelation();
+        //OptimizeRelation(); // XXX
         OptimizeCommutative();
+        RemoveTrivialAssign();
         OptimizeBinary();
         CheckIntegral(); // XXX
         CheckFloating(); // XXX
@@ -245,10 +247,9 @@ namespace CCompiler {
       for (int index = 0; index < (m_middleCodeList.Count - 1); ++index) {
         MiddleCode thisCode = m_middleCodeList[index],
                    nextCode = m_middleCodeList[index + 1];
-
         if ((thisCode.Operator == MiddleOperator.PushFloat) &&
             (nextCode.Operator == MiddleOperator.PopFloat) &&
-            (nextCode[0] == null)) {
+            ((thisCode[0] == nextCode[0]) || (nextCode[0] == null))) {
           thisCode.Clear();
           nextCode.Clear();
           m_update = true;
@@ -353,7 +354,7 @@ namespace CCompiler {
 
         if ((thisCode.Operator == MiddleOperator.Assign) &&
             (nextCode.Operator == MiddleOperator.Assign) &&
-            thisCode[0].Equals(nextCode[1])) {
+            thisCode[0] == nextCode[1]) {
           thisCode[0] = nextCode[0];
           nextCode.Clear();
           m_update = true;
@@ -361,26 +362,6 @@ namespace CCompiler {
       }
     }
   
-    public void RemoveClearedCode() {
-      for (int index1 = (m_middleCodeList.Count - 2); index1 > 0;--index1){
-        if (m_middleCodeList[index1].Operator == MiddleOperator.Empty) {
-          for (int index2 = 0; index2 < m_middleCodeList.Count; ++index2) {
-            MiddleCode middleCode = m_middleCodeList[index2];
-          
-            if (middleCode.IsRelationCarryOrGoto()) {
-              int target = (int) middleCode[0];
-            
-              if (target > index1) {
-                middleCode[0] = target - 1;
-              }
-            }
-          }
-        
-          m_middleCodeList.RemoveAt(index1);
-        }
-      }
-    }
-
     private void SematicOptimization() {
       for (int index = 0; index < m_middleCodeList.Count; ++index) {
         MiddleCode thisCode = m_middleCodeList[index];
@@ -393,39 +374,49 @@ namespace CCompiler {
 
           if ((leftSymbol.Value is BigInteger) && // t0 = 2 * 3
               (rightSymbol.Value is BigInteger)) {
-            newSymbol = ConstantExpression.ArithmeticIntegral(thisCode.Operator, leftSymbol, rightSymbol);
+            newSymbol =
+              ConstantExpression.ArithmeticIntegral(thisCode.Operator,
+                                                    leftSymbol, rightSymbol);
           }
-          else if ((thisCode.Operator == MiddleOperator.BinaryAdd) && // t0 = 0 + i
+          // t0 = 0 + i
+          else if ((thisCode.Operator == MiddleOperator.BinaryAdd) &&
                     (leftSymbol.Value is BigInteger) &&
                     (leftSymbol.Value.Equals(BigInteger.Zero))) {
             newSymbol = rightSymbol;
           }
-          else if (((thisCode.Operator == MiddleOperator.BinaryAdd) ||       // t0 = i + 0
-                    (thisCode.Operator == MiddleOperator.BinarySubtract)) && // t0 = i - 0
+          // t0 = i + 0
+          // t0 = i - 0
+          else if (((thisCode.Operator == MiddleOperator.BinaryAdd) ||
+                    (thisCode.Operator == MiddleOperator.BinarySubtract)) &&
                     (rightSymbol.Value is BigInteger) &&
                     (rightSymbol.Value.Equals(BigInteger.Zero))) {
             newSymbol = leftSymbol;
           }
-          else if (((thisCode.Operator == MiddleOperator.SignedMultiply) ||    // t0 = 0 * i
+          // t0 = 0 * i
+          else if (((thisCode.Operator == MiddleOperator.SignedMultiply) ||
                     (thisCode.Operator == MiddleOperator.UnsignedMultiply)) &&
                     (leftSymbol.Value is BigInteger) &&
                     (leftSymbol.Value.Equals(BigInteger.Zero))) {
             newSymbol = new Symbol(resultSymbol.Type, BigInteger.Zero);
           }
-          else if (((thisCode.Operator == MiddleOperator.SignedMultiply) ||    // t0 = 1 * i
+          // t0 = 1 * i
+          else if (((thisCode.Operator == MiddleOperator.SignedMultiply) ||
                     (thisCode.Operator == MiddleOperator.UnsignedMultiply)) &&
                     (leftSymbol.Value is BigInteger) &&
                     (leftSymbol.Value.Equals(BigInteger.One))) {
             newSymbol = rightSymbol;
           }
-          else if (((thisCode.Operator == MiddleOperator.SignedMultiply) ||    // t0 = i * 0
+          // t0 = i * 0
+          else if (((thisCode.Operator == MiddleOperator.SignedMultiply) ||
                     (thisCode.Operator == MiddleOperator.UnsignedMultiply)) &&
                     (rightSymbol.Value is BigInteger) &&
                     (rightSymbol.Value.Equals(BigInteger.Zero))) {
             newSymbol = new Symbol(resultSymbol.Type, BigInteger.Zero);
           }
-          else if (((thisCode.Operator == MiddleOperator.SignedMultiply) ||    // t0 = i * 1
-                    (thisCode.Operator == MiddleOperator.UnsignedMultiply) ||  // t0 = i / 1
+          // t0 = i * 1
+          // t0 = i / 1
+          else if (((thisCode.Operator == MiddleOperator.SignedMultiply) ||
+                    (thisCode.Operator == MiddleOperator.UnsignedMultiply) ||
                     (thisCode.Operator == MiddleOperator.SignedDivide) ||
                     (thisCode.Operator == MiddleOperator.UnsignedDivide)) &&
                     (rightSymbol.Value is BigInteger) &&
@@ -438,7 +429,8 @@ namespace CCompiler {
               thisCode.Operator = MiddleOperator.Empty;
 
               int index2;
-              for (index2 = index + 1; index2 < m_middleCodeList.Count; ++index2) {
+              for (index2 = index + 1; index2 < m_middleCodeList.Count;
+                   ++index2) {
                 MiddleCode nextCode = m_middleCodeList[index2];
 
                 if (nextCode[1] == resultSymbol) {
@@ -474,14 +466,8 @@ namespace CCompiler {
         if (middleCode.IsRelation()) {
           Symbol leftSymbol = (Symbol) middleCode[1],
                  rightSymbol = (Symbol) middleCode[2];
-   
-          if (leftSymbol.Value is long) {
-            middleCode.Operator = m_swapMap[middleCode.Operator];
-            middleCode[1] = rightSymbol;
-            middleCode[2] = leftSymbol;
-          }
-          else if (leftSymbol.IsStaticOrExtern() && leftSymbol.Type.IsArrayFunctionOrString() &&
-                   !(rightSymbol.Value is long))  {
+
+          if (leftSymbol.Value is BigInteger) {
             middleCode.Operator = m_swapMap[middleCode.Operator];
             middleCode[1] = rightSymbol;
             middleCode[2] = leftSymbol;
@@ -489,6 +475,24 @@ namespace CCompiler {
         }
       }
     }
+
+/*    private void OptimizeRelation() {
+      foreach (MiddleCode middleCode in m_middleCodeList) {
+        if (middleCode.IsRelation()) {
+          Symbol leftSymbol = (Symbol) middleCode[1],
+                 rightSymbol = (Symbol) middleCode[2];
+   
+          if ((leftSymbol.Value is BigInteger) &&
+              (leftSymbol.IsStaticOrExtern() &&
+               leftSymbol.Type.IsArrayFunctionOrString() &&
+               !(rightSymbol.Value is BigInteger)))  {
+            middleCode.Operator = m_swapMap[middleCode.Operator];
+            middleCode[1] = rightSymbol;
+            middleCode[2] = leftSymbol;
+          }
+        }
+      }
+    }*/
 
     // a = b + c
     // a = c + b
@@ -577,6 +581,22 @@ namespace CCompiler {
         
           if (resultSymbol.Type.IsIntegralPointerArrayStringOrFunction() &&
              resultSymbol.Equals(assignSymbol)) {
+            middleCode.Operator = MiddleOperator.Empty;
+            m_update = true;
+          }
+        }
+      }
+    }
+
+    private void RemoveTrivialAssign() {
+      foreach (MiddleCode middleCode in m_middleCodeList) {
+        MiddleOperator middleOperator = middleCode.Operator;
+      
+        if (middleOperator == MiddleOperator.Assign) {
+          Symbol resultSymbol = (Symbol) middleCode[0],
+                 assignSymbol = (Symbol) middleCode[1];
+        
+          if (resultSymbol == assignSymbol) {
             middleCode.Operator = MiddleOperator.Empty;
             m_update = true;
           }
@@ -755,6 +775,24 @@ namespace CCompiler {
               --stackSize;
             }
             break;
+        }
+      }
+    }
+
+    public void RemoveClearedCode() {
+      for (int index = (m_middleCodeList.Count - 1); index > 0;--index){
+        if (m_middleCodeList[index].Operator == MiddleOperator.Empty) {
+          foreach (MiddleCode middleCode in m_middleCodeList) {
+            if (middleCode.IsRelationCarryOrGoto()) {
+              int target = (int) middleCode[0];
+            
+              if (target > index) {
+                middleCode[0] = target - 1;
+              }
+            }
+          }
+        
+          m_middleCodeList.RemoveAt(index);
         }
       }
     }
