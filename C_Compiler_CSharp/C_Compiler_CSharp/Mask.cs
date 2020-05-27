@@ -14,7 +14,6 @@ namespace CCompiler {
                     Signed    = 0x0010000,
                     Unsigned  = 0x0020000,
                     Char      = 0x0040000,
-                    // WChar_T   = 0x0080000,
                     Short     = 0x0100000,
                     Int       = 0x0200000,
                     Long      = 0x0400000,

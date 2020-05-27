@@ -6,7 +6,8 @@ namespace CCompiler {
   public class Specifier {
     private Storage? m_storage = null;
     private Type m_type = null;
-    private static IDictionary<int, Sort> m_maskToSortMap = new Dictionary<int, Sort>();
+    private static IDictionary<int, Sort> m_maskToSortMap =
+      new Dictionary<int, Sort>();
   
     static Specifier() {
       m_maskToSortMap.Add((int) Mask.Void, Sort.Void);
@@ -18,7 +19,8 @@ namespace CCompiler {
       m_maskToSortMap.Add((int) Mask.SignedShort, Sort.Signed_Short_Int);
       m_maskToSortMap.Add((int) Mask.SignedShortInt, Sort.Signed_Short_Int);
       m_maskToSortMap.Add((int) Mask.UnsignedShort, Sort.Unsigned_Short_Int);
-      m_maskToSortMap.Add((int) Mask.UnsignedShortInt, Sort.Unsigned_Short_Int);
+      m_maskToSortMap.Add((int) Mask.UnsignedShortInt,
+                          Sort.Unsigned_Short_Int);
       m_maskToSortMap.Add((int) Mask.Int, Sort.Signed_Int);
       m_maskToSortMap.Add((int) Mask.Signed, Sort.Signed_Int);
       m_maskToSortMap.Add((int) Mask.SignedInt, Sort.Signed_Int);
@@ -57,14 +59,16 @@ namespace CCompiler {
           int maskValue = (int) obj;
 
           if ((maskValue & totalMaskValue) != 0) {
-            Assert.Error(MaskToString(maskValue), Message.Keyword_defined_twice);
+            Assert.Error(MaskToString(maskValue),
+                         Message.Keyword_defined_twice);
           }
 
           totalMaskValue |= maskValue;
         }
         else {
           if (compoundType != null) {
-            Assert.Error(MaskToString(totalMaskValue), Message.Invalid_specifier_sequence);
+            Assert.Error(MaskToString(totalMaskValue),
+                         Message.Invalid_specifier_sequence);
           }
 
           compoundType = (Type) obj;
@@ -76,27 +80,30 @@ namespace CCompiler {
 
         if (totalStorageValue != 0) {
           if (!Enum.IsDefined(typeof(Mask), totalStorageValue)) {
-            Assert.Error(MaskToString(totalStorageValue), Message.Invalid_specifier_sequence);
+            Assert.Error(MaskToString(totalStorageValue),
+                         Message.Invalid_specifier_sequence);
           }
 
           storage = (Storage) totalStorageValue;
         }
       }
 
-      if ((compoundType != null) && (compoundType.EnumerationItemSet != null)) {
+      if ((compoundType != null) && (compoundType.EnumerationItemSet != null)){
         if (storage != null) {
-          foreach (Pair<Symbol,bool> pair in compoundType.EnumerationItemSet) {
+          foreach (Pair<Symbol,bool> pair in compoundType.EnumerationItemSet){
             Symbol enumSymbol = pair.First;          
           
             switch (enumSymbol.Storage = storage.Value) {
               case CCompiler.Storage.Static:
-                SymbolTable.StaticSet.Add(ConstantExpression.Value(enumSymbol));
+                SymbolTable.StaticSet.Add(ConstantExpression.
+                                          Value(enumSymbol));
                 break;
 
               case CCompiler.Storage.Extern: {
                   bool enumInit = pair.Second;
-                  Assert.Error(!enumInit, enumSymbol + " = " + enumSymbol.Value,
-                               Message.Extern_enumeration_item_cannot_be_initialized);
+                  Assert.Error(!enumInit,
+                               enumSymbol + " = " + enumSymbol.Value,
+                    Message.Extern_enumeration_item_cannot_be_initialized);
                 }
                 break;
 
@@ -114,7 +121,8 @@ namespace CCompiler {
             switch (SymbolTable.CurrentTable.Scope) {
               case Scope.Global:
                 enumSymbol.Storage = CCompiler.Storage.Static;
-                SymbolTable.StaticSet.Add(ConstantExpression.Value(enumSymbol));
+                SymbolTable.StaticSet.Add(ConstantExpression.
+                                          Value(enumSymbol));
                 break;
 
               default:
@@ -139,7 +147,8 @@ namespace CCompiler {
 
         if (sortMaskValue != 0) {
           if (!m_maskToSortMap.ContainsKey(sortMaskValue)) {
-            Assert.Error(MaskToString(sortMaskValue), Message.Invalid_specifier_sequence);
+            Assert.Error(MaskToString(sortMaskValue),
+                         Message.Invalid_specifier_sequence);
           }
 
           sort = m_maskToSortMap[sortMaskValue];
@@ -162,8 +171,8 @@ namespace CCompiler {
           type.Volatile = isVolatile;
         }
         else {
-          Assert.Error(MaskToString((int) sortMaskValue),
-                       Message.Invalid_specifier_sequence_together_with_type);
+          Assert.Error(MaskToString((int) sortMaskValue), Message.
+                             Invalid_specifier_sequence_together_with_type);
         }
 
         return (new Specifier(storage, type));
@@ -177,7 +186,8 @@ namespace CCompiler {
         int maskValue = (int) mask;
 
         if ((maskValue & totalMaskValue) != 0) {
-          Assert.Error(MaskToString(maskValue), Message.Keyword_defined_twice);
+          Assert.Error(MaskToString(maskValue),
+                       Message.Keyword_defined_twice);
         }
 
         totalMaskValue |= maskValue;
