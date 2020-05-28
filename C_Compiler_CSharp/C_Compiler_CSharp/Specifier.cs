@@ -4,8 +4,9 @@ using System.Collections.Generic;
 
 namespace CCompiler {
   public class Specifier {
-    private Storage? m_storage = null;
-    private Type m_type = null;
+    private bool m_externalLinkage;
+    private Storage? m_storage;
+    private Type m_type;
     private static IDictionary<int, Sort> m_maskToSortMap =
       new Dictionary<int, Sort>();
   
@@ -37,12 +38,17 @@ namespace CCompiler {
       m_maskToSortMap.Add((int) Mask.LongDouble, Sort.Long_Double);
     }
 
-    public Specifier(Storage? storage, Type type) {
+    public Specifier(bool externalLinkage, Storage? storage, Type type) {
+      m_externalLinkage = externalLinkage;
       m_storage = storage;
       m_type = type;
     }
 
-    public CCompiler.Storage? Storage {
+    public bool ExternalLinkage {
+      get { return m_externalLinkage; }
+    }
+ 
+    public CCompiler.Storage? StorageX {
       get { return m_storage; }
     }
  
@@ -88,37 +94,25 @@ namespace CCompiler {
         }
       }
 
-/*      bool externalLinkage;
-      if (storage == null) {
-        externalLinkage = (SymbolTable.CurrentTable.Scope == Scope.Global);
+      bool externalLinkage = (SymbolTable.CurrentTable.Scope == Scope.Global) &&
+                             (CCompiler_Main.Parser.CallDepth == 0) &&
+                             ((storage == null) || (storage == CCompiler.Storage.Extern));
 
-        if ((SymbolTable.CurrentTable.Scope == Scope.Global) &&
-            (CCompiler_Main.Parser.CallDepth == 0)) {
-          storage = CCompiler.Storage.Static;
-        }
-        else {
-          storage = CCompiler.Storage.Auto;
-        }
-
+      if (CCompiler_Main.Parser.CallDepth > 0) {
+        Assert.Error((storage == null) || (storage == Storage.Auto) || (storage == Storage.Register),
+                     storage, Message.Only_auto_or_register_storage_allowed_in_parameter_declaration);
       }
-      else {
-        externalLinkage = false;
+      else if ((SymbolTable.CurrentTable.Scope == Scope.Struct) ||
+               (SymbolTable.CurrentTable.Scope == Scope.Union)) {
+          Assert.Error((storage == null) || (storage == Storage.Auto) || (storage == Storage.Register),
+                       storage, Message.Only_auto_or_register_storage_allowed_for_struct_or_union_scope);  
       }
-
-      switch (SymbolTable.CurrentTable.Scope) {
-        case Scope.Global:
-          Assert.Error((storage == Storage.Extern) || (storage == Storage.Static) ||
-                       (storage == Storage.Typedef) || (CCompiler_Main.Parser.CallDepth > 0),
+      else if (SymbolTable.CurrentTable.Scope == Scope.Global) {
+          Assert.Error((storage == null) || (storage == Storage.Extern) ||
+                       (storage == Storage.Static) || (storage == Storage.Typedef),
                        storage, Message.
                        Only_extern____static____or_typedef_storage_allowed_in_global_scope);
-          break;
-
-        case Scope.Struct:
-        case Scope.Union:
-          Assert.Error((storage == Storage.Auto) || (storage == Storage.Register),
-                       storage, Message.Only_auto_or_register_storage_allowed_for_struct_or_union_scope);  
-          break;
-      }*/
+      }
 
       if ((compoundType != null) && (compoundType.EnumerationItemSet != null)){
         if (storage != null) {
@@ -207,7 +201,7 @@ namespace CCompiler {
                              Invalid_specifier_sequence_together_with_type);
         }
 
-        return (new Specifier(storage, type));
+        return (new Specifier(externalLinkage, storage, type));
       }
     }
  

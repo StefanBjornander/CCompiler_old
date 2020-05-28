@@ -31,18 +31,21 @@ namespace CCompiler {
       // Empty.
     }
 
-    public Symbol(string name, Storage? storage, Type type) // Variable or function
-     :this(name, storage, type, false) {
+    public Symbol(string name, bool externalLinkage, Storage storage, Type type) // Variable or function
+     :this(name, externalLinkage, storage, type, false) {
       // Empty.
     }
 
-    public Symbol(string name, Storage? storage, Type type, bool parameter) { // Maybe parameter
+    public Symbol(string name, bool externalLinkage, Storage storage, Type type, bool parameter) { // Maybe parameter
       m_name = name;
 
       m_type = type;
-      m_externalLinkage = HasExternalLinkage(storage, name);
-      m_uniqueName = GetUniqueName(storage, name);
-      m_storage = SetStorage(storage);
+      m_externalLinkage = externalLinkage;
+      //m_externalLinkage = HasExternalLinkage(storage, name);
+      m_uniqueName = GetUniqueName();
+      //m_uniqueName = GetUniqueName();
+      m_storage = storage;
+      //m_storage = SetStorage(storage);
       m_temporary = false;
       m_parameter = parameter;
       m_assignable = GetAssignable();
@@ -60,13 +63,16 @@ namespace CCompiler {
       }
     }
 
-    public Symbol(string name, Storage? storage, // Variable with value
+    public Symbol(string name, bool externalLinkage, Storage storage, // Variable with value
                   Type type, object value) {
       m_name = name;
       m_type = type;
-      m_externalLinkage = HasExternalLinkage(storage, name);
-      m_uniqueName = GetUniqueName(storage, name);
-      m_storage = SetStorage(storage);
+      m_externalLinkage = externalLinkage;
+      //m_externalLinkage = HasExternalLinkage(storage, name);
+      m_uniqueName = GetUniqueName();
+      //m_uniqueName = GetUniqueName(storage, name);
+      m_storage = storage;
+      //m_storage = SetStorage(storage);
       m_value = value;
       m_temporary = false;
       m_parameter = false;
@@ -127,25 +133,34 @@ namespace CCompiler {
       m_addressable = false;
     }
 
-    private static bool HasExternalLinkage(Storage? storage, string name) {
+/*    private static bool HasExternalLinkage(Storage storage, string name) {
       return ((name != null) && (name.EndsWith(Symbol.NumberId) || (storage == Storage.Extern) ||
                                  ((SymbolTable.CurrentTable.Scope == Scope.Global) && (storage == null))));
+    }*/
+
+    private string GetUniqueName() {
+      if (m_externalLinkage) {
+        return (m_name.Equals("abs") ? "abs_" : m_name);
+      }
+      else {
+        return Symbol.FileMarker + (UniqueNameCount++) + Symbol.SeparatorId + m_name;
+      }
     }
 
-    private static string GetUniqueName(Storage? storage, string name) {
+/*    private static string GetUniqueName(Storage storage, string name) {
       if (HasExternalLinkage(storage, name)) {
         return (name.Equals("abs") ? "abs_" : name);
       }
       else {
         return Symbol.FileMarker + (UniqueNameCount++) + Symbol.SeparatorId + name;
       }
-    }
+    }*/
 
     public bool ExternalLinkage {
       get { return m_externalLinkage; }
     }
 
-    private static Storage SetStorage(Storage? storage) {
+    /*private static Storage SetStorage(Storage storage) {
       if (storage != null) {
         return storage.Value;
       }
@@ -160,7 +175,7 @@ namespace CCompiler {
           return Storage.Auto;
         }
       }
-    }
+    }*/
 
     public ISet<MiddleCode> TrueSet {
       get { return m_trueSet; }
