@@ -54,19 +54,7 @@ namespace CCompiler {
     }
 
     public SymbolTable ParentTable {
-      get {
-        if ((m_scope != Scope.Struct) && (m_scope != Scope.Union)) {
-          foreach (Symbol symbol in m_entryMap.Values) {
-        
-           if (!symbol.Used && !symbol.IsParameter() && !symbol.Temporary && (symbol.Name != null)) {
-             Console.Out.WriteLine("Symbol " + symbol.Name + " not used at line " +
-                                    CCompiler_Main.Scanner.Line + " in file " + CCompiler_Main.Scanner.Path.Name);
-            }
-          }
-        }
-
-        return m_parentTable;
-      }
+      get { return m_parentTable; }
     }
 
     public IDictionary<string,Symbol> EntryMap {
@@ -76,24 +64,6 @@ namespace CCompiler {
     public int CurrentOffset {
       get { return m_offset; }
     }
-
-/*    public void SetOffset(string name) {
-      Symbol symbol;
-
-      if (m_entryMap.TryGetValue(name, out symbol)) {
-        int size = symbol.Type.Size();
-
-        if (!symbol.IsAutoOrRegister() && (symbol.Offset > 0)) {
-          foreach (Symbol testSymbol in m_entryMap.Values) {
-            if (testSymbol.Offset > symbol.Offset) {
-               testSymbol.Offset -= size;
-            }
-          }
-
-          m_offset -= size;
-        }
-      }
-    }*/
 
     public void AddSymbol(Symbol newSymbol) {
       string name = newSymbol.Name;
@@ -131,7 +101,7 @@ namespace CCompiler {
       Symbol symbol;
 
       if (m_entryMap.TryGetValue(name, out symbol)) {
-        symbol.Used = true;
+        //symbol.Used = true;
         return symbol;
       }
       else if (m_parentTable != null) {

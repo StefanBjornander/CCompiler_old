@@ -13,7 +13,7 @@ namespace CCompiler {
     public const string SeparatorDot = ".";
     public const string FileMarker = "@";
 
-    private bool m_temporary, m_parameter, m_used, m_externalLinkage;
+    private bool m_temporary, m_parameter, m_externalLinkage;
     private string m_name, m_uniqueName;
     private Storage m_storage;
     private Type m_type;
@@ -24,7 +24,6 @@ namespace CCompiler {
     private bool m_assignable, m_addressable;
   
     private ISet<MiddleCode> m_trueSet, m_falseSet;
-    //private StaticSymbol m_staticSymbol;
 
     private static int UniqueNameCount = 0, TemporaryNameCount = 0;
 
@@ -100,24 +99,7 @@ namespace CCompiler {
     }
 
     public Symbol(Type type, object value) { // Value
-  
-    /*if (value is StaticAddress) {
-        StaticAddress staticAddress = (StaticAddress) value;
-        m_uniqueName = "staticaddress" + Symbol.SeparatorId + staticAddress.UniqueName +
-                       Symbol.SeparatorId + staticAddress.Offset + Symbol.NumberId;
-      }
-      else if (type.Sort == Sort.String) {
-        m_uniqueName = "string" + Symbol.SeparatorId + value.ToString() + Symbol.NumberId;
-      }
-      else if (type.IsFloating()) {
-        m_uniqueName = "float" + type.Size().ToString() + Symbol.SeparatorId + value.ToString() + Symbol.NumberId;
-      }
-      else {
-        m_uniqueName = "int" + type.Size().ToString() + Symbol.SeparatorId + value.ToString() + Symbol.NumberId;
-      }*/
-
       m_uniqueName = StaticSymbolWindows.ValueName(type, value);
-      //m_uniqueName = SetUniqueName(m_storage, m_name);
       m_storage = Storage.Static;
       m_type = type;
       m_value = value;
@@ -150,20 +132,6 @@ namespace CCompiler {
                                  ((SymbolTable.CurrentTable.Scope == Scope.Global) && (storage == null))));
     }
 
-    /*private static string SetUniqueName(Storage? storage, string name) {
-      if (name != null) {
-        if (name.EndsWith(Symbol.NumberId) || (storage == Storage.Extern) ||
-           (SymbolTable.CurrentTable.Scope == Scope.Global) && (storage == null)) {
-          return name;
-        }
-        else if (storage == Storage.Static) {
-          return Symbol.FileMarker + (UniqueNameCount++) + Symbol.SeparatorId + name;
-        }
-      }
-
-      return null;
-    }*/
-
     private static string GetUniqueName(Storage? storage, string name) {
       if (HasExternalLinkage(storage, name)) {
         return (name.Equals("abs") ? "abs_" : name);
@@ -176,20 +144,6 @@ namespace CCompiler {
     public bool ExternalLinkage {
       get { return m_externalLinkage; }
     }
-
-    /*private bool m_switch = false;
-
-    public bool Switch {
-      get {
-        Assert.Error(!m_switch);
-        return m_switch;
-      }
-
-      set {
-        Assert.Error(false);
-        m_switch = value;
-      }
-    }*/
 
     private static Storage SetStorage(Storage? storage) {
       if (storage != null) {
@@ -241,16 +195,6 @@ namespace CCompiler {
       set { m_offset = value; }
     }
 
-    /*public StaticSymbol StaticSymbol {
-      get { return m_staticSymbol; }
-      set { m_staticSymbol = value; }
-    }*/
-
-    public bool Used {
-      get { return m_used; }
-      set { m_used = value; }
-    }
-
     public bool IsRegister() {
       return (m_storage == Storage.Register);
     }
@@ -288,40 +232,11 @@ namespace CCompiler {
       set { m_temporary = value; }
     }
 
-    /*public bool HasValue() {
-      return (m_value != null) && !m_type.IsString();
-    }*/
-
     public object Value {
       get { return m_value; }
       set { m_value = value; }
     }
   
-    public BigInteger GetSignedValue() {
-      if (m_type.IsUnsigned()) {
-        BigInteger longValue = (BigInteger) m_value;
-
-        if (longValue.CompareTo(((BigInteger) 0)) < 0) {      
-          switch (m_type.Size()) {
-            case 1:
-              return (longValue - 128);
-
-            case 2:
-              return (longValue - 32768);
-
-            case 4:
-              return (longValue - 2147483648);
-          }
-        }  
-      }
-
-      return ((BigInteger) m_value);
-    }
-  
-    /*public bool HasAddressSymbol() {
-      return (m_addressSymbol != null);
-    }*/
-
     public Symbol AddressSymbol {
       get { return m_addressSymbol; }
       set { m_addressSymbol = value; }

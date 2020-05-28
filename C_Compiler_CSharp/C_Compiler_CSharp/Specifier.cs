@@ -88,6 +88,38 @@ namespace CCompiler {
         }
       }
 
+/*      bool externalLinkage;
+      if (storage == null) {
+        externalLinkage = (SymbolTable.CurrentTable.Scope == Scope.Global);
+
+        if ((SymbolTable.CurrentTable.Scope == Scope.Global) &&
+            (CCompiler_Main.Parser.CallDepth == 0)) {
+          storage = CCompiler.Storage.Static;
+        }
+        else {
+          storage = CCompiler.Storage.Auto;
+        }
+
+      }
+      else {
+        externalLinkage = false;
+      }
+
+      switch (SymbolTable.CurrentTable.Scope) {
+        case Scope.Global:
+          Assert.Error((storage == Storage.Extern) || (storage == Storage.Static) ||
+                       (storage == Storage.Typedef) || (CCompiler_Main.Parser.CallDepth > 0),
+                       storage, Message.
+                       Only_extern____static____or_typedef_storage_allowed_in_global_scope);
+          break;
+
+        case Scope.Struct:
+        case Scope.Union:
+          Assert.Error((storage == Storage.Auto) || (storage == Storage.Register),
+                       storage, Message.Only_auto_or_register_storage_allowed_for_struct_or_union_scope);  
+          break;
+      }*/
+
       if ((compoundType != null) && (compoundType.EnumerationItemSet != null)){
         if (storage != null) {
           foreach (Pair<Symbol,bool> pair in compoundType.EnumerationItemSet){

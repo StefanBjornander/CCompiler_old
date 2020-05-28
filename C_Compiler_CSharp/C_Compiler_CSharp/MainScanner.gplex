@@ -366,7 +366,7 @@ WHITE_SPACE [ \t\r\n\f]
   { string text = yytext.Substring(1, yyleng - 2);
     int index = text.IndexOf(',');
     Path = new FileInfo(text.Substring(0, index).Replace("+", " "));
-    Line = int.Parse(text.Substring(index + 1));
+    Line = int.Parse(text.Substring(index + 1)) - 1;
   }
 }
 

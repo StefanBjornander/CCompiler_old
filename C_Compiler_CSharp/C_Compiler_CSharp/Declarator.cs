@@ -38,8 +38,10 @@ namespace CCompiler {
             break;
 
           case Sort.Array:
-            Assert.Error(type.IsComplete(), Message.Array_of_incomplete_type_not_allowed);
-            Assert.Error(!type.IsFunction(), Message.Array_of_function_not_allowed);
+            Assert.Error(type.IsComplete(),
+                         Message.Array_of_incomplete_type_not_allowed);
+            Assert.Error(!type.IsFunction(),
+                         Message.Array_of_function_not_allowed);
             m_lastType.ArrayType = type;
             m_lastType = type;
 
@@ -49,8 +51,10 @@ namespace CCompiler {
             break;
 
           case Sort.Function:
-            Assert.Error(!type.IsArray(), Message.Function_cannot_return_array);
-            Assert.Error(!type.IsFunction(),Message.Function_cannot_return_function);
+            Assert.Error(!type.IsArray(),
+                         Message.Function_cannot_return_array);
+            Assert.Error(!type.IsFunction(),
+                         Message.Function_cannot_return_function);
             m_lastType.ReturnType = type;
             m_lastType = type;
             break;

@@ -4,9 +4,9 @@
 
 // GPPG version 1.5.2
 // Machine:  STEFAN1968
-// DateTime: 2020-05-27 12:19:08
+// DateTime: 2020-05-28 13:09:48
 // UserName: Stefan
-// Input file <MainParser.gppg - 2020-05-26 20:17:48>
+// Input file <MainParser.gppg - 2020-05-28 12:57:09>
 
 // options: lines gplex
 
@@ -88,13 +88,13 @@ public class ScanObj {
 [GeneratedCodeAttribute( "Gardens Point Parser Generator", "1.5.2")]
 public partial class Parser: ShiftReduceParser<ValueType, LexLocation>
 {
-  // Verbatim content from MainParser.gppg - 2020-05-26 20:17:48
+  // Verbatim content from MainParser.gppg - 2020-05-28 12:57:09
 #line 8 "MainParser.gppg"
   public static Stack<Specifier> SpecifierStack = new Stack<Specifier>();
   public static Stack<BigInteger> EnumValueStack = new Stack<BigInteger>();
   public static int CallDepth = 0;
 #line default
-  // End verbatim content from MainParser.gppg - 2020-05-26 20:17:48
+  // End verbatim content from MainParser.gppg - 2020-05-28 12:57:09
 
 #pragma warning disable 649
   private static Dictionary<int, string> aliases;
@@ -1086,7 +1086,7 @@ public partial class Parser: ShiftReduceParser<ValueType, LexLocation>
       case 56: // initialization_bitfield_simple_declarator -> declarator
 #line 277 "MainParser.gppg"
                {
-      MiddleCodeGenerator.SimpleDeclarator
+      MiddleCodeGenerator.Declarator
         (SpecifierStack.Peek(), ValueStack[ValueStack.Depth-1].declarator);
       CurrentSemanticValue.middle_code_list = new List<MiddleCode>();
     }

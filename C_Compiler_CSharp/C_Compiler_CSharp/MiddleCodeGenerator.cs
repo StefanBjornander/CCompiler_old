@@ -40,7 +40,7 @@ namespace CCompiler {
       Type returnType;
 
       if (specifier != null) {
-        storage = specifier.Storage;
+        storage = specifier.Storage; 
         returnType = specifier.Type;
       }
       else {
@@ -366,7 +366,7 @@ namespace CCompiler {
 
     // ---------------------------------------------------------------------------------------------------------------------
 
-    public static void SimpleDeclarator(Specifier specifier, Declarator declarator) {
+    public static void Declarator(Specifier specifier, Declarator declarator) {
       Storage? storage = specifier.Storage;
       declarator.Add(specifier.Type);
 
@@ -2302,7 +2302,7 @@ namespace CCompiler {
         SymbolTable.CurrentTable.AddSymbol(symbol);
       }
 
-      symbol.Used = true;
+      //symbol.Used = true;
       List<MiddleCode> shortList = new List<MiddleCode>(),
                        longList = new List<MiddleCode>(); 
 

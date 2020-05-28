@@ -6,9 +6,9 @@
 //
 //  GPLEX Version:  1.2.2
 //  Machine:  STEFAN1968
-//  DateTime: 2020-05-27 12:19:10
+//  DateTime: 2020-05-28 13:09:49
 //  UserName: Stefan
-//  GPLEX input file <MainScanner.gplex - 2020-05-25 16:02:08>
+//  GPLEX input file <MainScanner.gplex - 2020-05-28 13:09:39>
 //  GPLEX frame file <embedded resource>
 //
 //  Option settings: parser, minimize
@@ -2466,7 +2466,7 @@ return ((int) Tokens.MODULO_ASSIGN);
 { string text = yytext.Substring(1, yyleng - 2);
     int index = text.IndexOf(',');
     Path = new FileInfo(text.Substring(0, index).Replace("+", " "));
-    Line = int.Parse(text.Substring(index + 1));
+    Line = int.Parse(text.Substring(index + 1)) - 1;
   }
             break;
         case 242:

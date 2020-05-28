@@ -275,7 +275,7 @@ declarator_list:
     
 initialization_bitfield_simple_declarator:
     declarator {
-      MiddleCodeGenerator.SimpleDeclarator
+      MiddleCodeGenerator.Declarator
         (SpecifierStack.Peek(), $1);
       $$ = new List<MiddleCode>();
     }
