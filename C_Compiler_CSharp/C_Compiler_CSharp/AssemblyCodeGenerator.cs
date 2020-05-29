@@ -603,7 +603,7 @@ namespace CCompiler {
         Assert.ErrorA(!(symbol.Type.IsFunction()));
 
         if ((symbol.Value is BigInteger) ||
-            (symbol.IsStaticOrExtern() &&
+            (symbol.IsExternOrStatic() &&
              symbol.Type.IsArrayFunctionStringStructOrUnion())) {
           AddAssemblyCode(AssemblyOperator.mov, track,
                           ValueOrAddress(symbol));
@@ -799,7 +799,7 @@ namespace CCompiler {
       m_trackMap.TryGetValue(resultSymbol, out resultTrack);
       m_trackMap.TryGetValue(assignSymbol, out assignTrack);
 
-      if ((resultSymbol.Temporary) &&
+      if ((resultSymbol.IsTemporary()) &&
           (resultSymbol.AddressSymbol == null)) {
         if (assignTrack != null) {
           if (resultTrack != null) {
@@ -816,7 +816,7 @@ namespace CCompiler {
           }
 
           if ((assignSymbol.Value is BigInteger) ||
-              (assignSymbol.IsStaticOrExtern() &&
+              (assignSymbol.IsExternOrStatic() &&
                assignSymbol.Type.IsArrayFunctionOrString())) {
             AddAssemblyCode(AssemblyOperator.mov, resultTrack,
                             ValueOrAddress(assignSymbol));
@@ -848,7 +848,7 @@ namespace CCompiler {
           m_trackMap.Remove(assignSymbol);
         }
         else if (assignSymbol.Type.IsArrayFunctionOrString()) {
-          if (assignSymbol.IsStaticOrExtern()) {
+          if (assignSymbol.IsExternOrStatic()) {
             AssemblyOperator sizeMovOperator =
                AssemblyCode.OperatorToSize(AssemblyOperator.mov,
                                            Type.PointerSize);
@@ -1161,7 +1161,7 @@ namespace CCompiler {
              leftSymbol = (Symbol) middleCode[1],
              rightSymbol = (Symbol) middleCode[2];
 
-      if (resultSymbol.Equals(leftSymbol) && !resultSymbol.Temporary) {
+      if (resultSymbol.Equals(leftSymbol) && !resultSymbol.IsTemporary()) {
         CompoundIntegralBinary(middleCode.Operator,
                                        leftSymbol, rightSymbol);
       }
@@ -1185,7 +1185,7 @@ namespace CCompiler {
         AddAssemblyCode(sizeOperator, Base(leftSymbol),
                         Offset(leftSymbol), ValueOrAddress(rightSymbol));
       }
-      else if (rightSymbol.IsStaticOrExtern() &&
+      else if (rightSymbol.IsExternOrStatic() &&
                rightSymbol.Type.IsArrayFunctionOrString()) {
         AssemblyOperator sizeOperator =
           AssemblyCode.OperatorToSize(objectOperator, Type.PointerSize);
@@ -1231,7 +1231,7 @@ namespace CCompiler {
                         Base(rightSymbol), Offset(rightSymbol));
       }
 
-      Assert.ErrorA(resultSymbol.Temporary &&
+      Assert.ErrorA(resultSymbol.IsTemporary() &&
                     (resultSymbol.AddressSymbol == null));
       m_trackMap.Add(resultSymbol, leftTrack);
     }
@@ -1244,7 +1244,7 @@ namespace CCompiler {
 
       if ((leftTrack == null) && (rightTrack == null)) {
         if ((leftSymbol.AddressSymbol != null) ||
-            (leftSymbol.IsStaticOrExtern() &&
+            (leftSymbol.IsExternOrStatic() &&
              !leftSymbol.Type.IsArrayFunctionOrString()) ||
             (leftSymbol.IsAutoOrRegister() &&
              !leftSymbol.Type.IsArray())) {
@@ -1253,7 +1253,7 @@ namespace CCompiler {
                                         leftSymbol.Type.Size());
 
           if ((rightSymbol.Value is BigInteger) ||
-              (rightSymbol.IsStaticOrExtern() &&
+              (rightSymbol.IsExternOrStatic() &&
               rightSymbol.Type.IsArrayFunctionOrString())) {
             AddAssemblyCode(sizeOperator, Base(leftSymbol),
                             Offset(leftSymbol), ValueOrAddress(rightSymbol));
@@ -1276,7 +1276,7 @@ namespace CCompiler {
         }
 
         if ((rightSymbol.Value is BigInteger) ||
-            (rightSymbol.IsStaticOrExtern() &&
+            (rightSymbol.IsExternOrStatic() &&
              rightSymbol.Type.IsArrayFunctionOrString())) {
           AddAssemblyCode(AssemblyOperator.cmp, leftTrack,
                           ValueOrAddress(rightSymbol)); // cmp ax, 123
@@ -1295,7 +1295,7 @@ namespace CCompiler {
       else { // rightTrack != null
         Assert.ErrorA(!(leftSymbol.Value is BigInteger));
 
-        if ((leftSymbol.IsStaticOrExtern() &&
+        if ((leftSymbol.IsExternOrStatic() &&
              leftSymbol.Type.IsArrayFunctionOrString()) ||
              (leftSymbol.IsAutoOrRegister() &&
               leftSymbol.Type.IsArray())) {
@@ -1352,7 +1352,7 @@ namespace CCompiler {
         m_trackMap.Remove(symbol.AddressSymbol);
         return addressTrack;
       }
-      else if (symbol.IsStaticOrExtern()) {
+      else if (symbol.IsExternOrStatic()) {
         return symbol.UniqueName;
       }
       else { //resultSymbol.IsAutoOrRegister()
@@ -1409,7 +1409,7 @@ namespace CCompiler {
       AssemblyOperator objectOperator =
         m_middleToIntegralMap[middleCode.Operator];
 
-      if (rightSymbol.Temporary && (rightSymbol.AddressSymbol == null)) {
+      if (rightSymbol.IsTemporary() && (rightSymbol.AddressSymbol == null)) {
         Track rightTrack = LoadValueToRegister(rightSymbol);
         AddAssemblyCode(objectOperator, rightTrack);
       }
@@ -1429,7 +1429,7 @@ namespace CCompiler {
       Register resultRegister = ResultMultiplyMap[pair];
       Track resultTrack = new Track(resultSymbol, resultRegister);
 
-      Assert.ErrorA(resultSymbol.Temporary &&
+      Assert.ErrorA(resultSymbol.IsTemporary() &&
                     (resultSymbol.AddressSymbol == null));
       m_trackMap.Add(resultSymbol, resultTrack);
       AddAssemblyCode(AssemblyOperator.empty, resultTrack);
@@ -1620,7 +1620,7 @@ namespace CCompiler {
         objectOperator = m_floatTopMap[symbol.Type.Sort];
       }
     
-      if (symbol.Temporary && (symbol.AddressSymbol == null) &&
+      if (symbol.IsTemporary() && (symbol.AddressSymbol == null) &&
           (symbol.Offset == 0)) {
         AddAssemblyCode(objectOperator,
                         AssemblyCodeGenerator.IntegralStorageName, 0);
@@ -1717,7 +1717,7 @@ namespace CCompiler {
                           Offset(toSymbol), fromValue);
         }
       }
-      else if (fromSymbol.IsStaticOrExtern() &&
+      else if (fromSymbol.IsExternOrStatic() &&
                fromSymbol.Type.IsArrayFunctionOrString()) {
         AssemblyOperator sizeOperator =
           AssemblyCode.OperatorToSize(AssemblyOperator.mov,

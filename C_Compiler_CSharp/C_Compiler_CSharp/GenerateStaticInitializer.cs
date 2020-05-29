@@ -4,14 +4,14 @@ using System.Globalization;
 using System.Collections.Generic;
 
 namespace CCompiler {
-  public class GenerateStaticInitializerX {
+  public class GenerateStaticInitializer {
     public static List<MiddleCode> GenerateStatic(Type toType, object fromInit) {      
       List<MiddleCode> middleCodeList = new List<MiddleCode>();
 
       if (fromInit is Expression) {
         Expression fromExpression = (Expression) fromInit;
         Symbol fromSymbol = ((Expression) fromInit).Symbol;
-        Assert.Error(fromSymbol.IsStaticOrExtern(), fromSymbol, Message.Non__static_initializer);
+        Assert.Error(fromSymbol.IsExternOrStatic(), fromSymbol, Message.Non__static_initializer);
         Type fromType = fromSymbol.Type;
         object fromValue = fromSymbol.Value;
 
@@ -22,7 +22,8 @@ namespace CCompiler {
         }
         else if (toType.IsPointer() && fromType.IsString()) {
           Assert.ErrorA(toType.PointerType.IsChar());
-          middleCodeList.Add(new MiddleCode(MiddleOperator.Init, Sort.Pointer, StaticSymbolWindows.ValueName(toType, fromSymbol.Value)));
+          middleCodeList.Add(new MiddleCode(MiddleOperator.Init, Sort.Pointer,
+                             StaticSymbolWindows.ValueName(toType, fromSymbol.Value)));
         }
         else if (toType.IsPointer() && (fromSymbol.Value is StaticAddress)) {
           Assert.ErrorA(fromType.IsPointer()  && toType.IsPointer());

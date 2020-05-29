@@ -143,14 +143,6 @@ namespace CCompiler {
       get { return m_functionStyle; }
     }
 
-    /*public bool IsOldStyleFunction() {
-      return (m_nameList != null);
-    }
-
-    public bool IsNewStyleFunction() {
-      return (m_nameList == null);
-    }*/
-
     public List<string> NameList {
       get { return m_nameList; }
     }
@@ -180,10 +172,6 @@ namespace CCompiler {
       m_sort = sort;
       m_memberMap = symbolMap;
     }
-
-    /*public Symbol LookupMember(string name) {
-      return m_memberMap[name];
-    }*/
 
     public IDictionary<string,Symbol> MemberMap {
       get { return m_memberMap; }
@@ -264,22 +252,26 @@ namespace CCompiler {
         m_unsignedMap.Add(2, UnsignedIntegerType);
         m_unsignedMap.Add(4, UnsignedLongIntegerType);
 
+        m_minValueMap.Add(Sort.Logical, 0);
         m_minValueMap.Add(Sort.Signed_Char, -128);
         m_minValueMap.Add(Sort.Unsigned_Char, 0);
         m_minValueMap.Add(Sort.Signed_Short_Int, -128);
         m_minValueMap.Add(Sort.Unsigned_Short_Int, 0);
         m_minValueMap.Add(Sort.Signed_Int, -32768);
         m_minValueMap.Add(Sort.Unsigned_Int, 0);
+        m_minValueMap.Add(Sort.Array, 0);
         m_minValueMap.Add(Sort.Pointer, 0);
         m_minValueMap.Add(Sort.Signed_Long_Int, -2147483648);
         m_minValueMap.Add(Sort.Unsigned_Long_Int, 0);
 
+        m_maxValueMap.Add(Sort.Logical, 1);
         m_maxValueMap.Add(Sort.Signed_Char, 127);
         m_maxValueMap.Add(Sort.Unsigned_Char, 255);
         m_maxValueMap.Add(Sort.Signed_Short_Int, 127);
         m_maxValueMap.Add(Sort.Unsigned_Short_Int, 255);
         m_maxValueMap.Add(Sort.Signed_Int, 32767);
         m_maxValueMap.Add(Sort.Unsigned_Int, 65535);
+        m_maxValueMap.Add(Sort.Array, 65535);
         m_maxValueMap.Add(Sort.Pointer, 65535);
         m_maxValueMap.Add(Sort.Signed_Long_Int, 2147483647);
         m_maxValueMap.Add(Sort.Unsigned_Long_Int, 4294967295);
@@ -301,7 +293,6 @@ namespace CCompiler {
       if (Start.Linux) {
         PointerSize = 8;
         SignedIntegerSize = 4;
-        //ReturnAddressSize = 8;
 
         m_sizeMap.Add(Sort.Void, 0);
         m_sizeMap.Add(Sort.Function, 0);
@@ -331,22 +322,26 @@ namespace CCompiler {
         m_unsignedMap.Add(4, UnsignedIntegerType);
         m_unsignedMap.Add(8, UnsignedLongIntegerType);
 
+        m_minValueMap.Add(Sort.Logical, 0);
         m_minValueMap.Add(Sort.Signed_Char, -128);
         m_minValueMap.Add(Sort.Unsigned_Char, 0);
         m_minValueMap.Add(Sort.Signed_Short_Int, -32768);
         m_minValueMap.Add(Sort.Unsigned_Short_Int, 0);
         m_minValueMap.Add(Sort.Signed_Int, -2147483648);
         m_minValueMap.Add(Sort.Unsigned_Int, 0);
+        m_minValueMap.Add(Sort.Array, 0);
         m_minValueMap.Add(Sort.Pointer, 0);
         m_minValueMap.Add(Sort.Signed_Long_Int, -9223372036854775808);
         m_minValueMap.Add(Sort.Unsigned_Long_Int, 0);
 
+        m_maxValueMap.Add(Sort.Logical, 1);
         m_maxValueMap.Add(Sort.Signed_Char, 127);
         m_maxValueMap.Add(Sort.Unsigned_Char, 255);
         m_maxValueMap.Add(Sort.Signed_Short_Int, 32767);
         m_maxValueMap.Add(Sort.Unsigned_Short_Int, 65535);
         m_maxValueMap.Add(Sort.Signed_Int, 2147483647);
         m_maxValueMap.Add(Sort.Unsigned_Int, 4294967295);
+        m_maxValueMap.Add(Sort.Array, 4294967295);
         m_maxValueMap.Add(Sort.Pointer, 4294967295);
         m_maxValueMap.Add(Sort.Signed_Long_Int, 9223372036854775807);
         m_maxValueMap.Add(Sort.Unsigned_Long_Int, 18446744073709551615);

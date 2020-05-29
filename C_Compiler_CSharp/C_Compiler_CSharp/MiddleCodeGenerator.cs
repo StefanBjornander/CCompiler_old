@@ -61,7 +61,7 @@ namespace CCompiler {
       SymbolTable.CurrentFunction =
         new Symbol(declarator.Name, specifier.ExternalLinkage, storage.Value, declarator.Type);
 
-      Assert.Error(SymbolTable.CurrentFunction.IsStaticOrExtern(),
+      Assert.Error(SymbolTable.CurrentFunction.IsExternOrStatic(),
                 declarator.Name, Message.A_function_must_be_static_or_extern);
 
       SymbolTable.CurrentTable.AddSymbol(SymbolTable.CurrentFunction);
@@ -335,7 +335,7 @@ namespace CCompiler {
       if (optInitSymbol != null) {
         Assert.Error(optInitSymbol.Type.IsIntegral(), itemName,
                      Message.Non__integral_enum_value);
-        Assert.Error(optInitSymbol.IsValue(), itemName,
+        Assert.Error(optInitSymbol.Value != null, itemName,
                      Message.Non__constant_enum_value);
         CCompiler_Main.Parser.EnumValueStack.Pop();
         value = (BigInteger) optInitSymbol.Value;
@@ -345,7 +345,7 @@ namespace CCompiler {
       }
     
       // enum {a,b,c} extern;
-      Symbol itemSymbol = new Symbol(itemName, false, Storage.Auto, itemType, value);
+      Symbol itemSymbol = new Symbol(itemName, false, Storage.Auto, itemType, false, value);
       SymbolTable.CurrentTable.AddSymbol(itemSymbol);
       CCompiler_Main.Parser.EnumValueStack.Push(value + 1);
       return itemSymbol;
@@ -426,7 +426,7 @@ namespace CCompiler {
 
       if ((SymbolTable.CurrentTable.Scope == Scope.Global) || (storage == Storage.Static)) {
         init = ModifyInitializer.DoInit(type, init);
-        List<MiddleCode> middleCodeList = GenerateStaticInitializerX.GenerateStatic(type, init);
+        List<MiddleCode> middleCodeList = GenerateStaticInitializer.GenerateStatic(type, init);
 
         Symbol symbol = new Symbol(name, specifier.ExternalLinkage, storage.Value, type);
         List<AssemblyCode> assemblyCodeList = new List<AssemblyCode>();
@@ -444,14 +444,7 @@ namespace CCompiler {
         if (Start.Linux) {
           List<string> textList = new List<string>();
           ISet<string> externSet = new HashSet<string>();
-
-          if (symbol.ExternalLinkage) {
-            textList.Add(symbol.UniqueName + ":");
-          }
-          else {
-            textList.Add("\n" + symbol.UniqueName + ":");
-          }
-
+          textList.Add("\n" + symbol.UniqueName + ":");
           GenerateStaticInitializerLinux.TextList(assemblyCodeList, textList, externSet);
           SymbolTable.CurrentTable.AddSymbol(symbol);
           StaticSymbol staticSymbol = new StaticSymbolLinux(StaticSymbolLinux.TextOrData.Data, symbol.UniqueName, textList, externSet);
@@ -612,14 +605,31 @@ namespace CCompiler {
 
       Assert.Error((storage == Storage.Auto) || (storage == Storage.Register),
                    Message.Parameters_must_have_auto_or_register_storage);
-    
+
+      string name;
+      Type type;
+          
       if (declarator != null) {
+        name = declarator.Name;
         declarator.Add(specifierType);
-        return (new Pair<string,Symbol>(declarator.Name, new Symbol(declarator.Name, false, storage.Value, declarator.Type, true)));;
+        type = declarator.Type;
       }
       else {
-        return (new Pair<string,Symbol>(null,new Symbol(null, false, storage.Value, specifierType, true)));
+        name = null;
+        type = specifierType;
       }
+
+      if (type.IsArray()) {
+        type = new Type(type.ArrayType);
+        type.IsConstant = true;
+      }
+      else if (type.IsFunction()) {
+        type = new Type(type);
+        type.IsConstant = true;
+      }
+
+      Symbol symbol = new Symbol(name, false, storage.Value, type, true);
+      return (new Pair<string, Symbol>(name, symbol));
     }
 
     // ---------------------------------------------------------------------------------------------------------------------

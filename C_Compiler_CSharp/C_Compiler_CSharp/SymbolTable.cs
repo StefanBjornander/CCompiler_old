@@ -31,7 +31,7 @@ namespace CCompiler {
     
       switch (m_scope = scope) {
         case Scope.Global:
-          SymbolTable.StaticSet = new HashSet<StaticSymbol>();
+          StaticSet = new HashSet<StaticSymbol>();
           break;
 
         case Scope.Struct:
@@ -101,7 +101,6 @@ namespace CCompiler {
       Symbol symbol;
 
       if (m_entryMap.TryGetValue(name, out symbol)) {
-        //symbol.Used = true;
         return symbol;
       }
       else if (m_parentTable != null) {

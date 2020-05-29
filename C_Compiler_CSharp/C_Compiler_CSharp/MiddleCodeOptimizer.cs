@@ -29,7 +29,7 @@ namespace CCompiler {
         //OptimizeRelation(); // XXX
         OptimizeCommutative();
         RemoveTrivialAssign();
-        OptimizeBinary();
+        //OptimizeBinary();
         CheckIntegral(); // XXX
         CheckFloating(); // XXX
         RemoveClearedCode();
@@ -333,7 +333,7 @@ namespace CCompiler {
 
         if ((thisCode.IsUnary() || thisCode.IsBinary()) &&
             (nextCode.Operator == MiddleOperator.Assign) &&
-            ((Symbol) thisCode[0]).Temporary &&
+            ((Symbol) thisCode[0]).IsTemporary() &&
             thisCode[0].Equals(nextCode[1])) {
           thisCode[0] = nextCode[0];
           nextCode.Clear();
@@ -425,7 +425,7 @@ namespace CCompiler {
           }
 
           if (newSymbol != null) {
-            if (resultSymbol.Temporary) {
+            if (resultSymbol.IsTemporary()) {
               thisCode.Operator = MiddleOperator.Empty;
 
               int index2;
@@ -504,7 +504,7 @@ namespace CCompiler {
                  rightSymbol = (Symbol) middleCode[2];
    
           if (leftSymbol.Type.IsIntegralPointerArrayOrFunction() && // not 1 - i
-              leftSymbol.IsValue()) {
+              (leftSymbol.Value != null)) {
             middleCode[1] = rightSymbol;
             middleCode[2] = leftSymbol;
           }
@@ -527,7 +527,7 @@ namespace CCompiler {
     // i = i
     // empty
 
-    private void OptimizeBinary() {
+    /*private void OptimizeBinary() {
       foreach (MiddleCode middleCode in m_middleCodeList) {
         MiddleOperator middleOperator = middleCode.Operator;
       
@@ -586,7 +586,7 @@ namespace CCompiler {
           }
         }
       }
-    }
+    }*/
 
     private void RemoveTrivialAssign() {
       foreach (MiddleCode middleCode in m_middleCodeList) {
@@ -680,18 +680,18 @@ namespace CCompiler {
             break;
 
           default:
-            if ((symbol0 != null) && symbol0.Temporary &&
+            if ((symbol0 != null) && symbol0.IsTemporary() &&
                 (symbol0.AddressSymbol == null) &&
                 symbol0.Type.IsIntegralArrayOrPointer()) {
               integralSet.Add(symbol0);
             }
 
-            if ((symbol1 != null) && symbol1.Temporary &&
+            if ((symbol1 != null) && symbol1.IsTemporary() &&
                 symbol1.Type.IsIntegralArrayOrPointer()) {
               integralSet.Remove(symbol1);
             }
 
-            if ((symbol2 != null) && symbol2.Temporary &&
+            if ((symbol2 != null) && symbol2.IsTemporary() &&
                 symbol2.Type.IsIntegralArrayOrPointer()) {
               integralSet.Remove(symbol2);
             }

@@ -22,72 +22,33 @@ namespace CCompiler {
     private Symbol m_addressSymbol;
     private int m_addressOffset;
     private bool m_assignable, m_addressable;
-  
     private ISet<MiddleCode> m_trueSet, m_falseSet;
 
     private static int UniqueNameCount = 0, TemporaryNameCount = 0;
 
-    public Symbol() {
-      // Empty.
-    }
-
-    public Symbol(string name, bool externalLinkage, Storage storage, Type type) // Variable or function
-     :this(name, externalLinkage, storage, type, false) {
-      // Empty.
-    }
-
-    public Symbol(string name, bool externalLinkage, Storage storage, Type type, bool parameter) { // Maybe parameter
+    public Symbol(string name, bool externalLinkage, Storage storage,
+                  Type type, bool parameter = false, object value = null) {
       m_name = name;
-
-      m_type = type;
       m_externalLinkage = externalLinkage;
-      //m_externalLinkage = HasExternalLinkage(storage, name);
-      m_uniqueName = GetUniqueName();
-      //m_uniqueName = GetUniqueName();
-      m_storage = storage;
-      //m_storage = SetStorage(storage);
-      m_temporary = false;
-      m_parameter = parameter;
-      m_assignable = GetAssignable();
-      m_addressable = GetAddressable();
 
-      if (m_parameter) {
-        if (type.IsArray()) {
-          m_type = new Type(type.ArrayType);
-          m_type.IsConstant = true;
-        }
-        else if (type.IsFunction()) {
-          m_type = new Type(type);
-          m_type.IsConstant = true;
-        }
+      if (m_externalLinkage) {
+        m_uniqueName = (m_name.Equals("abs") ? "abs_" : m_name);
       }
-    }
+      else {
+        m_uniqueName = Symbol.FileMarker + (UniqueNameCount++) + Symbol.SeparatorId + m_name;
+      }
 
-    public Symbol(string name, bool externalLinkage, Storage storage, // Variable with value
-                  Type type, object value) {
-      m_name = name;
-      m_type = type;
-      m_externalLinkage = externalLinkage;
-      //m_externalLinkage = HasExternalLinkage(storage, name);
-      m_uniqueName = GetUniqueName();
-      //m_uniqueName = GetUniqueName(storage, name);
       m_storage = storage;
-      //m_storage = SetStorage(storage);
+      m_type = type;
+      m_parameter = parameter;
       m_value = value;
       m_temporary = false;
-      m_parameter = false;
       m_assignable = GetAssignable();
       m_addressable = GetAddressable();
+      CheckValue(m_type, m_value);
     }
 
-    public Symbol(Type type) // Temporary
-     :this(type, true) {
-      // Empty.
-    }
-
-    //private static Symbol m_lastFunction = null;
-
-    public Symbol(Type type, bool temporary) { //Maybe temporary
+    public Symbol(Type type, bool temporary = true) { //Maybe temporary
       m_name = Symbol.TemporaryId + "temporary" + (TemporaryNameCount++);
       m_storage = Storage.Auto;
       m_type = type;
@@ -113,11 +74,15 @@ namespace CCompiler {
       m_parameter = false;
       m_assignable = false;
       m_addressable = false;
+      CheckValue(m_type, m_value);
+    }
 
-      if (m_type.IsIntegralOrPointer() && (value is BigInteger)) {
+    private static void CheckValue(Type type, object value) {
+      if (value is BigInteger) {
         BigInteger bigValue = (BigInteger) value;
-        Assert.Error((bigValue >= m_type.GetMinValue()) && (bigValue <= m_type.GetMaxValue()),
-                     m_type + ": " + value, Message.Value_overflow);
+        Assert.Error((bigValue >= type.GetMinValue()) &&
+                     (bigValue <= type.GetMaxValue()),
+                     type + ": " + value, Message.Value_overflow);
       }
     }
 
@@ -133,58 +98,6 @@ namespace CCompiler {
       m_addressable = false;
     }
 
-/*    private static bool HasExternalLinkage(Storage storage, string name) {
-      return ((name != null) && (name.EndsWith(Symbol.NumberId) || (storage == Storage.Extern) ||
-                                 ((SymbolTable.CurrentTable.Scope == Scope.Global) && (storage == null))));
-    }*/
-
-    private string GetUniqueName() {
-      if (m_externalLinkage) {
-        return (m_name.Equals("abs") ? "abs_" : m_name);
-      }
-      else {
-        return Symbol.FileMarker + (UniqueNameCount++) + Symbol.SeparatorId + m_name;
-      }
-    }
-
-/*    private static string GetUniqueName(Storage storage, string name) {
-      if (HasExternalLinkage(storage, name)) {
-        return (name.Equals("abs") ? "abs_" : name);
-      }
-      else {
-        return Symbol.FileMarker + (UniqueNameCount++) + Symbol.SeparatorId + name;
-      }
-    }*/
-
-    public bool ExternalLinkage {
-      get { return m_externalLinkage; }
-    }
-
-    /*private static Storage SetStorage(Storage storage) {
-      if (storage != null) {
-        return storage.Value;
-      }
-      else {
-        if (CCompiler_Main.Parser.CallDepth > 0) {
-          return Storage.Auto;
-        }
-        else if (SymbolTable.CurrentTable.Scope == Scope.Global) {
-          return Storage.Static;
-        }
-        else {
-          return Storage.Auto;
-        }
-      }
-    }*/
-
-    public ISet<MiddleCode> TrueSet {
-      get { return m_trueSet; }
-    }
-
-    public ISet<MiddleCode> FalseSet {
-      get { return m_falseSet; }
-    }
-
     public string Name {
       get { return m_name; }
       set { m_name = value; }
@@ -195,7 +108,11 @@ namespace CCompiler {
       set { m_uniqueName = value; }
     }
 
-    public CCompiler.Storage Storage {
+    public bool ExternalLinkage {
+      get { return m_externalLinkage; }
+    }
+
+    public Storage Storage {
       get { return m_storage; }
       set { m_storage = value; }
     }
@@ -210,41 +127,48 @@ namespace CCompiler {
       set { m_offset = value; }
     }
 
-    public bool IsRegister() {
-      return (m_storage == Storage.Register);
-    }
-
-    public bool IsAutoOrRegister() {
-      return (m_storage == Storage.Auto) || (m_storage == Storage.Register);
-    }
-
-    public bool IsStatic() {
-      return (m_storage == Storage.Static);
-    }
-  
     public bool IsExtern() {
       return (m_storage == Storage.Extern);
     }
   
-    public bool IsStaticOrExtern() {
-      return IsStatic() || IsExtern();
+    public bool IsStatic() {
+      return (m_storage == Storage.Static);
+    }
+  
+    public bool IsExternOrStatic() {
+      return IsExtern() || IsStatic();
     }
   
     public bool IsTypedef() {
       return (m_storage == Storage.Typedef);
     }
   
+    public bool IsAuto() {
+      return (m_storage == Storage.Auto);
+    }
+
+    public bool IsRegister() {
+      return (m_storage == Storage.Register);
+    }
+
+    public bool IsAutoOrRegister() {
+      return IsAuto() || IsRegister();
+    }
+
+    public ISet<MiddleCode> TrueSet {
+      get { return m_trueSet; }
+    }
+
+    public ISet<MiddleCode> FalseSet {
+      get { return m_falseSet; }
+    }
+
     public bool IsParameter() {
       return m_parameter;
     }
           
-    public bool IsValue() {
-      return (m_uniqueName != null) && m_uniqueName.EndsWith(Symbol.NumberId);
-    }
-
-    public bool Temporary {
-      get { return m_temporary; }
-      set { m_temporary = value; }
+    public bool IsTemporary() {
+      return m_temporary;
     }
 
     public object Value {
