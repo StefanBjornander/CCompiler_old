@@ -26,10 +26,11 @@ namespace CCompiler {
 
     private static int UniqueNameCount = 0, TemporaryNameCount = 0;
 
-    public Symbol(string name, bool externalLinkage, Storage storage,
+    public Symbol(string name, bool externalLinkage, Storage storage, // Regular
                   Type type, bool parameter = false, object value = null) {
       m_name = name;
       m_externalLinkage = externalLinkage;
+      m_storage = storage;
 
       if (m_externalLinkage) {
         m_uniqueName = (m_name.Equals("abs") ? "abs_" : m_name);
@@ -38,7 +39,6 @@ namespace CCompiler {
         m_uniqueName = Symbol.FileMarker + (UniqueNameCount++) + Symbol.SeparatorId + m_name;
       }
 
-      m_storage = storage;
       m_type = type;
       m_parameter = parameter;
       m_value = value;

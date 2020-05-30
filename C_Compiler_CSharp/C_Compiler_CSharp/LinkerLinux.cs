@@ -32,7 +32,7 @@ namespace CCompiler {
       m_globalMap.Add(AssemblyCodeGenerator.PathName, GeneratePathSymbol());
 
       { StaticSymbol mainInfo;
-        Assert.Error(m_globalMap.TryGetValue("main", out mainInfo),
+        Assert.Error(m_globalMap.TryGetValue(AssemblyCodeGenerator.MainName, out mainInfo),
                      "non-static main", Message.Function_missing);
         GenerateTrace(mainInfo);
       }

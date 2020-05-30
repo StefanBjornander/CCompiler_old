@@ -34,18 +34,18 @@ namespace CCompiler {
     public override void Generate() {
       //m_globalMap.Add(AssemblyCodeGenerator.PathName, GeneratePathSymbol());
 
-      { Assert.ErrorA(m_globalMap.ContainsKey("$init"));
-        StaticSymbolWindows initInfo = m_globalMap["$init"];
+      { Assert.ErrorA(m_globalMap.ContainsKey(AssemblyCodeGenerator.InitName));
+        StaticSymbolWindows initInfo = m_globalMap[AssemblyCodeGenerator.InitName];
         m_globalList.Add(initInfo);
         m_totalSize += initInfo.ByteList.Count;
-        m_addressMap.Add("$init", 0);
+        m_addressMap.Add(AssemblyCodeGenerator.InitName, 0);
       }
 
-      if (m_globalMap.ContainsKey("$args")) {
-        { StaticSymbolWindows argsInfo = m_globalMap["$args"];
+      if (m_globalMap.ContainsKey(AssemblyCodeGenerator.ArgsName)) {
+        { StaticSymbolWindows argsInfo = m_globalMap[AssemblyCodeGenerator.ArgsName];
           m_globalList.Add(argsInfo);
           m_totalSize += argsInfo.ByteList.Count;
-          m_addressMap.Add("$args", 0);
+          m_addressMap.Add(AssemblyCodeGenerator.ArgsName, 0);
         }
 
         { List<byte> byteList = new List<byte>();
@@ -56,7 +56,7 @@ namespace CCompiler {
       }
 
       { StaticSymbolWindows mainInfo;
-        Assert.Error(m_globalMap.TryGetValue("main", out mainInfo),
+        Assert.Error(m_globalMap.TryGetValue(AssemblyCodeGenerator.MainName, out mainInfo),
                      "non-static main", Message.Function_missing);
         GenerateTrace(mainInfo);
       }

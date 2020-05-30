@@ -21,6 +21,9 @@ namespace CCompiler {
 
     public static string IntegralStorageName =
       Symbol.SeparatorId + "IntegralStorage" + Symbol.NumberId;
+    public static string MainName = "main";
+    public static string InitName = Symbol.SeparatorId + "init";
+    public static string ArgsName = Symbol.SeparatorId + "args";
     public static string PathName = Symbol.SeparatorId + "PathName";
     public static string PathText = "";
   
@@ -1881,7 +1884,7 @@ namespace CCompiler {
         AssemblyCodeGenerator.GenerateTargetWindows(assemblyCodeList,
                               byteList, accessMap, callMap, returnSet);
         StaticSymbol staticSymbol =
-          new StaticSymbolWindows("$init", byteList, accessMap,
+          new StaticSymbolWindows(AssemblyCodeGenerator.InitName, byteList, accessMap,
                                   callMap, returnSet);
         SymbolTable.StaticSet.Add(staticSymbol);
       }
@@ -1892,7 +1895,7 @@ namespace CCompiler {
         GenerateStaticInitializerLinux.TextList
                                  (assemblyCodeList, textList, externSet);
         SymbolTable.StaticSet.Add(new StaticSymbolLinux
-       (StaticSymbolLinux.TextOrData.Text, "$init", textList, externSet));
+       (StaticSymbolLinux.TextOrData.Text, AssemblyCodeGenerator.InitName, textList, externSet));
       }
     }
 
@@ -1937,7 +1940,7 @@ namespace CCompiler {
         IDictionary<int, string> callMap = new Dictionary<int, string>();
         ISet<int> returnSet = new HashSet<int>();
         AssemblyCodeGenerator.GenerateTargetWindows(assemblyCodeList, byteList, accessMap, callMap, returnSet);
-        StaticSymbol staticSymbol = new StaticSymbolWindows("$args", byteList, accessMap, callMap, returnSet);
+        StaticSymbol staticSymbol = new StaticSymbolWindows(AssemblyCodeGenerator.ArgsName, byteList, accessMap, callMap, returnSet);
         SymbolTable.StaticSet.Add(staticSymbol);
       }
 
@@ -1966,7 +1969,7 @@ namespace CCompiler {
         List<string> textList = new List<string>();
         ISet<string> externSet = new HashSet<string>();
         GenerateStaticInitializerLinux.TextList(assemblyCodeList, textList, externSet);
-        SymbolTable.StaticSet.Add(new StaticSymbolLinux(StaticSymbolLinux.TextOrData.Text, "$args", textList, externSet));
+        SymbolTable.StaticSet.Add(new StaticSymbolLinux(StaticSymbolLinux.TextOrData.Text, AssemblyCodeGenerator.ArgsName, textList, externSet));
       }
     }
 

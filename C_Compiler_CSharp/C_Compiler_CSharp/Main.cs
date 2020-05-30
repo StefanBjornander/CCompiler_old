@@ -228,15 +228,15 @@ namespace CCompiler {
         
         StaticSymbolLinux initSymbol = null, argsSymbol = null, mainSymbol = null;
         foreach (StaticSymbol staticSymbol in SymbolTable.StaticSet) {
-          if (staticSymbol.UniqueName.Equals("$init")) {
+          if (staticSymbol.UniqueName.Equals(AssemblyCodeGenerator.InitName)) {
             initSymbol = (StaticSymbolLinux) staticSymbol;
           }
 
-          if (staticSymbol.UniqueName.Equals("main")) {
+          if (staticSymbol.UniqueName.Equals(AssemblyCodeGenerator.MainName)) {
             mainSymbol = (StaticSymbolLinux) staticSymbol;
           }
 
-          if (staticSymbol.UniqueName.Equals("$args")) {
+          if (staticSymbol.UniqueName.Equals(AssemblyCodeGenerator.ArgsName)) {
             argsSymbol = (StaticSymbolLinux) staticSymbol;
           }
         }
@@ -268,7 +268,7 @@ namespace CCompiler {
           }
  
           if (staticSymbolLinux.TextOrDataX == StaticSymbolLinux.TextOrData.Text) {
-            if (staticSymbolLinux.UniqueName.Equals("main")) {
+            if (staticSymbolLinux.UniqueName.Equals(AssemblyCodeGenerator.MainName)) {
               totalTextList.Add("_start:");
               totalTextList.AddRange(staticSymbolLinux.TextList);
               totalDataList.Add("$StackTop:\ttimes 65536 db 0");
@@ -287,7 +287,7 @@ namespace CCompiler {
         StreamWriter streamWriter = new StreamWriter(assemblyFile.FullName);
 
         foreach (String globalName in totalGlobalSet) {
-          if (globalName.Equals("main")) {
+          if (globalName.Equals(AssemblyCodeGenerator.MainName)) {
             streamWriter.WriteLine("\tglobal _start");            
           }
           

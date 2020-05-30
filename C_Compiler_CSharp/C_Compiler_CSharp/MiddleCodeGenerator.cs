@@ -66,8 +66,8 @@ namespace CCompiler {
 
       SymbolTable.CurrentTable.AddSymbol(SymbolTable.CurrentFunction);
 
-      if (SymbolTable.CurrentFunction.UniqueName.Equals("main")) {
-        Assert.Error(returnType.IsVoid() || returnType.IsInteger(), "main",
+      if (SymbolTable.CurrentFunction.UniqueName.Equals(AssemblyCodeGenerator.MainName)) {
+        Assert.Error(returnType.IsVoid() || returnType.IsInteger(), AssemblyCodeGenerator.MainName,
                      Message.Function_main_must_return_void_or_integer);
       }
 
@@ -109,7 +109,7 @@ namespace CCompiler {
         }
       }
 
-      if (SymbolTable.CurrentFunction.UniqueName.Equals("main")) {
+      if (SymbolTable.CurrentFunction.UniqueName.Equals(AssemblyCodeGenerator.MainName)) {
         AssemblyCodeGenerator.InitializationCodeList();
         List<Type> typeList =
           SymbolTable.CurrentFunction.Type.TypeList;
@@ -119,12 +119,12 @@ namespace CCompiler {
                        typeList[1].IsPointer() &&
                        typeList[1].PointerType.IsPointer() &&
                        typeList[1].PointerType.PointerType.IsChar(),
-                       "main", Message.Invalid_parameter_list);
+                       AssemblyCodeGenerator.MainName, Message.Invalid_parameter_list);
           AssemblyCodeGenerator.ArgumentCodeList();
         }
         else {
           Assert.Error((typeList == null) || (typeList.Count == 0),
-                       "main", Message.Invalid_parameter_list);
+                       AssemblyCodeGenerator.MainName, Message.Invalid_parameter_list);
         }
       }
     }
@@ -135,7 +135,7 @@ namespace CCompiler {
       Backpatch(statement.NextSet, nextCode);
 
       if (SymbolTable.CurrentFunction.Type.ReturnType.IsVoid()) {
-        if (SymbolTable.CurrentFunction.UniqueName.Equals("main")) {
+        if (SymbolTable.CurrentFunction.UniqueName.Equals(AssemblyCodeGenerator.MainName)) {
           Type signedShortType = new Type(Sort.Signed_Short_Int);
           Symbol zeroSymbol = new Symbol(signedShortType, ((BigInteger) 0));
           AddMiddleCode(statement.CodeList, MiddleOperator.Exit,
@@ -198,7 +198,7 @@ namespace CCompiler {
         AddMiddleCode(statement.CodeList, MiddleOperator.Empty);
       Backpatch(statement.NextSet, nextCode);
     
-      if (SymbolTable.CurrentFunction.UniqueName.Equals("main") && 
+      if (SymbolTable.CurrentFunction.UniqueName.Equals(AssemblyCodeGenerator.MainName) && 
           SymbolTable.CurrentFunction.Type.ReturnType.IsVoid()) {
         Type signedShortType = new Type(Sort.Signed_Short_Int);
         Symbol zeroSymbol = new Symbol(signedShortType, ((BigInteger) 0));
@@ -242,12 +242,12 @@ namespace CCompiler {
 
       List<AssemblyCode> assemblyCodeList = new List<AssemblyCode>();
     
-      if (SymbolTable.CurrentFunction.UniqueName.Equals("main")) {
+      if (SymbolTable.CurrentFunction.UniqueName.Equals(AssemblyCodeGenerator.MainName)) {
         List<Type> typeList =
           SymbolTable.CurrentFunction.Type.TypeList;
         Assert.Error((typeList == null) || (typeList.Count == 0) ||
                      IsMainArgs(SymbolTable.CurrentFunction),
-                     "main", Message.Invalid_parameter_list);
+                     AssemblyCodeGenerator.MainName, Message.Invalid_parameter_list);
 
         AssemblyCodeGenerator.InitializationCodeList();
         //assemblyCodeList.AddRange(AssemblyCodeGenerator.InitializationCodeList());
@@ -910,7 +910,7 @@ namespace CCompiler {
                               SymbolTable.CurrentFunction.Type.ReturnType);
         codeList = expression.LongList;
 
-        if (SymbolTable.CurrentFunction.UniqueName.Equals("main")) {
+        if (SymbolTable.CurrentFunction.UniqueName.Equals(AssemblyCodeGenerator.MainName)) {
           AddMiddleCode(codeList, MiddleOperator.Exit,
                         null, expression.Symbol);
         }
@@ -925,7 +925,7 @@ namespace CCompiler {
                      Message.Void_returned_from_non__void_function);
         codeList = new List<MiddleCode>();
 
-        if (SymbolTable.CurrentFunction.UniqueName.Equals("main")) {
+        if (SymbolTable.CurrentFunction.UniqueName.Equals(AssemblyCodeGenerator.MainName)) {
           AddMiddleCode(codeList, MiddleOperator.Exit);
         }
         else {
