@@ -149,9 +149,35 @@ namespace CCompiler {
       AddMiddleCode(statement.CodeList, MiddleOperator.FunctionEnd,
                     SymbolTable.CurrentFunction);
 
+      if (SymbolTable.CurrentFunction.Name.Equals("generateTempName")) {
+        string name = @"C:\Users\Stefan\Documents\vagrant\homestead\code\code\" +
+                      SymbolTable.CurrentFunction.Name + ".middlebefore";
+        StreamWriter streamWriter = new StreamWriter(name);
+
+        for (int index = 0; index < statement.CodeList.Count; ++index) {
+          MiddleCode middleCode = statement.CodeList[index];
+          streamWriter.WriteLine(index + ": " + middleCode.ToString());
+        }
+
+        streamWriter.Close();
+      }
+
       MiddleCodeOptimizer middleCodeOptimizer =
         new MiddleCodeOptimizer(statement.CodeList);
       middleCodeOptimizer.Optimize();
+
+      if (SymbolTable.CurrentFunction.Name.Equals("generateTempName")) {
+        string name = @"C:\Users\Stefan\Documents\vagrant\homestead\code\code\" +
+                      SymbolTable.CurrentFunction.Name + ".middleafter";
+        StreamWriter streamWriter = new StreamWriter(name);
+
+        for (int index = 0; index < statement.CodeList.Count; ++index) {
+          MiddleCode middleCode = statement.CodeList[index];
+          streamWriter.WriteLine(index + ": " + middleCode.ToString());
+        }
+
+        streamWriter.Close();
+      }
 
       List<AssemblyCode> assemblyCodeList = new List<AssemblyCode>();
       AssemblyCodeGenerator.GenerateAssembly(statement.CodeList,
@@ -1846,8 +1872,6 @@ namespace CCompiler {
     public static Expression AddressExpression(Expression expression) {
       Assert.Error(expression.Symbol.Addressable, expression,
                    Message.Not_addressable);
-      Assert.Error(!expression.Symbol.IsRegister(), expression,
-                   Message.Invalid_address_of_register_storage);
 
       Symbol staticSymbol =
         StaticExpression.Unary(MiddleOperator.Address, expression.Symbol);
@@ -1873,20 +1897,104 @@ namespace CCompiler {
                    Message.Invalid_dereference_of_non__pointer);
 
       Symbol staticSymbol =
-        StaticExpression.Unary(MiddleOperator.Dereferenceerence, expression.Symbol);
+        StaticExpression.Unary(MiddleOperator.Dereference, expression.Symbol);
       if (staticSymbol != null) {
         return (new Expression(staticSymbol, null, null));
       }
 
-      Symbol symbol = expression.Symbol;
-      Symbol resultSymbol = new Symbol(symbol.Type.PointerOrArrayType);
-      resultSymbol.AddressSymbol = symbol;
-      resultSymbol.AddressOffset = 0;
-      resultSymbol.Assignable =
-        !symbol.Type.PointerOrArrayType.IsConstantRecursive() &&
-        !symbol.Type.IsArrayStringOrFunction();
-      AddMiddleCode(expression.LongList, MiddleOperator.Dereferenceerence,
-                    resultSymbol, symbol, 0);
+      Symbol resultSymbol = new Symbol(expression.Symbol.Type.PointerOrArrayType, false);
+      return Dereference(expression, resultSymbol, 0);
+    }
+  
+    public static Expression ArrowExpression(Expression expression,
+                                             string memberName) {
+      Assert.Error(expression.Symbol.Type.IsPointer() &&
+                   expression.Symbol.Type.PointerType.IsStructOrUnion(),
+                   expression,
+             Message.Not_a_pointer_to_a_struct_or_union_in_arrow_expression);
+      Symbol memberSymbol =
+        expression.Symbol.Type.PointerType.MemberMap[memberName];
+      Assert.Error(memberSymbol != null, memberName,
+                   Message.Unknown_member_in_arrow_expression);
+
+      Symbol resultSymbol = new Symbol(memberSymbol.Type, false);
+      return Dereference(expression, resultSymbol, memberSymbol.Offset);
+    }
+
+    public static Expression IndexExpression(Expression leftExpression,
+                                             Expression rightExpression) {
+      Expression staticExpression =
+        StaticExpression.Binary(MiddleOperator.Index, leftExpression,
+                                rightExpression);
+      if (staticExpression != null) {
+        return staticExpression;
+      }
+
+      Expression arrayExpression, indexExpression;
+
+      if (leftExpression.Symbol.Type.IsPointerOrArray()) {
+        arrayExpression = leftExpression;
+        indexExpression = rightExpression;
+      }
+      else {
+        indexExpression = leftExpression;
+        arrayExpression = rightExpression;
+      }
+
+      Type arrayType = arrayExpression.Symbol.Type,
+           indexType = indexExpression.Symbol.Type;
+
+      Assert.Error(arrayType.IsPointerOrArray() &&
+                   !arrayType.PointerOrArrayType.IsVoid(),
+                   arrayType, Message.Invalid_type_in_index_expression);
+      Assert.Error(indexType.IsIntegral(), indexExpression,
+                   Message.Invalid_type_in_index_expression);
+
+      List<MiddleCode> shortList = new List<MiddleCode>();
+      shortList.AddRange(arrayExpression.ShortList);
+      shortList.AddRange(indexExpression.ShortList);
+
+      Symbol resultSymbol = new Symbol(arrayExpression.Symbol.Type.PointerOrArrayType, false);
+
+      if (indexExpression.Symbol.Value is BigInteger) {
+        int indexValue = (int) ((BigInteger)indexExpression.Symbol.Value),
+            indexSize = arrayExpression.Symbol.Type.PointerOrArrayType.Size();
+        return Dereference(arrayExpression, resultSymbol, indexValue * indexSize);
+      }
+      else {
+        indexExpression =
+          TypeCast.ImplicitCast(indexExpression, arrayExpression.Symbol.Type);
+
+        List<MiddleCode> longList = new List<MiddleCode>();
+        longList.AddRange(arrayExpression.LongList);
+        longList.AddRange(indexExpression.LongList);
+
+        Symbol arraySymbol = arrayExpression.Symbol,
+               indexSymbol = indexExpression.Symbol;
+        Symbol sizeSymbol = new Symbol(arraySymbol.Type, (BigInteger)
+                               arraySymbol.Type.PointerOrArrayType.Size()),
+               multSymbol = new Symbol(arraySymbol.Type);
+        AddMiddleCode(longList, MiddleOperator.UnsignedMultiply,
+                      multSymbol, indexSymbol, sizeSymbol);
+        Symbol addSymbol = new Symbol(arraySymbol.Type);
+        AddMiddleCode(longList, MiddleOperator.BinaryAdd,
+                      addSymbol, arraySymbol, multSymbol);
+
+        Expression addExpression = new Expression(addSymbol, shortList, longList);
+        return Dereference(addExpression, resultSymbol, 0);
+      }
+    }
+
+    private static Expression Dereference(Expression expression, Symbol resultSymbol, int offset) {
+      resultSymbol.Storage = expression.Symbol.Storage;
+      resultSymbol.AddressSymbol = expression.Symbol;
+      resultSymbol.AddressOffset = offset;
+      resultSymbol.Addressable = !resultSymbol.IsRegister() &&
+                                 !resultSymbol.Type.IsBitfield();
+      resultSymbol.Assignable = !resultSymbol.Type.IsConstantRecursive() &&
+                                !resultSymbol.Type.IsArrayStringOrFunction();
+      AddMiddleCode(expression.LongList, MiddleOperator.Dereference,
+                    resultSymbol, expression.Symbol, 0);
 
       if (resultSymbol.Type.IsFloating()) {
         AddMiddleCode(expression.LongList, MiddleOperator.PushFloat,
@@ -1940,120 +2048,6 @@ namespace CCompiler {
         return (new Expression(resultSymbol, expression.ShortList,
                                expression.LongList));
       }
-    }
-
-    public static Expression ArrowExpression(Expression expression,
-                                             string memberName) {
-      Symbol parentSymbol = expression.Symbol;
-      Assert.Error(parentSymbol.Type.IsPointer(), expression,
-                   Message.Not_a_pointer_in_arrow_expression);
-      Assert.Error(parentSymbol.Type.PointerType.IsStructOrUnion(),
-                   expression,
-             Message.Not_a_pointer_to_a_struct_or_union_in_arrow_expression);
-      Symbol memberSymbol =
-        parentSymbol.Type.PointerType.MemberMap[memberName];
-      Assert.Error(memberSymbol != null, memberName,
-                   Message.Unknown_member_in_arrow_expression);
-
-      Symbol resultSymbol = new Symbol(memberSymbol.Type);
-      resultSymbol.AddressSymbol = expression.Symbol;
-      int memberOffset = memberSymbol.Offset;
-      resultSymbol.AddressOffset = memberOffset;
-      resultSymbol.Addressable = !parentSymbol.IsRegister() &&
-                                 !memberSymbol.Type.IsBitfield();
-      resultSymbol.Assignable = !parentSymbol.Type.IsConstant &&
-                                !memberSymbol.Type.IsConstantRecursive() &&
-                                !memberSymbol.Type.IsArrayStringOrFunction();
-      AddMiddleCode(expression.LongList, MiddleOperator.Dereferenceerence,
-                    resultSymbol, parentSymbol, memberOffset);
-
-      if (resultSymbol.Type.IsFloating()) {
-        AddMiddleCode(expression.LongList, MiddleOperator.PushFloat,
-                      resultSymbol);
-      }
-
-      return (new Expression(resultSymbol, expression.ShortList,
-                             expression.LongList));
-    }
-
-    public static Expression IndexExpression(Expression leftExpression,
-                                             Expression rightExpression) {
-      Expression staticExpression =
-        StaticExpression.Binary(MiddleOperator.Index, leftExpression,
-                                rightExpression);
-      if (staticExpression != null) {
-        return staticExpression;
-      }
-
-      Expression pointerExpression, indexExpression;
-
-      if (leftExpression.Symbol.Type.IsPointerOrArray()) {
-        pointerExpression = leftExpression;
-        indexExpression = rightExpression;
-      }
-      else {
-        indexExpression = leftExpression;
-        pointerExpression = rightExpression;
-      }
-
-      Type arrayType = pointerExpression.Symbol.Type,
-           indexType = indexExpression.Symbol.Type;
-
-      Assert.Error(arrayType.IsPointerOrArray() &&
-                   !arrayType.PointerOrArrayType.IsVoid(),
-                   arrayType, Message.Invalid_type_in_index_expression);
-      Assert.Error(indexType.IsIntegral(), indexExpression,
-                   Message.Invalid_type_in_index_expression);
-
-      List<MiddleCode> shortList = new List<MiddleCode>();
-      shortList.AddRange(pointerExpression.ShortList);
-      shortList.AddRange(indexExpression.ShortList);
-
-      indexExpression =
-        TypeCast.ImplicitCast(indexExpression, pointerExpression.Symbol.Type);
-
-      List<MiddleCode> longList = new List<MiddleCode>();
-      longList.AddRange(pointerExpression.LongList);
-      longList.AddRange(indexExpression.LongList);
-      
-      Symbol pointerSymbol = pointerExpression.Symbol,
-             indexSymbol = indexExpression.Symbol;
-
-      Symbol resultSymbol = new Symbol(arrayType.PointerOrArrayType);
-    
-      if (indexSymbol.Value is BigInteger) {
-        int memberOffset = (int) ((BigInteger) indexSymbol.Value) *
-                           pointerSymbol.Type.PointerOrArrayType.Size();
-        resultSymbol.AddressSymbol = pointerSymbol;
-        resultSymbol.AddressOffset = memberOffset;
-        AddMiddleCode(longList, MiddleOperator.Dereferenceerence, resultSymbol,
-                      pointerSymbol, memberOffset);
-      }
-      else {
-        Symbol sizeSymbol = new Symbol(indexSymbol.Type, (BigInteger)
-                               pointerSymbol.Type.PointerOrArrayType.Size()),
-               multSymbol = new Symbol(indexSymbol.Type);
-        AddMiddleCode(longList, MiddleOperator.UnsignedMultiply,
-                      multSymbol, indexSymbol, sizeSymbol);
-        Symbol addSymbol = new Symbol(indexSymbol.Type);
-        AddMiddleCode(longList, MiddleOperator.BinaryAdd,
-                      addSymbol, pointerSymbol, multSymbol);
-        resultSymbol.AddressSymbol = addSymbol;
-        resultSymbol.AddressOffset = 0;
-        AddMiddleCode(longList, MiddleOperator.Dereferenceerence,
-                      resultSymbol, addSymbol, 0);
-      }
-
-      if (resultSymbol.Type.IsFloating()) {
-        AddMiddleCode(longList, MiddleOperator.PushFloat, resultSymbol);
-      }
-
-      resultSymbol.Addressable = !pointerSymbol.IsRegister() &&
-                                 !arrayType.PointerOrArrayType.IsBitfield();
-      resultSymbol.Assignable =
-        !arrayType.PointerOrArrayType.IsConstantRecursive() &&
-        !arrayType.PointerOrArrayType.IsArrayFunctionOrString();
-      return (new Expression(resultSymbol, shortList, longList));
     }
 
     public static Expression CastExpression(Type type, Expression expression) {

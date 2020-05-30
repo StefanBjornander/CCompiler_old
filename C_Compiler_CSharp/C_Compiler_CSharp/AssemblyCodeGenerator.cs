@@ -96,6 +96,12 @@ namespace CCompiler {
           }
         }
 
+        /*if ((SymbolTable.CurrentFunction != null) &&
+            SymbolTable.CurrentFunction.Name.Equals("localeconv") &&
+            (middleIndex == 1)) {
+          int i = 1;
+        }*/
+
         switch (middleCode.Operator) {
           case MiddleOperator.CallHeader:
             CallHeader(middleCode);
@@ -261,7 +267,7 @@ namespace CCompiler {
             Address(middleCode);
             break;
 
-          case MiddleOperator.Dereferenceerence: {
+          case MiddleOperator.Dereference: {
               Symbol symbol = (Symbol) middleCode[1];
 
               if (symbol.Type.IsFloating()) {
@@ -864,8 +870,11 @@ namespace CCompiler {
             AssemblyOperator sizeAddOperator =
                AssemblyCode.OperatorToSize(AssemblyOperator.add,
                                            Type.PointerSize);
-            AddAssemblyCode(sizeAddOperator, Base(resultSymbol),
+
+            if (assignSymbol.Offset > 0) {
+              AddAssemblyCode(sizeAddOperator, Base(resultSymbol),
                   Offset(resultSymbol), (BigInteger) assignSymbol.Offset);
+            }
           }
         }
         /*else if (assignSymbol.Value is StaticAddress) {
@@ -1735,8 +1744,12 @@ namespace CCompiler {
         AssemblyOperator sizeOperator =
           AssemblyCode.OperatorToSize(AssemblyOperator.add,
                                       toSymbol.Type.Size());
-        AddAssemblyCode(sizeOperator, Base(toSymbol), Offset(toSymbol),
-                        (BigInteger) Offset(fromSymbol));
+
+        int offset = Offset(fromSymbol);
+        if (offset > 0) {
+          AddAssemblyCode(sizeOperator, Base(toSymbol), Offset(toSymbol),
+                          (BigInteger) offset);
+        }
       }
       else {
         Track fromTrack = LoadValueToRegister(fromSymbol);

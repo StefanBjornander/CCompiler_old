@@ -244,7 +244,7 @@ namespace CCompiler {
       OpToTextMap.Add(MiddleOperator.LogicalNot, "!");
       OpToTextMap.Add(MiddleOperator.BitwiseNot, "~");
       OpToTextMap.Add(MiddleOperator.Address, "&");
-      OpToTextMap.Add(MiddleOperator.Dereferenceerence, "*");
+      OpToTextMap.Add(MiddleOperator.Dereference, "*");
       OpToTextMap.Add(MiddleOperator.Dot, ".");
       OpToTextMap.Add(MiddleOperator.Arrow, "->");
       OpToTextMap.Add(MiddleOperator.Comma, ",");
@@ -452,7 +452,7 @@ namespace CCompiler {
         case MiddleOperator.SetReturnValue:
           return "return_value = " + operand1;
         
-        case MiddleOperator.Dereferenceerence:
+        case MiddleOperator.Dereference:
           if (((int) operand2) != 0) {
             return operand0 + " = *" + operand1 + ", offset " + operand2;
           }

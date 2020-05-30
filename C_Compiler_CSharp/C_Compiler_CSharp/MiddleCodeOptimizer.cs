@@ -645,7 +645,7 @@ namespace CCompiler {
             integralSet = integralSetStack.Pop();
             break;
 
-          case MiddleOperator.Dereferenceerence: {
+          case MiddleOperator.Dereference: {
               Symbol resultSymbol = (Symbol) middleCode[0];
               integralSet.Add(resultSymbol.AddressSymbol);
               //integralSet.Remove(resultSymbol.AddressSymbol);

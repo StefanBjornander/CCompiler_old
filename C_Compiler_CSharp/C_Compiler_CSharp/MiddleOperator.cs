@@ -16,7 +16,7 @@ namespace CCompiler {
                               SignedMultiply, SignedDivide, SignedModulo,
                               UnsignedMultiply, UnsignedDivide, UnsignedModulo,
                               UnaryAdd, UnarySubtract, Carry, NotCarry,
-                              LogicalNot, BitwiseNot, Address, Dereferenceerence,
+                              LogicalNot, BitwiseNot, Address, Dereference,
                               Call, PostCall, DecreaseStack, CheckTrackMapFloatStack,
                               Parameter, Empty, Return, Increment, Decrement, Exit, CallHeader,
                               FunctionEnd, //SystemInit, SystemParameter,
