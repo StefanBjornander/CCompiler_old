@@ -1910,12 +1910,17 @@ namespace CCompiler {
         return (new Expression(staticSymbol, null, null));
       }
 
-      Symbol resultSymbol = new Symbol(expression.Symbol.Type.PointerOrArrayType);
-      resultSymbol.Assignable = Symbol.GetAssignable(resultSymbol);
-      resultSymbol.Addressable = Symbol.GetAddressable(resultSymbol);
+      bool assignable =
+        !expression.Symbol.Type.PointerOrArrayType.IsConstantRecursive() &&
+        !expression.Symbol.Type.PointerOrArrayType.IsArrayOrFunction(),
+           addressable =
+        !expression.Symbol.Type.PointerOrArrayType.IsBitfield();
+      Symbol resultSymbol =
+        new Symbol(expression.Symbol.Type.PointerOrArrayType,
+                   assignable, addressable);
       return Dereference(expression, resultSymbol, 0);
     }
-  
+
     public static Expression ArrowExpression(Expression expression,
                                              string memberName) {
       Assert.Error(expression.Symbol.Type.IsPointer() &&
@@ -1927,10 +1932,12 @@ namespace CCompiler {
       Assert.Error(memberSymbol != null, memberName,
                    Message.Unknown_member_in_arrow_expression);
 
-      Symbol resultSymbol = new Symbol(memberSymbol.Type);
-      resultSymbol.Assignable = !expression.Symbol.Type.PointerOrArrayType.IsConstant &&
-                                Symbol.GetAssignable(resultSymbol);
-      resultSymbol.Addressable = Symbol.GetAddressable(resultSymbol);
+      bool assignable = !expression.Symbol.Type.PointerOrArrayType.IsConstant
+                        && !memberSymbol.Type.IsConstantRecursive() &&
+                        !memberSymbol.Type.IsArrayOrFunction(),
+           addressable = !memberSymbol.Type.IsBitfield();
+      Symbol resultSymbol =
+        new Symbol(memberSymbol.Type, assignable, addressable);
       return Dereference(expression, resultSymbol, memberSymbol.Offset);
     }
 
@@ -1967,15 +1974,20 @@ namespace CCompiler {
       shortList.AddRange(arrayExpression.ShortList);
       shortList.AddRange(indexExpression.ShortList);
 
-      Symbol resultSymbol = new Symbol(arrayExpression.Symbol.Type.PointerOrArrayType);
-      resultSymbol.Assignable = !arrayExpression.Symbol.Type.PointerOrArrayType.IsConstant &&
-                                Symbol.GetAssignable(resultSymbol);
-      resultSymbol.Addressable = Symbol.GetAddressable(resultSymbol);
+      bool assignable =
+       !arrayExpression.Symbol.Type.PointerOrArrayType.IsConstantRecursive()
+       && !arrayExpression.Symbol.Type.PointerOrArrayType.IsArrayOrFunction();
+      bool addressable =
+        !arrayExpression.Symbol.Type.PointerOrArrayType.IsBitfield();
+      Symbol resultSymbol =
+        new Symbol(arrayExpression.Symbol.Type.PointerOrArrayType,
+                   assignable, addressable);
 
       if (indexExpression.Symbol.Value is BigInteger) {
         int indexValue = (int) ((BigInteger)indexExpression.Symbol.Value),
             indexSize = arrayExpression.Symbol.Type.PointerOrArrayType.Size();
-        return Dereference(arrayExpression, resultSymbol, indexValue * indexSize);
+        return Dereference(arrayExpression, resultSymbol,
+                           indexValue * indexSize);
       }
       else {
         indexExpression =
@@ -1996,19 +2008,16 @@ namespace CCompiler {
         AddMiddleCode(longList, MiddleOperator.BinaryAdd,
                       addSymbol, arraySymbol, multSymbol);
 
-        Expression addExpression = new Expression(addSymbol, shortList, longList);
+        Expression addExpression =
+          new Expression(addSymbol, shortList, longList);
         return Dereference(addExpression, resultSymbol, 0);
       }
     }
 
-    private static Expression Dereference(Expression expression, Symbol resultSymbol, int offset) {
-      resultSymbol.Storage = expression.Symbol.Storage;
+    private static Expression Dereference(Expression expression,
+                                          Symbol resultSymbol, int offset) {
       resultSymbol.AddressSymbol = expression.Symbol;
       resultSymbol.AddressOffset = offset;
-      resultSymbol.Addressable = !resultSymbol.IsRegister() &&
-                                 !resultSymbol.Type.IsBitfield();
-      resultSymbol.Assignable = !resultSymbol.Type.IsConstantRecursive() &&
-                                !resultSymbol.Type.IsArrayStringOrFunction();
       AddMiddleCode(expression.LongList, MiddleOperator.Dereference,
                     resultSymbol, expression.Symbol, 0);
 
@@ -2020,7 +2029,7 @@ namespace CCompiler {
       return (new Expression(resultSymbol, expression.ShortList,
                              expression.LongList));
     }
-  
+
     public static Expression DotExpression(Expression expression,
                                            string memberName) {
       Symbol parentSymbol = expression.Symbol;
@@ -2031,19 +2040,31 @@ namespace CCompiler {
       Assert.Error(memberSymbol != null, memberName,
                    Message.Unknown_member_in_dot_expression);
 
+
       Symbol resultSymbol;
       if (parentSymbol.AddressSymbol != null) {
         string name = parentSymbol.Name + "." + memberSymbol.Name +
                       Symbol.SeparatorId + memberSymbol.Offset;
-        resultSymbol = new Symbol(name, parentSymbol.ExternalLinkage, parentSymbol.Storage,
-                                  memberSymbol.Type, parentSymbol.IsParameter());
+        resultSymbol = new Symbol(name, parentSymbol.ExternalLinkage,
+                                  parentSymbol.Storage, memberSymbol.Type,
+                                  parentSymbol.IsParameter());
         resultSymbol.UniqueName = parentSymbol.UniqueName;
         resultSymbol.AddressSymbol = parentSymbol.AddressSymbol;
         resultSymbol.AddressOffset = parentSymbol.AddressOffset;
         resultSymbol.Offset = parentSymbol.Offset + memberSymbol.Offset;
+        resultSymbol.Assignable = !parentSymbol.Type.IsConstant &&
+                                  !memberSymbol.Type.IsConstantRecursive() &&
+                                  !memberSymbol.Type.IsArrayOrFunction();
+        resultSymbol.Addressable = !parentSymbol.IsRegister() &&
+                                   !memberSymbol.Type.IsBitfield();
       }
       else {
-        resultSymbol = new Symbol(memberSymbol.Type);
+        bool assignable = !parentSymbol.Type.IsConstant &&
+                          !memberSymbol.Type.IsConstantRecursive() &&
+                          !memberSymbol.Type.IsArrayOrFunction(),
+             addressable = !parentSymbol.IsRegister() &&
+                           !memberSymbol.Type.IsBitfield();
+        resultSymbol = new Symbol(memberSymbol.Type, assignable, addressable);
         resultSymbol.Name = parentSymbol.Name + Symbol.SeparatorId +
                             memberName;
         resultSymbol.UniqueName = parentSymbol.UniqueName;
@@ -2051,10 +2072,6 @@ namespace CCompiler {
         resultSymbol.Offset = parentSymbol.Offset + memberSymbol.Offset;
       }
 
-      resultSymbol.Addressable = !parentSymbol.IsRegister() &&
-                                 !memberSymbol.Type.IsBitfield();
-      resultSymbol.Assignable = !parentSymbol.Type.IsConstant &&
-                                Symbol.GetAssignable(memberSymbol);
       return (new Expression(resultSymbol, expression.ShortList,
                              expression.LongList));
     }

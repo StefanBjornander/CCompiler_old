@@ -24,9 +24,11 @@ namespace CCompiler {
     private bool m_assignable, m_addressable;
     private ISet<MiddleCode> m_trueSet, m_falseSet;
 
-    private static int UniqueNameCount = 0, TemporaryNameCount = 0;
+    private static int UniqueNameCount = 0, FieldNameCount = 0,
+                       TemporaryNameCount = 0;
+                       
 
-    public Symbol(string name, bool externalLinkage, Storage storage, // Regular
+    public Symbol(string name, bool externalLinkage, Storage storage,
                   Type type, bool parameter = false, object value = null) {
       m_name = name;
       m_externalLinkage = externalLinkage;
@@ -36,44 +38,19 @@ namespace CCompiler {
         m_uniqueName = (m_name.Equals("abs") ? "abs_" : m_name);
       }
       else {
-        m_uniqueName = Symbol.FileMarker + (UniqueNameCount++) + Symbol.SeparatorId + m_name;
+        m_uniqueName = Symbol.FileMarker + (UniqueNameCount++) +
+                       Symbol.SeparatorId + m_name;
       }
 
       m_type = type;
       m_parameter = parameter;
-      m_value = value;
       m_temporary = false;
-      m_assignable = GetAssignable(this);
-      m_addressable = GetAddressable(this);
-      CheckValue(m_type, m_value);
-    }
+      m_assignable = m_type.IsComplete() &&
+                     !m_type.IsConstantRecursive() &&
+                     !m_type.IsArrayOrFunction();
+      m_addressable = !IsRegister() && !m_type.IsBitfield();
 
-    public Symbol(Type type, bool temporary = true) { //Maybe temporary
-      m_name = Symbol.TemporaryId + "temporary" + (TemporaryNameCount++);
-      m_storage = Storage.Auto;
-      m_type = type;
-      m_temporary = temporary;
-      m_parameter = false;
-
-      if (temporary) {
-        m_assignable = false;
-        m_addressable = false;
-      }
-      else {
-        m_assignable = GetAssignable(this);
-        m_addressable = GetAddressable(this);
-      }
-    }
-
-    public Symbol(Type type, object value) { // Value
-      m_uniqueName = StaticSymbolWindows.ValueName(type, value);
-      m_storage = Storage.Static;
-      m_type = type;
       m_value = value;
-      m_temporary = false;
-      m_parameter = false;
-      m_assignable = false;
-      m_addressable = false;
       CheckValue(m_type, m_value);
     }
 
@@ -86,6 +63,28 @@ namespace CCompiler {
       }
     }
 
+    public Symbol(Type type, bool assignable, bool addressable = false) {
+      m_name = Symbol.TemporaryId + "field" + (FieldNameCount++);
+      m_externalLinkage = false;
+      m_storage = Storage.Auto;
+      m_type = type;
+      m_temporary = false;
+      m_parameter = false;
+      m_assignable = assignable;
+      m_addressable = addressable;
+    }
+
+    public Symbol(Type type) {
+      m_name = Symbol.TemporaryId + "temporary" + (TemporaryNameCount++);
+      m_externalLinkage = false;
+      m_storage = Storage.Auto;
+      m_type = type;
+      m_temporary = true;
+      m_parameter = false;
+      m_assignable = false;
+      m_addressable = false;
+    }
+
     public Symbol(ISet<MiddleCode> trueSet, ISet<MiddleCode> falseSet) {
       m_name = Symbol.TemporaryId + "logical" + (TemporaryNameCount++);
       m_storage = Storage.Auto;
@@ -96,6 +95,63 @@ namespace CCompiler {
       m_parameter = false;
       m_assignable = false;
       m_addressable = false;
+    }
+
+    public Symbol(Type type, object value) {
+      Assert.ErrorA(!(value is bool));
+      m_uniqueName = ValueName(type, value);
+      m_storage = Storage.Static;
+      m_type = type;
+      m_value = value;
+      m_temporary = false;
+      m_parameter = false;
+      m_assignable = false;
+      m_addressable = false;
+      CheckValue(m_type, m_value);
+    }
+
+    public static string ValueName(CCompiler.Type type, object value) {
+      Assert.ErrorA(value != null);
+
+      if (value is string) {
+        string text = (string) value;
+        StringBuilder buffer = new StringBuilder();
+
+        for (int index = 0; index < text.Length; ++index) {
+          if (char.IsLetterOrDigit(text[index]) ||
+              (text[index] == '_')) {
+            buffer.Append(text[index]);
+          }
+          else if (text[index] != '\0') {
+            int asciiValue = (int) text[index];
+            char hex1 = "0123456789ABCDEF"[asciiValue / 16],
+                 hex2 = "0123456789ABCDEF"[asciiValue % 16];
+            buffer.Append(hex1.ToString() + hex2.ToString());
+          }
+        }
+
+        return "string_" + buffer.ToString() + Symbol.NumberId;
+      }
+      else if (value is StaticAddress) {
+        StaticAddress staticAddress = (StaticAddress) value;
+        return "staticaddress" + Symbol.SeparatorId + staticAddress.UniqueName
+               + Symbol.SeparatorId + staticAddress.Offset + Symbol.NumberId;
+      }
+      else if (type.IsArray()) {
+        return "Array_" + Symbol.NumberId; // + ((value != null) ? value : "");
+      }
+      else if (type.IsFloating()) {
+        return "float" + type.Size().ToString() + Symbol.SeparatorId +
+               value.ToString().Replace("-", "minus") + Symbol.NumberId;
+      }
+      else if (type.IsLogical()) {
+        return "int" + type.Size().ToString() + Symbol.SeparatorId +
+               value.ToString().Replace("-", "minus") + Symbol.NumberId;
+      }
+      else {
+        return "int" + type.Size().ToString() + Symbol.SeparatorId +
+               value.ToString().Replace("-", "minus") + Symbol.NumberId;
+      }
     }
 
     public string Name {
@@ -196,20 +252,11 @@ namespace CCompiler {
       set { m_addressable = value; }
     }
 
-    public static bool GetAssignable(Symbol symbol) {
-      return !symbol.Type.IsConstantRecursive() &&
-             symbol.Type.IsComplete() &&
-             !symbol.Type.IsArrayOrFunction();
-    }
-
-    public static bool GetAddressable(Symbol symbol) {
-      return !symbol.IsRegister() && !symbol.Type.IsBitfield();
-    }
-
     public override string ToString() {
       if (m_name != null) {
         if (m_addressSymbol != null) {
-          return ((m_name != null) ? m_name : "") + " -> " + m_addressSymbol.ToString();
+          return ((m_name != null) ? m_name : "") + " -> " +
+                 m_addressSymbol.ToString();
         }
         else {
           return ((m_name != null) ? m_name : "");
@@ -217,7 +264,8 @@ namespace CCompiler {
       }
       else {
         if (m_addressSymbol != null) {
-          return ((m_uniqueName != null) ? m_uniqueName : "") + " -> " + m_addressSymbol.ToString();
+          return ((m_uniqueName != null) ? m_uniqueName : "") + " -> " +
+                 m_addressSymbol.ToString();
         }
         else {
           return ((m_uniqueName != null) ? m_uniqueName : "");

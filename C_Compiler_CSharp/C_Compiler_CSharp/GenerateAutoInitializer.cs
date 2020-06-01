@@ -25,14 +25,14 @@ namespace CCompiler {
         List<object> list = new List<object>();
 
         for (int index = 0; index < text.Length; ++index) {
-          Symbol toCharSymbol = new Symbol(toType.ArrayType, false);
+          Symbol toCharSymbol = new Symbol(toType.ArrayType, true);
           toCharSymbol.Name = toSymbol.Name + "[" + index + "]";
           toCharSymbol.Offset = toSymbol.Offset + (index * toType.ArrayType.Size());
           Symbol fromCharSymbol = new Symbol(toType.ArrayType, (BigInteger) text[index]);
           codeList.Add(new MiddleCode(MiddleOperator.Assign, toCharSymbol, fromCharSymbol));
         }
 
-        { Symbol toCharSymbol = new Symbol(toType.ArrayType, false);
+        { Symbol toCharSymbol = new Symbol(toType.ArrayType, true);
           toCharSymbol.Name = toSymbol.Name + "[" + text.Length + "]";
           toCharSymbol.Offset = toSymbol.Offset + (text.Length * toType.ArrayType.Size());
           Symbol fromCharSymbol = new Symbol(toType.ArrayType, (BigInteger) '\0');
@@ -63,7 +63,7 @@ namespace CCompiler {
               //Assert.Error((fromList.Count < toType.ArraySize), toType, Message.Too_few_initializers);
             
               for (int index = 0; index < fromList.Count; ++index) {
-                Symbol subSymbol = new Symbol(toType.ArrayType, false);
+                Symbol subSymbol = new Symbol(toType.ArrayType, true);
                 subSymbol.Offset = toSymbol.Offset + (index * toType.ArrayType.Size());
                 subSymbol.Name = toSymbol.Name + "[" + index + "]";
                 codeList.AddRange(GenerateAuto(subSymbol, fromList[index]));
@@ -80,7 +80,7 @@ namespace CCompiler {
               
               for (int index = 0; index < fromList.Count; ++index) {
                 Symbol memberSymbol = memberArray[index].Value;
-                Symbol subSymbol = new Symbol(memberSymbol.Type, false);
+                Symbol subSymbol = new Symbol(memberSymbol.Type, true);
                 subSymbol.Name = toSymbol.Name + Symbol.SeparatorDot + memberSymbol.Name;
                 subSymbol.Offset = toSymbol.Offset + memberSymbol.Offset;
                 codeList.AddRange(GenerateAuto(subSymbol, fromList[index]));
@@ -92,7 +92,7 @@ namespace CCompiler {
               Assert.Error(fromList.Count == 1, toType, Message.A_union_can_be_initalized_by_one_value_only);
               IDictionary<string, Symbol> memberMap = toType.MemberMap;
               Symbol firstSymbol = memberMap.Values.GetEnumerator().Current;
-              Symbol subSymbol = new Symbol(firstSymbol.Type, false);
+              Symbol subSymbol = new Symbol(firstSymbol.Type, true);
               subSymbol.Name = toSymbol.Name + Symbol.SeparatorId + firstSymbol.Name;
               subSymbol.Offset = toSymbol.Offset;
               codeList.AddRange(GenerateAuto(subSymbol, fromList[0]));

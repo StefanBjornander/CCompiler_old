@@ -23,7 +23,7 @@ namespace CCompiler {
         else if (toType.IsPointer() && fromType.IsString()) {
           Assert.ErrorA(toType.PointerType.IsChar());
           middleCodeList.Add(new MiddleCode(MiddleOperator.Init, Sort.Pointer,
-                             StaticSymbolWindows.ValueName(toType, fromSymbol.Value)));
+                             Symbol.ValueName(toType, fromSymbol.Value)));
         }
         else if (toType.IsPointer() && (fromSymbol.Value is StaticAddress)) {
           Assert.ErrorA(fromType.IsPointer()  && toType.IsPointer());

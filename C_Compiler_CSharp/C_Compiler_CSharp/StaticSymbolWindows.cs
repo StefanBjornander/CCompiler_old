@@ -33,48 +33,6 @@ namespace CCompiler {
       m_returnSet = returnSet;
     }
 
-    public static string ValueName(CCompiler.Type type, object value) {
-      Assert.ErrorA(value != null);
-
-      if (value is string) {
-        string text = (string) value;
-        StringBuilder buffer = new StringBuilder();
-
-        for (int index = 0; index < text.Length; ++index) {
-          if (char.IsLetterOrDigit(text[index]) ||
-              (text[index] == '_')) {
-            buffer.Append(text[index]);
-          }
-          else if (text[index] != '\0') {
-            int asciiValue = (int) text[index];
-            char hex1 = "0123456789ABCDEF"[asciiValue / 16],
-                 hex2 = "0123456789ABCDEF"[asciiValue % 16];
-            buffer.Append(hex1.ToString() + hex2.ToString());
-          }
-        }
-
-        //string name = Enum.GetName(typeof(Sort), Sort.StringX);
-        return "string_" + buffer.ToString() + Symbol.NumberId;
-      }
-      else if (value is StaticAddress) {
-        StaticAddress staticAddress = (StaticAddress) value;
-        return "staticaddress" + Symbol.SeparatorId + staticAddress.UniqueName +
-                Symbol.SeparatorId + staticAddress.Offset + Symbol.NumberId;
-      }
-      else if (type.IsArray()) {
-        return "Array_" + Symbol.NumberId; // + ((value != null) ? value : "");
-      }
-      else if (type.IsFloating()) {
-        return "float" + type.Size().ToString() + Symbol.SeparatorId + value.ToString().Replace("-", "minus") + Symbol.NumberId;
-      }
-      else if (type.IsLogical()) {
-        return "int" + type.Size().ToString() + Symbol.SeparatorId + value.ToString().Replace("-", "minus") + Symbol.NumberId;
-      }
-      else {
-        return "int" + type.Size().ToString() + Symbol.SeparatorId + value.ToString().Replace("-", "minus") + Symbol.NumberId;
-      }
-    }
-
     public List<byte> ByteList {
       get { return m_byteList; }
     }
