@@ -92,7 +92,7 @@ namespace CCompiler {
               Assert.Error(fromList.Count == 1, toType, Message.A_union_can_be_initalized_by_one_value_only);
               IDictionary<string, Symbol> memberMap = toType.MemberMap;
               Symbol firstSymbol = memberMap.Values.GetEnumerator().Current;
-              Symbol subSymbol = new Symbol(firstSymbol.Type);
+              Symbol subSymbol = new Symbol(firstSymbol.Type, false);
               subSymbol.Name = toSymbol.Name + Symbol.SeparatorId + firstSymbol.Name;
               subSymbol.Offset = toSymbol.Offset;
               codeList.AddRange(GenerateAuto(subSymbol, fromList[0]));

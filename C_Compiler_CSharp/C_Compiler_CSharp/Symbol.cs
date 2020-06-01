@@ -43,8 +43,8 @@ namespace CCompiler {
       m_parameter = parameter;
       m_value = value;
       m_temporary = false;
-      m_assignable = GetAssignable();
-      m_addressable = GetAddressable();
+      m_assignable = GetAssignable(this);
+      m_addressable = GetAddressable(this);
       CheckValue(m_type, m_value);
     }
 
@@ -60,8 +60,8 @@ namespace CCompiler {
         m_addressable = false;
       }
       else {
-        m_assignable = GetAssignable();
-        m_addressable = GetAddressable();
+        m_assignable = GetAssignable(this);
+        m_addressable = GetAddressable(this);
       }
     }
 
@@ -196,12 +196,14 @@ namespace CCompiler {
       set { m_addressable = value; }
     }
 
-    private bool GetAssignable() {
-      return !m_type.IsConstantRecursive() && m_type.IsComplete() && !m_type.IsArrayOrFunction();
+    public static bool GetAssignable(Symbol symbol) {
+      return !symbol.Type.IsConstantRecursive() &&
+             symbol.Type.IsComplete() &&
+             !symbol.Type.IsArrayOrFunction();
     }
 
-    private bool GetAddressable() {
-      return ((m_storage != Storage.Register) && !m_type.IsBitfield());
+    public static bool GetAddressable(Symbol symbol) {
+      return !symbol.IsRegister() && !symbol.Type.IsBitfield();
     }
 
     public override string ToString() {
