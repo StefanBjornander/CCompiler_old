@@ -21,7 +21,7 @@ namespace CCompiler {
       Assert.ErrorA(!type.IsFunction() && !type.IsStructOrUnion());
     
       if (type.IsArray() || type.IsString()) {
-        m_minSize = m_currSize = m_maxSize = Type.PointerSize;
+        m_minSize = m_currSize = m_maxSize = TypeSize.PointerSize;
       }
       else {
         m_minSize = m_currSize = m_maxSize = type.Size();
@@ -35,7 +35,7 @@ namespace CCompiler {
       Assert.ErrorA(type != null);
       Assert.ErrorA(!type.IsArrayFunctionStringStructOrUnion());
       m_minSize = m_currSize = m_maxSize = type.Size();
-      //m_maxSize = m_currSize = type.IsArray() ? Type.PointerSize : type.Size();
+      //m_maxSize = m_currSize = type.IsArray() ? TypeSize.PointerSize : type.Size();
       Assert.ErrorA((m_currSize == 1) || (m_currSize == 2) || (m_currSize == 4) || (m_currSize == 8));
     }
 

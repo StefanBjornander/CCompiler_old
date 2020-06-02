@@ -13,7 +13,7 @@ namespace CCompiler {
               string name = (string) assemblyCode[0];
               accessMap.Add(byteList.Count, name);
               int offset = (int) assemblyCode[1];
-              AssemblyCode.LoadByteList(byteList, byteList.Count, Type.PointerSize, (BigInteger) offset);
+              AssemblyCode.LoadByteList(byteList, byteList.Count, TypeSize.PointerSize, (BigInteger) offset);
             }
             break;
 
@@ -30,16 +30,16 @@ namespace CCompiler {
               if (sort == Sort.Pointer) {
                 if (value is string) {
                   accessMap.Add(byteList.Count, (string) value);
-                  AssemblyCode.LoadByteList(byteList, byteList.Count, Type.PointerSize, (BigInteger) 0);
+                  AssemblyCode.LoadByteList(byteList, byteList.Count, TypeSize.PointerSize, (BigInteger) 0);
                 }
                 else if (value is StaticAddress) {
                   StaticAddress staticAddress = (StaticAddress) value;
                   accessMap.Add(byteList.Count, staticAddress.UniqueName);
                   int offset = staticAddress.Offset;
-                  AssemblyCode.LoadByteList(byteList, byteList.Count, Type.PointerSize, (BigInteger) offset);
+                  AssemblyCode.LoadByteList(byteList, byteList.Count, TypeSize.PointerSize, (BigInteger) offset);
                 }
                 else {
-                  AssemblyCode.LoadByteList(byteList, byteList.Count, Type.PointerSize, (BigInteger) value);
+                  AssemblyCode.LoadByteList(byteList, byteList.Count, TypeSize.PointerSize, (BigInteger) value);
                 }
               }
               else if (sort == Sort.Float) {

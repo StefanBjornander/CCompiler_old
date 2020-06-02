@@ -116,6 +116,7 @@
     <Compile Include="TypeCast.cs">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="TypeSize.cs" />
     <Compile Include="UnorderedPair.cs" />
   </ItemGroup>
   <ItemGroup>

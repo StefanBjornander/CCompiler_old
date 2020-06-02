@@ -24,9 +24,7 @@ namespace CCompiler {
     private bool m_assignable, m_addressable;
     private ISet<MiddleCode> m_trueSet, m_falseSet;
 
-    private static int UniqueNameCount = 0, FieldNameCount = 0,
-                       TemporaryNameCount = 0;
-                       
+    private static int UniqueNameCount = 0, TemporaryNameCount = 0;
 
     public Symbol(string name, bool externalLinkage, Storage storage,
                   Type type, bool parameter = false, object value = null) {
@@ -35,7 +33,7 @@ namespace CCompiler {
       m_storage = storage;
 
       if (m_externalLinkage) {
-        m_uniqueName = (m_name.Equals("abs") ? "abs_" : m_name);
+        m_uniqueName = m_name.Equals("abs") ? "_abs" : m_name;
       }
       else {
         m_uniqueName = Symbol.FileMarker + (UniqueNameCount++) +
@@ -57,14 +55,14 @@ namespace CCompiler {
     private static void CheckValue(Type type, object value) {
       if (value is BigInteger) {
         BigInteger bigValue = (BigInteger) value;
-        Assert.Error((bigValue >= type.GetMinValue()) &&
-                     (bigValue <= type.GetMaxValue()),
+        Assert.Error((bigValue >= TypeSize.GetMinValue(type.Sort)) &&
+                     (bigValue <= TypeSize.GetMaxValue(type.Sort)),
                      type + ": " + value, Message.Value_overflow);
       }
     }
 
     public Symbol(Type type, bool assignable, bool addressable = false) {
-      m_name = Symbol.TemporaryId + "field" + (FieldNameCount++);
+      m_name = Symbol.TemporaryId + "field" + (TemporaryNameCount++);
       m_externalLinkage = false;
       m_storage = Storage.Auto;
       m_type = type;

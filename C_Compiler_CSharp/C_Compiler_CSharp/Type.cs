@@ -6,25 +6,6 @@ using System.Collections.Generic;
 
 namespace CCompiler {
   public class Type {
-    public static Type SignedShortIntegerType = new Type(Sort.Signed_Short_Int);
-    public static Type UnsignedShortIntegerType = new Type(Sort.Unsigned_Short_Int);
-    public static Type SignedIntegerType = new Type(Sort.Signed_Int);
-    public static Type UnsignedIntegerType = new Type(Sort.Unsigned_Int);
-    public static Type SignedLongIntegerType = new Type(Sort.Signed_Long_Int);
-    public static Type UnsignedLongIntegerType = new Type(Sort.Unsigned_Long_Int);
-    public static Type FloatType = new Type(Sort.Float);
-    public static Type DoubleType = new Type(Sort.Double);
-    public static Type LongDoubleType = new Type(Sort.Long_Double);
-    public static Type SignedCharType = new Type(Sort.Signed_Char);
-    public static Type UnsignedCharType = new Type(Sort.Unsigned_Char);
-    public static Type StringType = new Type(Sort.String);
-    public static Type VoidType = new Type(Sort.Void);
-    public static Type PointerTypeX = new Type(SignedIntegerType);
-    public static Type VoidPointerType = new Type(new Type(Sort.Void));
-    public static Type LogicalType = new Type(Sort.Logical);
-  
-    // ------------------------------------------------------------------------
-  
     private Sort m_sort;
 
     public Sort Sort {
@@ -121,7 +102,8 @@ namespace CCompiler {
                    null, Message.Duplicate_name_in_parameter_list);
     }
 
-    public Type(Type returnType, List<Pair<string,Symbol>> parameterList, bool ellipse) {
+    public Type(Type returnType, List<Pair<string,Symbol>> parameterList,
+                bool ellipse) {
       m_sort = Sort.Function;
       m_functionStyle = FunctionStyle.New;
       m_returnType = returnType;
@@ -203,189 +185,6 @@ namespace CCompiler {
 
     // ------------------------------------------------------------------------
 
-    public static int PointerSize;
-    public static int SignedIntegerSize;
-    //public static int ReturnAddressSize;
-
-    public static IDictionary<Sort,int> m_sizeMap = new Dictionary<Sort,int>();
-    public static IDictionary<int,Type> m_signedMap = new Dictionary<int,Type>(),
-                                        m_unsignedMap = new Dictionary<int,Type>();
-    private static IDictionary<int, BigInteger> m_maskMap = new Dictionary<int, BigInteger>();
-    private static IDictionary<Sort,BigInteger> m_minValueMap = new Dictionary<Sort,BigInteger>(),
-                                                m_maxValueMap = new Dictionary<Sort,BigInteger>();
-    private static IDictionary<Sort,decimal> m_minValueFloatMap = new Dictionary<Sort,decimal>(),
-                                             m_maxValueFloatMap = new Dictionary<Sort,decimal>();
-  
-    static Type() {
-      m_maskMap.Add(1, (BigInteger) 0x000000FF);
-      m_maskMap.Add(2, (BigInteger) 0x0000FFFF);
-      m_maskMap.Add(4, (BigInteger) 0xFFFFFFFF);
-
-      if (Start.Windows) {
-        PointerSize = 2;
-        SignedIntegerSize = 2;
-        //ReturnAddressSize = 2;
-
-        m_sizeMap.Add(Sort.Void, 0);
-        m_sizeMap.Add(Sort.Function, 0);
-        m_sizeMap.Add(Sort.Logical, 1);
-        m_sizeMap.Add(Sort.Array, 2);
-        m_sizeMap.Add(Sort.Pointer, 2);
-        m_sizeMap.Add(Sort.String, 2);
-        m_sizeMap.Add(Sort.Signed_Char, 1);
-        m_sizeMap.Add(Sort.Unsigned_Char, 1);
-        m_sizeMap.Add(Sort.Signed_Short_Int, 1);
-        m_sizeMap.Add(Sort.Unsigned_Short_Int, 1);
-        m_sizeMap.Add(Sort.Signed_Int, 2);
-        m_sizeMap.Add(Sort.Unsigned_Int, 2);
-        m_sizeMap.Add(Sort.Signed_Long_Int, 4);
-        m_sizeMap.Add(Sort.Unsigned_Long_Int, 4);
-        m_sizeMap.Add(Sort.Float, 4);
-        m_sizeMap.Add(Sort.Double, 8);
-        m_sizeMap.Add(Sort.Long_Double, 8);
-
-        m_signedMap.Add(1, SignedCharType);
-        m_signedMap.Add(2, SignedIntegerType);
-        m_signedMap.Add(4, SignedLongIntegerType);
-
-        m_unsignedMap.Add(1, UnsignedCharType);
-        m_unsignedMap.Add(2, UnsignedIntegerType);
-        m_unsignedMap.Add(4, UnsignedLongIntegerType);
-
-        m_minValueMap.Add(Sort.Logical, 0);
-        m_minValueMap.Add(Sort.Signed_Char, -128);
-        m_minValueMap.Add(Sort.Unsigned_Char, 0);
-        m_minValueMap.Add(Sort.Signed_Short_Int, -128);
-        m_minValueMap.Add(Sort.Unsigned_Short_Int, 0);
-        m_minValueMap.Add(Sort.Signed_Int, -32768);
-        m_minValueMap.Add(Sort.Unsigned_Int, 0);
-        m_minValueMap.Add(Sort.Array, 0);
-        m_minValueMap.Add(Sort.Pointer, 0);
-        m_minValueMap.Add(Sort.Signed_Long_Int, -2147483648);
-        m_minValueMap.Add(Sort.Unsigned_Long_Int, 0);
-
-        m_maxValueMap.Add(Sort.Logical, 1);
-        m_maxValueMap.Add(Sort.Signed_Char, 127);
-        m_maxValueMap.Add(Sort.Unsigned_Char, 255);
-        m_maxValueMap.Add(Sort.Signed_Short_Int, 127);
-        m_maxValueMap.Add(Sort.Unsigned_Short_Int, 255);
-        m_maxValueMap.Add(Sort.Signed_Int, 32767);
-        m_maxValueMap.Add(Sort.Unsigned_Int, 65535);
-        m_maxValueMap.Add(Sort.Array, 65535);
-        m_maxValueMap.Add(Sort.Pointer, 65535);
-        m_maxValueMap.Add(Sort.Signed_Long_Int, 2147483647);
-        m_maxValueMap.Add(Sort.Unsigned_Long_Int, 4294967295);
-
-        /*m_minValueFloatMap.Add(Sort.Float, decimal.Parse("1.2E-38", NumberStyles.Float));
-        m_minValueFloatMap.Add(Sort.Double, decimal.Parse("2.3E-308", NumberStyles.Float));
-        m_minValueFloatMap.Add(Sort.Long_Double, decimal.Parse("2.3E-308", NumberStyles.Float));
-
-        m_maxValueFloatMap.Add(Sort.Float, decimal.Parse("3.4E+38", NumberStyles.Float));
-        m_maxValueFloatMap.Add(Sort.Double, decimal.Parse("1.7E+308", NumberStyles.Float));
-        m_maxValueFloatMap.Add(Sort.Long_Double, decimal.Parse("1.7E+308", NumberStyles.Float));*/
-
-        /*m_maskMap.Add(Sort.Unsigned_Char, 0x00000000000000FF);
-        m_maskMap.Add(Sort.Unsigned_Short_Int, 0x00000000000000FF);
-        m_maskMap.Add(Sort.Unsigned_Int, 0x000000000000FFFF);
-        m_maskMap.Add(Sort.Unsigned_Long_Int, 0x00000000FFFFFFFF);*/
-      }
-      
-      if (Start.Linux) {
-        PointerSize = 8;
-        SignedIntegerSize = 4;
-
-        m_sizeMap.Add(Sort.Void, 0);
-        m_sizeMap.Add(Sort.Function, 0);
-        m_sizeMap.Add(Sort.Logical, 1);
-        m_sizeMap.Add(Sort.Pointer, 8);
-        m_sizeMap.Add(Sort.Array, 8);
-        m_sizeMap.Add(Sort.String, 4);
-        m_sizeMap.Add(Sort.Signed_Char, 1);
-        m_sizeMap.Add(Sort.Unsigned_Char, 1);
-        m_sizeMap.Add(Sort.Signed_Short_Int, 2);
-        m_sizeMap.Add(Sort.Unsigned_Short_Int, 2);
-        m_sizeMap.Add(Sort.Signed_Int, 4);
-        m_sizeMap.Add(Sort.Unsigned_Int, 4);
-        m_sizeMap.Add(Sort.Signed_Long_Int, 8);
-        m_sizeMap.Add(Sort.Unsigned_Long_Int, 8);
-        m_sizeMap.Add(Sort.Float, 4);
-        m_sizeMap.Add(Sort.Double, 8);
-        m_sizeMap.Add(Sort.Long_Double, 8);
-
-        m_signedMap.Add(1, SignedCharType);
-        m_signedMap.Add(2, SignedShortIntegerType);
-        m_signedMap.Add(4, SignedIntegerType);
-        m_signedMap.Add(8, SignedLongIntegerType);
-
-        m_unsignedMap.Add(1, UnsignedCharType);
-        m_unsignedMap.Add(2, UnsignedShortIntegerType);
-        m_unsignedMap.Add(4, UnsignedIntegerType);
-        m_unsignedMap.Add(8, UnsignedLongIntegerType);
-
-        m_minValueMap.Add(Sort.Logical, 0);
-        m_minValueMap.Add(Sort.Signed_Char, -128);
-        m_minValueMap.Add(Sort.Unsigned_Char, 0);
-        m_minValueMap.Add(Sort.Signed_Short_Int, -32768);
-        m_minValueMap.Add(Sort.Unsigned_Short_Int, 0);
-        m_minValueMap.Add(Sort.Signed_Int, -2147483648);
-        m_minValueMap.Add(Sort.Unsigned_Int, 0);
-        m_minValueMap.Add(Sort.Array, 0);
-        m_minValueMap.Add(Sort.Pointer, 0);
-        m_minValueMap.Add(Sort.Signed_Long_Int, -9223372036854775808);
-        m_minValueMap.Add(Sort.Unsigned_Long_Int, 0);
-
-        m_maxValueMap.Add(Sort.Logical, 1);
-        m_maxValueMap.Add(Sort.Signed_Char, 127);
-        m_maxValueMap.Add(Sort.Unsigned_Char, 255);
-        m_maxValueMap.Add(Sort.Signed_Short_Int, 32767);
-        m_maxValueMap.Add(Sort.Unsigned_Short_Int, 65535);
-        m_maxValueMap.Add(Sort.Signed_Int, 2147483647);
-        m_maxValueMap.Add(Sort.Unsigned_Int, 4294967295);
-        m_maxValueMap.Add(Sort.Array, 4294967295);
-        m_maxValueMap.Add(Sort.Pointer, 4294967295);
-        m_maxValueMap.Add(Sort.Signed_Long_Int, 9223372036854775807);
-        m_maxValueMap.Add(Sort.Unsigned_Long_Int, 18446744073709551615);
-
-        /*m_minValueFloatMap.Add(Sort.Float, decimal.Parse("1.2E-38", NumberStyles.Float));
-        m_minValueFloatMap.Add(Sort.Double, decimal.Parse("2.3E-308", NumberStyles.Float));
-        m_minValueFloatMap.Add(Sort.Long_Double, decimal.Parse("2.3E-308", NumberStyles.Float));
-
-        m_maxValueFloatMap.Add(Sort.Float, decimal.Parse("3.4E+38", NumberStyles.Float));
-        m_maxValueFloatMap.Add(Sort.Double, decimal.Parse("1.7E+308", NumberStyles.Float));
-        m_maxValueFloatMap.Add(Sort.Long_Double, decimal.Parse("1.7E+308", NumberStyles.Float));*/
-
-/*        m_maskMap.Add(Sort.Unsigned_Char, 0x00000000000000FF);
-                        m_maskMap.Add(Sort.Unsigned_Short_Int, 0x00000000000000FF);
-                        m_maskMap.Add(Sort.Unsigned_Int, 0x000000000000FFFF);
-                        m_maskMap.Add(Sort.Unsigned_Long_Int, 0x0FFFFFFFFFFFFFFF);*/
-      }
-    }
-  
-    public BigInteger GetMinValue() {
-      return m_minValueMap[m_sort];
-    }
-
-    public BigInteger GetMaxValue() {
-      return m_maxValueMap[m_sort];
-    }
-
-    public BigInteger GetMask() {
-      return m_maskMap[m_sizeMap[m_sort]];
-    }
-
-    public static Type SizeToSignedType(int size) {
-      return m_signedMap[size];
-    }
-
-    public static Type SizeToUnsignedType(int size) {
-      return m_unsignedMap[size];
-    }
-
-
-    public static int Size(Sort sort) {
-      return m_sizeMap[sort];
-    }
-
     public static bool IsSigned(Sort sort) {
       return (sort == Sort.Signed_Char) || (sort == Sort.Signed_Short_Int) ||
              (sort == Sort.Signed_Int) || (sort == Sort.Signed_Long_Int);
@@ -394,7 +193,7 @@ namespace CCompiler {
     public int SizeX() {
       switch (m_sort) {
         case Sort.Array:
-          return Type.PointerSize;
+          return TypeSize.PointerSize;
 
         default:
           return Size();
@@ -427,10 +226,10 @@ namespace CCompiler {
           }
 
         case Sort.Logical:
-            return Type.SignedIntegerSize;
+            return TypeSize.SignedIntegerSize;
 
         default:
-          return m_sizeMap[m_sort];
+          return TypeSize.Size(m_sort);
       }
     }
 
@@ -438,7 +237,7 @@ namespace CCompiler {
       switch (m_sort) {
         case Sort.Array:
         case Sort.Function:
-          return PointerSize;
+          return TypeSize.PointerSize;
 
         default:
           return Size();
@@ -504,7 +303,8 @@ namespace CCompiler {
       if (obj is Type) {
         Type type = (Type) obj;
 
-        if ((m_constant == type.m_constant) && (m_volatile == type.m_volatile) && (m_sort == type.m_sort)) {
+        if ((m_constant == type.m_constant) &&
+            (m_volatile == type.m_volatile) && (m_sort == type.m_sort)) {
           switch (m_sort) {
             case Sort.Pointer:
               return m_pointerType.Equals(type.m_pointerType);
@@ -734,7 +534,28 @@ namespace CCompiler {
     }
 
     public override string ToString() {
-      return Enum.GetName(typeof(Sort), m_sort).Replace("__", "-").Replace("_", " ").ToLower();
+      return Enum.GetName(typeof(Sort), m_sort).
+                  Replace("__", "-").Replace("_", " ").ToLower();
     }
+
+    public static Type SignedShortIntegerType =
+      new Type(Sort.Signed_Short_Int);
+    public static Type UnsignedShortIntegerType =
+      new Type(Sort.Unsigned_Short_Int);
+    public static Type SignedIntegerType = new Type(Sort.Signed_Int);
+    public static Type UnsignedIntegerType = new Type(Sort.Unsigned_Int);
+    public static Type SignedLongIntegerType = new Type(Sort.Signed_Long_Int);
+    public static Type UnsignedLongIntegerType =
+      new Type(Sort.Unsigned_Long_Int);
+    public static Type FloatType = new Type(Sort.Float);
+    public static Type DoubleType = new Type(Sort.Double);
+    public static Type LongDoubleType = new Type(Sort.Long_Double);
+    public static Type SignedCharType = new Type(Sort.Signed_Char);
+    public static Type UnsignedCharType = new Type(Sort.Unsigned_Char);
+    public static Type StringType = new Type(Sort.String);
+    public static Type VoidType = new Type(Sort.Void);
+    public static Type PointerTypeX = new Type(SignedIntegerType);
+    public static Type VoidPointerType = new Type(new Type(Sort.Void));
+    public static Type LogicalType = new Type(Sort.Logical);
   }
 }

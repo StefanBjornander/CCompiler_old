@@ -860,7 +860,7 @@ namespace CCompiler {
           if (assignSymbol.IsExternOrStatic()) {
             AssemblyOperator sizeMovOperator =
                AssemblyCode.OperatorToSize(AssemblyOperator.mov,
-                                           Type.PointerSize);
+                                           TypeSize.PointerSize);
             AddAssemblyCode(sizeMovOperator, Base(resultSymbol),
                             Offset(resultSymbol), assignSymbol.UniqueName);
           }
@@ -869,7 +869,7 @@ namespace CCompiler {
                             Offset(resultSymbol), Base(assignSymbol));
             AssemblyOperator sizeAddOperator =
                AssemblyCode.OperatorToSize(AssemblyOperator.add,
-                                           Type.PointerSize);
+                                           TypeSize.PointerSize);
 
             if (assignSymbol.Offset > 0) {
               AddAssemblyCode(sizeAddOperator, Base(resultSymbol),
@@ -1200,7 +1200,7 @@ namespace CCompiler {
       else if (rightSymbol.IsExternOrStatic() &&
                rightSymbol.Type.IsArrayFunctionOrString()) {
         AssemblyOperator sizeOperator =
-          AssemblyCode.OperatorToSize(objectOperator, Type.PointerSize);
+          AssemblyCode.OperatorToSize(objectOperator, TypeSize.PointerSize);
         AddAssemblyCode(sizeOperator, Base(leftSymbol),
                         Offset(leftSymbol), ValueOrAddress(rightSymbol));
       }
@@ -1588,14 +1588,14 @@ namespace CCompiler {
                           BaseRegister(symbol));
           AssemblyOperator addObjectOp =
             AssemblyCode.OperatorToSize(AssemblyOperator.add,
-                                        Type.PointerSize);
+                                        TypeSize.PointerSize);
           AddAssemblyCode(addObjectOp, IntegralStorageName, 0,
                           (BigInteger) symbol.Offset);
         }
         else {
           AssemblyOperator movObjectOp =
             AssemblyCode.OperatorToSize(AssemblyOperator.mov,
-                                        Type.PointerSize);
+                                        TypeSize.PointerSize);
           AddAssemblyCode(movObjectOp, IntegralStorageName, 0,
                           symbol.UniqueName);
         }
@@ -1661,12 +1661,12 @@ namespace CCompiler {
           if (toSize == 8) {
             Track toTrack = new Track(toSymbol);
             AddAssemblyCode(AssemblyOperator.mov, toTrack,
-                            fromType.GetMask());
+                            TypeSize.GetMask(fromType.Sort));
             AddAssemblyCode(AssemblyOperator.and, fromTrack, toTrack);
           }
           else {
             AddAssemblyCode(AssemblyOperator.and, fromTrack,
-                            fromType.GetMask());
+                            TypeSize.GetMask(fromType.Sort));
           }
 
         }
@@ -1733,7 +1733,7 @@ namespace CCompiler {
                fromSymbol.Type.IsArrayFunctionOrString()) {
         AssemblyOperator sizeOperator =
           AssemblyCode.OperatorToSize(AssemblyOperator.mov,
-                                      Type.PointerSize);
+                                      TypeSize.PointerSize);
         AddAssemblyCode(sizeOperator, Base(toSymbol), Offset(toSymbol),
                         fromSymbol.UniqueName);
       }
@@ -1969,15 +1969,15 @@ namespace CCompiler {
 
         AddAssemblyCode(assemblyCodeList, AssemblyOperator.pop, Register.rsi);
         AddAssemblyCode(assemblyCodeList, AssemblyOperator.mov, Register.rbp, 0, Register.rsi);
-        AddAssemblyCode(assemblyCodeList, AssemblyOperator.add, Register.rbp, (BigInteger) Type.PointerSize);
+        AddAssemblyCode(assemblyCodeList, AssemblyOperator.add, Register.rbp, (BigInteger) TypeSize.PointerSize);
         AddAssemblyCode(assemblyCodeList, AssemblyOperator.dec, Register.rbx);
         AddAssemblyCode(assemblyCodeList, AssemblyOperator.jmp, null, null, "$args$loop");
 
         AddAssemblyCode(assemblyCodeList, AssemblyOperator.label, "$args$exit");
         AddAssemblyCode(assemblyCodeList, AssemblyOperator.mov_qword, Register.rbp, 0, (BigInteger) 0);
-        AddAssemblyCode(assemblyCodeList, AssemblyOperator.add, Register.rbp, (BigInteger) Type.PointerSize);
+        AddAssemblyCode(assemblyCodeList, AssemblyOperator.add, Register.rbp, (BigInteger) TypeSize.PointerSize);
         AddAssemblyCode(assemblyCodeList, AssemblyOperator.mov, Register.rbp, SymbolTable.FunctionHeaderSize, Register.eax);
-        AddAssemblyCode(assemblyCodeList, AssemblyOperator.mov, Register.rbp, SymbolTable.FunctionHeaderSize + Type.SignedIntegerSize, Register.rdx);
+        AddAssemblyCode(assemblyCodeList, AssemblyOperator.mov, Register.rbp, SymbolTable.FunctionHeaderSize + TypeSize.SignedIntegerSize, Register.rdx);
 
         List<string> textList = new List<string>();
         ISet<string> externSet = new HashSet<string>();
@@ -2069,7 +2069,7 @@ namespace CCompiler {
           int byteAddress = assemblyToByteMap[assemblyAddress];
           int nextAddress = assemblyToByteMap[line + 1];
           BigInteger byteReturn = byteAddress - nextAddress +
-                                  Type.PointerSize;
+                                  TypeSize.PointerSize;
           assemblyCode[2] = byteReturn;
         }
       }
@@ -2096,7 +2096,7 @@ namespace CCompiler {
             (assemblyCode.Operator != AssemblyOperator.define_zero_sequence)) {
            if (assemblyCode.Operator == AssemblyOperator.define_address) {
             string name = (string) assemblyCode[0];
-            accessMap.Add(byteList.Count - Type.PointerSize, name);
+            accessMap.Add(byteList.Count - TypeSize.PointerSize, name);
           }
           else if (assemblyCode.Operator == AssemblyOperator.define_value) {
             Sort sort = (Sort) assemblyCode[0];
@@ -2104,22 +2104,22 @@ namespace CCompiler {
 
             if (sort == Sort.Pointer) {
               if (value is string) {
-                accessMap.Add(byteList.Count - Type.PointerSize, (string)value);
+                accessMap.Add(byteList.Count - TypeSize.PointerSize, (string)value);
               }
               else if (value is StaticAddress) {
                 StaticAddress staticAddress = (StaticAddress) value;
-                accessMap.Add(byteList.Count - Type.PointerSize, staticAddress.UniqueName);
+                accessMap.Add(byteList.Count - TypeSize.PointerSize, staticAddress.UniqueName);
               }
             }
           }
           else if ((assemblyCode.Operator == AssemblyOperator.call) &&
                    (assemblyCode[0] is string)) {
             string calleeName = (string) assemblyCode[0];
-            int address = byteList.Count - Type.PointerSize;
+            int address = byteList.Count - TypeSize.PointerSize;
             callMap.Add(address, calleeName);
           }
           else if (assemblyCode.Operator == AssemblyOperator.address_return) {
-            int address = byteList.Count - Type.PointerSize;
+            int address = byteList.Count - TypeSize.PointerSize;
             returnSet.Add(address);
           }
           else if (operand0 is string) { // Add [g + 1], 2
@@ -2129,21 +2129,21 @@ namespace CCompiler {
                                                assemblyCode.Operator);
             }
           
-            int address = byteList.Count - Type.PointerSize - size;
+            int address = byteList.Count - TypeSize.PointerSize - size;
             accessMap.Add(address, (string) operand0);
           }
           else if (operand1 is string) {
             if (operand2 is int) { // mov ax, [g + 1]
-              int address = byteList.Count - Type.PointerSize;
+              int address = byteList.Count - TypeSize.PointerSize;
               accessMap.Add(address, (string) operand1);
             }
             else {
-              int address = byteList.Count - Type.PointerSize; // mov ax, g
+              int address = byteList.Count - TypeSize.PointerSize; // mov ax, g
               accessMap.Add(address, (string) operand1);
             }
           }
           else if (operand2 is string) { // Add [bp + 2], g
-            int address = byteList.Count - Type.PointerSize;
+            int address = byteList.Count - TypeSize.PointerSize;
             accessMap.Add(address, (string) operand2);
           }
         }

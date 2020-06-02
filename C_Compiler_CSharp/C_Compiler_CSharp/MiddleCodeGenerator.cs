@@ -2319,7 +2319,7 @@ namespace CCompiler {
         case Sort.Array:
         case Sort.String:
         case Sort.Function:
-          return Type.PointerSize;
+          return TypeSize.PointerSize;
 
         default:
           return symbol.Type.Size();
@@ -2386,7 +2386,7 @@ namespace CCompiler {
     public static Expression RegisterExpression(Register register) {
       List<MiddleCode> longList = new List<MiddleCode>();
       int size = AssemblyCode.SizeOfRegister(register);
-      Type type = Type.SizeToUnsignedType(size);
+      Type type = TypeSize.SizeToUnsignedType(size); 
       Symbol symbol = new Symbol(type);
       AddMiddleCode(longList, MiddleOperator.InspectRegister, symbol, register);
       return (new Expression(symbol, new List<MiddleCode>(), longList, register));

@@ -21,9 +21,9 @@ namespace CCompiler {
 
     static SymbolTable() {
       ReturnAddressOffset = 0;
-      RegularFrameOffset = Type.PointerSize;
-      EllipseFrameOffset = 2 * Type.PointerSize;
-      FunctionHeaderSize = 3 * Type.PointerSize;
+      RegularFrameOffset = TypeSize.PointerSize;
+      EllipseFrameOffset = 2 * TypeSize.PointerSize;
+      FunctionHeaderSize = 3 * TypeSize.PointerSize;
     }
 
     public SymbolTable(SymbolTable parentTable, Scope scope) {
