@@ -8,7 +8,7 @@ namespace CCompiler {
       Type type = symbol.Type;
       return (type.IsLogical() && ((symbol.TrueSet.Count == 0) ||
               (symbol.FalseSet.Count == 0))) ||
-             (type.IsIntegralArrayOrPointer() && (symbol.Value != null)) ||
+             (type.IsIntegralOrPointer() && (symbol.Value != null)) ||
              (type.IsFloating() && (symbol.Value != null));
     }
 
@@ -17,8 +17,7 @@ namespace CCompiler {
               !((BigInteger) expression.Symbol.Value).IsZero) ||
              ((expression.Symbol.Value is decimal) &&
               !((decimal) expression.Symbol.Value).Equals((decimal) 0)) ||
-             ((expression.Symbol.TrueSet != null) &&
-              (expression.Symbol.TrueSet.Count > 0));
+             (expression.Symbol.TrueSet.Count > 0);
     }
 
     public static Expression Relation(MiddleOperator middleOp,
@@ -90,8 +89,8 @@ namespace CCompiler {
           break;
       }
 
-      Symbol symbol = resultValue ? (new Symbol(null, jumpSet))
-                                  : (new Symbol(jumpSet, null));
+      Symbol symbol = resultValue ? (new Symbol(jumpSet, null))
+                                  : (new Symbol(null, jumpSet));
       return (new Expression(symbol, null, codeList));
     }
       
@@ -109,8 +108,8 @@ namespace CCompiler {
       leftExpression = LogicalToFloating(leftExpression);
       rightExpression = LogicalToFloating(leftExpression);
 
-      decimal leftValue;
-      if (leftExpression.Symbol.Type.IsIntegralArrayOrPointer()) {
+      decimal leftValue;      
+      if (leftExpression.Symbol.Value is BigInteger) {
         leftValue = (decimal) ((BigInteger) leftExpression.Symbol.Value);
       }
       else {
@@ -118,7 +117,7 @@ namespace CCompiler {
       }
 
       decimal rightValue;
-      if (rightExpression.Symbol.Type.IsIntegralArrayOrPointer()) {
+      if (rightExpression.Symbol.Value is BigInteger) {
         rightValue = (decimal) ((BigInteger) rightExpression.Symbol.Value);
       }
       else {
@@ -158,8 +157,8 @@ namespace CCompiler {
           break;
       }
 
-      Symbol symbol = resultValue ? (new Symbol(null, jumpSet))
-                                  : (new Symbol(jumpSet, null));
+      Symbol symbol = resultValue ? (new Symbol(jumpSet, null))
+                                  : (new Symbol(null, jumpSet));
       return (new Expression(symbol, null, codeList));
     }
 
@@ -200,8 +199,8 @@ namespace CCompiler {
           break;
       }
 
-      Symbol symbol = resultValue ? (new Symbol(null, jumpSet))
-                                  : (new Symbol(jumpSet, null));
+      Symbol symbol = resultValue ? (new Symbol(jumpSet, null))
+                                  : (new Symbol(null, jumpSet));
       return (new Expression(symbol, null, codeList));
     }
   
@@ -367,8 +366,8 @@ namespace CCompiler {
         ISet<MiddleCode> jumpSet = new HashSet<MiddleCode>();
         jumpSet.Add(jumpCode);
         bool isTrue = (expression.Symbol.TrueSet.Count > 0);
-        Symbol symbol = isTrue ? (new Symbol(null, jumpSet))
-                               : (new Symbol(jumpSet, null));
+        Symbol symbol = isTrue ? (new Symbol(jumpSet, null))
+                               : (new Symbol(null, jumpSet));
         return (new Expression(symbol, null, codeList));
       }
 
