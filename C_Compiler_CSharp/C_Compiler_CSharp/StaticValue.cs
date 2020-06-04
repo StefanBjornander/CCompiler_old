@@ -12,8 +12,8 @@ namespace CCompiler {
       get { return m_uniqueName; }
     }
   
-    public int Offset() {
-      return m_offset;
+    public int Offset {
+      get { return m_offset; }
     }
   }
 }

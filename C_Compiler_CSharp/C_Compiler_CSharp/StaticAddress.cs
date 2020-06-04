@@ -4,7 +4,6 @@ namespace CCompiler {
     private int m_offset;
   
     public StaticAddress(string name, int offset) {
-      //Assert.Error(offset >= 0);
       m_uniqueName = name;
       m_offset = offset;
     }
