@@ -93,25 +93,27 @@ namespace CCompiler {
           storage = (Storage) totalStorageValue;
         }
       }
-
-      bool externalLinkage = (SymbolTable.CurrentTable.Scope == Scope.Global) &&
-                             (CCompiler_Main.Parser.CallDepth == 0) &&
-                             ((storage == null) || (storage == CCompiler.Storage.Extern));
+      bool externalLinkage = (SymbolTable.CurrentTable.Scope == Scope.Global)
+                             && (CCompiler_Main.Parser.CallDepth == 0) &&
+                             ((storage == null) ||
+                              (storage == CCompiler.Storage.Extern));
 
       if (CCompiler_Main.Parser.CallDepth > 0) {
-        Assert.Error((storage == null) || (storage == Storage.Auto) || (storage == Storage.Register),
-                     storage, Message.Only_auto_or_register_storage_allowed_in_parameter_declaration);
+        Assert.Error((storage == null) || (storage == Storage.Auto) || 
+                     (storage == Storage.Register), storage, Message.
+          Only_auto_or_register_storage_allowed_in_parameter_declaration);
       }
       else if ((SymbolTable.CurrentTable.Scope == Scope.Struct) ||
                (SymbolTable.CurrentTable.Scope == Scope.Union)) {
-          Assert.Error((storage == null) || (storage == Storage.Auto) || (storage == Storage.Register),
-                       storage, Message.Only_auto_or_register_storage_allowed_for_struct_or_union_scope);  
+          Assert.Error((storage == null) || (storage == Storage.Auto) ||
+                       (storage == Storage.Register), storage, Message.
+            Only_auto_or_register_storage_allowed_for_struct_or_union_scope);  
       }
       else if (SymbolTable.CurrentTable.Scope == Scope.Global) {
           Assert.Error((storage == null) || (storage == Storage.Extern) ||
-                       (storage == Storage.Static) || (storage == Storage.Typedef),
-                       storage, Message.
-                       Only_extern____static____or_typedef_storage_allowed_in_global_scope);
+                       (storage == Storage.Static) ||
+                      (storage == Storage.Typedef), storage, Message.
+        Only_extern____static____or_typedef_storage_allowed_in_global_scope);
       }
 
       if ((compoundType != null) && (compoundType.EnumerationItemSet != null)){
@@ -162,7 +164,7 @@ namespace CCompiler {
 
       { bool isConstant = (totalMaskValue & ((int) Mask.Constant)) != 0;
         bool isVolatile = (totalMaskValue & ((int) Mask.Volatile)) != 0;
-    
+
         if ((isConstant || isVolatile) && (compoundType != null) &&
              compoundType.IsStructOrUnion() /*&& compoundType.HasTag()*/) {
           compoundType = new Type(compoundType.Sort, compoundType.MemberMap);
@@ -204,7 +206,7 @@ namespace CCompiler {
         return (new Specifier(externalLinkage, storage, type));
       }
     }
- 
+
     public static Type QualifierList(List<Mask> qualifierList) {
       int totalMaskValue = 0;
     

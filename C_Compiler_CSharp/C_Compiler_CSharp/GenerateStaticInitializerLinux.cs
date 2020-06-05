@@ -6,7 +6,7 @@ using System.Collections.Generic;
 
 namespace CCompiler {
   public class GenerateStaticInitializerLinux {
-    public static void TextList(IList<AssemblyCode> assemblyCodeList, IList<string> textList,
+    /*public static void TextList(IList<AssemblyCode> assemblyCodeList, IList<string> textList,
                                         ISet<string> externSet) {
       foreach (AssemblyCode assemblyCode in assemblyCodeList) {
         AssemblyOperator assemblyOperator = assemblyCode.Operator;
@@ -57,6 +57,6 @@ namespace CCompiler {
           textList.Add(text);
         }
       }
-    }
+    }*/
   }
 }

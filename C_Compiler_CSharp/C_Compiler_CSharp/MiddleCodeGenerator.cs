@@ -186,8 +186,9 @@ namespace CCompiler {
       if (Start.Linux) {
         List<string> textList = new List<string>();
         ISet<string> externSet = new HashSet<string>();
-        GenerateStaticInitializerLinux.TextList(assemblyCodeList,
-                                                textList, externSet);
+        AssemblyCodeGenerator.TextList(assemblyCodeList, textList, externSet);
+        //GenerateStaticInitializerLinux.TextList(assemblyCodeList,
+        //                                      textList, externSet);
         StaticSymbol staticSymbol =
           new StaticSymbolLinux(StaticSymbolLinux.TextOrData.Text,
                                 SymbolTable.CurrentFunction.UniqueName,
@@ -471,7 +472,8 @@ namespace CCompiler {
           List<string> textList = new List<string>();
           ISet<string> externSet = new HashSet<string>();
           textList.Add("\n" + symbol.UniqueName + ":");
-          GenerateStaticInitializerLinux.TextList(assemblyCodeList, textList, externSet);
+          AssemblyCodeGenerator.TextList(assemblyCodeList, textList, externSet);
+          //GenerateStaticInitializerLinux.TextList(assemblyCodeList, textList, externSet);
           SymbolTable.CurrentTable.AddSymbol(symbol);
           StaticSymbol staticSymbol = new StaticSymbolLinux(StaticSymbolLinux.TextOrData.Data, symbol.UniqueName, textList, externSet);
           SymbolTable.StaticSet.Add(staticSymbol);

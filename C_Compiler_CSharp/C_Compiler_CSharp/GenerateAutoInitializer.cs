@@ -7,12 +7,14 @@ using System.Collections.Generic;
 
 namespace CCompiler {
   class GenerateAutoInitializer {
-    public static List<MiddleCode> GenerateAuto(Symbol toSymbol, object fromInit) {
+    public static List<MiddleCode> GenerateAuto(Symbol toSymbol,
+                                                object fromInit) {
       List<MiddleCode> codeList = new List<MiddleCode>();
       Type toType = toSymbol.Type;
     
       if (toType.IsArray() && toType.ArrayType.IsChar() &&
-          (fromInit is Expression) && ((Expression) fromInit).Symbol.Type.IsString()) {
+          (fromInit is Expression) &&
+          ((Expression) fromInit).Symbol.Type.IsString()) {
         string text = (string) ((Expression) fromInit).Symbol.Value;
 
         if (toType.ArraySize == 0) {
@@ -27,27 +29,35 @@ namespace CCompiler {
         for (int index = 0; index < text.Length; ++index) {
           Symbol toCharSymbol = new Symbol(toType.ArrayType, true);
           toCharSymbol.Name = toSymbol.Name + "[" + index + "]";
-          toCharSymbol.Offset = toSymbol.Offset + (index * toType.ArrayType.Size());
-          Symbol fromCharSymbol = new Symbol(toType.ArrayType, (BigInteger) text[index]);
-          codeList.Add(new MiddleCode(MiddleOperator.Assign, toCharSymbol, fromCharSymbol));
+          toCharSymbol.Offset = toSymbol.Offset +
+                                (index * toType.ArrayType.Size());
+          Symbol fromCharSymbol = new Symbol(toType.ArrayType,
+                                             (BigInteger) text[index]);
+          codeList.Add(new MiddleCode(MiddleOperator.Assign,
+                       toCharSymbol, fromCharSymbol));
         }
 
         { Symbol toCharSymbol = new Symbol(toType.ArrayType, true);
           toCharSymbol.Name = toSymbol.Name + "[" + text.Length + "]";
-          toCharSymbol.Offset = toSymbol.Offset + (text.Length * toType.ArrayType.Size());
-          Symbol fromCharSymbol = new Symbol(toType.ArrayType, (BigInteger) '\0');
-          codeList.Add(new MiddleCode(MiddleOperator.Assign, toCharSymbol, fromCharSymbol));
+          toCharSymbol.Offset = toSymbol.Offset +
+                                (text.Length * toType.ArrayType.Size());
+          Symbol fromCharSymbol = new Symbol(toType.ArrayType,
+                                             (BigInteger) '\0');
+          codeList.Add(new MiddleCode(MiddleOperator.Assign,
+                                      toCharSymbol, fromCharSymbol));
         }
       }
       else if (fromInit is Expression) {
-        Expression initExpression = TypeCast.ImplicitCast((Expression) fromInit, toType);
+        Expression initExpression =
+          TypeCast.ImplicitCast((Expression) fromInit, toType);
         codeList.AddRange(initExpression.LongList);      
       
         if (toType.IsFloating()) {
           codeList.Add(new MiddleCode(MiddleOperator.PopFloat, toSymbol));
         }
         else {
-          codeList.Add(new MiddleCode(MiddleOperator.Assign, toSymbol, initExpression.Symbol));
+          codeList.Add(new MiddleCode(MiddleOperator.Assign, toSymbol,
+                                      initExpression.Symbol));
         }
       }
       else {
@@ -59,12 +69,13 @@ namespace CCompiler {
                 toType.ArraySize = fromList.Count;
               }
 
-              Assert.Error(!(fromList.Count > toType.ArraySize), toType, Message.Too_many_initializers);
-              //Assert.Error((fromList.Count < toType.ArraySize), toType, Message.Too_few_initializers);
+              Assert.Error(!(fromList.Count > toType.ArraySize),
+                           toType, Message.Too_many_initializers);
             
               for (int index = 0; index < fromList.Count; ++index) {
                 Symbol subSymbol = new Symbol(toType.ArrayType, true);
-                subSymbol.Offset = toSymbol.Offset + (index * toType.ArrayType.Size());
+                subSymbol.Offset = toSymbol.Offset +
+                                   (index * toType.ArrayType.Size());
                 subSymbol.Name = toSymbol.Name + "[" + index + "]";
                 codeList.AddRange(GenerateAuto(subSymbol, fromList[index]));
               }
@@ -73,15 +84,19 @@ namespace CCompiler {
           
           case Sort.Struct: {
               IDictionary<string,Symbol> memberMap = toType.MemberMap;            
-              Assert.Error(!(fromList.Count > memberMap.Count), toType, Message.Too_many_initializers);
-              Assert.Error(!(fromList.Count < memberMap.Count), toType, Message.Too_few_initializers);
-              KeyValuePair<string, Symbol>[] memberArray = new KeyValuePair<string, Symbol>[memberMap.Count];
+              Assert.Error(!(fromList.Count > memberMap.Count),
+                           toType, Message.Too_many_initializers);
+              Assert.Error(!(fromList.Count < memberMap.Count),
+                           toType, Message.Too_few_initializers);
+              KeyValuePair<string, Symbol>[] memberArray =
+                new KeyValuePair<string, Symbol>[memberMap.Count];
               memberMap.CopyTo(memberArray, 0);
               
               for (int index = 0; index < fromList.Count; ++index) {
                 Symbol memberSymbol = memberArray[index].Value;
                 Symbol subSymbol = new Symbol(memberSymbol.Type, true);
-                subSymbol.Name = toSymbol.Name + Symbol.SeparatorDot + memberSymbol.Name;
+                subSymbol.Name = toSymbol.Name + Symbol.SeparatorDot +
+                                 memberSymbol.Name;
                 subSymbol.Offset = toSymbol.Offset + memberSymbol.Offset;
                 codeList.AddRange(GenerateAuto(subSymbol, fromList[index]));
               }
@@ -89,18 +104,21 @@ namespace CCompiler {
             break;
           
           case Sort.Union: {
-              Assert.Error(fromList.Count == 1, toType, Message.A_union_can_be_initalized_by_one_value_only);
+              Assert.Error(fromList.Count == 1, toType,
+                       Message.A_union_can_be_initalized_by_one_value_only);
               IDictionary<string, Symbol> memberMap = toType.MemberMap;
               Symbol firstSymbol = memberMap.Values.GetEnumerator().Current;
               Symbol subSymbol = new Symbol(firstSymbol.Type, true);
-              subSymbol.Name = toSymbol.Name + Symbol.SeparatorId + firstSymbol.Name;
+              subSymbol.Name = toSymbol.Name + Symbol.SeparatorId +
+                               firstSymbol.Name;
               subSymbol.Offset = toSymbol.Offset;
               codeList.AddRange(GenerateAuto(subSymbol, fromList[0]));
             }
             break;
 
           default:
-            Assert.Error(toType, Message.Only_array_struct_or_union_can_be_initialized_by_a_list);
+            Assert.Error(toType,
+            Message.Only_array_struct_or_union_can_be_initialized_by_a_list);
             break;
         }
       }
