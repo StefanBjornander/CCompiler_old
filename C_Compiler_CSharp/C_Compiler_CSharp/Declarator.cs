@@ -4,7 +4,7 @@ namespace CCompiler {
     private Type m_firstType, m_lastType;
 
     public Declarator(string name) {
-      Name = name;
+      m_name = name;
     }
   
     public string Name {
@@ -16,7 +16,7 @@ namespace CCompiler {
       get { return m_firstType; }
     }
 
-    private void SetArrayDimension(Type type) {
+    /*private void SetArrayDimension(Type type) {
       if (type.IsArray()) {
         SetArrayDimension(type.ArrayType);
         type.Dimension = type.ArrayType.Dimension + 1;
@@ -24,7 +24,7 @@ namespace CCompiler {
       else {
         type.Dimension = 0;
       }
-    }
+    }*/
 
     public void Add(Type type) {
       if (m_firstType == null) {
@@ -45,9 +45,9 @@ namespace CCompiler {
             m_lastType.ArrayType = type;
             m_lastType = type;
 
-            if (!m_lastType.IsArray()) {
+            /*if (!m_lastType.IsArray()) {
               SetArrayDimension(m_firstType);
-            }
+            }*/
             break;
 
           case Sort.Function:

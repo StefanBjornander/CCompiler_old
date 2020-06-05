@@ -79,9 +79,12 @@
     <Compile Include="Mask.cs" />
     <Compile Include="Message.cs" />
     <Compile Include="MiddleCode.cs" />
-    <Compile Include="ModifyInitializer.cs" />
     <Compile Include="MiddleCodeOptimizer.cs" />
     <Compile Include="MiddleOperator.cs" />
+    <Compile Include="ModifyInitializer.cs" />
+    <Compile Include="ModifyInitializerOld.cs">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="ObjectCodeComparer.cs" />
     <Compile Include="ObjectCodeInfo.cs" />
     <Compile Include="ObjectCodeTable.cs" />
