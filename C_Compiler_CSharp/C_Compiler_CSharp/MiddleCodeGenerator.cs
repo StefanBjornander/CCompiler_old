@@ -452,7 +452,7 @@ namespace CCompiler {
                      null, Message.Auto_or_register_storage_in_global_scope);
 
       if ((SymbolTable.CurrentTable.Scope == Scope.Global) || (storage == Storage.Static)) {
-        init = ModifyInitializerOld.DoInit(type, init);
+        init = ModifyInitializer.DoInit(type, init);
         List<MiddleCode> middleCodeList = GenerateStaticInitializer.GenerateStatic(type, init);
 
         Symbol symbol = new Symbol(name, specifier.ExternalLinkage, storage.Value, type);

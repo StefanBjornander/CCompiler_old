@@ -5,21 +5,23 @@ using System.Globalization;
 using System.Collections.Generic;
 
 namespace CCompiler {
-  class ModifyInitializerOld {
+  class ModifyInitializer {
     public static object DoInit(Type type, object init) {
       if (type.IsArray() && (init is List<object>)) {
         List<object> list = (List<object>) init;
+        IDictionary<Type,int> typeToDimensionMap = new Dictionary<Type,int>();
+        int maxDimension = GenerateTypeToDimensionMap(type, typeToDimensionMap);
         IDictionary<int,int> dimensionToSizeMap = new Dictionary<int,int>();
-        GenerateDimensionToSizeMap(type, dimensionToSizeMap);
+        GenerateDimensionToSizeMap(type, typeToDimensionMap, dimensionToSizeMap);
         IDictionary<object,int> initToDimensionMap = new Dictionary<object,int>();
-        GenerateInitToDimensionlMap(list, initToDimensionMap);
+        GenerateInitToDimensionlMap(list, typeToDimensionMap, initToDimensionMap);
 
         // int a[2][2][2] = {1,2,3,4,5,6,7,8};
         // {{1,2],{3,4},{5,6},{7,8}}
         // {{{1,2],{3,4}},{{5,6},{7,8}}}
 
         //List<object> list = (List<object>) init;
-        for (int dimension = 1; dimension < type.Dimension; ++dimension) {
+        for (int dimension = 1; dimension < maxDimension; ++dimension) {
           List<object> totalList = new List<object>(), currentList = new List<object>();
           int arraySize = dimensionToSizeMap[dimension];
           Assert.ErrorA(arraySize > 0);
@@ -61,25 +63,51 @@ namespace CCompiler {
       return init;
     }
 
-    private static void GenerateDimensionToSizeMap(Type type, IDictionary<int,int> dimensionToSizeMap) {
+    private static int GenerateTypeToDimensionMap(Type type, IDictionary<Type,int> typeToDimensionMap) {
       if (type.IsArray()) {
-        dimensionToSizeMap[type.Dimension] = type.ArraySize;
-        GenerateDimensionToSizeMap(type.ArrayType, dimensionToSizeMap);
+        int dimension = GenerateTypeToDimensionMap(type.ArrayType, typeToDimensionMap) + 1;
+        typeToDimensionMap[type] = dimension;
+        return dimension;
+      }
+      else {
+        typeToDimensionMap[type] = 0;
+        return 0;
       }
     }
 
-    private static int GenerateInitToDimensionlMap(object init, IDictionary<object,int> totalMap) {
+    private static void GenerateDimensionToSizeMap(Type type, IDictionary<Type,int> typeToDimensionMap,
+                                                   IDictionary<int,int> dimensionToSizeMap) {
+      if (type.IsArray()) {
+        int dimension = typeToDimensionMap[type];
+        dimensionToSizeMap[dimension] = type.ArraySize;
+        GenerateDimensionToSizeMap(type.ArrayType, typeToDimensionMap, dimensionToSizeMap);
+      }
+    }
+
+    private static int GenerateInitToDimensionlMap(object init, IDictionary<Type,int> typeToDimensionMap,
+                                                   IDictionary<object, int> totalMap)
+    {
       if (init is Expression) {
         Symbol symbol = ((Expression) init).Symbol;
-        totalMap[init] = symbol.Type.Dimension;
-        return symbol.Type.Dimension;
+        Assert.ErrorA(symbol.Type.Dimension == -1);
+
+        int dimension;
+        if (typeToDimensionMap.ContainsKey(symbol.Type)) {
+          dimension = typeToDimensionMap[symbol.Type];
+        }
+        else {
+          dimension = 0;
+        }
+
+        totalMap[init] = dimension;
+        return dimension;
       }
       else {
         List<object> list = (List<object>) init;
         int maxDimension = 0;
 
         foreach (object member in list) {
-          int dimension = GenerateInitToDimensionlMap(member, totalMap);
+          int dimension = GenerateInitToDimensionlMap(member, typeToDimensionMap, totalMap);
           maxDimension = Math.Max(maxDimension, dimension);
         }
 

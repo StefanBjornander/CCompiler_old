@@ -48,7 +48,7 @@ namespace CCompiler {
 
     // ------------------------------------------------------------------------
   
-    private int m_dimension;
+    private int m_dimension = -1;
     private int m_arraySize;
     private Type m_arrayType;
 

@@ -94,7 +94,7 @@ namespace CCompiler {
               int size = 0;
               for (int index = 0; index < fromList.Count; ++index) {
                 Symbol memberSymbol = memberArray[index].Value;
-                object init = ModifyInitializerOld.DoInit(memberSymbol.Type,
+                object init = ModifyInitializer.DoInit(memberSymbol.Type,
                                                        fromList[index]);
                 middleCodeList.AddRange(GenerateStatic(memberSymbol.Type,
                                                        init));
@@ -112,7 +112,7 @@ namespace CCompiler {
               IDictionary<string, Symbol> memberMap = toType.MemberMap;
               Symbol firstSymbol = memberMap.Values.GetEnumerator().Current;
               object init =
-                ModifyInitializerOld.DoInit(firstSymbol.Type, fromList[0]);
+                ModifyInitializer.DoInit(firstSymbol.Type, fromList[0]);
               middleCodeList.AddRange(GenerateStatic(firstSymbol.Type, init));
               middleCodeList.Add(new MiddleCode(MiddleOperator.InitZero,
                                     toType.Size() - firstSymbol.Type.Size()));

@@ -5,13 +5,29 @@ using System.Globalization;
 using System.Collections.Generic;
 
 namespace CCompiler {
-  class ModifyInitializerOld {
+  class ModifyInitializerX {
+    private static IDictionary<Type,int> m_typeToDimensionMap = new Dictionary<Type,int>();
+    private static IDictionary<int,int> m_dimensionToSizeMap = new Dictionary<int,int>();
+
+    private static int GenerateDimensionMaps(Type type) {
+      if (type.IsArray()) {
+        int dimension = GenerateDimensionMaps(type.ArrayType) + 1;
+        m_typeToDimensionMap[type] = dimension;
+        m_dimensionToSizeMap[dimension] = type.ArraySize;
+        return dimension;
+      }
+      else {
+        m_typeToDimensionMap[type] = 0;
+        m_dimensionToSizeMap[0] = 0;
+        return 0;
+      }
+    }
+
     public static object DoInit(Type type, object init) {
       if (type.IsArray() && (init is List<object>)) {
         List<object> list = (List<object>) init;
-        IDictionary<int,int> dimensionToSizeMap = new Dictionary<int,int>();
-        GenerateDimensionToSizeMap(type, dimensionToSizeMap);
-        IDictionary<object,int> initToDimensionMap = new Dictionary<object,int>();
+        int maxDimension = GenerateDimensionMaps(type);
+        IDictionary<object, int> initToDimensionMap = new Dictionary<object, int>();
         GenerateInitToDimensionlMap(list, initToDimensionMap);
 
         // int a[2][2][2] = {1,2,3,4,5,6,7,8};
@@ -19,9 +35,9 @@ namespace CCompiler {
         // {{{1,2],{3,4}},{{5,6},{7,8}}}
 
         //List<object> list = (List<object>) init;
-        for (int dimension = 1; dimension < type.Dimension; ++dimension) {
+        for (int dimension = 1; dimension < maxDimension; ++dimension) {
           List<object> totalList = new List<object>(), currentList = new List<object>();
-          int arraySize = dimensionToSizeMap[dimension];
+          int arraySize = m_dimensionToSizeMap[dimension];
           Assert.ErrorA(arraySize > 0);
 
           foreach (object member in list) {
@@ -61,18 +77,12 @@ namespace CCompiler {
       return init;
     }
 
-    private static void GenerateDimensionToSizeMap(Type type, IDictionary<int,int> dimensionToSizeMap) {
-      if (type.IsArray()) {
-        dimensionToSizeMap[type.Dimension] = type.ArraySize;
-        GenerateDimensionToSizeMap(type.ArrayType, dimensionToSizeMap);
-      }
-    }
-
     private static int GenerateInitToDimensionlMap(object init, IDictionary<object,int> totalMap) {
       if (init is Expression) {
         Symbol symbol = ((Expression) init).Symbol;
-        totalMap[init] = symbol.Type.Dimension;
-        return symbol.Type.Dimension;
+        int dimension = m_typeToDimensionMap[symbol.Type];
+        totalMap[init] = dimension;
+        return dimension;
       }
       else {
         List<object> list = (List<object>) init;
