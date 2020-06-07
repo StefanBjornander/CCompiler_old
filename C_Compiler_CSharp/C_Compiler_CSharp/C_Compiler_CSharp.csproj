@@ -81,11 +81,7 @@
     <Compile Include="MiddleCode.cs" />
     <Compile Include="MiddleCodeOptimizer.cs" />
     <Compile Include="MiddleOperator.cs" />
-    <Compile Include="ModifyInitializer.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="ModifyInitializerX.cs" />
-    <Compile Include="ModifyInitializerY.cs" />
+    <Compile Include="ModifyInitializer.cs" />
     <Compile Include="ObjectCodeComparer.cs" />
     <Compile Include="ObjectCodeInfo.cs" />
     <Compile Include="ObjectCodeTable.cs" />

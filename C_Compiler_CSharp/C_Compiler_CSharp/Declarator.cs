@@ -16,47 +16,33 @@ namespace CCompiler {
       get { return m_firstType; }
     }
 
-    private void SetArrayDimension(Type type) {
-      if (type.IsArray()) {
-        SetArrayDimension(type.ArrayType);
-        type.Dimension = type.ArrayType.Dimension + 1;
-      }
-      else {
-        type.Dimension = 0;
-      }
-    }
-
-    public void Add(Type type) {
+    public void Add(Type newType) {
       if (m_firstType == null) {
-        m_firstType = m_lastType = type;
+        m_firstType = m_lastType = newType;
       }
       else {
         switch (m_lastType.Sort) {
           case Sort.Pointer:
-            m_lastType.PointerType = type;
-            m_lastType = type;
+            m_lastType.PointerType = newType;
+            m_lastType = newType;
             break;
 
           case Sort.Array:
-            Assert.Error(type.IsComplete(),
+            Assert.Error(newType.IsComplete(),
                          Message.Array_of_incomplete_type_not_allowed);
-            Assert.Error(!type.IsFunction(),
+            Assert.Error(!newType.IsFunction(),
                          Message.Array_of_function_not_allowed);
-            m_lastType.ArrayType = type;
-            m_lastType = type;
-
-            if (!m_lastType.IsArray()) {
-              SetArrayDimension(m_firstType);
-            }
+            m_lastType.ArrayType = newType;
+            m_lastType = newType;
             break;
 
           case Sort.Function:
-            Assert.Error(!type.IsArray(),
+            Assert.Error(!newType.IsArray(),
                          Message.Function_cannot_return_array);
-            Assert.Error(!type.IsFunction(),
+            Assert.Error(!newType.IsFunction(),
                          Message.Function_cannot_return_function);
-            m_lastType.ReturnType = type;
-            m_lastType = type;
+            m_lastType.ReturnType = newType;
+            m_lastType = newType;
             break;
         }
       }

@@ -5,7 +5,7 @@ using System.Globalization;
 using System.Collections.Generic;
 
 namespace CCompiler {
-  class ModifyInitializerOld {
+/*  class ModifyInitializerOld {
     public static object DoInit(Type type, object init) {
       if (type.IsArray() && (init is List<object>)) {
         List<object> list = (List<object>) init;
@@ -112,5 +112,5 @@ namespace CCompiler {
       int index = name.LastIndexOf(Symbol.SeparatorId);
       return ((index != -1) ? name.Substring(index + 1) : name).Replace(Symbol.NumberId, "");
     }
-  }
+  }*/
 }

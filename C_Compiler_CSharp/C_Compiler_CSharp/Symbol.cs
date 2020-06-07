@@ -271,7 +271,7 @@ namespace CCompiler {
       }
     }
 
-    private static string SimpleName(string name) {
+    public static string SimpleName(string name) {
       int index = name.LastIndexOf(Symbol.SeparatorId);
       return (index != -1) ? name.Substring(index + 1).Replace("#", "") : name;
     }

@@ -48,7 +48,7 @@ namespace CCompiler {
 
     // ------------------------------------------------------------------------
   
-    private int m_dimension = -1;
+    //private int m_dimension = -1;
     private int m_arraySize;
     private Type m_arrayType;
 
@@ -58,10 +58,10 @@ namespace CCompiler {
       m_arrayType = arrayType;
     }
 
-    public int Dimension {
+    /*public int Dimension {
       get { return m_dimension; }
       set { m_dimension = value; }
-    }
+    }*/
 
     public int ArraySize {
       get { return m_arraySize; }
