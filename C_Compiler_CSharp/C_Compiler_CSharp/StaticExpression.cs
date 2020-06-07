@@ -1,5 +1,4 @@
 using System.Numerics;
-using System.Collections.Generic;
 
 namespace CCompiler {
   public class StaticExpression {
@@ -12,101 +11,39 @@ namespace CCompiler {
              rightValue = rightExpression.Symbol.Value;
     
       switch (middleOp) {
-        case MiddleOperator.BinaryAdd: // &i + 2
-          if ((leftValue is StaticAddress) && (rightValue is BigInteger)) {
-            StaticAddress staticAddress = (StaticAddress) leftValue;
-            int resultOffset =
-              ((int) rightValue) * leftType.PointerType.Size();
-            object resultValue =
-              new StaticAddress(staticAddress.UniqueName,
-                                staticAddress.Offset + resultOffset);
-            Symbol resultSymbol = new Symbol(leftType, resultValue);
-            return (new Expression(resultSymbol, null, null));
+        case MiddleOperator.BinaryAdd: // &i + 2, a + 2
+          if (((leftValue is StaticAddress) ||
+               (leftExpression.Symbol.IsExternOrStatic() && leftType.IsArray())) &&
+              (rightValue is BigInteger)) {
+            return GenerateAddition(leftExpression.Symbol, (BigInteger) rightValue);
           }
-
-          // 2 + &i
-          if ((leftValue is BigInteger) && (rightValue is StaticAddress)) {
-            StaticAddress staticAddress = (StaticAddress) rightValue;
-            int resultOffset =
-              ((int) leftValue) * rightType.PointerType.Size();
-            object resultValue =
-               new StaticAddress(staticAddress.UniqueName,
-                                 staticAddress.Offset + resultOffset);
-            Symbol resultSymbol =new Symbol(rightType, resultValue);
-            return (new Expression(resultSymbol, null, null));
-          }
-
-          if (leftExpression.Symbol.IsExternOrStatic() && leftType.IsArray()
-              && (rightValue is BigInteger)) { // a + 2
-            int resultOffset = ((int) rightValue) * leftType.ArrayType.Size();
-            object resultValue =
-              new StaticAddress(leftExpression.Symbol.UniqueName,
-                                resultOffset);
-            Symbol resultSymbol = new Symbol(leftType, resultValue);
-            return (new Expression(resultSymbol, null, null));
-          }
-
-          if (leftExpression.Symbol.IsExternOrStatic() &&
-              (leftValue is BigInteger) && rightType.IsArray()) { // 2 + a
-            int resultOffset = ((int) leftValue) * rightType.ArrayType.Size();
-            object resultValue =
-              new StaticAddress(rightExpression.Symbol.UniqueName,
-                                resultOffset);
-            Symbol resultSymbol = new Symbol(rightType, resultValue);
-            return (new Expression(resultSymbol, null, null));
+          else if ((leftValue is BigInteger) && // 2 + &i, 2 + a
+                   ((rightValue is StaticAddress) || (rightType.IsArray() &&
+                     rightExpression.Symbol.IsExternOrStatic()))) {
+            return GenerateAddition(rightExpression.Symbol, (BigInteger) leftValue);
           }
           break;
 
-        case MiddleOperator.BinarySubtract: // &i - 2
-          if ((leftValue is StaticAddress) && (rightValue is BigInteger)) {
-            StaticAddress staticAddress = (StaticAddress) leftValue;
-            int resultOffset = ((int) leftValue) * leftType.PointerType.Size();
-            object resultValue =
-              new StaticAddress(staticAddress.UniqueName,
-                                staticAddress.Offset - resultOffset);
-            Symbol resultSymbol = new Symbol(leftType, resultValue);
-            return (new Expression(resultSymbol, null, null));
-          }
-
-          if (leftExpression.Symbol.IsExternOrStatic() && leftType.IsArray()
-              && (rightValue is BigInteger)) { // a - 2
-            int resultOffset = ((int) rightValue) * leftType.ArrayType.Size();
-            object resultValue =
-              new StaticAddress(leftExpression.Symbol.UniqueName,
-                                -resultOffset);
-            Symbol resultSymbol = new Symbol(leftType, resultValue);
-            return (new Expression(resultSymbol, null, null));
+        case MiddleOperator.BinarySubtract: // &i - 2, a - 2
+          if (((leftValue is StaticAddress) ||
+               (leftExpression.Symbol.IsExternOrStatic() && leftType.IsArray())) &&
+              (rightValue is BigInteger)) {
+            return GenerateAddition(leftExpression.Symbol, -((BigInteger) rightValue));
           }
           break;
 
         case MiddleOperator.Index:
-          if (leftExpression.Symbol.IsExternOrStatic() && leftType.IsArray()
-              && (rightValue is BigInteger)) { // a[2]
-            int size = leftType.ArrayType.Size();
-            int offset = ((int) ((BigInteger) rightValue)) * size;
-            StaticValue resultValue =
-              new StaticValue(leftExpression.Symbol.UniqueName, offset);
-            Symbol resultSymbol = new Symbol(leftType, resultValue);
-            resultSymbol.Addressable = !leftExpression.Symbol.IsRegister() &&
-                                       !leftType.ArrayType.IsBitfield();
-            resultSymbol.Assignable =
-              !leftType.ArrayType.IsConstantRecursive() &&
-              !leftType.ArrayType.IsArrayFunctionOrString();
-            return (new Expression(resultSymbol, null, null));
+          if (((leftValue is StaticAddress) || (leftType.IsArray() &&
+               leftExpression.Symbol.IsExternOrStatic())) && 
+              (rightValue is BigInteger)) { // a[2]
+            return GenerateIndex(leftExpression.Symbol,
+                                 (BigInteger) rightValue);
           }
-          else if ((leftValue is BigInteger) && rightType.IsArray() &&
-                   rightExpression.Symbol.IsExternOrStatic()) { // [2]a
-            int size = rightType.ArrayType.Size();
-            int offset = ((int) ((BigInteger) leftValue)) * size;
-            StaticValue resultValue =
-              new StaticValue(rightExpression.Symbol.UniqueName, offset);
-            Symbol resultSymbol = new Symbol(rightType, resultValue);
-            resultSymbol.Addressable = !leftExpression.Symbol.IsRegister() &&
-                                       !leftType.ArrayType.IsBitfield();
-            resultSymbol.Assignable =
-              !leftType.ArrayType.IsConstantRecursive() &&
-              !leftType.ArrayType.IsArrayFunctionOrString();
-            return (new Expression(resultSymbol, null, null));
+          else if ((leftValue is BigInteger) && ((rightType.IsArray() &&
+                   rightExpression.Symbol.IsExternOrStatic()) ||
+                   (rightValue is StaticAddress))) {
+            return GenerateIndex(rightExpression.Symbol,
+                                 (BigInteger) leftValue);
           }
           break;
 
@@ -114,7 +51,7 @@ namespace CCompiler {
           if (leftExpression.Symbol.IsExternOrStatic()) {
             object resultValue =
               new StaticValue(leftExpression.Symbol.UniqueName,
-                              rightExpression.Symbol.Offset); // s.i*/
+                              rightExpression.Symbol.Offset); // s.i
             Symbol resultSymbol = new Symbol(leftType, resultValue);
             return (new Expression(resultSymbol, null, null));
           }
@@ -124,8 +61,49 @@ namespace CCompiler {
       return null;
     }  
 
-    public static Symbol Unary(MiddleOperator middleOp, Symbol symbol) {
-      Type type = symbol.Type;
+    private static Expression GenerateAddition(Symbol symbol,
+                                               BigInteger value) {
+      int offset = ((int) value) * symbol.Type.PointerOrArrayType.Size();
+      StaticAddress resultValue;
+
+      if (symbol.Value is StaticAddress) {
+        StaticAddress staticAddress = (StaticAddress) symbol.Value;
+        resultValue = new StaticAddress(staticAddress.UniqueName,
+                                        staticAddress.Offset + offset);
+      }
+      else {
+        resultValue = new StaticAddress(symbol.UniqueName, offset);
+      }
+
+      Symbol resultSymbol = new Symbol(symbol.Type, resultValue);
+      return (new Expression(resultSymbol, null, null));
+    }
+
+    private static Expression GenerateIndex(Symbol symbol,
+                                            BigInteger value) {
+      int offset = ((int) value) * symbol.Type.ArrayType.Size();
+      StaticValue resultValue;
+
+      if (symbol.Value is StaticAddress) {
+        StaticAddress staticAddress = (StaticAddress) symbol.Value;
+        resultValue = new StaticValue(staticAddress.UniqueName,
+                                      staticAddress.Offset + offset);
+      }
+      else {
+        resultValue = new StaticValue(symbol.UniqueName, offset);
+      }
+
+      Symbol resultSymbol = new Symbol(symbol.Type, resultValue);
+      resultSymbol.Addressable = !symbol.IsRegister() &&
+                                 !symbol.Type.ArrayType.IsBitfield();
+      resultSymbol.Assignable =
+        !symbol.Type.ArrayType.IsConstantRecursive() &&
+        !symbol.Type.ArrayType.IsArrayFunctionOrString();
+      return (new Expression(resultSymbol, null, null));
+    }
+
+    public static Symbol Unary(MiddleOperator middleOp, Expression expression) {
+      Symbol symbol = expression.Symbol;
     
       switch (middleOp) {
         case MiddleOperator.Address:
@@ -133,17 +111,29 @@ namespace CCompiler {
             StaticValue staticValue = (StaticValue) symbol.Value;
             StaticAddress staticAddress =
               new StaticAddress(staticValue.UniqueName, staticValue.Offset);
-            return (new Symbol(new Type(type), staticAddress));
+            return (new Symbol(new Type(symbol.Type), staticAddress));
           }
           else if (symbol.IsExternOrStatic()) { // &i
-            StaticAddress staticAddress =
-              new StaticAddress(symbol.UniqueName, 0);
-            return (new Symbol(new Type(type), staticAddress));
+            StaticAddress staticAddress = new StaticAddress(symbol.UniqueName, 0);
+            return (new Symbol(new Type(symbol.Type), staticAddress));
+          }
+          break;
+
+        case MiddleOperator.Dereference:
+          if (symbol.Value is StaticAddress) { // *&a[i], *&s.i
+            StaticAddress staticAddress = (StaticAddress) symbol.Value;
+            StaticValue staticValue =
+              new StaticValue(staticAddress.UniqueName, staticAddress.Offset);
+            return (new Symbol(new Type(symbol.Type), staticValue));
+          }
+          else if (symbol.IsExternOrStatic()) { // *&i
+            StaticValue staticValue = new StaticValue(symbol.UniqueName, 0);
+            return (new Symbol(new Type(symbol.Type), staticValue));
           }
           break;
       }
 
       return null;
-    }  
+    }
   }
 }

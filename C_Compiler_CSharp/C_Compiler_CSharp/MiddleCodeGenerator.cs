@@ -1874,9 +1874,11 @@ namespace CCompiler {
     public static Expression AddressExpression(Expression expression) {
       Assert.Error(expression.Symbol.Addressable, expression,
                    Message.Not_addressable);
+      Assert.Error(!expression.Symbol.IsRegister(), expression,
+                   Message.Invalid_address_of_register_storage);
 
       Symbol staticSymbol =
-        StaticExpression.Unary(MiddleOperator.Address, expression.Symbol);
+        StaticExpression.Unary(MiddleOperator.Address, expression);
       if (staticSymbol != null) {
         return (new Expression(staticSymbol, new List<MiddleCode>(),
                                new List<MiddleCode>()));
@@ -1907,7 +1909,7 @@ namespace CCompiler {
                    Message.Invalid_dereference_of_non__pointer);
 
       Symbol staticSymbol =
-        StaticExpression.Unary(MiddleOperator.Dereference, expression.Symbol);
+        StaticExpression.Unary(MiddleOperator.Dereference, expression);
       if (staticSymbol != null) {
         return (new Expression(staticSymbol, null, null));
       }
