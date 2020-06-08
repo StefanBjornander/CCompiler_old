@@ -521,11 +521,11 @@ namespace CCompiler {
       List<MiddleCode> middleCodeList = new List<MiddleCode>();
       
       if (value != null) {
-        middleCodeList.Add(new MiddleCode(MiddleOperator.Init,
+        middleCodeList.Add(new MiddleCode(MiddleOperator.Initializer,
                                           type.Sort, value));
       }
       else {
-        middleCodeList.Add(new MiddleCode(MiddleOperator.InitZero,
+        middleCodeList.Add(new MiddleCode(MiddleOperator.InitializerZero,
                                           type.Size()));
       }
 

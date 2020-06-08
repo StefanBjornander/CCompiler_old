@@ -13,7 +13,7 @@ namespace CCompiler {
 
     private TextOrData m_textOrData = TextOrData.None;
 
-    public StaticSymbolLinux(TextOrData textOrData, string uniqueName, // Linux function definition or static object
+    public StaticSymbolLinux(TextOrData textOrData, string uniqueName, // Linux function definitializerion or static object
                              List<string> textList,ISet<string> externSet)
      :base(uniqueName) {
       m_textOrData = textOrData;

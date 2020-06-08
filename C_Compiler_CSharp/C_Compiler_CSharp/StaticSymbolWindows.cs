@@ -23,7 +23,7 @@ namespace CCompiler {
       m_returnSet = new HashSet<int>();
     }
 
-    public StaticSymbolWindows(string uniqueName, List<byte> byteList, // Windows function definition
+    public StaticSymbolWindows(string uniqueName, List<byte> byteList, // Windows function definitializerion
                         IDictionary<int,string> accessMap,
                         IDictionary<int,string> callMap, ISet<int> returnSet)
      :base(uniqueName) {

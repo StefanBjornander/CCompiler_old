@@ -102,7 +102,7 @@ namespace CCompiler {
       return (new Expression(resultSymbol, null, null));
     }
 
-    public static Symbol Unary(MiddleOperator middleOp, Expression expression) {
+    public static Expression Unary(MiddleOperator middleOp, Expression expression) {
       Symbol symbol = expression.Symbol;
     
       switch (middleOp) {
@@ -111,15 +111,20 @@ namespace CCompiler {
             StaticValue staticValue = (StaticValue) symbol.Value;
             StaticAddress staticAddress =
               new StaticAddress(staticValue.UniqueName, staticValue.Offset);
-            return (new Symbol(new Type(symbol.Type), staticAddress));
+            Symbol resultSymbol =
+              new Symbol(new Type(symbol.Type), staticAddress);
+            return (new Expression(resultSymbol, null, null));
           }
           else if (symbol.IsExternOrStatic()) { // &i
-            StaticAddress staticAddress = new StaticAddress(symbol.UniqueName, 0);
-            return (new Symbol(new Type(symbol.Type), staticAddress));
+            StaticAddress staticAddress =
+              new StaticAddress(symbol.UniqueName, 0);
+            Symbol resultSymbol =
+              new Symbol(new Type(symbol.Type), staticAddress);
+            return (new Expression(resultSymbol, null, null));
           }
           break;
 
-        case MiddleOperator.Dereference:
+        /*case MiddleOperator.Dereference:
           if (symbol.Value is StaticAddress) { // *&a[i], *&s.i
             StaticAddress staticAddress = (StaticAddress) symbol.Value;
             StaticValue staticValue =
@@ -131,6 +136,7 @@ namespace CCompiler {
             return (new Symbol(new Type(symbol.Type), staticValue));
           }
           break;
+        }*/
       }
 
       return null;

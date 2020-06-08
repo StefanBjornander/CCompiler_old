@@ -22,7 +22,7 @@ namespace CCompiler {
     public static string IntegralStorageName =
       Symbol.SeparatorId + "IntegralStorage" + Symbol.NumberId;
     public static string MainName = "main";
-    public static string InitName = Symbol.SeparatorId + "init";
+    public static string InitializerName = Symbol.SeparatorId + "initializer";
     public static string ArgsName = Symbol.SeparatorId + "args";
     public static string PathName = Symbol.SeparatorId + "PathName";
     public static string PathText = "";
@@ -80,7 +80,7 @@ namespace CCompiler {
         AddAssemblyCode(AssemblyOperator.new_middle_code, middleIndex);
 
         if (SymbolTable.CurrentFunction != null) {
-          if (middleCode.Operator == MiddleOperator.Init) {
+          if (middleCode.Operator == MiddleOperator.Initializer) {
             AddAssemblyCode(AssemblyOperator.label, null,
                             middleCode.ToString());
           }
@@ -147,16 +147,16 @@ namespace CCompiler {
             SystemCall(middleCode);
             break;
 
-          case MiddleOperator.Init: {
+          case MiddleOperator.Initializer: {
               Sort sort = (Sort) middleCode[0];
               object value = middleCode[1];
-              Init(sort, value);
+              Initializer(sort, value);
             }
             break;
 
-          case MiddleOperator.InitZero: {
+          case MiddleOperator.InitializerZero: {
               int size = (int) middleCode[0];
-              InitZero(size);
+              InitializerZero(size);
             }
             break;
           
@@ -780,7 +780,7 @@ namespace CCompiler {
                       middleCode[0]);
     }
 
-    private void Init(Sort sort, object value) {
+    private void Initializer(Sort sort, object value) {
       if (value is StaticAddress) {
         StaticAddress staticAddress = (StaticAddress) value;
         string name = staticAddress.UniqueName;
@@ -792,7 +792,7 @@ namespace CCompiler {
       }
     }
 
-    private void InitZero(int size) {
+    private void InitializerZero(int size) {
       if (size > 0) {
         AddAssemblyCode(AssemblyOperator.define_zero_sequence, size);
       }
@@ -1855,23 +1855,23 @@ namespace CCompiler {
       AddAssemblyCode(AssemblyOperator.jne, null, labelIndex);
     }
 
-    public static void InitializationCodeList() {
+    public static void InitializerializationCodeList() {
       List<AssemblyCode> assemblyCodeList = new List<AssemblyCode>();
       AddAssemblyCode(assemblyCodeList, AssemblyOperator.comment,
-                      "Initialize Stack Pointer");
+                      "Initializerialize Stack Pointer");
       AddAssemblyCode(assemblyCodeList, AssemblyOperator.mov,
                  AssemblyCode.FrameRegister, LinkerWindows.StackTopName);
 
       if (Start.Windows) {
         AddAssemblyCode(assemblyCodeList, AssemblyOperator.comment,
-                        "Initialize Heap Pointer");
+                        "Initializerialize Heap Pointer");
         AddAssemblyCode(assemblyCodeList, AssemblyOperator.mov_word,
                         null, 65534, (BigInteger) 65534);
       }
 
       if (Start.Linux) {
         AddAssemblyCode(assemblyCodeList, AssemblyOperator.comment,
-                        "Initialize Heap Pointer");
+                        "Initializerialize Heap Pointer");
         AddAssemblyCode(assemblyCodeList, AssemblyOperator.mov_dword,
                         LinkerWindows.StackTopName, 65534,
                         LinkerWindows.StackTopName);
@@ -1881,7 +1881,7 @@ namespace CCompiler {
       }
 
       AddAssemblyCode(assemblyCodeList, AssemblyOperator.comment,
-                      "Initialize FPU Control Word, truncate mode => set bit 10 and 11.");
+                      "Initializerialize FPU Control Word, truncate mode => set bit 10 and 11.");
       AddAssemblyCode(assemblyCodeList, AssemblyOperator.fstcw,
                       AssemblyCode.FrameRegister, 0);
       AddAssemblyCode(assemblyCodeList, AssemblyOperator.or_word,
@@ -1897,7 +1897,7 @@ namespace CCompiler {
         AssemblyCodeGenerator.GenerateTargetWindows(assemblyCodeList,
                               byteList, accessMap, callMap, returnSet);
         StaticSymbol staticSymbol =
-          new StaticSymbolWindows(AssemblyCodeGenerator.InitName, byteList,
+          new StaticSymbolWindows(AssemblyCodeGenerator.InitializerName, byteList,
                                   accessMap, callMap, returnSet);
         SymbolTable.StaticSet.Add(staticSymbol);
       }
@@ -1909,7 +1909,7 @@ namespace CCompiler {
         //GenerateStaticInitializerLinux.TextList
         //                         (assemblyCodeList, textList, externSet);
         SymbolTable.StaticSet.Add(new StaticSymbolLinux
-       (StaticSymbolLinux.TextOrData.Text, AssemblyCodeGenerator.InitName, textList, externSet));
+       (StaticSymbolLinux.TextOrData.Text, AssemblyCodeGenerator.InitializerName, textList, externSet));
       }
     }
 
@@ -1959,7 +1959,7 @@ namespace CCompiler {
       }
 
       if (Start.Linux) {
-        AddAssemblyCode(assemblyCodeList, AssemblyOperator.comment, "Initialize Command Line Arguments");
+        AddAssemblyCode(assemblyCodeList, AssemblyOperator.comment, "Initializerialize Command Line Arguments");
         AddAssemblyCode(assemblyCodeList, AssemblyOperator.pop, Register.rbx);
         AddAssemblyCode(assemblyCodeList, AssemblyOperator.mov, Register.rax, Register.rbx);
         AddAssemblyCode(assemblyCodeList, AssemblyOperator.mov, Register.rdx, Register.rbp);

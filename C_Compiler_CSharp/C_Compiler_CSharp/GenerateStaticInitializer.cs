@@ -5,12 +5,12 @@ using System.Collections.Generic;
 
 namespace CCompiler {
   public class GenerateStaticInitializer {
-    public static List<MiddleCode> GenerateStatic(Type toType, object fromInit) {      
+    public static List<MiddleCode> GenerateStatic(Type toType, object fromInitializer) {      
       List<MiddleCode> middleCodeList = new List<MiddleCode>();
 
-      if (fromInit is Expression) {
-        Expression fromExpression = (Expression) fromInit;
-        Symbol fromSymbol = ((Expression) fromInit).Symbol;
+      if (fromInitializer is Expression) {
+        Expression fromExpression = (Expression) fromInitializer;
+        Symbol fromSymbol = ((Expression) fromInitializer).Symbol;
         Assert.Error(fromSymbol.IsExternOrStatic(), fromSymbol,
                      Message.Non__static_initializer);
         Type fromType = fromSymbol.Type;
@@ -19,17 +19,17 @@ namespace CCompiler {
         if (toType.IsArray() && fromType.IsString()) {
           Assert.ErrorA(toType.ArrayType.IsChar());
           string text = (string) fromSymbol.Value;
-          middleCodeList.Add(new MiddleCode(MiddleOperator.Init,
+          middleCodeList.Add(new MiddleCode(MiddleOperator.Initializer,
                                      fromSymbol.Type.Sort, fromSymbol.Value));
         }
         else if (toType.IsPointer() && fromType.IsString()) {
           Assert.ErrorA(toType.PointerType.IsChar());
-          middleCodeList.Add(new MiddleCode(MiddleOperator.Init, Sort.Pointer,
+          middleCodeList.Add(new MiddleCode(MiddleOperator.Initializer, Sort.Pointer,
                              Symbol.ValueName(toType, fromSymbol.Value)));
         }
         else if (toType.IsPointer() && (fromSymbol.Value is StaticAddress)) {
           Assert.ErrorA(fromType.IsPointer()  && toType.IsPointer());
-          middleCodeList.Add(new MiddleCode(MiddleOperator.Init, toType.Sort,
+          middleCodeList.Add(new MiddleCode(MiddleOperator.Initializer, toType.Sort,
                                             fromSymbol.Value));
         }
         else if (toType.IsPointer() && fromType.IsArrayFunctionOrString()) {
@@ -41,11 +41,11 @@ namespace CCompiler {
           if (fromType.IsArray()) {
             StaticAddress staticAddress =
               new StaticAddress(fromSymbol.UniqueName, 0);
-            middleCodeList.Add(new MiddleCode(MiddleOperator.Init,
+            middleCodeList.Add(new MiddleCode(MiddleOperator.Initializer,
                                               toType.Sort, staticAddress));
           }
           else {
-            middleCodeList.Add(new MiddleCode(MiddleOperator.Init,
+            middleCodeList.Add(new MiddleCode(MiddleOperator.Initializer,
                                               toType.Sort, fromSymbol.Value));
           }
         }
@@ -55,12 +55,12 @@ namespace CCompiler {
           Symbol toSymbol = toExpression.Symbol;
           Assert.Error(toSymbol.Value != null, toSymbol,
                        Message.Non__constant_expression);
-          middleCodeList.Add(new MiddleCode(MiddleOperator.Init,
+          middleCodeList.Add(new MiddleCode(MiddleOperator.Initializer,
                                      fromSymbol.Type.Sort, fromSymbol.Value));
         }
       }
       else {
-        List<object> fromList = (List<object>) fromInit;
+        List<object> fromList = (List<object>) fromInitializer;
       
         switch (toType.Sort) {
           case Sort.Array: {
@@ -78,7 +78,7 @@ namespace CCompiler {
 
               int restSize = toType.Size() -
                              (fromList.Count * toType.ArrayType.Size());
-              middleCodeList.Add(new MiddleCode(MiddleOperator.InitZero,
+              middleCodeList.Add(new MiddleCode(MiddleOperator.InitializerZero,
                                                 restSize));
             }
             break;
@@ -94,34 +94,34 @@ namespace CCompiler {
               int size = 0;
               for (int index = 0; index < fromList.Count; ++index) {
                 Symbol memberSymbol = memberArray[index].Value;
-                object init = ModifyInitializer.DoInit(memberSymbol.Type,
+                object initializer = ModifyInitializer.DoInitializer(memberSymbol.Type,
                                                        fromList[index]);
                 middleCodeList.AddRange(GenerateStatic(memberSymbol.Type,
-                                                       init));
+                                                       initializer));
                 size += memberSymbol.Type.Size();
               }
 
-              middleCodeList.Add(new MiddleCode(MiddleOperator.InitZero,
+              middleCodeList.Add(new MiddleCode(MiddleOperator.InitializerZero,
                                                 toType.Size() - size));
             }
             break;
           
           case Sort.Union: {
               Assert.Error(fromList.Count == 1, toType,
-                       Message.A_union_can_be_initalized_by_one_value_only);
+                       Message.A_union_can_be_initializeralized_by_one_value_only);
               IDictionary<string, Symbol> memberMap = toType.MemberMap;
               Symbol firstSymbol = memberMap.Values.GetEnumerator().Current;
-              object init =
-                ModifyInitializer.DoInit(firstSymbol.Type, fromList[0]);
-              middleCodeList.AddRange(GenerateStatic(firstSymbol.Type, init));
-              middleCodeList.Add(new MiddleCode(MiddleOperator.InitZero,
+              object initializer =
+                ModifyInitializer.DoInitializer(firstSymbol.Type, fromList[0]);
+              middleCodeList.AddRange(GenerateStatic(firstSymbol.Type, initializer));
+              middleCodeList.Add(new MiddleCode(MiddleOperator.InitializerZero,
                                     toType.Size() - firstSymbol.Type.Size()));
             }
             break;
 
           default:
             Assert.Error(toType,
-            Message.Only_array_struct_or_union_can_be_initialized_by_a_list);
+            Message.Only_array_struct_or_union_can_be_initializerialized_by_a_list);
             break;
         }
       }

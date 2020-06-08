@@ -54,7 +54,7 @@ namespace CCompiler {
 
       declarator.Add(returnType);
       Assert.Error(declarator.Name != null,
-                   Message.Unnamed_function_definition);
+                   Message.Unnamed_function_definitializerion);
       Assert.Error(declarator.Type.IsFunction(), declarator.Name,
                    Message.Not_a_function);
 
@@ -75,7 +75,7 @@ namespace CCompiler {
         new SymbolTable(SymbolTable.CurrentTable, Scope.Function);
     }
 
-    public static void CheckFunctionDefinition() {
+    public static void CheckFunctionDefinitializerion() {
       Type funcType = SymbolTable.CurrentFunction.Type;
 
       if (funcType.Style == Type.FunctionStyle.Old) {
@@ -85,7 +85,7 @@ namespace CCompiler {
 
         Assert.Error(nameList.Count == entryMap.Count,
                      SymbolTable.CurrentFunction.Name, Message. 
-          Unmatched_number_of_parameters_in_old__style_function_definition);
+          Unmatched_number_of_parameters_in_old__style_function_definitializerion);
 
         int offset = SymbolTable.FunctionHeaderSize;
         foreach (string name in nameList) {
@@ -93,7 +93,7 @@ namespace CCompiler {
 
           if (!entryMap.TryGetValue(name, out symbol)) {
             Assert.Error(name, Message. 
-                      Undefined_parameter_in_old__style_function_definition);
+                      Undefined_parameter_in_old__style_function_definitializerion);
           }
 
           symbol.Offset = offset;
@@ -102,7 +102,7 @@ namespace CCompiler {
       }
       else {
         Assert.Error(SymbolTable.CurrentTable.EntryMap.Count == 0,
-          Message.New_and_old_style_mixed_function_definition);
+          Message.New_and_old_style_mixed_function_definitializerion);
 
         foreach (Pair<string,Symbol> pair in funcType.ParameterList){
           SymbolTable.CurrentTable.AddSymbol(pair.Second);
@@ -110,7 +110,7 @@ namespace CCompiler {
       }
 
       if (SymbolTable.CurrentFunction.UniqueName.Equals(AssemblyCodeGenerator.MainName)) {
-        AssemblyCodeGenerator.InitializationCodeList();
+        AssemblyCodeGenerator.InitializerializationCodeList();
         List<Type> typeList =
           SymbolTable.CurrentFunction.Type.TypeList;
 
@@ -276,20 +276,20 @@ namespace CCompiler {
                      IsMainArgs(SymbolTable.CurrentFunction),
                      AssemblyCodeGenerator.MainName, Message.Invalid_parameter_list);
 
-        AssemblyCodeGenerator.InitializationCodeList();
-        //assemblyCodeList.AddRange(AssemblyCodeGenerator.InitializationCodeList());
+        AssemblyCodeGenerator.InitializerializationCodeList();
+        //assemblyCodeList.AddRange(AssemblyCodeGenerator.InitializerializationCodeList());
 
         if (IsMainArgs(SymbolTable.CurrentFunction)) {
           AssemblyCodeGenerator.ArgumentCodeList();
 //          assemblyCodeList.AddRange(AssemblyCodeGenerator.ArgumentCodeList());
 
           /*SymbolTable.CurrentStaticFunction.EntryPoint =
-            AssemblyCode.MainInitializationSize +
+            AssemblyCode.MainInitializerializationSize +
             AssemblyCode.MainArgumentSize;*
         }      
         else {
           /*SymbolTable.CurrentStaticFunction.EntryPoint =
-            AssemblyCode.MainInitializationSize;*
+            AssemblyCode.MainInitializerializationSize;*
         }
       }
 
@@ -354,18 +354,18 @@ namespace CCompiler {
 
     // ---------------------------------------------------------------------------------------------------------------------
   
-    public static Symbol EnumItem(string itemName, Symbol optInitSymbol) {
+    public static Symbol EnumItem(string itemName, Symbol optInitializerSymbol) {
       Type itemType = new Type(Sort.Signed_Int, true);
       itemType.IsConstant = true;
       BigInteger value;
 
-      if (optInitSymbol != null) {
-        Assert.Error(optInitSymbol.Type.IsIntegral(), itemName,
+      if (optInitializerSymbol != null) {
+        Assert.Error(optInitializerSymbol.Type.IsIntegral(), itemName,
                      Message.Non__integral_enum_value);
-        Assert.Error(optInitSymbol.Value != null, itemName,
+        Assert.Error(optInitializerSymbol.Value != null, itemName,
                      Message.Non__constant_enum_value);
         CCompiler_Main.Parser.EnumValueStack.Pop();
-        value = (BigInteger) optInitSymbol.Value;
+        value = (BigInteger) optInitializerSymbol.Value;
       }
       else {
         value = CCompiler_Main.Parser.EnumValueStack.Pop();
@@ -427,7 +427,7 @@ namespace CCompiler {
     }
   
     public static List<MiddleCode> AssignmentDeclarator(Specifier specifier,
-                                                     Declarator declarator, object init) {
+                                                     Declarator declarator, object initializer) {
       Assert.ErrorA(CCompiler_Main.Parser.CallDepth == 0);
       Storage? storage = specifier.StorageX;
       Type specifierType = specifier.Type;
@@ -441,19 +441,19 @@ namespace CCompiler {
                   ? CCompiler.Storage.Static : CCompiler.Storage.Auto;
       }
 
-      Assert.Error(!type.IsFunction(), null, Message.Functions_cannot_be_initialized);
-      Assert.Error(storage != Storage.Typedef, name, Message.Typedef_cannot_be_initialized);
-      Assert.Error(storage != Storage.Extern, name, Message.Extern_cannot_be_initialized);
+      Assert.Error(!type.IsFunction(), null, Message.Functions_cannot_be_initializerialized);
+      Assert.Error(storage != Storage.Typedef, name, Message.Typedef_cannot_be_initializerialized);
+      Assert.Error(storage != Storage.Extern, name, Message.Extern_cannot_be_initializerialized);
       Assert.Error((SymbolTable.CurrentTable.Scope != Scope.Struct) &&
                    (SymbolTable.CurrentTable.Scope != Scope.Union),
-                   name, Message.Struct_or_union_field_cannot_be_initialized);
+                   name, Message.Struct_or_union_field_cannot_be_initializerialized);
       Assert.Error((SymbolTable.CurrentTable.Scope != Scope.Global) ||
                    ((storage != Storage.Auto) && (storage != Storage.Register)),
                      null, Message.Auto_or_register_storage_in_global_scope);
 
       if ((SymbolTable.CurrentTable.Scope == Scope.Global) || (storage == Storage.Static)) {
-        init = ModifyInitializer.DoInit(type, init);
-        List<MiddleCode> middleCodeList = GenerateStaticInitializer.GenerateStatic(type, init);
+        initializer = ModifyInitializer.DoInitializer(type, initializer);
+        List<MiddleCode> middleCodeList = GenerateStaticInitializer.GenerateStatic(type, initializer);
 
         Symbol symbol = new Symbol(name, specifier.ExternalLinkage, storage.Value, type);
         List<AssemblyCode> assemblyCodeList = new List<AssemblyCode>();
@@ -484,7 +484,7 @@ namespace CCompiler {
       else {
         Symbol symbol = new Symbol(name, specifier.ExternalLinkage, storage.Value, type);
         symbol.Offset = SymbolTable.CurrentTable.CurrentOffset;
-        List<MiddleCode> codeList = GenerateAutoInitializer.GenerateAuto(symbol, init);
+        List<MiddleCode> codeList = GenerateAutoInitializer.GenerateAuto(symbol, initializer);
         SymbolTable.CurrentTable.AddSymbol(symbol);
         return codeList;
       }
@@ -851,13 +851,13 @@ namespace CCompiler {
       return (new Statement(codeList, nextSet));
     }
   
-    public static Statement ForStatement(Expression initExpression, Expression testExpression,
+    public static Statement ForStatement(Expression initializerExpression, Expression testExpression,
                                          Expression nextExpression, Statement innerStatement) {
       List<MiddleCode> codeList = new List<MiddleCode>();
       ISet<MiddleCode> nextSet = new HashSet<MiddleCode>();
     
-      if (initExpression != null) {
-        codeList.AddRange(initExpression.ShortList);
+      if (initializerExpression != null) {
+        codeList.AddRange(initializerExpression.ShortList);
       }
 
       MiddleCode testTarget = AddMiddleCode(codeList, MiddleOperator.Empty);
@@ -1877,11 +1877,10 @@ namespace CCompiler {
       Assert.Error(!expression.Symbol.IsRegister(), expression,
                    Message.Invalid_address_of_register_storage);
 
-      Symbol staticSymbol =
+      Expression staticExpression =
         StaticExpression.Unary(MiddleOperator.Address, expression);
-      if (staticSymbol != null) {
-        return (new Expression(staticSymbol, new List<MiddleCode>(),
-                               new List<MiddleCode>()));
+      if (staticExpression!= null) {
+        return staticExpression ;
       }
     
       if (expression.Symbol.Type.IsFloating()) {
@@ -1904,15 +1903,18 @@ namespace CCompiler {
      p->i = 5;
     */
 
+    //int *p = &i;
+    //int *p = &a[3];
+    //int *p = a + 2;
+
     public static Expression DereferenceExpression(Expression expression) {
       Assert.Error(expression.Symbol.Type.IsPointerArrayStringOrFunction(),
                    Message.Invalid_dereference_of_non__pointer);
-
-      Symbol staticSymbol =
+      /*Symbol staticSymbol =
         StaticExpression.Unary(MiddleOperator.Dereference, expression);
       if (staticSymbol != null) {
         return (new Expression(staticSymbol, null, null));
-      }
+      }*/
 
       bool assignable =
         !expression.Symbol.Type.PointerOrArrayType.IsConstantRecursive() &&
@@ -2369,7 +2371,7 @@ namespace CCompiler {
 
     /*public static Expression SystemCall(String name, List<Expression> argList) {
       List<MiddleCode> shortList = new List<MiddleCode>();
-      AddMiddleCode(shortList, MiddleOperator.SystemInit, name);
+      AddMiddleCode(shortList, MiddleOperator.SystemInitializer, name);
 
       int index = 0;
       foreach (Expression arg in argList) {

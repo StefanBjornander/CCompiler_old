@@ -501,11 +501,11 @@ namespace CCompiler {
         case MiddleOperator.CheckTrackMapFloatStack:
           return "check track map float stack";
 
-        case MiddleOperator.Init:
-          return "init " + operand0.ToString();
+        case MiddleOperator.Initializer:
+          return "initializer " + operand0.ToString();
 
-        case MiddleOperator.InitZero:
-          return "init zero " + operand0.ToString();
+        case MiddleOperator.InitializerZero:
+          return "initializer zero " + operand0.ToString();
 
         case MiddleOperator.Case:
           return "case " + operand1.ToString() + " == " + operand2.ToString() + " goto " + operand0.ToString();

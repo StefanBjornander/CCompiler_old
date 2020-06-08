@@ -437,7 +437,7 @@ namespace CCompiler {
         while (true) {
           Token nextToken = tokenList[tokenIndex++];
           Assert.Error(nextToken.Id == CCompiler_Pre.Tokens.NAME,
-                       nextToken.ToString(), Message.Invalid_macro_definition);
+                       nextToken.ToString(), Message.Invalid_macro_definitializerion);
           string paramName = (string) nextToken.Value;
           Assert.Error(!paramMap.ContainsKey(paramName),
                        paramName, Message.Repeated_macro_parameter);
@@ -451,7 +451,7 @@ namespace CCompiler {
             break;
           }
           else {
-            Assert.Error(nextToken.ToString(), Message.Invalid_macro_definition);
+            Assert.Error(nextToken.ToString(), Message.Invalid_macro_definitializerion);
           }
         }
       
@@ -479,7 +479,7 @@ namespace CCompiler {
       }
       else {
         Assert.Error(Preprocessor.MacroMap[name].Equals(macro),
-                     name, Message.Invalid_macro_redefinition);
+                     name, Message.Invalid_macro_redefinitializerion);
       }
     }
 

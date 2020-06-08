@@ -19,10 +19,10 @@ namespace CCompiler {
                               LogicalNot, BitwiseNot, Address, Dereference,
                               Call, PostCall, DecreaseStack, CheckTrackMapFloatStack,
                               Parameter, Empty, Return, Increment, Decrement, Exit, CallHeader,
-                              FunctionEnd, //SystemInit, SystemParameter,
+                              FunctionEnd, //SystemInitializer, SystemParameter,
                               Conditional, SetReturnValue, GetReturnValue,
                               IntegralToIntegral, IntegralToFloating, FloatingToIntegral,
                               ArrayToPointer, FunctionToPointer, StringToPointer,
                               ValueOffset, AddressOffset, /*CarryFlag,*/ Case, CaseEnd,
-                              Index, Dot, Arrow, Variable, Value, Init, InitZero};
+                              Index, Dot, Arrow, Variable, Value, Initializer, InitializerZero};
 }

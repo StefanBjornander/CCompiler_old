@@ -4,9 +4,9 @@
 
 // GPPG version 1.5.2
 // Machine:  STEFAN1968
-// DateTime: 2020-06-06 09:44:14
+// DateTime: 2020-06-08 14:24:14
 // UserName: Stefan
-// Input file <MainParser.gppg - 2020-05-28 12:57:09>
+// Input file <MainParser.gppg - 2020-06-08 14:22:57>
 
 // options: lines gplex
 
@@ -88,13 +88,13 @@ public class ScanObj {
 [GeneratedCodeAttribute( "Gardens Point Parser Generator", "1.5.2")]
 public partial class Parser: ShiftReduceParser<ValueType, LexLocation>
 {
-  // Verbatim content from MainParser.gppg - 2020-05-28 12:57:09
+  // Verbatim content from MainParser.gppg - 2020-06-08 14:22:57
 #line 8 "MainParser.gppg"
   public static Stack<Specifier> SpecifierStack = new Stack<Specifier>();
   public static Stack<BigInteger> EnumValueStack = new Stack<BigInteger>();
   public static int CallDepth = 0;
 #line default
-  // End verbatim content from MainParser.gppg - 2020-05-28 12:57:09
+  // End verbatim content from MainParser.gppg - 2020-06-08 14:22:57
 
 #pragma warning disable 649
   private static Dictionary<int, string> aliases;
@@ -104,7 +104,7 @@ public partial class Parser: ShiftReduceParser<ValueType, LexLocation>
   private static string[] nonTerms = new string[] {
       "declaration_specifier", "declaration_specifier_list_x", "declaration_specifier_list", 
       "optional_name", "struct_or_union_specifier", "struct_or_union", "enum_specifier", 
-      "enum_list", "enum", "declarator_list", "initialization_bitfield_simple_declarator", 
+      "enum_list", "enum", "declarator_list", "initializerialization_bitfield_simple_declarator", 
       "declaration", "optional_simple_declarator", "declarator", "pointer_declarator", 
       "optional_pointer_list", "pointer_list", "pointer", "optional_qualifier_list", 
       "qualifier", "optional_parameter_ellipse_list", "parameter_ellipse_list", 
@@ -120,7 +120,7 @@ public partial class Parser: ShiftReduceParser<ValueType, LexLocation>
       "multiply_expression", "type_cast_expression", "prefix_expression", "postfix_expression", 
       "primary_expression", "optional_statement_list", "statement", "closed_statement", 
       "opened_statement", "optional_argument_expression_list", "argument_expression_list", 
-      "translation_unit", "$accept", "external_declaration", "function_definition", 
+      "translation_unit", "$accept", "external_declaration", "function_definitializerion", 
       "Anon@1", "optional_declaration_list", "Anon@2", "Anon@3", "Anon@4", "declaration_list", 
       "Anon@5", "Anon@6", "Anon@7", "Anon@8", "Anon@9", "optional_comma", "switch_header", 
       "loop_header", "Anon@10", "Anon@11", "Anon@12", };
@@ -792,13 +792,13 @@ public partial class Parser: ShiftReduceParser<ValueType, LexLocation>
       case 7: // Anon@2 -> /* empty */
 #line 133 "MainParser.gppg"
                               {
-      MiddleCodeGenerator.CheckFunctionDefinition();
+      MiddleCodeGenerator.CheckFunctionDefinitializerion();
     }
 #line default
         break;
-      case 8: // function_definition -> declaration_specifier_list_x, declarator, Anon@1, 
-              //                        optional_declaration_list, Anon@2, LEFT_BLOCK, 
-              //                        optional_statement_list, RIGHT_BLOCK
+      case 8: // function_definitializerion -> declaration_specifier_list_x, declarator, Anon@1, 
+              //                               optional_declaration_list, Anon@2, LEFT_BLOCK, 
+              //                               optional_statement_list, RIGHT_BLOCK
 #line 136 "MainParser.gppg"
                                                    {
       MiddleCodeGenerator.BackpatchGoto();
@@ -816,12 +816,13 @@ public partial class Parser: ShiftReduceParser<ValueType, LexLocation>
       case 10: // Anon@4 -> /* empty */
 #line 143 "MainParser.gppg"
                               {
-      MiddleCodeGenerator.CheckFunctionDefinition();
+      MiddleCodeGenerator.CheckFunctionDefinitializerion();
     }
 #line default
         break;
-      case 11: // function_definition -> declarator, Anon@3, optional_declaration_list, Anon@4, 
-               //                        LEFT_BLOCK, optional_statement_list, RIGHT_BLOCK
+      case 11: // function_definitializerion -> declarator, Anon@3, optional_declaration_list, 
+               //                               Anon@4, LEFT_BLOCK, optional_statement_list, 
+               //                               RIGHT_BLOCK
 #line 146 "MainParser.gppg"
                                                    {
       MiddleCodeGenerator.BackpatchGoto();
@@ -1067,23 +1068,23 @@ public partial class Parser: ShiftReduceParser<ValueType, LexLocation>
     }
 #line default
         break;
-      case 54: // declarator_list -> initialization_bitfield_simple_declarator
+      case 54: // declarator_list -> initializerialization_bitfield_simple_declarator
 #line 268 "MainParser.gppg"
-                                              {
+                                                     {
       CurrentSemanticValue.middle_code_list = ValueStack[ValueStack.Depth-1].middle_code_list;
     }
 #line default
         break;
       case 55: // declarator_list -> declarator_list, COMMA, 
-               //                    initialization_bitfield_simple_declarator
+               //                    initializerialization_bitfield_simple_declarator
 #line 271 "MainParser.gppg"
-                                                                    {
+                                                                           {
       ValueStack[ValueStack.Depth-3].middle_code_list.AddRange(ValueStack[ValueStack.Depth-1].middle_code_list);
       CurrentSemanticValue.middle_code_list = ValueStack[ValueStack.Depth-3].middle_code_list;
     }
 #line default
         break;
-      case 56: // initialization_bitfield_simple_declarator -> declarator
+      case 56: // initializerialization_bitfield_simple_declarator -> declarator
 #line 277 "MainParser.gppg"
                {
       MiddleCodeGenerator.Declarator
@@ -1092,7 +1093,8 @@ public partial class Parser: ShiftReduceParser<ValueType, LexLocation>
     }
 #line default
         break;
-      case 57: // initialization_bitfield_simple_declarator -> declarator, ASSIGN, initializer
+      case 57: // initializerialization_bitfield_simple_declarator -> declarator, ASSIGN, 
+               //                                                     initializer
 #line 282 "MainParser.gppg"
                                   {
       CurrentSemanticValue.middle_code_list = MiddleCodeGenerator.AssignmentDeclarator
@@ -1100,8 +1102,9 @@ public partial class Parser: ShiftReduceParser<ValueType, LexLocation>
     }
 #line default
         break;
-      case 58: // initialization_bitfield_simple_declarator -> optional_simple_declarator, COLON, 
-               //                                              constant_integral_expression
+      case 58: // initializerialization_bitfield_simple_declarator -> optional_simple_declarator, 
+               //                                                     COLON, 
+               //                                                     constant_integral_expression
 #line 286 "MainParser.gppg"
                                                                   {
       MiddleCodeGenerator.BitfieldDeclarator

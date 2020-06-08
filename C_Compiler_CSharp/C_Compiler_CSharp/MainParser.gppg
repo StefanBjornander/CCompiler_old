@@ -70,7 +70,7 @@
 %type <symbol_bool_pair_set> enum_list
 %type <symbol_bool_pair> enum
 %type <middle_code_list> declarator_list
-                         initialization_bitfield_simple_declarator declaration
+                         initializerialization_bitfield_simple_declarator declaration
 
 %type <declarator> optional_simple_declarator declarator pointer_declarator
 %type <type_list> optional_pointer_list pointer_list
@@ -122,16 +122,16 @@ translation_unit:
   | translation_unit external_declaration;
 
 external_declaration:
-    function_definition
+    function_definitializerion
  |  declaration;
 
-function_definition:
+function_definitializerion:
     declaration_specifier_list_x declarator {
       MiddleCodeGenerator.FunctionHeader
         (SpecifierStack.Pop(), $2);
     }
     optional_declaration_list {
-      MiddleCodeGenerator.CheckFunctionDefinition();
+      MiddleCodeGenerator.CheckFunctionDefinitializerion();
     }
     LEFT_BLOCK optional_statement_list RIGHT_BLOCK {
       MiddleCodeGenerator.BackpatchGoto();
@@ -141,7 +141,7 @@ function_definition:
       MiddleCodeGenerator.FunctionHeader(null, $1);
     }
     optional_declaration_list {
-      MiddleCodeGenerator.CheckFunctionDefinition();
+      MiddleCodeGenerator.CheckFunctionDefinitializerion();
     }
     LEFT_BLOCK optional_statement_list RIGHT_BLOCK {
       MiddleCodeGenerator.BackpatchGoto();
@@ -265,15 +265,15 @@ enum:
     };
 
 declarator_list:
-    initialization_bitfield_simple_declarator {
+    initializerialization_bitfield_simple_declarator {
       $$ = $1;
     }
-  | declarator_list COMMA initialization_bitfield_simple_declarator {
+  | declarator_list COMMA initializerialization_bitfield_simple_declarator {
       $1.AddRange($3);
       $$ = $1;
     };
     
-initialization_bitfield_simple_declarator:
+initializerialization_bitfield_simple_declarator:
     declarator {
       MiddleCodeGenerator.Declarator
         (SpecifierStack.Peek(), $1);

@@ -128,10 +128,10 @@ namespace CCompiler {
                 break;
 
               case CCompiler.Storage.Extern: {
-                  bool enumInit = pair.Second;
-                  Assert.Error(!enumInit,
+                  bool enumInitializer = pair.Second;
+                  Assert.Error(!enumInitializer,
                                enumSymbol + " = " + enumSymbol.Value,
-                    Message.Extern_enumeration_item_cannot_be_initialized);
+                    Message.Extern_enumeration_item_cannot_be_initializerialized);
                 }
                 break;
 

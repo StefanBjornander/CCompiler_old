@@ -13,7 +13,7 @@ namespace CCompiler {
     public static void Main(string[] args){
       Assert.ErrorA((Windows && !Linux) || (!Windows && Linux));
       System.Threading.Thread.CurrentThread.CurrentCulture = CultureInfo.InvariantCulture;
-      ObjectCodeTable.Init();
+      ObjectCodeTable.Initializer();
       args = new string[]{"-r", "-p", /*"-w", "-c",*/ "Main", "Malloc", "CType", "ErrNo", "Locale", "Math", "SetJmp",      
                           "Signal", "File", "Temp", "Scanf", "Printf", "StdLib", "Time",
                           "String", "PrintTest", "CharacterTest", "FloatTest", "LimitsTest",
@@ -228,7 +228,7 @@ namespace CCompiler {
         
         StaticSymbolLinux initSymbol = null, argsSymbol = null, mainSymbol = null;
         foreach (StaticSymbol staticSymbol in SymbolTable.StaticSet) {
-          if (staticSymbol.UniqueName.Equals(AssemblyCodeGenerator.InitName)) {
+          if (staticSymbol.UniqueName.Equals(AssemblyCodeGenerator.InitializerName)) {
             initSymbol = (StaticSymbolLinux) staticSymbol;
           }
 

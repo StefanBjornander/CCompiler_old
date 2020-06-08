@@ -15,5 +15,18 @@ namespace CCompiler {
     public int Offset {
       get { return m_offset; }
     }
+
+
+    public override string ToString() {
+      if (m_offset > 0) {
+        return m_uniqueName + " + " + m_offset;
+      }
+      else if (m_offset < 0) {
+        return m_uniqueName + " - " + (-m_offset);
+      }
+      else {
+        return m_uniqueName;
+      }
+    }
   }
 }

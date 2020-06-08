@@ -7,7 +7,7 @@ namespace CCompiler {
     private const int CARRY_FLAG = 0x01;
     private enum InOut {In, Out};
     private static List<Pair<Register, Symbol>> m_outParameterList = new List<Pair<Register, Symbol>>();
-    private static IDictionary<String, List<AssemblyCode>> m_initMap = new Dictionary<String, List<AssemblyCode>>();
+    private static IDictionary<String, List<AssemblyCode>> m_initializerMap = new Dictionary<String, List<AssemblyCode>>();
     private static IDictionary<String, List<Pair<Register,InOut>>> m_parameterMap = new Dictionary<String, List<Pair<Register, InOut>>>();
     private static IDictionary<String, Type> m_returnTypeMap = new Dictionary<String, Type>();
     private static IDictionary<String, Object> m_returnMap = new Dictionary<String, Object>();
@@ -15,10 +15,10 @@ namespace CCompiler {
     private static IDictionary<String, int> m_carryMap = new Dictionary<String, int>();
 
     static SystemCode() {
-      { { List<AssemblyCode> readCharInitList = new List<AssemblyCode>();
-          readCharInitList.Add(new AssemblyCode(AssemblyOperator.mov, Register.ah, 0x3F));
-          readCharInitList.Add(new AssemblyCode(AssemblyOperator.mov, Register.cx, 1));
-          m_initMap.Add("read_char", readCharInitList);
+      { { List<AssemblyCode> readCharInitializerList = new List<AssemblyCode>();
+          readCharInitializerList.Add(new AssemblyCode(AssemblyOperator.mov, Register.ah, 0x3F));
+          readCharInitializerList.Add(new AssemblyCode(AssemblyOperator.mov, Register.cx, 1));
+          m_initializerMap.Add("read_char", readCharInitializerList);
         }
 
         { List<Pair<Register,InOut>> readCharParameterList = new List<Pair<Register,InOut>>();
@@ -31,10 +31,10 @@ namespace CCompiler {
         m_returnMap.Add("read_char", Register.ax);
       }
 
-      { { List<AssemblyCode> writeCharInitList = new List<AssemblyCode>();
-          writeCharInitList.Add(new AssemblyCode(AssemblyOperator.mov, Register.ah, 0x40));
-          writeCharInitList.Add(new AssemblyCode(AssemblyOperator.mov, Register.cx, 1));
-          m_initMap.Add("write_char", writeCharInitList);
+      { { List<AssemblyCode> writeCharInitializerList = new List<AssemblyCode>();
+          writeCharInitializerList.Add(new AssemblyCode(AssemblyOperator.mov, Register.ah, 0x40));
+          writeCharInitializerList.Add(new AssemblyCode(AssemblyOperator.mov, Register.cx, 1));
+          m_initializerMap.Add("write_char", writeCharInitializerList);
         }
         
         { List<Pair<Register,InOut>> writeCharParameterList = new List<Pair<Register,InOut>>();
@@ -47,10 +47,10 @@ namespace CCompiler {
         m_returnMap.Add("write_char", Register.ax);
       }
 
-      { { List<AssemblyCode> fileExistsInitList = new List<AssemblyCode>();
-          fileExistsInitList.Add(new AssemblyCode(AssemblyOperator.mov, Register.ah, 0x43));
-          fileExistsInitList.Add(new AssemblyCode(AssemblyOperator.mov, Register.al, 0));
-          m_initMap.Add("file_exists", fileExistsInitList);
+      { { List<AssemblyCode> fileExistsInitializerList = new List<AssemblyCode>();
+          fileExistsInitializerList.Add(new AssemblyCode(AssemblyOperator.mov, Register.ah, 0x43));
+          fileExistsInitializerList.Add(new AssemblyCode(AssemblyOperator.mov, Register.al, 0));
+          m_initializerMap.Add("file_exists", fileExistsInitializerList);
         }
 
         { List<Pair<Register,InOut>> fileExistsParameterList = new List<Pair<Register,InOut>>();
@@ -63,11 +63,11 @@ namespace CCompiler {
         m_carryMap.Add("file_exists", 0);
       }
 
-      /*{ { List<ObjectCode> fileSizeInitList = new List<ObjectCode>();
-          fileSizeInitList.Add(new ObjectCode(ObjectOperator.mov, Register.ah, 0x42));
-          fileSizeInitList.Add(new ObjectCode(ObjectOperator.mov, Register.cx, 0));
-          fileSizeInitList.Add(new ObjectCode(ObjectOperator.mov, Register.dx, 0));
-          m_initMap.Add("file_size", fileSizeInitList);
+      /*{ { List<ObjectCode> fileSizeInitializerList = new List<ObjectCode>();
+          fileSizeInitializerList.Add(new ObjectCode(ObjectOperator.mov, Register.ah, 0x42));
+          fileSizeInitializerList.Add(new ObjectCode(ObjectOperator.mov, Register.cx, 0));
+          fileSizeInitializerList.Add(new ObjectCode(ObjectOperator.mov, Register.dx, 0));
+          m_initializerMap.Add("file_size", fileSizeInitializerList);
         }
 
         { List<Pair<Register,InOut>> fileSizeParameterList = new List<Pair<Register,InOut>>();
@@ -80,10 +80,10 @@ namespace CCompiler {
         m_carryMap.Add("file_size", -1);
       }*/
 
-      { { List<AssemblyCode> fileCreateInitList = new List<AssemblyCode>();
-          fileCreateInitList.Add(new AssemblyCode(AssemblyOperator.mov, Register.ah, 0x3C));
-          fileCreateInitList.Add(new AssemblyCode(AssemblyOperator.mov, Register.cx, 0));
-          m_initMap.Add("file_create", fileCreateInitList);
+      { { List<AssemblyCode> fileCreateInitializerList = new List<AssemblyCode>();
+          fileCreateInitializerList.Add(new AssemblyCode(AssemblyOperator.mov, Register.ah, 0x3C));
+          fileCreateInitializerList.Add(new AssemblyCode(AssemblyOperator.mov, Register.cx, 0));
+          m_initializerMap.Add("file_create", fileCreateInitializerList);
         }
 
         { List<Pair<Register,InOut>> fileCreateParameterList = new List<Pair<Register,InOut>>();
@@ -96,9 +96,9 @@ namespace CCompiler {
         m_carryMap.Add("file_create", -1);
       }
 
-      { { List<AssemblyCode> fileOpenInitList = new List<AssemblyCode>();
-          fileOpenInitList.Add(new AssemblyCode(AssemblyOperator.mov, Register.ah, 0x3D));
-          m_initMap.Add("file_open", fileOpenInitList);
+      { { List<AssemblyCode> fileOpenInitializerList = new List<AssemblyCode>();
+          fileOpenInitializerList.Add(new AssemblyCode(AssemblyOperator.mov, Register.ah, 0x3D));
+          m_initializerMap.Add("file_open", fileOpenInitializerList);
         }
 
         { List<Pair<Register,InOut>> fileOpenParameterList = new List<Pair<Register,InOut>>();
@@ -112,9 +112,9 @@ namespace CCompiler {
         m_carryMap.Add("file_open", -1);
       }
 
-      { { List<AssemblyCode> fileCloseInitList = new List<AssemblyCode>();
-          fileCloseInitList.Add(new AssemblyCode(AssemblyOperator.mov, Register.ah, 0x3E));
-          m_initMap.Add("file_close", fileCloseInitList);
+      { { List<AssemblyCode> fileCloseInitializerList = new List<AssemblyCode>();
+          fileCloseInitializerList.Add(new AssemblyCode(AssemblyOperator.mov, Register.ah, 0x3E));
+          m_initializerMap.Add("file_close", fileCloseInitializerList);
         }
 
         { List<Pair<Register,InOut>> fileCloseParameterList = new List<Pair<Register,InOut>>();
@@ -127,10 +127,10 @@ namespace CCompiler {
         m_carryMap.Add("file_close", -1);
       }
 
-      { { List<AssemblyCode> fileRemoveInitList = new List<AssemblyCode>();
-          fileRemoveInitList.Add(new AssemblyCode(AssemblyOperator.mov, Register.ah, 0x41));
-          fileRemoveInitList.Add(new AssemblyCode(AssemblyOperator.mov, Register.cl, 0));
-          m_initMap.Add("file_remove", fileRemoveInitList);
+      { { List<AssemblyCode> fileRemoveInitializerList = new List<AssemblyCode>();
+          fileRemoveInitializerList.Add(new AssemblyCode(AssemblyOperator.mov, Register.ah, 0x41));
+          fileRemoveInitializerList.Add(new AssemblyCode(AssemblyOperator.mov, Register.cl, 0));
+          m_initializerMap.Add("file_remove", fileRemoveInitializerList);
         }
 
         { List<Pair<Register,InOut>> fileRemoveParameterList = new List<Pair<Register,InOut>>();
@@ -143,10 +143,10 @@ namespace CCompiler {
         m_carryMap.Add("file_remove", -1);
       }
 
-      { { List<AssemblyCode> fileRenameInitList = new List<AssemblyCode>();
-          fileRenameInitList.Add(new AssemblyCode(AssemblyOperator.mov, Register.ah, 0x56));
-          fileRenameInitList.Add(new AssemblyCode(AssemblyOperator.mov, Register.cl, 0));
-          m_initMap.Add("file_rename", fileRenameInitList);
+      { { List<AssemblyCode> fileRenameInitializerList = new List<AssemblyCode>();
+          fileRenameInitializerList.Add(new AssemblyCode(AssemblyOperator.mov, Register.ah, 0x56));
+          fileRenameInitializerList.Add(new AssemblyCode(AssemblyOperator.mov, Register.cl, 0));
+          m_initializerMap.Add("file_rename", fileRenameInitializerList);
         }
 
         { List<Pair<Register,InOut>> fileRenameParameterList = new List<Pair<Register,InOut>>();
@@ -160,9 +160,9 @@ namespace CCompiler {
         m_carryMap.Add("file_rename", -1);
       }
 
-      { { List<AssemblyCode> fileReadInitList = new List<AssemblyCode>();
-          fileReadInitList.Add(new AssemblyCode(AssemblyOperator.mov, Register.ah, 0x3F));
-          m_initMap.Add("file_read", fileReadInitList);
+      { { List<AssemblyCode> fileReadInitializerList = new List<AssemblyCode>();
+          fileReadInitializerList.Add(new AssemblyCode(AssemblyOperator.mov, Register.ah, 0x3F));
+          m_initializerMap.Add("file_read", fileReadInitializerList);
         }
 
         { List<Pair<Register,InOut>> fileReadParameterList = new List<Pair<Register,InOut>>();
@@ -177,9 +177,9 @@ namespace CCompiler {
         m_carryMap.Add("file_read", -1);
       }
 
-      { { List<AssemblyCode> fileWriteInitList = new List<AssemblyCode>();
-          fileWriteInitList.Add(new AssemblyCode(AssemblyOperator.mov, Register.ah, 0x40));
-          m_initMap.Add("file_write", fileWriteInitList);
+      { { List<AssemblyCode> fileWriteInitializerList = new List<AssemblyCode>();
+          fileWriteInitializerList.Add(new AssemblyCode(AssemblyOperator.mov, Register.ah, 0x40));
+          m_initializerMap.Add("file_write", fileWriteInitializerList);
         }
 
         { List<Pair<Register,InOut>> fileWriteParameterList = new List<Pair<Register,InOut>>();
@@ -194,10 +194,10 @@ namespace CCompiler {
         m_carryMap.Add("file_write", -1);
       }
 
-      { { List<AssemblyCode> fileFSeekInitList = new List<AssemblyCode>();
-          fileFSeekInitList.Add(new AssemblyCode(AssemblyOperator.mov, Register.ah, 0x42));
-          fileFSeekInitList.Add(new AssemblyCode(AssemblyOperator.mov, Register.cx, 0));
-          m_initMap.Add("file_seek", fileFSeekInitList);
+      { { List<AssemblyCode> fileFSeekInitializerList = new List<AssemblyCode>();
+          fileFSeekInitializerList.Add(new AssemblyCode(AssemblyOperator.mov, Register.ah, 0x42));
+          fileFSeekInitializerList.Add(new AssemblyCode(AssemblyOperator.mov, Register.cx, 0));
+          m_initializerMap.Add("file_seek", fileFSeekInitializerList);
         }
 
         { List<Pair<Register,InOut>> fileFSeekParameterList = new List<Pair<Register,InOut>>();
@@ -212,9 +212,9 @@ namespace CCompiler {
         m_carryMap.Add("file_seek", -1);
       }
 
-      { { List<AssemblyCode> signalInitList = new List<AssemblyCode>();
-          signalInitList.Add(new AssemblyCode(AssemblyOperator.mov, Register.ah, 0x25));
-          m_initMap.Add("signal", signalInitList);
+      { { List<AssemblyCode> signalInitializerList = new List<AssemblyCode>();
+          signalInitializerList.Add(new AssemblyCode(AssemblyOperator.mov, Register.ah, 0x25));
+          m_initializerMap.Add("signal", signalInitializerList);
         }
 
         { List<Pair<Register,InOut>> signalParameterList = new List<Pair<Register,InOut>>();
@@ -226,9 +226,9 @@ namespace CCompiler {
         m_returnTypeMap.Add("signal", Type.VoidType);
       }
 
-      { { List<AssemblyCode> raiseInitList = new List<AssemblyCode>();
-          raiseInitList.Add(new AssemblyCode(AssemblyOperator.mov, Register.ah, 0x35));
-          m_initMap.Add("raise", raiseInitList);
+      { { List<AssemblyCode> raiseInitializerList = new List<AssemblyCode>();
+          raiseInitializerList.Add(new AssemblyCode(AssemblyOperator.mov, Register.ah, 0x35));
+          m_initializerMap.Add("raise", raiseInitializerList);
         }
 
         { List<Pair<Register,InOut>> raiseParameterList = new List<Pair<Register,InOut>>();
@@ -240,18 +240,18 @@ namespace CCompiler {
         m_returnMap.Add("raise", Register.bx);
       }
 
-      { { List<AssemblyCode> abortInitList = new List<AssemblyCode>();
-          abortInitList.Add(new AssemblyCode(AssemblyOperator.mov, Register.ah, 0x4C));
-          abortInitList.Add(new AssemblyCode(AssemblyOperator.mov, Register.al, -1));
-          m_initMap.Add("abort", abortInitList);
+      { { List<AssemblyCode> abortInitializerList = new List<AssemblyCode>();
+          abortInitializerList.Add(new AssemblyCode(AssemblyOperator.mov, Register.ah, 0x4C));
+          abortInitializerList.Add(new AssemblyCode(AssemblyOperator.mov, Register.al, -1));
+          m_initializerMap.Add("abort", abortInitializerList);
         }
 
         m_returnTypeMap.Add("abort", Type.VoidType);
       }
 
-      { { List<AssemblyCode> exitInitList = new List<AssemblyCode>();
-          exitInitList.Add(new AssemblyCode(AssemblyOperator.mov, Register.ah, 0x4C));
-          m_initMap.Add("exit", exitInitList);
+      { { List<AssemblyCode> exitInitializerList = new List<AssemblyCode>();
+          exitInitializerList.Add(new AssemblyCode(AssemblyOperator.mov, Register.ah, 0x4C));
+          m_initializerMap.Add("exit", exitInitializerList);
         }
 
         { List<Pair<Register,InOut>> exitParameterList = new List<Pair<Register,InOut>>();
@@ -262,9 +262,9 @@ namespace CCompiler {
         m_returnTypeMap.Add("exit", Type.VoidType);
       }
 
-      { { List<AssemblyCode> dateInitList = new List<AssemblyCode>();
-          dateInitList.Add(new AssemblyCode(AssemblyOperator.mov, Register.ah, 0x2A));
-          m_initMap.Add("date", dateInitList);
+      { { List<AssemblyCode> dateInitializerList = new List<AssemblyCode>();
+          dateInitializerList.Add(new AssemblyCode(AssemblyOperator.mov, Register.ah, 0x2A));
+          m_initializerMap.Add("date", dateInitializerList);
         }
 
         { List<Pair<Register,InOut>> dateParameterList = new List<Pair<Register,InOut>>();
@@ -278,9 +278,9 @@ namespace CCompiler {
         m_returnTypeMap.Add("date", Type.VoidType);
       }
 
-      { { List<AssemblyCode> timeInitList = new List<AssemblyCode>();
-          timeInitList.Add(new AssemblyCode(AssemblyOperator.mov, Register.ah, 0x2C));
-          m_initMap.Add("time", timeInitList);
+      { { List<AssemblyCode> timeInitializerList = new List<AssemblyCode>();
+          timeInitializerList.Add(new AssemblyCode(AssemblyOperator.mov, Register.ah, 0x2C));
+          m_initializerMap.Add("time", timeInitializerList);
         }
 
         { List<Pair<Register,InOut>> timeParameterList = new List<Pair<Register,InOut>>();
@@ -300,7 +300,7 @@ namespace CCompiler {
       return m_returnTypeMap[name];
     }
 
-    public static void GenerateInit(String name, AssemblyCodeGenerator objectCodeGenerator) {
+    public static void GenerateInitializer(String name, AssemblyCodeGenerator objectCodeGenerator) {
       // Empty.
     }
 
@@ -321,9 +321,9 @@ namespace CCompiler {
     }
 
     public static void GenerateCall(String name, Symbol returnSymbol, AssemblyCodeGenerator objectCodeGenerator) {
-      List<AssemblyCode> initList = m_initMap[name];
+      List<AssemblyCode> initializerList = m_initializerMap[name];
 
-      foreach (AssemblyCode objectCode in initList) {
+      foreach (AssemblyCode objectCode in initializerList) {
         //objectCodeGenerator.AddAssemblyCode(objectCode);
       }
       

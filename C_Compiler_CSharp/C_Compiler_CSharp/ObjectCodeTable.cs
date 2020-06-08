@@ -4,7 +4,7 @@ namespace CCompiler {
   public class ObjectCodeTable {
     public static IDictionary<ObjectCodeInfo, byte[]> MainArrayMap = new SortedDictionary<ObjectCodeInfo, byte[]>(new ObjectCodeComparer());
 
-    public static void Init() {
+    public static void Initializer() {
       MainArrayMap.Add(new ObjectCodeInfo(AssemblyOperator.add, Register.ah, 0, null), new byte[]{128, 196, 0});
       MainArrayMap.Add(new ObjectCodeInfo(AssemblyOperator.add, Register.ah, 1, null), new byte[]{128, 196, 1});
       MainArrayMap.Add(new ObjectCodeInfo(AssemblyOperator.add, Register.ah, Register.ah, null), new byte[]{0, 228});
