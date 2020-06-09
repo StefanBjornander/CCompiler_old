@@ -1,63 +1,57 @@
-﻿using System;
+﻿// int a[2][2][2] = {1,2,3,4,5,6,7,8};
+// {{1,2],{3,4},{5,6},{7,8}}
+// {{{1,2],{3,4}},{{5,6},{7,8}}}
+
+using System.Text; // XXX
+using System;
 using System.IO;
-using System.Text;
-using System.Globalization;
 using System.Collections.Generic;
 
 namespace CCompiler {
   class ModifyInitializer {
-    public static object DoInitializer(Type type, object initializer) {
-      if (type.IsArray() && (initializer is List<object>)) {
-        List<object> list = (List<object>) initializer;
-        IDictionary<int,int> dimensionToSizeMap = new Dictionary<int,int>();
-        int maxDimension = DimensionToSizeMap(type, dimensionToSizeMap);
-        IDictionary<object,int> initializerToDimensionMap =
-          new Dictionary<object,int>();
-        InitializerToDimensionMap(list, initializerToDimensionMap);
+    public static List<object> ModifyArray(Type type, List<object> list) {
+      IDictionary<int,int> dimensionToSizeMap = new Dictionary<int,int>();
+      int maxDimension = DimensionToSizeMap(type, dimensionToSizeMap);
+      IDictionary<object,int> initializerToDimensionMap =
+        new Dictionary<object,int>();
+      InitializerToDimensionMap(list, initializerToDimensionMap);
 
-        // int a[2][2][2] = {1,2,3,4,5,6,7,8};
-        // {{1,2],{3,4},{5,6},{7,8}}
-        // {{{1,2],{3,4}},{{5,6},{7,8}}}
+      for (int dimension = 1; dimension < maxDimension; ++dimension) {
+        List<object> totalList =
+          new List<object>(), currentList = new List<object>();
+        int arraySize = dimensionToSizeMap[dimension];
+        Assert.ErrorXXX(arraySize > 0);
 
-        for (int dimension = 1; dimension < maxDimension; ++dimension) {
-          List<object> totalList =
-            new List<object>(), currentList = new List<object>();
-          int arraySize = dimensionToSizeMap[dimension];
-          Assert.ErrorA(arraySize > 0);
-
-          foreach (object member in list) {
-            if (initializerToDimensionMap[member] < dimension) {
-              currentList.Add(member);
-            }
-            else {
-              if (currentList.Count > 0) {
-                initializerToDimensionMap[currentList] = dimension;
-                totalList.Add(currentList);
-              }
-
-              totalList.Add(member);
-              currentList = new List<object>();
-            }
-
-            if (currentList.Count == arraySize) {
+        foreach (object member in list) {
+          if (initializerToDimensionMap[member] < dimension) {
+            currentList.Add(member);
+          }
+          else {
+            if (currentList.Count > 0) {
               initializerToDimensionMap[currentList] = dimension;
               totalList.Add(currentList);
-              currentList = new List<object>();
             }
+
+            totalList.Add(member);
+            currentList = new List<object>();
           }
 
-          if (currentList.Count > 0) {
+          if (currentList.Count == arraySize) {
             initializerToDimensionMap[currentList] = dimension;
             totalList.Add(currentList);
+            currentList = new List<object>();
           }
-
-          list = totalList;
         }
 
-        return list;
+        if (currentList.Count > 0) {
+          initializerToDimensionMap[currentList] = dimension;
+          totalList.Add(currentList);
+        }
+
+        list = totalList;
       }
 
-      return initializer;
+      return list;
     }
 
     private static int DimensionToSizeMap(Type type,
@@ -72,13 +66,14 @@ namespace CCompiler {
     }
 
     private static int InitializerToDimensionMap(object initializer,
-                             IDictionary<object,int> initializerToDimensionMap) {
+                          IDictionary<object,int> initializerToDimensionMap) {
       if (initializer is List<object>) {
         List<object> list = (List<object>) initializer;
         int maxDimension = 0;
 
         foreach (object member in list) {
-          int dimension = InitializerToDimensionMap(member, initializerToDimensionMap);
+          int dimension =
+            InitializerToDimensionMap(member, initializerToDimensionMap);
           maxDimension = Math.Max(maxDimension, dimension);
         }
 
@@ -110,4 +105,4 @@ namespace CCompiler {
       }
     }
   }
-}
+ }

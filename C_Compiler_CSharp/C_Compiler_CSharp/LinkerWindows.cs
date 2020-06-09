@@ -34,7 +34,7 @@ namespace CCompiler {
     public override void Generate() {
       //m_globalMap.Add(AssemblyCodeGenerator.PathName, GeneratePathSymbol());
 
-      { Assert.ErrorA(m_globalMap.ContainsKey(AssemblyCodeGenerator.InitializerName));
+      { Assert.ErrorXXX(m_globalMap.ContainsKey(AssemblyCodeGenerator.InitializerName));
         StaticSymbolWindows initializerInfo = m_globalMap[AssemblyCodeGenerator.InitializerName];
         m_globalList.Add(initializerInfo);
         m_totalSize += initializerInfo.ByteList.Count;

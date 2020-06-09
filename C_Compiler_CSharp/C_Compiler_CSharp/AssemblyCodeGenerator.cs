@@ -280,11 +280,11 @@ namespace CCompiler {
             break;
 
           case MiddleOperator.DecreaseStack:
-            Assert.ErrorA((--m_floatStackSize) >= 0);
+            Assert.ErrorXXX((--m_floatStackSize) >= 0);
             break;
 
           case MiddleOperator.CheckTrackMapFloatStack:
-            Assert.ErrorA((m_trackMap.Count == 0) &&
+            Assert.ErrorXXX((m_trackMap.Count == 0) &&
                           (m_floatStackSize == 0));
             break;
 
@@ -362,7 +362,7 @@ namespace CCompiler {
                 StructUnionSetReturnValue(middleCode);
               }
               else if (symbol.Type.IsFloating()) {
-                Assert.ErrorA((--m_floatStackSize) == 0);
+                Assert.ErrorXXX((--m_floatStackSize) == 0);
               }
               else {
                 IntegralSetReturnValue(middleCode);
@@ -376,7 +376,7 @@ namespace CCompiler {
             break;
 
           default:
-            Assert.ErrorA(false);
+            Assert.ErrorXXX(false);
             break;
         }
       }
@@ -427,9 +427,9 @@ namespace CCompiler {
 
     public void CallHeader(MiddleCode middleCode) {
       ISet<Symbol> integralSet = (ISet<Symbol>) middleCode[1];
-      Assert.ErrorA(integralSet.SequenceEqual(m_trackMap.Keys));
+      Assert.ErrorXXX(integralSet.SequenceEqual(m_trackMap.Keys));
       int stackSize = (int) middleCode[2];
-      Assert.ErrorA(stackSize == m_floatStackSize);
+      Assert.ErrorXXX(stackSize == m_floatStackSize);
       Register baseRegister = BaseRegister(null);
       int recordOffset = (int) middleCode[0], recordSize = 0;
 
@@ -522,7 +522,7 @@ namespace CCompiler {
                           AssemblyCode.EllipseRegister,
                           AssemblyCode.FrameRegister);
 
-          Assert.ErrorA(extraSize >= 0);
+          Assert.ErrorXXX(extraSize >= 0);
           if (extraSize > 0) {
             AddAssemblyCode(AssemblyOperator.add,
                             AssemblyCode.EllipseRegister,
@@ -609,7 +609,7 @@ namespace CCompiler {
       }
       else {
         track = new Track(symbol, register);
-        Assert.ErrorA(!(symbol.Type.IsFunction()));
+        Assert.ErrorXXX(!(symbol.Type.IsFunction()));
 
         if ((symbol.Value is BigInteger) ||
             (symbol.IsExternOrStatic() &&
@@ -668,7 +668,7 @@ namespace CCompiler {
               break;
             }    
           }
-          Assert.ErrorA(lastLine >= 0);
+          Assert.ErrorXXX(lastLine >= 0);
 
           AssemblyCode setCode =
             new AssemblyCode(AssemblyOperator.set_track_size,
@@ -683,7 +683,7 @@ namespace CCompiler {
     }
   
     public void Return(MiddleCode middleCode) {
-      Assert.ErrorA(m_floatStackSize == 0);
+      Assert.ErrorXXX(m_floatStackSize == 0);
       //Type type = Type.SizeToUnsignedType(Type.ReturnAddressSize);
       Track track = new Track(Type.VoidPointerType);
       AddAssemblyCode(AssemblyOperator.mov, track,
@@ -793,6 +793,7 @@ namespace CCompiler {
     }
 
     private void InitializerZero(int size) {
+      Assert.ErrorXXX(size >= 0);
       if (size > 0) {
         AddAssemblyCode(AssemblyOperator.define_zero_sequence, size);
       }
@@ -1158,7 +1159,7 @@ namespace CCompiler {
     }
 
     public void FloatingRelation(MiddleCode middleCode, int index) {
-      Assert.ErrorA((m_floatStackSize -= 2) >= 0);
+      Assert.ErrorXXX((m_floatStackSize -= 2) >= 0);
       int target = (int) middleCode[0];
       AddAssemblyCode(AssemblyOperator.fcompp);
       AddAssemblyCode(AssemblyOperator.fstsw, Register.ax);
@@ -1188,7 +1189,7 @@ namespace CCompiler {
       Symbol rightSymbol) {
       AssemblyOperator objectOperator =
         m_middleToIntegralMap[middleOperator];
-      Assert.ErrorA(!m_trackMap.ContainsKey(leftSymbol));
+      Assert.ErrorXXX(!m_trackMap.ContainsKey(leftSymbol));
 
       if (rightSymbol.Value is BigInteger) {
         AssemblyOperator sizeOperator =
@@ -1243,7 +1244,7 @@ namespace CCompiler {
                         Base(rightSymbol), Offset(rightSymbol));
       }
 
-      Assert.ErrorA(resultSymbol.IsTemporary() &&
+      Assert.ErrorXXX(resultSymbol.IsTemporary() &&
                     (resultSymbol.AddressSymbol == null));
       m_trackMap.Add(resultSymbol, leftTrack);
     }
@@ -1305,7 +1306,7 @@ namespace CCompiler {
         m_trackMap.Remove(leftSymbol);
       }
       else { // rightTrack != null
-        Assert.ErrorA(!(leftSymbol.Value is BigInteger));
+        Assert.ErrorXXX(!(leftSymbol.Value is BigInteger));
 
         if ((leftSymbol.IsExternOrStatic() &&
              leftSymbol.Type.IsArrayFunctionOrString()) ||
@@ -1340,7 +1341,7 @@ namespace CCompiler {
     }
 
     public Register BaseRegister(Symbol symbol) {
-      Assert.ErrorA((symbol == null) || symbol.IsAutoOrRegister());
+      Assert.ErrorXXX((symbol == null) || symbol.IsAutoOrRegister());
     
       if (SymbolTable.CurrentFunction.Type.IsEllipse() &&
           ((symbol == null) || !symbol.IsParameter())) {
@@ -1358,7 +1359,7 @@ namespace CCompiler {
       }
       else if (symbol.AddressSymbol != null) {
         Track addressTrack = LoadValueToRegister(symbol.AddressSymbol);
-        Assert.ErrorA((addressTrack.Register == null) ||
+        Assert.ErrorXXX((addressTrack.Register == null) ||
                       RegisterAllocator.PointerRegisterSetWithEllipse.Contains(addressTrack.Register.Value));
         addressTrack.Pointer = true;
         m_trackMap.Remove(symbol.AddressSymbol);
@@ -1441,7 +1442,7 @@ namespace CCompiler {
       Register resultRegister = ResultMultiplyMap[pair];
       Track resultTrack = new Track(resultSymbol, resultRegister);
 
-      Assert.ErrorA(resultSymbol.IsTemporary() &&
+      Assert.ErrorXXX(resultSymbol.IsTemporary() &&
                     (resultSymbol.AddressSymbol == null));
       m_trackMap.Add(resultSymbol, resultTrack);
       AddAssemblyCode(AssemblyOperator.empty, resultTrack);
@@ -1520,7 +1521,7 @@ namespace CCompiler {
     
       if (addressSymbol != null) {
         Track addressTrack = LoadValueToRegister(addressSymbol);
-        Assert.ErrorA((addressTrack.Register == null) ||
+        Assert.ErrorXXX((addressTrack.Register == null) ||
                       RegisterAllocator.PointerRegisterSetWithEllipse.Contains(addressTrack.Register.Value));
         addressTrack.Pointer = true;
 
@@ -1543,7 +1544,7 @@ namespace CCompiler {
       else {
         Symbol pointerSymbol = new Symbol(new Type(symbol.Type));
         Track addressTrack = new Track(pointerSymbol, register);
-        Assert.ErrorA((addressTrack.Register == null) ||
+        Assert.ErrorXXX((addressTrack.Register == null) ||
                       RegisterAllocator.PointerRegisterSetWithEllipse.Contains(addressTrack.Register.Value));
         addressTrack.Pointer = true;
 
@@ -1563,7 +1564,7 @@ namespace CCompiler {
     }
 
     public void PushSymbol(Symbol symbol) {
-      Assert.ErrorA((++m_floatStackSize) <= FloatingStackMaxSize);
+      Assert.ErrorXXX((++m_floatStackSize) <= FloatingStackMaxSize);
       AssemblyOperator objectOperator = m_floatPushMap[symbol.Type.Sort];
       Track track;
 
@@ -1621,12 +1622,12 @@ namespace CCompiler {
     }
       
     public void TopPopSymbol(Symbol symbol, TopOrPop topOrPop) {
-      Assert.ErrorA(symbol != null);
+      Assert.ErrorXXX(symbol != null);
       AssemblyOperator objectOperator;
 
       if (topOrPop == TopOrPop.Pop) {
         objectOperator = m_floatPopMap[symbol.Type.Sort];
-        Assert.ErrorA((--m_floatStackSize) >= 0);
+        Assert.ErrorXXX((--m_floatStackSize) >= 0);
       }
       else {
         objectOperator = m_floatTopMap[symbol.Type.Sort];
@@ -1780,7 +1781,7 @@ namespace CCompiler {
     }
 
     public void FloatingBinary(MiddleCode middleCode) {
-      Assert.ErrorA((--m_floatStackSize) >= 0);
+      Assert.ErrorXXX((--m_floatStackSize) >= 0);
       AddAssemblyCode(m_middleToFloatingMap[middleCode.Operator]);
     }
 
@@ -2039,7 +2040,7 @@ namespace CCompiler {
             int byteSource = assemblyToByteMap[line + 1],
                 byteTarget = assemblyToByteMap[assemblyTarget];
             int byteDistance = byteTarget - byteSource;
-            Assert.ErrorA(byteDistance != 0);
+            Assert.ErrorXXX(byteDistance != 0);
             thisCode[0] = byteDistance;
           }
         }

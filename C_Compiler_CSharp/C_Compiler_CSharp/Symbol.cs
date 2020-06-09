@@ -96,7 +96,7 @@ namespace CCompiler {
     }
 
     public Symbol(Type type, object value) {
-      Assert.ErrorA(!(value is bool));
+      Assert.ErrorXXX(!(value is bool));
       m_uniqueName = ValueName(type, value);
       m_storage = Storage.Static;
       m_type = type;
@@ -109,7 +109,7 @@ namespace CCompiler {
     }
 
     public static string ValueName(CCompiler.Type type, object value) {
-      Assert.ErrorA(value != null);
+      Assert.ErrorXXX(value != null);
 
       if (value is string) {
         string text = (string) value;

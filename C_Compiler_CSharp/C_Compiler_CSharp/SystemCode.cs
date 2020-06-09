@@ -296,7 +296,7 @@ namespace CCompiler {
     }
 
     public static Type ReturnType(String name) {
-      Assert.ErrorA(m_returnTypeMap.ContainsKey(name));
+      Assert.ErrorXXX(m_returnTypeMap.ContainsKey(name));
       return m_returnTypeMap[name];
     }
 
@@ -305,9 +305,9 @@ namespace CCompiler {
     }
 
     public static void GenerateParameter(String name, int index, Symbol argSymbol, AssemblyCodeGenerator objectCodeGenerator) {
-      Assert.ErrorA(m_parameterMap.ContainsKey(name));
+      Assert.ErrorXXX(m_parameterMap.ContainsKey(name));
       List<Pair<Register,InOut>> parameterList = m_parameterMap[name];
-      Assert.ErrorA(index < parameterList.Count);
+      Assert.ErrorXXX(index < parameterList.Count);
       Pair<Register,InOut> pair = parameterList[index];
       Register register = pair.First;
       InOut inOut = pair.Second;

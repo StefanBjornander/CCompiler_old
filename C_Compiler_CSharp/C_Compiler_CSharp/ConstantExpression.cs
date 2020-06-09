@@ -486,7 +486,7 @@ namespace CCompiler {
         return (new Expression(targetSymbol, null, longList));
       }
       else {
-        Assert.ErrorA((sourceValue is BigInteger) || (sourceValue is decimal));
+        Assert.ErrorXXX((sourceValue is BigInteger) || (sourceValue is decimal));
         Symbol targetSymbol = null;
 
         if (sourceType.IsIntegralArrayOrPointer() &&targetType.IsFloating()) {

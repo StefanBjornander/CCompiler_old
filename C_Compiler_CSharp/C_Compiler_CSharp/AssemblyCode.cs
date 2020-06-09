@@ -63,7 +63,7 @@ namespace CCompiler {
 
     public object this[int index] {
       get { return m_operandArray[index]; }
-      set { Assert.ErrorA((index >= 0) && (index < 3));
+      set { Assert.ErrorXXX((index >= 0) && (index < 3));
             m_operandArray[index] = value; }
     }
 
@@ -167,18 +167,18 @@ namespace CCompiler {
           break;
 
         case 2:
-          Assert.ErrorA(!name.Contains("h"));
+          Assert.ErrorXXX(!name.Contains("h"));
           name = name.Replace("l", "x").Replace("e", "").Replace("r", "");
           break;
 
         case 4:
-          Assert.ErrorA(!name.Contains("h"));
+          Assert.ErrorXXX(!name.Contains("h"));
           name = "e" + name.Replace("l", "x").Replace("e", "")
                                              .Replace("r", "");
           break;
 
         case 8:
-          Assert.ErrorA(!name.Contains("h"));
+          Assert.ErrorXXX(!name.Contains("h"));
           name = "r" + name.Replace("l", "x").Replace("e", "")
                                              .Replace("r", "");
           break;
@@ -233,7 +233,7 @@ namespace CCompiler {
           break;
 
         default:
-          Assert.ErrorA(false);
+          Assert.ErrorXXX(false);
           break;
       }
 
@@ -412,7 +412,7 @@ namespace CCompiler {
       }
       // mov [global + 4], ax; mov [null + 4], ax
       else if ((operand1 is int) && (operand2 is Register)) {
-        Assert.ErrorA((operand0 is string) || (operand0 == null));
+        Assert.ErrorXXX((operand0 is string) || (operand0 == null));
         int offset = (int)operand1;
         Register fromRegister = (Register)operand2;
         List<byte> byteList =
@@ -451,7 +451,7 @@ namespace CCompiler {
       }
       // mov [global + 4], 123; mov [null + 4], 123
       else if ((operand1 is int) && (operand2 is BigInteger)) {
-        Assert.ErrorA((operand0 is string) || (operand0 == null));
+        Assert.ErrorXXX((operand0 is string) || (operand0 == null));
         int offset = (int) operand1;
         BigInteger value = (BigInteger) operand2;
         int valueSize = SizeOfValue(value, Operator);
@@ -464,13 +464,13 @@ namespace CCompiler {
         return byteList; 
       }
       else if ((operand0 is Register) && (operand1 is Register)) { // mov ax, bx
-        Assert.ErrorA(operand2 == null);
+        Assert.ErrorXXX(operand2 == null);
         Register toRegister = (Register) operand0,
                  fromRegister = (Register) operand1;
         return LookupByteArray(Operator, toRegister, fromRegister);
       }
       else if ((operand0 is Register) && (operand1 is BigInteger)) { // mov ax, 123
-        Assert.ErrorA(operand2 == null);
+        Assert.ErrorXXX(operand2 == null);
         Register register = (Register) operand0;
         BigInteger value = (BigInteger) operand1;
         int size = ((Operator == AssemblyOperator.mov) ||
@@ -481,7 +481,7 @@ namespace CCompiler {
         return byteList;
       }
       else if ((operand0 is Register) && (operand1 is string)) { // mov ax, global
-        Assert.ErrorA(operand2 == null);
+        Assert.ErrorXXX(operand2 == null);
         Register register = (Register) operand0;
         int size = SizeOfRegister(register);
         List<byte> byteList = LookupByteArray(Operator, register, size);
@@ -489,7 +489,7 @@ namespace CCompiler {
         return byteList;
       }
       else if ((operand0 is Register) && (operand1 is int)) { // inc [bp + 2]
-        Assert.ErrorA(operand2 == null);
+        Assert.ErrorXXX(operand2 == null);
         Register baseRegister = (Register) operand0;
         int offset = (int) operand1;
         int size = SizeOfValue(offset);
@@ -498,8 +498,8 @@ namespace CCompiler {
         return byteList;
       }
       else if (operand1 is int) { // inc [global + 4]; inc [null + 4]
-        Assert.ErrorA((operand0 is string) || (operand0 == null));
-        Assert.ErrorA(operand2 == null);
+        Assert.ErrorXXX((operand0 is string) || (operand0 == null));
+        Assert.ErrorXXX(operand2 == null);
         int offset = (int) operand1;
         List<byte> byteList =
           LookupByteArray(Operator, null, TypeSize.PointerSize);
@@ -508,12 +508,12 @@ namespace CCompiler {
         return byteList;
       }
       else if (operand0 is Register) { // inc ax
-        Assert.ErrorA((operand1 == null) && (operand2 == null));
+        Assert.ErrorXXX((operand1 == null) && (operand2 == null));
         Register register = (Register) operand0;
         return LookupByteArray(Operator, register);
       }
       else if (operand0 is BigInteger) { // int 33
-        Assert.ErrorA((operand1 == null) && (operand2 == null));
+        Assert.ErrorXXX((operand1 == null) && (operand2 == null));
         BigInteger value = (BigInteger) operand0;
         int size = SizeOfValue(value);
         List<byte> byteList = LookupByteArray(Operator, size);
@@ -521,7 +521,7 @@ namespace CCompiler {
         return byteList;
       }
       else { // lahf
-        Assert.ErrorA((operand0 == null) && (operand1 == null) &&
+        Assert.ErrorXXX((operand0 == null) && (operand1 == null) &&
                       (operand2 == null));
         return LookupByteArray(Operator);
       }
@@ -591,7 +591,7 @@ namespace CCompiler {
       ObjectCodeInfo info =
         new ObjectCodeInfo(objectOp, operand1, operand2, operand3);
       byte[] byteArray = ObjectCodeTable.MainArrayMap[info];
-      Assert.ErrorA(byteArray != null);
+      Assert.ErrorXXX(byteArray != null);
       List<byte> byteList = new List<byte>();
 
       foreach (byte b in byteArray) {
@@ -689,7 +689,7 @@ namespace CCompiler {
               return "\tdq " + text;
 
             default:
-              Assert.ErrorA(false);
+              Assert.ErrorXXX(false);
               return null;
           }
         }
@@ -738,7 +738,7 @@ namespace CCompiler {
       // mov ax, [bp + 2]; mov ax, [global + 4]
       else if ((operand0 is Register) && (operand1 != null) &&
                (operand2 is int)) {
-        Assert.ErrorA((operand1 is Register) || (operand1 is string));
+        Assert.ErrorXXX((operand1 is Register) || (operand1 is string));
         return "\t" + operatorName + " " + operand0 +
                ", [" + operand1 + WithSign(operand2) + "]";
       }
@@ -751,8 +751,8 @@ namespace CCompiler {
       // mov [bp + 2], ax; mov [global + 4], ax; mov [bp + 2], 123; mov [global + 4], 123; mov [bp + 2], global; mov [global + 4], global
       else if ((operand0 != null) && (operand1 is int) &&
                (operand2 != null)) {
-        Assert.ErrorA((operand0 is Register) || (operand0 is string));
-        Assert.ErrorA((operand2 is Register) || (operand2 is BigInteger)
+        Assert.ErrorXXX((operand0 is Register) || (operand0 is string));
+        Assert.ErrorXXX((operand2 is Register) || (operand2 is BigInteger)
                       || (operand2 is string));
         return "\t" + operatorName +
                " [" + operand0 + WithSign(operand1) + "], " + operand2;
@@ -760,38 +760,38 @@ namespace CCompiler {
       // mov [null + 4], ax; mov [null + 4], 123; mov [null + 4], global
       else if ((operand0 == null) && (operand1 is int) &&
                (operand2 != null)) {
-        Assert.ErrorA((operand2 is Register) || (operand2 is BigInteger)
+        Assert.ErrorXXX((operand2 is Register) || (operand2 is BigInteger)
                       || (operand2 is string));
         return "\t" + operatorName + " [" + operand1 + "], " + operand2;
       }
       // inc [bp + 2]; inc [global + 4]
       else if ((operand0 != null) && (operand1 is int)) {
-        Assert.ErrorA((operand0 is Register) || (operand0 is string));
-        Assert.ErrorA(operand2 == null);
+        Assert.ErrorXXX((operand0 is Register) || (operand0 is string));
+        Assert.ErrorXXX(operand2 == null);
         return "\t" + operatorName +
                " [" + operand0 + WithSign(operand1) + "]";
       }
       // mov ax, bx; mov ax, 123; mov ax, global
       else if ((operand0 is Register) && (operand1 != null)) {
-        Assert.ErrorA(operand2 == null);
-        Assert.ErrorA((operand1 is Register) || (operand1 is BigInteger)
+        Assert.ErrorXXX(operand2 == null);
+        Assert.ErrorXXX((operand1 is Register) || (operand1 is BigInteger)
                       || (operand1 is string));
         return "\t" + operatorName + " " + operand0 + ", " + operand1;
       }
       // inc [null + 4]
       else if ((operand0 == null) && (operand1 is int)) {
-        Assert.ErrorA(operand2 == null);
+        Assert.ErrorXXX(operand2 == null);
         return "\t" + operatorName + " [" + operand1 + "]";
       }
       // inc ax; int 33
       else if (operand0 != null) {
-        Assert.ErrorA((operand0 is Register) || (operand0 is BigInteger));
-        Assert.ErrorA((operand1 == null) && (operand2 == null));
+        Assert.ErrorXXX((operand0 is Register) || (operand0 is BigInteger));
+        Assert.ErrorXXX((operand1 == null) && (operand2 == null));
         return "\t" + operatorName + " " + operand0;
       }
       // lahf
       else {
-        Assert.ErrorA((operand0 == null) && (operand1 == null) &&
+        Assert.ErrorXXX((operand0 == null) && (operand1 == null) &&
                       (operand2 == null));
         return "\t" + operatorName + " ";
       }

@@ -16,9 +16,9 @@ namespace CCompiler {
       m_name = "track" + (TrackCount++);
       m_register = register;
 
-      Assert.ErrorA(symbol != null);
+      Assert.ErrorXXX(symbol != null);
       Type type = symbol.Type;
-      Assert.ErrorA(!type.IsFunction() && !type.IsStructOrUnion());
+      Assert.ErrorXXX(!type.IsFunction() && !type.IsStructOrUnion());
     
       if (type.IsArray() || type.IsString()) {
         m_minSize = m_currSize = m_maxSize = TypeSize.PointerSize;
@@ -27,16 +27,16 @@ namespace CCompiler {
         m_minSize = m_currSize = m_maxSize = type.Size();
       }
 
-      Assert.ErrorA((m_currSize == 1) || (m_currSize == 2) || (m_currSize == 4) || (m_currSize == 8));
+      Assert.ErrorXXX((m_currSize == 1) || (m_currSize == 2) || (m_currSize == 4) || (m_currSize == 8));
     }
 
     public Track(Type type) {
       m_name = "track" + (TrackCount++);
-      Assert.ErrorA(type != null);
-      Assert.ErrorA(!type.IsArrayFunctionStringStructOrUnion());
+      Assert.ErrorXXX(type != null);
+      Assert.ErrorXXX(!type.IsArrayFunctionStringStructOrUnion());
       m_minSize = m_currSize = m_maxSize = type.Size();
       //m_maxSize = m_currSize = type.IsArray() ? TypeSize.PointerSize : type.Size();
-      Assert.ErrorA((m_currSize == 1) || (m_currSize == 2) || (m_currSize == 4) || (m_currSize == 8));
+      Assert.ErrorXXX((m_currSize == 1) || (m_currSize == 2) || (m_currSize == 4) || (m_currSize == 8));
     }
 
     public void Replace(List<AssemblyCode> assemblyCodeList, Track newTrack) {
@@ -54,7 +54,7 @@ namespace CCompiler {
         m_currSize = value;
         m_minSize = Math.Min(m_minSize, m_currSize);
         m_maxSize = Math.Max(m_maxSize, m_currSize);
-        Assert.ErrorA((m_currSize == 1) || (m_currSize == 2) || (m_currSize == 4) || (m_currSize == 8));
+        Assert.ErrorXXX((m_currSize == 1) || (m_currSize == 2) || (m_currSize == 4) || (m_currSize == 8));
       }
     }
   
@@ -73,7 +73,7 @@ namespace CCompiler {
     public Register? Register {
       get { return m_register; }
       set {
-        Assert.ErrorA((value == null) || (m_register == null) ||
+        Assert.ErrorXXX((value == null) || (m_register == null) ||
                       AssemblyCode.RegisterOverlap(value, m_register));
         m_register = value;
       }

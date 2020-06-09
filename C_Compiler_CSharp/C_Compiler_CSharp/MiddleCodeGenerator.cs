@@ -26,7 +26,7 @@ namespace CCompiler {
                                  MiddleCode target) {
       if (sourceSet != null) {
         foreach (MiddleCode source in sourceSet) {
-          Assert.ErrorA(source[0] == null);
+          Assert.ErrorXXX(source[0] == null);
           source[0] = target;
         }
       }
@@ -398,7 +398,7 @@ namespace CCompiler {
     // ---------------------------------------------------------------------------------------------------------------------
 
     public static void Declarator(Specifier specifier, Declarator declarator) {
-      Assert.ErrorA(CCompiler_Main.Parser.CallDepth == 0);
+      Assert.ErrorXXX(CCompiler_Main.Parser.CallDepth == 0);
       Storage? storage = specifier.StorageX;
       declarator.Add(specifier.Type);
 
@@ -428,7 +428,7 @@ namespace CCompiler {
   
     public static List<MiddleCode> AssignmentDeclarator(Specifier specifier,
                                                      Declarator declarator, object initializer) {
-      Assert.ErrorA(CCompiler_Main.Parser.CallDepth == 0);
+      Assert.ErrorXXX(CCompiler_Main.Parser.CallDepth == 0);
       Storage? storage = specifier.StorageX;
       Type specifierType = specifier.Type;
 
@@ -441,18 +441,17 @@ namespace CCompiler {
                   ? CCompiler.Storage.Static : CCompiler.Storage.Auto;
       }
 
-      Assert.Error(!type.IsFunction(), null, Message.Functions_cannot_be_initializerialized);
-      Assert.Error(storage != Storage.Typedef, name, Message.Typedef_cannot_be_initializerialized);
-      Assert.Error(storage != Storage.Extern, name, Message.Extern_cannot_be_initializerialized);
+      Assert.Error(!type.IsFunction(), null, Message.Functions_cannot_be_initialized);
+      Assert.Error(storage != Storage.Typedef, name, Message.Typedef_cannot_be_initialized);
+      Assert.Error(storage != Storage.Extern, name, Message.Extern_cannot_be_initialized);
       Assert.Error((SymbolTable.CurrentTable.Scope != Scope.Struct) &&
                    (SymbolTable.CurrentTable.Scope != Scope.Union),
-                   name, Message.Struct_or_union_field_cannot_be_initializerialized);
+                   name, Message.Struct_or_union_field_cannot_be_initialized);
       Assert.Error((SymbolTable.CurrentTable.Scope != Scope.Global) ||
                    ((storage != Storage.Auto) && (storage != Storage.Register)),
                      null, Message.Auto_or_register_storage_in_global_scope);
 
       if ((SymbolTable.CurrentTable.Scope == Scope.Global) || (storage == Storage.Static)) {
-        initializer = ModifyInitializer.DoInitializer(type, initializer);
         List<MiddleCode> middleCodeList = GenerateStaticInitializer.GenerateStatic(type, initializer);
 
         Symbol symbol = new Symbol(name, specifier.ExternalLinkage, storage.Value, type);

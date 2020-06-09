@@ -131,7 +131,7 @@ namespace CCompiler {
                   bool enumInitializer = pair.Second;
                   Assert.Error(!enumInitializer,
                                enumSymbol + " = " + enumSymbol.Value,
-                    Message.Extern_enumeration_item_cannot_be_initializerialized);
+                    Message.Extern_enumeration_item_cannot_be_initialized);
                 }
                 break;
 

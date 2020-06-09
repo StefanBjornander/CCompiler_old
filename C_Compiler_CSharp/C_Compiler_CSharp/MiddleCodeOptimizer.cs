@@ -49,9 +49,9 @@ namespace CCompiler {
       
         if (sourceCode.IsGoto() || sourceCode.IsCarry() ||
             sourceCode.IsRelation()) {
-          Assert.ErrorA(sourceCode[0] is MiddleCode);
+          Assert.ErrorXXX(sourceCode[0] is MiddleCode);
           MiddleCode targetCode = (MiddleCode) sourceCode[0];
-          Assert.ErrorA(addressMap.ContainsKey(targetCode));
+          Assert.ErrorXXX(addressMap.ContainsKey(targetCode));
           sourceCode[0] = addressMap[targetCode];
         }
       }
@@ -293,7 +293,7 @@ namespace CCompiler {
 
         if ((thisCode.Operator == MiddleOperator.TopFloat) &&
             (nextCode.Operator == MiddleOperator.PopFloat)) {
-          Assert.ErrorA(nextCode[0] == null);
+          Assert.ErrorXXX(nextCode[0] == null);
           thisCode.Operator = MiddleOperator.PopFloat;
           nextCode.Clear();
           m_update = true;
@@ -444,7 +444,7 @@ namespace CCompiler {
                 }
               }
 
-              Assert.ErrorA(index2 < m_middleCodeList.Count);
+              Assert.ErrorXXX(index2 < m_middleCodeList.Count);
             }
             else {
               thisCode.Operator = MiddleOperator.Assign; // i = 0 + j;
@@ -631,7 +631,7 @@ namespace CCompiler {
 
         switch (middleCode.Operator) {
           case MiddleOperator.Empty:
-            Assert.ErrorA((symbol0 == null) && (symbol1 == null) && (symbol2 == null));
+            Assert.ErrorXXX((symbol0 == null) && (symbol1 == null) && (symbol2 == null));
             break;
 
           case MiddleOperator.CallHeader: {

@@ -5,7 +5,7 @@ using System.IO;
 
 namespace CCompiler {
   public class Assert {
-    public static void ErrorA(bool test) {
+    public static void ErrorXXX(bool test) {
       if (!test) {
         Error(null, null);
       }

@@ -514,7 +514,7 @@ namespace CCompiler {
           return "case end " + operand0.ToString();
 
         default:
-          Assert.ErrorA(false);
+          Assert.ErrorXXX(false);
           return null;
       }
     }

@@ -11,7 +11,7 @@ namespace CCompiler {
     public static IDictionary<string,ISet<FileInfo>> DependencySetMap = new Dictionary<string,ISet<FileInfo>>();
 
     public static void Main(string[] args){
-      Assert.ErrorA((Windows && !Linux) || (!Windows && Linux));
+      Assert.ErrorXXX((Windows && !Linux) || (!Windows && Linux));
       System.Threading.Thread.CurrentThread.CurrentCulture = CultureInfo.InvariantCulture;
       ObjectCodeTable.Initializer();
       args = new string[]{"-r", "-p", /*"-w", "-c",*/ "Main", "Malloc", "CType", "ErrNo", "Locale", "Math", "SetJmp",      
