@@ -11,16 +11,9 @@ namespace CCompiler {
       if (toType.IsArray() && toType.ArrayType.IsChar() &&
           (fromInitializer is Expression) &&
           ((Expression) fromInitializer).Symbol.Type.IsString()) {
-        string text = ((string) (((Expression) fromInitializer).Symbol.Value))
-                      + "0";
 
-        if (toType.ArraySize == 0) {
-          toType.ArraySize = text.Length;
-        }
-        else {
-          Assert.Error(text.Length <= toType.ArraySize, toSymbol,
-                       Message.String_does_not_fit_in_array);
-        }
+        object value = ((Expression) fromInitializer).Symbol.Value;
+        string text = ((string) value) + "0";
         List<object> list = new List<object>();
 
         for (int index = 0; index < text.Length; ++index) {
@@ -30,22 +23,16 @@ namespace CCompiler {
                                 (index * toType.ArrayType.Size());
           Symbol fromCharSymbol = new Symbol(toType.ArrayType,
                                              (BigInteger) text[index]);
-          codeList.Add(new MiddleCode(MiddleOperator.Assign,
-                       toCharSymbol, fromCharSymbol));
         }
+
+        return GenerateAuto(toSymbol, list);
       }
       else if (fromInitializer is Expression) {
-        Expression initializerExpression =
+        Expression fromExpression =
           TypeCast.ImplicitCast((Expression) fromInitializer, toType);
-        codeList.AddRange(initializerExpression.LongList);      
+        codeList.AddRange(fromExpression.LongList);      
       
-        if (toType.IsFloating()) {
-          codeList.Add(new MiddleCode(MiddleOperator.PopFloat, toSymbol));
-        }
-        else {
-          codeList.Add(new MiddleCode(MiddleOperator.Assign, toSymbol,
-                                      initializerExpression.Symbol));
-        }
+        AddCode(codeList, toSymbol, fromExpression, true);
       }
       else {
         List<object> fromList = (List<object>) fromInitializer;
@@ -110,6 +97,23 @@ namespace CCompiler {
       }
 
       return codeList;
+    }
+
+    private static void AddCode(List<MiddleCode> codeList, Symbol toSymbol,
+                                Symbol fromSymbol, bool x) {
+      if (x) {
+        if (toSymbol.Type.IsFloating()) {
+          codeList.Add(new MiddleCode(MiddleOperator.PopFloat, toSymbol));
+        }
+        else {
+          codeList.Add(new MiddleCode(MiddleOperator.Assign, toSymbol,
+                                      fromSymbol));
+        }
+      }
+      else {
+        codeList.Add(new MiddleCode(MiddleOperator.Initializer,
+                                    fromSymbol.Type.Sort, fromSymbol.Value));
+      }
     }
   }
 }
