@@ -75,8 +75,10 @@ namespace CCompiler {
 
               int restSize = toType.Size() -
                              (fromList.Count * toType.ArrayType.Size());
-              codeList.Add(new MiddleCode(MiddleOperator.InitializerZero,
-                                          restSize));
+              if (restSize > 0) {
+                codeList.Add(new MiddleCode(MiddleOperator.InitializerZero,
+                                            restSize));
+              }
             }
             break;
           
@@ -100,8 +102,10 @@ namespace CCompiler {
               }
 
               int restSize = toType.Size() - size;
-              codeList.Add(new MiddleCode(MiddleOperator.InitializerZero,
-                                          restSize));
+              if (restSize > 0) {
+                codeList.Add(new MiddleCode(MiddleOperator.InitializerZero,
+                                            restSize));
+              }
             }
             break;
         }

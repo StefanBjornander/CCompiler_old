@@ -5,23 +5,23 @@ using System.Text;
 using System.Threading.Tasks;
 
 namespace C_Compiler_CSharp {
-  class BigDecimal {
+  class ZBigDecimal {
     bool m_minus;
     private decimal m_mantissa;
     private int m_exponent;
 
-    public BigDecimal(string text) {
+    public ZBigDecimal(string text) {
     }
 
-    private BigDecimal(bool minus, decimal mantissa, int exponent) {
+    private ZBigDecimal(bool minus, decimal mantissa, int exponent) {
       m_minus = minus;
       m_mantissa = mantissa;
       m_exponent = exponent;
     }
 
     public override bool Equals(object obj) {
-      if (obj is BigDecimal) {
-        return (this == ((BigDecimal) obj));
+      if (obj is ZBigDecimal) {
+        return (this == ((ZBigDecimal) obj));
       }
 
       return false;
@@ -35,40 +35,40 @@ namespace C_Compiler_CSharp {
       return (m_minus ? "-" : "") + m_mantissa.ToString() + "e" + m_exponent.ToString();
     }
 
-    public static BigDecimal operator+(BigDecimal bigDecimal) {
-      return (new BigDecimal(bigDecimal.m_minus, bigDecimal.m_mantissa, bigDecimal.m_exponent));
+    public static ZBigDecimal operator+(ZBigDecimal bigDecimal) {
+      return (new ZBigDecimal(bigDecimal.m_minus, bigDecimal.m_mantissa, bigDecimal.m_exponent));
     }
 
-    public static BigDecimal operator-(BigDecimal bigDecimal) {
-      return (new BigDecimal(!bigDecimal.m_minus, bigDecimal.m_mantissa, bigDecimal.m_exponent));
+    public static ZBigDecimal operator-(ZBigDecimal bigDecimal) {
+      return (new ZBigDecimal(!bigDecimal.m_minus, bigDecimal.m_mantissa, bigDecimal.m_exponent));
     }
 
-    public static BigDecimal operator+(BigDecimal leftDecimal, BigDecimal rightDecimal) {
+    public static ZBigDecimal operator+(ZBigDecimal leftDecimal, ZBigDecimal rightDecimal) {
       return null;
     }
 
-    public static BigDecimal operator-(BigDecimal leftDecimal, BigDecimal rightDecimal) {
+    public static ZBigDecimal operator-(ZBigDecimal leftDecimal, ZBigDecimal rightDecimal) {
       return null;
     }
 
-    public static BigDecimal operator*(BigDecimal leftDecimal, BigDecimal rightDecimal) {
+    public static ZBigDecimal operator*(ZBigDecimal leftDecimal, ZBigDecimal rightDecimal) {
       bool minus = (leftDecimal.m_minus && !rightDecimal.m_minus) ||
                    (!leftDecimal.m_minus && rightDecimal.m_minus);
       decimal mantissa = leftDecimal.m_mantissa * rightDecimal.m_mantissa;
       int exponent = leftDecimal.m_exponent + rightDecimal.m_exponent;
 
-      BigDecimal resultDecimal = new BigDecimal(minus, mantissa, exponent);
+      ZBigDecimal resultDecimal = new ZBigDecimal(minus, mantissa, exponent);
       resultDecimal.Normalize();
       return resultDecimal;
     }
 
-    public static BigDecimal operator/(BigDecimal leftDecimal, BigDecimal rightDecimal) {
+    public static ZBigDecimal operator/(ZBigDecimal leftDecimal, ZBigDecimal rightDecimal) {
       bool minus = (leftDecimal.m_minus && !rightDecimal.m_minus) ||
                    (!leftDecimal.m_minus && rightDecimal.m_minus);
       decimal mantissa = leftDecimal.m_mantissa / rightDecimal.m_mantissa;
       int exponent = leftDecimal.m_exponent - rightDecimal.m_exponent;
 
-      BigDecimal resultDecimal = new BigDecimal(minus, mantissa, exponent);
+      ZBigDecimal resultDecimal = new ZBigDecimal(minus, mantissa, exponent);
       resultDecimal.Normalize();
       return resultDecimal;
     }
@@ -85,17 +85,17 @@ namespace C_Compiler_CSharp {
       }
     }
 
-    public static bool operator==(BigDecimal leftDecimal, BigDecimal rightDecimal) {
+    public static bool operator==(ZBigDecimal leftDecimal, ZBigDecimal rightDecimal) {
       return (leftDecimal.m_minus == rightDecimal.m_minus) &&
              (leftDecimal.m_mantissa == rightDecimal.m_mantissa) &&
              (leftDecimal.m_exponent == rightDecimal.m_exponent);             
     }
 
-    public static bool operator!=(BigDecimal leftDecimal, BigDecimal rightDecimal) {
+    public static bool operator!=(ZBigDecimal leftDecimal, ZBigDecimal rightDecimal) {
       return !(leftDecimal == rightDecimal);
     }
 
-    public static bool operator<(BigDecimal leftDecimal, BigDecimal rightDecimal) {
+    public static bool operator<(ZBigDecimal leftDecimal, ZBigDecimal rightDecimal) {
       if (leftDecimal.m_minus != rightDecimal.m_minus) {
         return leftDecimal.m_minus;
       }
@@ -112,15 +112,15 @@ namespace C_Compiler_CSharp {
       }
     }
 
-    public static bool operator<=(BigDecimal leftDecimal, BigDecimal rightDecimal) {
+    public static bool operator<=(ZBigDecimal leftDecimal, ZBigDecimal rightDecimal) {
       return (leftDecimal < rightDecimal) || (leftDecimal == rightDecimal);
     }
 
-    public static bool operator>(BigDecimal leftDecimal, BigDecimal rightDecimal) {
+    public static bool operator>(ZBigDecimal leftDecimal, ZBigDecimal rightDecimal) {
       return !(leftDecimal <= rightDecimal);
     }
 
-    public static bool operator>=(BigDecimal leftDecimal, BigDecimal rightDecimal) {
+    public static bool operator>=(ZBigDecimal leftDecimal, ZBigDecimal rightDecimal) {
       return !(leftDecimal < rightDecimal);
     }
   }
