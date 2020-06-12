@@ -47,7 +47,6 @@ namespace CCompiler {
 
     // ------------------------------------------------------------------------
   
-    //private int m_dimension = -1;
     private int m_arraySize;
     private Type m_arrayType;
 
@@ -56,11 +55,6 @@ namespace CCompiler {
       m_arraySize = arraySize;
       m_arrayType = arrayType;
     }
-
-    /*public int Dimension {
-      get { return m_dimension; }
-      set { m_dimension = value; }
-    }*/
 
     public int ArraySize {
       get { return m_arraySize; }
@@ -103,6 +97,7 @@ namespace CCompiler {
 
     public Type(Type returnType, List<Pair<string,Symbol>> parameterList,
                 bool ellipse) {
+      Assert.ErrorXXX(parameterList != null);
       m_sort = Sort.Function;
       m_functionStyle = FunctionStyle.New;
       m_returnType = returnType;
