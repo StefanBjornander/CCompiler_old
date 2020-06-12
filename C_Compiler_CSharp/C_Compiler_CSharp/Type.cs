@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Linq;
 using System.Numerics;
-using System.Globalization;
 using System.Collections.Generic;
 
 namespace CCompiler {
