@@ -2,7 +2,8 @@ using System.Collections.Generic;
 
 namespace CCompiler {
   public class RegisterAllocator {
-    public RegisterAllocator(ISet<Track> totalTrackSet, List<AssemblyCode> assemblyCodeList) {
+    public RegisterAllocator(ISet<Track> totalTrackSet,
+                             List<AssemblyCode> assemblyCodeList) {
       Graph<Track> totalTrackGraph = new Graph<Track>(totalTrackSet);
 
       foreach (Track track1 in totalTrackSet) {
@@ -17,7 +18,8 @@ namespace CCompiler {
       int index = 0;
       foreach (Graph<Track> trackGraph in split) {
         List<Track> trackList = new List<Track>(trackGraph.VertexSet);
-        Assert.Error(DeepSearch(trackList, 0, trackGraph), Message.Out_of_registers);
+        Assert.Error(DeepSearch(trackList, 0, trackGraph),
+                     Message.Out_of_registers);
         ++index;
       }
 
@@ -26,7 +28,8 @@ namespace CCompiler {
       }
     }
     
-    private bool DeepSearch(List<Track> trackList, int listIndex, Graph<Track> trackGraph) {
+    private bool DeepSearch(List<Track> trackList, int listIndex,
+                            Graph<Track> trackGraph) {
       if (listIndex == trackList.Count) {
         return true;
       }
@@ -55,7 +58,8 @@ namespace CCompiler {
       return false;
     }
 
-    private bool OverlapNeighbourSet(Register register, ISet<Track> neighbourSet) {
+    private bool OverlapNeighbourSet(Register register,
+                                     ISet<Track> neighbourSet) {
       foreach (Track neighbourTrack in neighbourSet) {
         if (AssemblyCode.RegisterOverlap(register, neighbourTrack.Register)) {
           return true;
@@ -65,56 +69,57 @@ namespace CCompiler {
       return false;
     }
 
-    public static ISet<Register> PointerRegisterSetWithEllipse = new HashSet<Register>(),
-                                 m_pointerRegisterSetWithEllipse = new HashSet<Register>(),
-                                 m_pointerRegisterSetWithoutEllipse = new HashSet<Register>(),
-                                 m_byte1RegisterSet = new HashSet<Register>(),
-                                 m_byte2RegisterSet = new HashSet<Register>();
-                                 /*m_byte4RegisterSet = new HashSet<Register>(),
-                                 m_byte8RegisterSet = new HashSet<Register>(),
-                                 m_extraRegisterSet = new HashSet<Register>();*/
+    public static ISet<Register>
+      PointerRegisterSetWithEllipse = new HashSet<Register>(),
+      PointerRegisterSetWithoutEllipse = new HashSet<Register>(),
+      Byte1RegisterSet = new HashSet<Register>(),
+      Byte2RegisterSet = new HashSet<Register>();
 
     static RegisterAllocator() {
-      if (Start.Windows) {
-        PointerRegisterSetWithEllipse.Add(Register.si);
-        PointerRegisterSetWithEllipse.Add(Register.di);
-        PointerRegisterSetWithEllipse.Add(Register.bx);
-        PointerRegisterSetWithEllipse.Add(Register.si);
-        PointerRegisterSetWithEllipse.Add(Register.di);
-        PointerRegisterSetWithEllipse.Add(Register.bx);
+      PointerRegisterSetWithEllipse.Add(AssemblyCode.RegisterToSize(Register.si, TypeSize.PointerSize));
+      PointerRegisterSetWithEllipse.Add(AssemblyCode.RegisterToSize(Register.di, TypeSize.PointerSize));
+      PointerRegisterSetWithEllipse.Add(AssemblyCode.RegisterToSize(Register.bx, TypeSize.PointerSize));
+
+      PointerRegisterSetWithoutEllipse.UnionWith(PointerRegisterSetWithEllipse);
+      PointerRegisterSetWithoutEllipse.Remove(AssemblyCode.EllipseRegister);
+
+      Byte1RegisterSet.Add(Register.al);
+      Byte1RegisterSet.Add(Register.ah);
+      Byte1RegisterSet.Add(Register.bl);
+      Byte1RegisterSet.Add(Register.bh);
+      Byte1RegisterSet.Add(Register.cl);
+      Byte1RegisterSet.Add(Register.ch);
+      Byte1RegisterSet.Add(Register.dl);
+      Byte1RegisterSet.Add(Register.dh);
+
+      Byte2RegisterSet.Add(Register.ax);
+      Byte2RegisterSet.Add(Register.bx);
+      Byte2RegisterSet.Add(Register.cx);
+      Byte2RegisterSet.Add(Register.dx);
+    }
+
+    private static ISet<Register> GetPossibleSet(Track track) {
+      if (track.Pointer) {
+        if (SymbolTable.CurrentFunction.Type.IsEllipse()) {
+          return PointerRegisterSetWithoutEllipse;
+        }
+        else {
+          return PointerRegisterSetWithEllipse;
+        }
       }
-
-      if (Start.Linux) {
-        PointerRegisterSetWithEllipse.Add(Register.rsi);
-        PointerRegisterSetWithEllipse.Add(Register.rdi);
-        PointerRegisterSetWithEllipse.Add(Register.rbx);
-        PointerRegisterSetWithEllipse.Add(Register.rsi);
-        PointerRegisterSetWithEllipse.Add(Register.rdi);
-        PointerRegisterSetWithEllipse.Add(Register.rbx);
+      else if (track.MaxSize == 1) {
+        return Byte1RegisterSet;
       }
+      else {
+        return Byte2RegisterSet;
+      }
+    }
+  }
+}
 
-      m_pointerRegisterSetWithEllipse.Add(Register.si);
-      m_pointerRegisterSetWithEllipse.Add(Register.di);
-      m_pointerRegisterSetWithEllipse.Add(Register.bx);
-
-      m_pointerRegisterSetWithoutEllipse.Add(Register.si);
-      m_pointerRegisterSetWithoutEllipse.Add(Register.di);
-      m_pointerRegisterSetWithoutEllipse.Add(Register.bx);
-      m_pointerRegisterSetWithoutEllipse.Remove(AssemblyCode.EllipseRegister);
-
-      m_byte1RegisterSet.Add(Register.al);
-      m_byte1RegisterSet.Add(Register.ah);
-      m_byte1RegisterSet.Add(Register.bl);
-      m_byte1RegisterSet.Add(Register.bh);
-      m_byte1RegisterSet.Add(Register.cl);
-      m_byte1RegisterSet.Add(Register.ch);
-      m_byte1RegisterSet.Add(Register.dl);
-      m_byte1RegisterSet.Add(Register.dh);
-
-      m_byte2RegisterSet.Add(Register.ax);
-      m_byte2RegisterSet.Add(Register.bx);
-      m_byte2RegisterSet.Add(Register.cx);
-      m_byte2RegisterSet.Add(Register.dx);
+      /*m_byte4RegisterSet = new HashSet<Register>(),
+      m_byte8RegisterSet = new HashSet<Register>(),
+      m_extraRegisterSet = new HashSet<Register>();*/
 
       /*m_byte4RegisterSet.Add(Register.eax);
       m_byte4RegisterSet.Add(Register.ebx);
@@ -141,23 +146,6 @@ namespace CCompiler {
       m_extraRegisterSet.Add(Register.r12);
       m_extraRegisterSet.Add(Register.r13);
       m_extraRegisterSet.Add(Register.r14);*/
-    }
-
-    private static ISet<Register> GetPossibleSet(Track track) {
-      if (track.Pointer) {
-        if (SymbolTable.CurrentFunction.Type.IsEllipse()) {
-          return m_pointerRegisterSetWithoutEllipse;
-        }
-        else {
-          return m_pointerRegisterSetWithEllipse;
-        }
-      }
-      else if (track.MaxSize == 1) {
-        return m_byte1RegisterSet;
-      }
-      else {
-        return m_byte2RegisterSet;
-      }
       /*else {
         ISet<Register> registerSet = m_byte2RegisterSet;
 
@@ -184,6 +172,3 @@ namespace CCompiler {
       }
 
       return null;*/
-    }
-  }
-}
