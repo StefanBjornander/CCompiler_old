@@ -96,12 +96,6 @@ namespace CCompiler {
           }
         }
 
-        /*if ((SymbolTable.CurrentFunction != null) &&
-            SymbolTable.CurrentFunction.Name.Equals("localeconv") &&
-            (middleIndex == 1)) {
-          int i = 1;
-        }*/
-
         switch (middleCode.Operator) {
           case MiddleOperator.CallHeader:
             CallHeader(middleCode);
@@ -147,21 +141,16 @@ namespace CCompiler {
             SystemCall(middleCode);
             break;
 
-          case MiddleOperator.Initializer: {
-              Sort sort = (Sort) middleCode[0];
-              object value = middleCode[1];
-              Initializer(sort, value);
-            }
+          case MiddleOperator.Initializer:
+            Initializer(middleCode);
             break;
 
-          case MiddleOperator.InitializerZero: {
-              int size = (int) middleCode[0];
-              InitializerZero(size);
-            }
+          case MiddleOperator.InitializerZero:
+            InitializerZero(middleCode);
             break;
           
           case MiddleOperator.Assign: {
-              Symbol symbol = (Symbol) middleCode[1];
+              Symbol symbol = (Symbol)middleCode[0];
 
               if (symbol.Type.IsStructOrUnion()) {
                 StructUnionAssign(middleCode, middleIndex);
@@ -780,7 +769,10 @@ namespace CCompiler {
                       middleCode[0]);
     }
 
-    private void Initializer(Sort sort, object value) {
+    private void Initializer(MiddleCode middleCode) {
+      Sort sort = (Sort) middleCode[0];
+      object value = middleCode[1];
+
       if (value is StaticAddress) {
         StaticAddress staticAddress = (StaticAddress) value;
         string name = staticAddress.UniqueName;
@@ -793,7 +785,9 @@ namespace CCompiler {
       }
     }
 
-    private void InitializerZero(int size) {
+    private void InitializerZero(MiddleCode middleCode) {
+      int size = (int) middleCode[0];
+
       Assert.ErrorXXX(size >= 0);
       if (size > 0) {
         AddAssemblyCode(AssemblyOperator.define_zero_sequence, size);
