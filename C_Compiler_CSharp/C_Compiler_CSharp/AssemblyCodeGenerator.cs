@@ -458,66 +458,48 @@ namespace CCompiler {
            calleeEllipse = calleeType.IsEllipse();
       Track jumpTrack = null;
 
-      if (callerEllipse) {
-        AddAssemblyCode(AssemblyOperator.address_return,
-                        AssemblyCode.EllipseRegister,
-                        recordSize + SymbolTable.ReturnAddressOffset,
-                        (BigInteger) (index + 1));
+      Register frameRegister = callerEllipse ? AssemblyCode.EllipseRegister : AssemblyCode.FrameRegister;               
 
-        AddAssemblyCode(AssemblyOperator.mov,AssemblyCode.EllipseRegister,
-                        recordSize + SymbolTable.RegularFrameOffset,
-                        AssemblyCode.FrameRegister);
-        AddAssemblyCode(AssemblyOperator.mov,AssemblyCode.EllipseRegister,
+      AddAssemblyCode(AssemblyOperator.address_return, frameRegister,
+                      recordSize + SymbolTable.ReturnAddressOffset,
+                      (BigInteger) (index + 1));
+
+      AddAssemblyCode(AssemblyOperator.mov, frameRegister,
+                      recordSize + SymbolTable.RegularFrameOffset,
+                      AssemblyCode.FrameRegister);
+
+      if (callerEllipse) {
+        AddAssemblyCode(AssemblyOperator.mov, frameRegister,
                         recordSize + SymbolTable.EllipseFrameOffset,
                         AssemblyCode.EllipseRegister);
+      }
 
-        AddAssemblyCode(AssemblyOperator.mov, AssemblyCode.FrameRegister,
+      AddAssemblyCode(AssemblyOperator.add, frameRegister, // add di, 10
+                      (BigInteger) recordSize);
+
+      if (callerEllipse) {
+        AddAssemblyCode(AssemblyOperator.mov, AssemblyCode.FrameRegister, // mov bp, di
                         AssemblyCode.EllipseRegister);
-
-        if (!calleeSymbol.Type.IsFunction()) {
-          jumpTrack = LoadValueToRegister(calleeSymbol);
-        }
-
-        AddAssemblyCode(AssemblyOperator.add, AssemblyCode.FrameRegister,
-                        (BigInteger) recordSize);
-
-        if (calleeEllipse) {
-          AddAssemblyCode(AssemblyOperator.add,
-                          AssemblyCode.EllipseRegister,
-                          (BigInteger) (recordSize + extraSize));
-        }
       }
       else {
-        AddAssemblyCode(AssemblyOperator.address_return, 
-                        AssemblyCode.FrameRegister,
-                        recordSize + SymbolTable.ReturnAddressOffset,
-                        (BigInteger) (index + 1));
-
-        AddAssemblyCode(AssemblyOperator.mov, AssemblyCode.FrameRegister,
-                        recordSize + SymbolTable.RegularFrameOffset,
-                        AssemblyCode.FrameRegister);
-
-        if (!calleeSymbol.Type.IsFunction()) {
-          //Type type = Type.SizeToUnsignedType(Type.ReturnAddressSize);
-          Symbol symbol = new Symbol(Type.VoidPointerType);
-          jumpTrack = LoadValueToRegister(symbol);
-        }
-
-        AddAssemblyCode(AssemblyOperator.add, AssemblyCode.FrameRegister,
-                        (BigInteger) recordSize);
-
         if (calleeEllipse) {
-          AddAssemblyCode(AssemblyOperator.mov,
-                          AssemblyCode.EllipseRegister,
+          AddAssemblyCode(AssemblyOperator.mov, AssemblyCode.EllipseRegister,
                           AssemblyCode.FrameRegister);
-
-          Assert.ErrorXXX(extraSize >= 0);
-          if (extraSize > 0) {
-            AddAssemblyCode(AssemblyOperator.add,
-                            AssemblyCode.EllipseRegister,
-                            (BigInteger) extraSize);
-          }
         }
+      }
+
+      if (!calleeSymbol.Type.IsFunction()) {
+        jumpTrack = LoadValueToRegister(calleeSymbol);
+      }
+      
+      /*if (!calleeSymbol.Type.IsFunction()) {
+        Symbol symbol = new Symbol(Type.VoidPointerType);
+        jumpTrack = LoadValueToRegister(symbol);
+      }*/
+
+      if (calleeEllipse && (extraSize > 0)) {
+        AddAssemblyCode(AssemblyOperator.add, AssemblyCode.EllipseRegister,
+                        (BigInteger) extraSize);
       }
 
       if (calleeSymbol.Type.IsFunction()) {
