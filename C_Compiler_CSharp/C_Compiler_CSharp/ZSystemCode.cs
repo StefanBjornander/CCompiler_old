@@ -334,7 +334,7 @@ namespace CCompiler {
         Symbol outSymbol = pair.Second;
         Track outTrack = new Track(outSymbol, outRegister);
         //objectCodeGenerator.m_trackSet.Add(outTrack);
-        objectCodeGenerator.SaveValueFromRegister(outTrack, outSymbol);
+        objectCodeGenerator.StoreValueFromRegister(outTrack, outSymbol);
       }
 
       m_outParameterList.Clear();

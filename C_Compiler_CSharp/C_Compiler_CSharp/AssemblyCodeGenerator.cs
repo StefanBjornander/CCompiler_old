@@ -456,8 +456,6 @@ namespace CCompiler {
 
       bool callerEllipse = SymbolTable.CurrentFunction.Type.IsEllipse(),
            calleeEllipse = calleeType.IsEllipse();
-      Track jumpTrack = null;
-
       Register frameRegister = callerEllipse ? AssemblyCode.EllipseRegister
                                              : AssemblyCode.FrameRegister;               
 
@@ -487,10 +485,6 @@ namespace CCompiler {
                         AssemblyCode.FrameRegister);
       }
 
-      if (!calleeSymbol.Type.IsFunction()) {
-        jumpTrack = LoadValueToRegister(calleeSymbol);
-      }
-      
       if (calleeEllipse && (extraSize > 0)) {
         AddAssemblyCode(AssemblyOperator.add, AssemblyCode.EllipseRegister,
                         (BigInteger) extraSize);
@@ -501,6 +495,7 @@ namespace CCompiler {
         m_returnFloating = calleeSymbol.Type.ReturnType.IsFloating();
       }
       else {
+        Track jumpTrack = LoadValueToRegister(calleeSymbol);
         AddAssemblyCode(AssemblyOperator.jmp, jumpTrack);
         m_returnFloating =
           calleeSymbol.Type.PointerType.ReturnType.IsFloating();
@@ -551,7 +546,7 @@ namespace CCompiler {
     public Track LoadValueToRegister(Symbol symbol,
                                      Register? register = null) {
       if (register != null) {
-        CheckRegister(symbol, register);
+        CheckRegister(symbol, register.Value);
       }
 
       Track track;
@@ -610,12 +605,12 @@ namespace CCompiler {
       }
     }
 
-    public void SaveValueFromRegister(Track track, Symbol symbol) {
+    public void StoreValueFromRegister(Track track, Symbol symbol) {
       AddAssemblyCode(AssemblyOperator.mov, Base(symbol),
                       Offset(symbol), track);
     }
 
-    public void CheckRegister(Symbol symbol, Register? register) {
+    public void CheckRegister(Symbol symbol, Register register) {
       foreach (KeyValuePair<Symbol,Track> entry in m_trackMap) {
         Symbol oldSymbol = entry.Key;
         Track oldTrack = entry.Value;
@@ -649,7 +644,6 @@ namespace CCompiler {
   
     public void Return(MiddleCode middleCode) {
       Assert.ErrorXXX(m_floatStackSize == 0);
-      //Type type = Type.SizeToUnsignedType(Type.ReturnAddressSize);
       Track track = new Track(Type.VoidPointerType);
       AddAssemblyCode(AssemblyOperator.mov, track,
                       AssemblyCode.FrameRegister,
@@ -662,40 +656,41 @@ namespace CCompiler {
                       SymbolTable.RegularFrameOffset);
       AddAssemblyCode(AssemblyOperator.jmp, track);
     }
-  
+
     public void Exit(MiddleCode middleCode) {
       Symbol exitSymbol = (Symbol) middleCode[0];
 
-      if (Start.Windows) {        
-        if (exitSymbol == null) {
-          AddAssemblyCode(AssemblyOperator.mov, Register.al,
-                          BigInteger.Zero);
+      if (Start.Linux) {        
+        if (exitSymbol != null) {
+          LoadValueToRegister(exitSymbol, Register.rdi);
         }
         else {
-          LoadValueToRegister(exitSymbol, Register.al);
-        }
-
-        AddAssemblyCode(AssemblyOperator.mov, Register.ah,
-                        (BigInteger) 0x4C);
-        AddAssemblyCode(AssemblyOperator.interrupt, (BigInteger) 33);
-      }
-
-      if (Start.Linux) {        
-        if (exitSymbol == null) {
           AddAssemblyCode(AssemblyOperator.mov, Register.rdi,
                           BigInteger.Zero);
         }
-        else {
-          LoadValueToRegister(exitSymbol, Register.rdi);
-        }
 
         AddAssemblyCode(AssemblyOperator.mov, Register.rax,
-                        (BigInteger) 0x3C);
+                        (BigInteger) 60); // 0x3C
         AddAssemblyCode(AssemblyOperator.syscall);
+      }
+
+      if (Start.Windows) {        
+        if (exitSymbol != null) {
+          LoadValueToRegister(exitSymbol, Register.al);
+        }
+        else {
+          AddAssemblyCode(AssemblyOperator.mov, Register.al,
+                          BigInteger.Zero);
+        }
+
+        AddAssemblyCode(AssemblyOperator.mov, Register.ah,
+                        (BigInteger) 76); // 0x4C
+        AddAssemblyCode(AssemblyOperator.interrupt, (BigInteger) 33); // 0x21
       }
     }
 
-    public void Goto(MiddleCode middleCode) {
+    public void Goto(MiddleCode middleCode)
+    {
       AddAssemblyCode(AssemblyOperator.jmp, null, null,
                       middleCode[0]);
     }
