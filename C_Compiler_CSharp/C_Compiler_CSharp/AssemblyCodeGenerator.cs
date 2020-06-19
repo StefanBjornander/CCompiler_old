@@ -458,7 +458,8 @@ namespace CCompiler {
            calleeEllipse = calleeType.IsEllipse();
       Track jumpTrack = null;
 
-      Register frameRegister = callerEllipse ? AssemblyCode.EllipseRegister : AssemblyCode.FrameRegister;               
+      Register frameRegister = callerEllipse ? AssemblyCode.EllipseRegister
+                                             : AssemblyCode.FrameRegister;               
 
       AddAssemblyCode(AssemblyOperator.address_return, frameRegister,
                       recordSize + SymbolTable.ReturnAddressOffset,
@@ -477,26 +478,19 @@ namespace CCompiler {
       AddAssemblyCode(AssemblyOperator.add, frameRegister, // add di, 10
                       (BigInteger) recordSize);
 
-      if (callerEllipse) {
-        AddAssemblyCode(AssemblyOperator.mov, AssemblyCode.FrameRegister, // mov bp, di
+      if (callerEllipse) { // mov bp, di
+        AddAssemblyCode(AssemblyOperator.mov, AssemblyCode.FrameRegister,
                         AssemblyCode.EllipseRegister);
       }
-      else {
-        if (calleeEllipse) {
-          AddAssemblyCode(AssemblyOperator.mov, AssemblyCode.EllipseRegister,
-                          AssemblyCode.FrameRegister);
-        }
+      else if (calleeEllipse) {
+        AddAssemblyCode(AssemblyOperator.mov, AssemblyCode.EllipseRegister,
+                        AssemblyCode.FrameRegister);
       }
 
       if (!calleeSymbol.Type.IsFunction()) {
         jumpTrack = LoadValueToRegister(calleeSymbol);
       }
       
-      /*if (!calleeSymbol.Type.IsFunction()) {
-        Symbol symbol = new Symbol(Type.VoidPointerType);
-        jumpTrack = LoadValueToRegister(symbol);
-      }*/
-
       if (calleeEllipse && (extraSize > 0)) {
         AddAssemblyCode(AssemblyOperator.add, AssemblyCode.EllipseRegister,
                         (BigInteger) extraSize);
