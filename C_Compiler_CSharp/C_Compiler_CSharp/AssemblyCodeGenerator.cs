@@ -689,10 +689,9 @@ namespace CCompiler {
       }
     }
 
-    public void Goto(MiddleCode middleCode)
-    {
-      AddAssemblyCode(AssemblyOperator.jmp, null, null,
-                      middleCode[0]);
+    public void Goto(MiddleCode middleCode) {
+      int jumpTarget = (int) middleCode[0];
+      AddAssemblyCode(AssemblyOperator.jmp, null, null, jumpTarget);
     }
 
     public void LoadToRegister(MiddleCode middleCode) {
@@ -736,8 +735,8 @@ namespace CCompiler {
     public void CarryExpression(MiddleCode middleCode) {
       AssemblyOperator objectOperator =
         m_middleToIntegralMap[middleCode.Operator];
-      AddAssemblyCode(objectOperator, null, null,
-                      middleCode[0]);
+      int jumpTarget = (int) middleCode[0];
+      AddAssemblyCode(objectOperator, null, null, jumpTarget);
     }
 
     private void Initializer(MiddleCode middleCode) {
@@ -758,11 +757,8 @@ namespace CCompiler {
 
     private void InitializerZero(MiddleCode middleCode) {
       int size = (int) middleCode[0];
-
-      Assert.ErrorXXX(size >= 0);
-      if (size > 0) {
-        AddAssemblyCode(AssemblyOperator.define_zero_sequence, size);
-      }
+      Assert.ErrorXXX(size > 0);
+      AddAssemblyCode(AssemblyOperator.define_zero_sequence, size);
     }
 
     // -----------------------------------------------------------------------
