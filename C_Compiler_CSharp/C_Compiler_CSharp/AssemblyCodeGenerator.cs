@@ -1136,9 +1136,8 @@ namespace CCompiler {
              leftSymbol = (Symbol) middleCode[1],
              rightSymbol = (Symbol) middleCode[2];
 
-      if (resultSymbol.Equals(leftSymbol) && !resultSymbol.IsTemporary()) {
-        CompoundIntegralBinary(middleCode.Operator,
-                                       leftSymbol, rightSymbol);
+      if (!resultSymbol.IsTemporary() && resultSymbol.Equals(leftSymbol)) {
+        CompoundIntegralBinary(middleCode.Operator, leftSymbol, rightSymbol);
       }
       else {
         SimpleIntegralBinary(middleCode.Operator, resultSymbol,
@@ -1146,9 +1145,8 @@ namespace CCompiler {
       }
     }
   
-    public void CompoundIntegralBinary
-      (MiddleOperator middleOperator, Symbol leftSymbol,
-      Symbol rightSymbol) {
+    public void CompoundIntegralBinary(MiddleOperator middleOperator,
+                                       Symbol leftSymbol, Symbol rightSymbol){
       AssemblyOperator objectOperator =
         m_middleToIntegralMap[middleOperator];
       Assert.ErrorXXX(!m_trackMap.ContainsKey(leftSymbol));
