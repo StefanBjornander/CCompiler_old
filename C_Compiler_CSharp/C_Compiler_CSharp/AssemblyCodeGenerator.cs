@@ -1286,7 +1286,7 @@ namespace CCompiler {
 
     private object ValueOrAddress(Symbol symbol) {
       if (symbol.Value is BigInteger) {
-        return ((BigInteger) symbol.Value);
+        return symbol.Value;
       }
       else if (symbol.IsAutoOrRegister()) {
         Track track = new Track(symbol);
@@ -1304,7 +1304,7 @@ namespace CCompiler {
       Assert.ErrorXXX((symbol == null) || symbol.IsAutoOrRegister());
     
       if (SymbolTable.CurrentFunction.Type.IsEllipse() &&
-          ((symbol == null) || !symbol.IsParameter())) {
+          (symbol != null) && !symbol.IsParameter()) {
         return AssemblyCode.EllipseRegister;
       }
       else {
@@ -1318,6 +1318,7 @@ namespace CCompiler {
         return staticAddress.UniqueName;
       }
       else if (symbol.AddressSymbol != null) {
+        //Assert.ErrorXXX(m_trackMap.ContainsKey(symbol.AddressSymbol)); 
         Track addressTrack = LoadValueToRegister(symbol.AddressSymbol);
         Assert.ErrorXXX((addressTrack.Register == null) ||
                         RegisterAllocator.PointerRegisterSetWithEllipse.
