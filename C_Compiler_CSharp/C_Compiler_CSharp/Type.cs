@@ -184,7 +184,7 @@ namespace CCompiler {
              (sort == Sort.Signed_Int) || (sort == Sort.Signed_Long_Int);
     }
         
-    public int SizeX() {
+    public int SizeArray() {
       switch (m_sort) {
         case Sort.Array:
           return TypeSize.PointerSize;

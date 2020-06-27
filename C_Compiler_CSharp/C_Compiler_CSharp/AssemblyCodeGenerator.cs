@@ -1370,13 +1370,13 @@ namespace CCompiler {
 
     public void IntegralMultiply(MiddleCode middleCode) {
       Symbol leftSymbol = (Symbol) middleCode[1];
-      Register leftRegister = LeftMultiplyMap[leftSymbol.Type.SizeX()];
+      Register leftRegister = LeftMultiplyMap[leftSymbol.Type.SizeArray()];
       Track leftTrack = LoadValueToRegister(leftSymbol, leftRegister);
       AddAssemblyCode(AssemblyOperator.empty, leftTrack);
 
       Pair<MiddleOperator,int> pair =
         new Pair<MiddleOperator,int>(middleCode.Operator,
-                                     leftSymbol.Type.SizeX());
+                                     leftSymbol.Type.SizeArray());
       Register clearRegister = ClearMultiplyMap[pair];
       Track clearTrack = new Track(leftSymbol, clearRegister);
       AddAssemblyCode(AssemblyOperator.xor, clearTrack, clearTrack);
@@ -1392,7 +1392,7 @@ namespace CCompiler {
       else {
         AssemblyOperator sizeOperator =
           AssemblyCode.OperatorToSize(objectOperator,
-                                      rightSymbol.Type.SizeX());
+                                      rightSymbol.Type.SizeArray());
         AddAssemblyCode(sizeOperator, Base(rightSymbol),
                         Offset(rightSymbol));
 
@@ -1617,7 +1617,7 @@ namespace CCompiler {
              fromSymbol = (Symbol) middleCode[1];
 
       Type toType = toSymbol.Type, fromType = fromSymbol.Type;
-      int toSize = toType.SizeX(), fromSize = fromType.SizeX();
+      int toSize = toType.SizeArray(), fromSize = fromType.SizeArray();
 
       Track fromTrack = LoadValueToRegister(fromSymbol);
       AddAssemblyCode(AssemblyOperator.set_track_size, fromTrack, toSize);
