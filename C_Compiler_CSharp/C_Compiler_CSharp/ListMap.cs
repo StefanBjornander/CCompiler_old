@@ -68,16 +68,16 @@ namespace CCompiler {
       Add(new KeyValuePair<KeyType,ValueType>(key, value));
     }
 
-    public void Add(KeyValuePair<KeyType,ValueType> Addpair) {
+    public void Add(KeyValuePair<KeyType,ValueType> addpair) {
       for (int index = 0; index < m_list.Count; ++index) {
         KeyValuePair<KeyType,ValueType> pair = m_list[index];
 
-        if (pair.Key.Equals(Addpair.Key)) {
+        if (pair.Key.Equals(addpair.Key)) {
           throw (new InvalidOperationException());
         }
       }
 
-      m_list.Add(Addpair);
+      m_list.Add(addpair);
     }
 
     public bool ContainsKey(KeyType key) {

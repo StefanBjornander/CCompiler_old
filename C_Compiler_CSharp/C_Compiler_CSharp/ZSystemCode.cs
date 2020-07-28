@@ -334,7 +334,9 @@ namespace CCompiler {
         Symbol outSymbol = pair.Second;
         Track outTrack = new Track(outSymbol, outRegister);
         //objectCodeGenerator.m_trackSet.Add(outTrack);
-        objectCodeGenerator.StoreValueFromRegister(outTrack, outSymbol);
+        //objectCodeGenerator.StoreValueFromRegister(outTrack, outSymbol);
+        /*AddAssemblyCode(AssemblyOperator.mov, Base(outSymbol),
+                        Offset(outSymbol), outTrack);*/
       }
 
       m_outParameterList.Clear();

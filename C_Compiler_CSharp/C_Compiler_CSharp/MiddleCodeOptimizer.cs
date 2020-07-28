@@ -23,7 +23,7 @@ namespace CCompiler {
         MergePopPushToTop();
         MergeTopPopToPop();
         //AssignFloat(); // XXX
-        //MergeBinary(); // XXX
+        MergeBinary(); // XXX
         //MergeDoubleAssign(); // XXX
         SematicOptimization();
         //OptimizeRelation(); // XXX
@@ -331,10 +331,10 @@ namespace CCompiler {
         MiddleCode thisCode = m_middleCodeList[index],
                    nextCode = m_middleCodeList[index + 1];
 
-        if ((thisCode.IsUnary() || thisCode.IsBinary()) &&
+        if ((/*thisCode.IsUnary() ||*/ thisCode.IsBinary()) &&
             (nextCode.Operator == MiddleOperator.Assign) &&
-            ((Symbol) thisCode[0]).IsTemporary() &&
-            thisCode[0].Equals(nextCode[1])) {
+            //((Symbol) thisCode[0]).IsTemporary() &&
+            (thisCode[0] == nextCode[1])) {
           thisCode[0] = nextCode[0];
           nextCode.Clear();
           m_update = true;
@@ -504,7 +504,7 @@ namespace CCompiler {
                  rightSymbol = (Symbol) middleCode[2];
    
           if (leftSymbol.Type.IsIntegralPointerArrayOrFunction() && // not 1 - i
-              (leftSymbol.Value != null)) {
+              (leftSymbol.Value is BigInteger)) {            
             middleCode[1] = rightSymbol;
             middleCode[2] = leftSymbol;
           }

@@ -2107,6 +2107,9 @@ namespace CCompiler {
                                  MiddleOperator.BinaryAdd);
     }
 
+    private static IDictionary<MiddleOperator,MiddleOperator>
+      incrementMap = new Dictionary<MiddleOperator,MiddleOperator>();
+
     public static Expression PrefixIncrementExpression(MiddleOperator middleOp,
                                                        Expression expression) {
       Symbol symbol = expression.Symbol;
@@ -2115,8 +2118,9 @@ namespace CCompiler {
                    expression, Message.Invalid_type_in_increment_expression);
 
       if (symbol.Type.IsIntegralOrPointer()) {
-        AddMiddleCode(expression.ShortList, middleOp, null, symbol);
-        AddMiddleCode(expression.LongList, middleOp, null, symbol);
+        Symbol oneSymbol = new Symbol(symbol.Type, BigInteger.One);
+        AddMiddleCode(expression.ShortList, m_incrementMap[middleOp], symbol, symbol, oneSymbol);
+        AddMiddleCode(expression.LongList, m_incrementMap[middleOp], symbol, symbol, oneSymbol);
 
         BigInteger? bitFieldMask = symbol.Type.BitfieldMask();
         if (bitFieldMask != null) {
@@ -2160,8 +2164,9 @@ namespace CCompiler {
         Symbol resultSymbol = new Symbol(symbol.Type);
         AddMiddleCode(expression.LongList, MiddleOperator.Assign,
                       resultSymbol, symbol);
-        AddMiddleCode(expression.ShortList, middleOp, null, symbol);
-        AddMiddleCode(expression.LongList, middleOp, null, symbol);
+        Symbol oneSymbol = new Symbol(symbol.Type, BigInteger.One);
+        AddMiddleCode(expression.ShortList, m_incrementMap[middleOp], symbol, symbol, oneSymbol);
+        AddMiddleCode(expression.LongList, m_incrementMap[middleOp], symbol, symbol, oneSymbol);
 
         BigInteger? bitFieldMask = symbol.Type.BitfieldMask();
         if (bitFieldMask != null) {

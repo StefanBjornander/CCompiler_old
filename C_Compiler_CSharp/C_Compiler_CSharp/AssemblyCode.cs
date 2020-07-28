@@ -26,7 +26,7 @@ namespace CCompiler {
   
     public AssemblyCode(AssemblyOperator objectOp, object operand0,
                         object operand1, object operand2 = null) {
-      Operator = objectOp;
+      m_operator = objectOp;
       m_operandArray[0] = operand0;
       m_operandArray[1] = operand1;
       m_operandArray[2] = operand2;
@@ -43,9 +43,29 @@ namespace CCompiler {
              operand1 = m_operandArray[1],
              operand2 = m_operandArray[2];
 
-      if (((Operator == AssemblyOperator.add) ||
-           (Operator == AssemblyOperator.sub)) && (operand0 is Track) &&
-          (operand1 is BigInteger) &&(operand2 == null)){
+      string name = Enum.GetName(typeof(AssemblyOperator), m_operator);
+
+      if ((name.Contains("add_") || name.Contains("sub_")) &&
+          /*((operand0 is Register) || (operand0 is string) || (operand0 == null)) &&
+          (operand1 is int) &&*/ (operand2 is BigInteger)) {
+        int value = (int) ((BigInteger) operand2);
+
+        if ((name.Contains("add_") && (value == 1)) ||
+            (name.Contains("sub_") && (value == -1))) {
+          m_operator = (AssemblyOperator) Enum.Parse(typeof(AssemblyOperator),
+                       name.Replace("add_", "inc_").Replace("sub_", "inc_"));
+          m_operandArray[2] = null;
+        }
+        else if ((name.Contains("add_") && (value == -1)) ||
+                 (name.Contains("sub_") && (value == 1))) {
+          m_operator = (AssemblyOperator) Enum.Parse(typeof(AssemblyOperator),
+                       name.Replace("add_", "dec_").Replace("sub_", "dec_"));
+          m_operandArray[2] = null;
+        }
+      }
+      else if (((Operator == AssemblyOperator.add) ||
+                (Operator == AssemblyOperator.sub)) && (operand0 is Track) &&
+                (operand1 is BigInteger) && (operand2 == null)){
         BigInteger value = (BigInteger) operand1;
 
         if (((Operator == AssemblyOperator.add) && (value == 1)) ||
