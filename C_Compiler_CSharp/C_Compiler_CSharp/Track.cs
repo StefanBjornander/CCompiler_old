@@ -20,7 +20,7 @@ namespace CCompiler {
       Type type = symbol.Type;
       Assert.ErrorXXX(!type.IsFunction() && !type.IsStructOrUnion());
     
-      if (type.IsArray() || type.IsString()) {
+      if (type.IsArrayFunctionOrString()) {
         m_minSize = m_currSize = m_maxSize = TypeSize.PointerSize;
       }
       else {

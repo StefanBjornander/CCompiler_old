@@ -187,6 +187,8 @@ namespace CCompiler {
     public int SizeArray() {
       switch (m_sort) {
         case Sort.Array:
+        case Sort.Function:
+        case Sort.String:
           return TypeSize.PointerSize;
 
         default:

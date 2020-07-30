@@ -158,7 +158,14 @@ namespace CCompiler {
     }
 
     public string UniqueName {
-      get { return m_uniqueName; }
+      get { 
+        if (m_value is StaticAddress) {
+          return ((StaticAddress) m_value).UniqueName;
+        }
+        else {
+          return m_uniqueName; 
+        }
+      }
       set { m_uniqueName = value; }
     }
 
@@ -177,7 +184,14 @@ namespace CCompiler {
     }
 
     public int Offset {
-      get { return m_offset; }
+      get { 
+        if (m_value is StaticAddress) {
+          return ((StaticAddress) m_value).Offset;
+        }
+        else {
+          return m_offset;
+        }
+      }
       set { m_offset = value; }
     }
 
@@ -223,6 +237,15 @@ namespace CCompiler {
           
     public bool IsTemporary() {
       return m_temporary;
+    }
+
+    public bool Temporary {
+      get {
+        return m_temporary;
+      }
+      set {
+        m_temporary = value;
+      }
     }
 
     public object Value {
