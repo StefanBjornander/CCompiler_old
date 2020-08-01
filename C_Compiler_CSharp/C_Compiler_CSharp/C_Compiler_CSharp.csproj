@@ -48,10 +48,10 @@
     <Compile Include="AssemblyCode.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="ZAssemblyCodeOptimizer.cs" />
     <Compile Include="AssemblyCodeGenerator.cs">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="ZAssemblyCodeOptimizer.cs" />
     <Compile Include="Assert.cs" />
     <Compile Include="ZBigDecimal.cs" />
     <Compile Include="Linker.cs" />

@@ -1622,21 +1622,21 @@ namespace CCompiler {
       }
     }*/
 
-    public static IDictionary<int,Register> m_leftRegisterMap =
-      new Dictionary<int,Register>() {{1, Register.al}, {2, Register.ax},
-                                      {4, Register.eax}, {8, Register.rax}};
+    public static IDictionary<int, Register> m_leftRegisterMap =
+      new Dictionary<int, Register>() {{1, Register.al}, {2, Register.ax},
+                                       {4, Register.eax}, {8, Register.rax}};
 
-    public static IDictionary<int,Register> m_clearRegisterMap =
-      new Dictionary<int,Register>() {{1, Register.ah}, {2, Register.dx},
-                                      {4, Register.edx}, {8, Register.rdx}};
+    public static IDictionary<int, Register> m_clearRegisterMap =
+      new Dictionary<int, Register>() {{1, Register.ah}, {2, Register.dx},
+                                       {4, Register.edx}, {8, Register.rdx}};
 
-    public static IDictionary<int,Register> m_productQuintentRegisterMap =
-      new Dictionary<int,Register>() {{1, Register.al}, {2, Register.ax},
-                                      {4, Register.eax}, {8, Register.rax}};
+    public static IDictionary<int, Register> m_productQuintentRegisterMap =
+      new Dictionary<int, Register>() {{1, Register.al}, {2, Register.ax},
+                                       {4, Register.eax}, {8, Register.rax}};
 
-    public static IDictionary<int,Register> m_remainderRegisterMap =
-      new Dictionary<int,Register>() {{1, Register.ah}, {2, Register.dx},
-                                      {4, Register.edx}, {8, Register.rdx}};
+    public static IDictionary<int, Register> m_remainderRegisterMap =
+      new Dictionary<int, Register>() {{1, Register.ah}, {2, Register.dx},
+                                       {4, Register.edx}, {8, Register.rdx}};
 
     public void IntegralMultiply(MiddleCode middleCode) {
       Symbol leftSymbol = (Symbol) middleCode[1];
