@@ -1,7 +1,7 @@
 ﻿using System.IO;
 
 namespace CCompiler {
-  public class StaticSymbol {
+  public abstract class StaticSymbol {
     private string m_uniqueName;
 
     public StaticSymbol() {

@@ -85,43 +85,27 @@ namespace CCompiler {
     // 1. if a >= b goto 10
     // 2. Clear
 
-    public static IDictionary<MiddleOperator, MiddleOperator> m_inverseMap =
-      new Dictionary<MiddleOperator, MiddleOperator>();
-
-    public static IDictionary<MiddleOperator,MiddleOperator> m_swapMap =
-       new Dictionary<MiddleOperator,MiddleOperator>();
-
-    static MiddleCodeOptimizer() {
-      m_inverseMap.Add(MiddleOperator.Equal, MiddleOperator.NotEqual);
-      m_inverseMap.Add(MiddleOperator.NotEqual, MiddleOperator.Equal);
-      m_inverseMap.Add(MiddleOperator.Carry, MiddleOperator.NotCarry);
-      m_inverseMap.Add(MiddleOperator.NotCarry, MiddleOperator.Carry);
-      m_inverseMap.Add(MiddleOperator.SignedLessThan, MiddleOperator.SignedGreaterThanEqual);
-      m_inverseMap.Add(MiddleOperator.SignedLessThanEqual, MiddleOperator.SignedGreaterThan);
-      m_inverseMap.Add(MiddleOperator.SignedGreaterThan, MiddleOperator.SignedLessThanEqual);
-      m_inverseMap.Add(MiddleOperator.SignedGreaterThanEqual, MiddleOperator.SignedLessThan);
-      m_inverseMap.Add(MiddleOperator.UnsignedLessThan, MiddleOperator.UnsignedGreaterThanEqual);
-      m_inverseMap.Add(MiddleOperator.UnsignedLessThanEqual, MiddleOperator.UnsignedGreaterThan);
-      m_inverseMap.Add(MiddleOperator.UnsignedGreaterThan, MiddleOperator.UnsignedLessThanEqual);
-      m_inverseMap.Add(MiddleOperator.UnsignedGreaterThanEqual, MiddleOperator.UnsignedLessThan);
-
-      m_swapMap.Add(MiddleOperator.Equal, MiddleOperator.Equal);
-      m_swapMap.Add(MiddleOperator.NotEqual, MiddleOperator.NotEqual);
-      m_swapMap.Add(MiddleOperator.SignedLessThan, MiddleOperator.SignedGreaterThan);
-      m_swapMap.Add(MiddleOperator.SignedGreaterThan, MiddleOperator.SignedLessThan);
-      m_swapMap.Add(MiddleOperator.SignedLessThanEqual, MiddleOperator.SignedGreaterThanEqual);
-      m_swapMap.Add(MiddleOperator.SignedGreaterThanEqual, MiddleOperator.SignedLessThanEqual);
-      m_swapMap.Add(MiddleOperator.UnsignedLessThan, MiddleOperator.UnsignedGreaterThan);
-      m_swapMap.Add(MiddleOperator.UnsignedGreaterThan, MiddleOperator.UnsignedLessThan);
-      m_swapMap.Add(MiddleOperator.UnsignedLessThanEqual, MiddleOperator.UnsignedGreaterThanEqual);
-      m_swapMap.Add(MiddleOperator.UnsignedGreaterThanEqual, MiddleOperator.UnsignedLessThanEqual);
-    }
-
     // 1. if a < b goto 3
     // 2. goto 10
 
     // 1. if a >= b goto 10
     // 2. empty
+
+    public static IDictionary<MiddleOperator, MiddleOperator> m_inverseMap =
+      new Dictionary<MiddleOperator, MiddleOperator>() {
+        {MiddleOperator.Equal, MiddleOperator.NotEqual},
+        {MiddleOperator.NotEqual, MiddleOperator.Equal},
+        {MiddleOperator.Carry, MiddleOperator.NotCarry},
+        {MiddleOperator.NotCarry, MiddleOperator.Carry},
+        {MiddleOperator.SignedLessThan, MiddleOperator.SignedGreaterThanEqual},
+        {MiddleOperator.SignedLessThanEqual, MiddleOperator.SignedGreaterThan},
+        {MiddleOperator.SignedGreaterThan, MiddleOperator.SignedLessThanEqual},
+        {MiddleOperator.SignedGreaterThanEqual, MiddleOperator.SignedLessThan},
+        {MiddleOperator.UnsignedLessThan, MiddleOperator.UnsignedGreaterThanEqual},
+        {MiddleOperator.UnsignedLessThanEqual, MiddleOperator.UnsignedGreaterThan},
+        {MiddleOperator.UnsignedGreaterThan, MiddleOperator.UnsignedLessThanEqual},
+        {MiddleOperator.UnsignedGreaterThanEqual, MiddleOperator.UnsignedLessThan}
+      };
 
     private void ClearDoubleRelationStatements() {
       for (int index = 0; index < (m_middleCodeList.Count - 1); ++index) {
@@ -458,9 +442,22 @@ namespace CCompiler {
       }
     }
 
+    public static IDictionary<MiddleOperator, MiddleOperator> m_swapMap =
+       new Dictionary<MiddleOperator, MiddleOperator>() {
+        {MiddleOperator.Equal, MiddleOperator.Equal},
+        {MiddleOperator.NotEqual, MiddleOperator.NotEqual},
+        {MiddleOperator.SignedLessThan, MiddleOperator.SignedGreaterThan},
+        {MiddleOperator.SignedGreaterThan, MiddleOperator.SignedLessThan},
+        {MiddleOperator.SignedLessThanEqual, MiddleOperator.SignedGreaterThanEqual},
+        {MiddleOperator.SignedGreaterThanEqual, MiddleOperator.SignedLessThanEqual},
+        {MiddleOperator.UnsignedLessThan, MiddleOperator.UnsignedGreaterThan},
+        {MiddleOperator.UnsignedGreaterThan, MiddleOperator.UnsignedLessThan},
+        {MiddleOperator.UnsignedLessThanEqual, MiddleOperator.UnsignedGreaterThanEqual},
+        {MiddleOperator.UnsignedGreaterThanEqual, MiddleOperator.UnsignedLessThanEqual}
+      };
+
     // if 1 < x goto
     // if x > 1 goto
-  
     private void OptimizeRelation() {
       foreach (MiddleCode middleCode in m_middleCodeList) {
         if (middleCode.IsRelation()) {

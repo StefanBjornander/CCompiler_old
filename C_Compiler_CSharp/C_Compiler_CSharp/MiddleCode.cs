@@ -207,51 +207,50 @@ namespace CCompiler {
       }
     }
  
-    private static IDictionary<MiddleOperator, string> OpToTextMap = new Dictionary<MiddleOperator, string>();
-  
-    static MiddleCode() {
-      OpToTextMap.Add(MiddleOperator.Assign, "=");
-      OpToTextMap.Add(MiddleOperator.BinaryAdd, "+");
-      OpToTextMap.Add(MiddleOperator.BinarySubtract, "-");
-      OpToTextMap.Add(MiddleOperator.SignedMultiply, "*");
-      OpToTextMap.Add(MiddleOperator.SignedDivide, "/");
-      OpToTextMap.Add(MiddleOperator.SignedModulo, "%");
-      OpToTextMap.Add(MiddleOperator.UnsignedMultiply, "*");
-      OpToTextMap.Add(MiddleOperator.UnsignedDivide, "/");
-      OpToTextMap.Add(MiddleOperator.UnsignedModulo, "%");
-      OpToTextMap.Add(MiddleOperator.BitwiseOr, "|");
-      OpToTextMap.Add(MiddleOperator.BitwiseXOr, "^");
-      OpToTextMap.Add(MiddleOperator.BitwiseAnd, "&");
-      OpToTextMap.Add(MiddleOperator.ShiftLeft, "<<");
-      OpToTextMap.Add(MiddleOperator.ShiftRight, ">>");
-      OpToTextMap.Add(MiddleOperator.LogicalOr, "||");
-      OpToTextMap.Add(MiddleOperator.LogicalAnd, "&&");
-      OpToTextMap.Add(MiddleOperator.Increment, "++");
-      OpToTextMap.Add(MiddleOperator.Decrement, "--");
-      OpToTextMap.Add(MiddleOperator.EqualZero, "==0");
-      OpToTextMap.Add(MiddleOperator.Equal, "==");
-      OpToTextMap.Add(MiddleOperator.NotEqual, "!=");
-      OpToTextMap.Add(MiddleOperator.SignedLessThan, "<");
-      OpToTextMap.Add(MiddleOperator.SignedLessThanEqual, "<=");
-      OpToTextMap.Add(MiddleOperator.SignedGreaterThan, ">");
-      OpToTextMap.Add(MiddleOperator.SignedGreaterThanEqual, ">=");
-      OpToTextMap.Add(MiddleOperator.UnsignedLessThan, "<");
-      OpToTextMap.Add(MiddleOperator.UnsignedLessThanEqual, "<=");
-      OpToTextMap.Add(MiddleOperator.UnsignedGreaterThan, ">");
-      OpToTextMap.Add(MiddleOperator.UnsignedGreaterThanEqual, ">=");
-      OpToTextMap.Add(MiddleOperator.UnaryAdd, "+");
-      OpToTextMap.Add(MiddleOperator.UnarySubtract, "-");
-      OpToTextMap.Add(MiddleOperator.LogicalNot, "!");
-      OpToTextMap.Add(MiddleOperator.BitwiseNot, "~");
-      OpToTextMap.Add(MiddleOperator.Address, "&");
-      OpToTextMap.Add(MiddleOperator.Dereference, "*");
-      OpToTextMap.Add(MiddleOperator.Dot, ".");
-      OpToTextMap.Add(MiddleOperator.Arrow, "->");
-      OpToTextMap.Add(MiddleOperator.Comma, ",");
-      OpToTextMap.Add(MiddleOperator.IntegralToIntegral, "int_to_int");
-      OpToTextMap.Add(MiddleOperator.IntegralToFloating, "int_to_float");
-      OpToTextMap.Add(MiddleOperator.FloatingToIntegral, "float_to_int");
-    }
+    private static IDictionary<MiddleOperator, string> OpToTextMap =
+      new Dictionary<MiddleOperator, string>() {
+        {MiddleOperator.Assign, "="},
+        {MiddleOperator.BinaryAdd, "+"},
+        {MiddleOperator.BinarySubtract, "-"},
+        {MiddleOperator.SignedMultiply, "*"},
+        {MiddleOperator.SignedDivide, "/"},
+        {MiddleOperator.SignedModulo, "%"},
+        {MiddleOperator.UnsignedMultiply, "*"},
+        {MiddleOperator.UnsignedDivide, "/"},
+        {MiddleOperator.UnsignedModulo, "%"},
+        {MiddleOperator.BitwiseOr, "|"},
+        {MiddleOperator.BitwiseXOr, "^"},
+        {MiddleOperator.BitwiseAnd, "&"},
+        {MiddleOperator.ShiftLeft, "<<"},
+        {MiddleOperator.ShiftRight, ">>"},
+        {MiddleOperator.LogicalOr, "||"},
+        {MiddleOperator.LogicalAnd, "&&"},
+        {MiddleOperator.Increment, "++"},
+        {MiddleOperator.Decrement, "--"},
+        {MiddleOperator.EqualZero, "==0"},
+        {MiddleOperator.Equal, "=="},
+        {MiddleOperator.NotEqual, "!="},
+        {MiddleOperator.SignedLessThan, "<"},
+        {MiddleOperator.SignedLessThanEqual, "<="},
+        {MiddleOperator.SignedGreaterThan, ">"},
+        {MiddleOperator.SignedGreaterThanEqual, ">="},
+        {MiddleOperator.UnsignedLessThan, "<"},
+        {MiddleOperator.UnsignedLessThanEqual, "<="},
+        {MiddleOperator.UnsignedGreaterThan, ">"},
+        {MiddleOperator.UnsignedGreaterThanEqual, ">="},
+        {MiddleOperator.UnaryAdd, "+"},
+        {MiddleOperator.UnarySubtract, "-"},
+        {MiddleOperator.LogicalNot, "!"},
+        {MiddleOperator.BitwiseNot, "~"},
+        {MiddleOperator.Address, "&"},
+        {MiddleOperator.Dereference, "*"},
+        {MiddleOperator.Dot, "."},
+        {MiddleOperator.Arrow, "->"},
+        {MiddleOperator.Comma, ","},
+        {MiddleOperator.IntegralToIntegral, "int_to_int"},
+        {MiddleOperator.IntegralToFloating, "int_to_float"},
+        {MiddleOperator.FloatingToIntegral, "float_to_int"}
+      };
  
     private string opToText() {
       if (OpToTextMap.ContainsKey(m_middleOperator)) {

@@ -44,19 +44,10 @@ namespace CCompiler {
       Assert.Error(Preprocessor.IfStack.Count == stackSize, Message.Unbalanced_if_and_endif_directive_structure);
     }
 
-    private static IDictionary<char,char> TriGraphMap = new Dictionary<char,char>();
-
-    static Preprocessor() {
-      TriGraphMap.Add('=', '#');
-      TriGraphMap.Add('/', '\\');
-      TriGraphMap.Add('\'', '^');
-      TriGraphMap.Add('(', '[');
-      TriGraphMap.Add(')', ']');
-      TriGraphMap.Add('!', '|');
-      TriGraphMap.Add('<', '{');
-      TriGraphMap.Add('>', '}');
-      TriGraphMap.Add('-', '~');
-    }
+    private static IDictionary<char,char> TriGraphMap =
+      new Dictionary<char,char>() {{'=', '#'}, {'/', '\\'}, {'\'', '^'},
+                                   {'(', '['}, {')', ']'}, {'!', '|'},
+                                   {'<', '{'}, {'>', '}'}, {'-', '~'}};
 
     public void GenerateTriGraphs(StringBuilder buffer) {
       for (int index = 0; index < (buffer.Length - 1); ++index) {

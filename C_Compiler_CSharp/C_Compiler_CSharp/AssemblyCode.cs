@@ -547,7 +547,7 @@ namespace CCompiler {
       }
       else { // lahf
         Assert.ErrorXXX((operand0 == null) && (operand1 == null) &&
-                      (operand2 == null));
+                        (operand2 == null));
         return LookupByteArray(Operator);
       }
     }

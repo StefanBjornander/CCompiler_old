@@ -14,11 +14,11 @@ namespace CCompiler {
       // Empty.
     }
 
-    public StaticSymbolWindows(string uniqueName, List<byte> byteList, // Windows static object
-                        IDictionary<int,string> accessMap)
+    public StaticSymbolWindows(string uniqueName, List<byte> byteList = null, // Windows static object
+                        IDictionary<int,string> accessMap = null)
      :base(uniqueName) {
-      m_byteList = byteList;
-      m_accessMap = accessMap;
+      m_byteList = (byteList != null) ? byteList : (new List<byte>());
+      m_accessMap = (accessMap != null) ? accessMap : (new Dictionary<int,string>());
       m_callMap = new Dictionary<int,string>();
       m_returnSet = new HashSet<int>();
     }

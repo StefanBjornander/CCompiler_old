@@ -98,7 +98,7 @@ namespace CCompiler {
 
         /*if ((SymbolTable.CurrentFunction != null) &&
             SymbolTable.CurrentFunction.Name.Equals("main") &&
-            (middleIndex == 17)) {
+            (middleIndex == 11)) {
           int i = 1;
         }*/
 
@@ -970,113 +970,20 @@ namespace CCompiler {
       }
     }*/
 
-    public static IDictionary<MiddleOperator,AssemblyOperator>
-                       m_middleToIntegralMap =
-                       new Dictionary<MiddleOperator,AssemblyOperator>();
-
-    public static IDictionary<Sort, AssemblyOperator> m_floatPushMap =
-      new Dictionary<Sort, AssemblyOperator>();
-
-    public static IDictionary<Sort,AssemblyOperator>
-      m_floatTopMap = new Dictionary<Sort,AssemblyOperator>(),
-      m_floatPopMap = new Dictionary<Sort,AssemblyOperator>();
-
-    public static IDictionary<MiddleOperator,AssemblyOperator>
-      m_middleToFloatingMap =
-        new Dictionary<MiddleOperator,AssemblyOperator>();
-
-    static AssemblyCodeGenerator() {
-      m_middleToIntegralMap.Add(MiddleOperator.BitwiseNot, AssemblyOperator.not);
-      m_middleToIntegralMap.Add(MiddleOperator.UnarySubtract, AssemblyOperator.neg);
-
-      m_middleToIntegralMap.Add(MiddleOperator.SignedMultiply, AssemblyOperator.imul);
-      m_middleToIntegralMap.Add(MiddleOperator.SignedDivide, AssemblyOperator.idiv);
-      m_middleToIntegralMap.Add(MiddleOperator.SignedModulo, AssemblyOperator.idiv);
-      m_middleToIntegralMap.Add(MiddleOperator.UnsignedMultiply, AssemblyOperator.mul);
-      m_middleToIntegralMap.Add(MiddleOperator.UnsignedDivide, AssemblyOperator.div);
-      m_middleToIntegralMap.Add(MiddleOperator.UnsignedModulo, AssemblyOperator.div);
-
-      m_middleToIntegralMap.Add(MiddleOperator.Assign, AssemblyOperator.mov);
-      m_middleToIntegralMap.Add(MiddleOperator.BinaryAdd, AssemblyOperator.add);
-      m_middleToIntegralMap.Add(MiddleOperator.BinarySubtract, AssemblyOperator.sub);
-      m_middleToIntegralMap.Add(MiddleOperator.BitwiseAnd, AssemblyOperator.and);
-      m_middleToIntegralMap.Add(MiddleOperator.BitwiseOr, AssemblyOperator.or);
-      m_middleToIntegralMap.Add(MiddleOperator.BitwiseXOr, AssemblyOperator.xor);
-      m_middleToIntegralMap.Add(MiddleOperator.ShiftLeft, AssemblyOperator.shl);
-      m_middleToIntegralMap.Add(MiddleOperator.ShiftRight, AssemblyOperator.shr);
-
-      m_middleToIntegralMap.Add(MiddleOperator.Equal, AssemblyOperator.je);
-      m_middleToIntegralMap.Add(MiddleOperator.NotEqual, AssemblyOperator.jne);
-      m_middleToIntegralMap.Add(MiddleOperator.Carry, AssemblyOperator.jc);
-      m_middleToIntegralMap.Add(MiddleOperator.NotCarry, AssemblyOperator.jnc);
-      m_middleToIntegralMap.Add(MiddleOperator.SignedLessThan, AssemblyOperator.jl);
-      m_middleToIntegralMap.Add(MiddleOperator.SignedLessThanEqual,AssemblyOperator.jle);
-      m_middleToIntegralMap.Add(MiddleOperator.SignedGreaterThan, AssemblyOperator.jg);
-      m_middleToIntegralMap.Add(MiddleOperator.SignedGreaterThanEqual, AssemblyOperator.jge);
-      m_middleToIntegralMap.Add(MiddleOperator.UnsignedLessThan, AssemblyOperator.jb);
-      m_middleToIntegralMap.Add(MiddleOperator.UnsignedLessThanEqual, AssemblyOperator.jbe);
-      m_middleToIntegralMap.Add(MiddleOperator.UnsignedGreaterThan, AssemblyOperator.ja);
-      m_middleToIntegralMap.Add(MiddleOperator.UnsignedGreaterThanEqual, AssemblyOperator.jae);
-
-      /*m_leftRegisterMap.Add(1, Register.al);
-      m_leftRegisterMap.Add(2, Register.ax);
-      m_leftRegisterMap.Add(4, Register.eax);
-      m_leftRegisterMap.Add(8, Register.rax);
-
-      m_clearRegisterMap.Add(1, Register.ah);
-      m_clearRegisterMap.Add(2, Register.dx);
-      m_clearRegisterMap.Add(4, Register.edx);
-      m_clearRegisterMap.Add(8, Register.rdx);
-
-      m_productQuintentRegisterMap.Add(1, Register.al);
-      m_productQuintentRegisterMap.Add(2, Register.ax);
-      m_productQuintentRegisterMap.Add(4, Register.eax);
-      m_productQuintentRegisterMap.Add(8, Register.rax);
-
-      m_remainderRegisterMap.Add(1, Register.ah);
-      m_remainderRegisterMap.Add(2, Register.dx);
-      m_remainderRegisterMap.Add(4, Register.edx);
-      m_remainderRegisterMap.Add(8, Register.rdx);*/
-
-      m_floatPushMap.Add(Sort.Signed_Int, AssemblyOperator.fild_word);
-      m_floatPushMap.Add(Sort.Unsigned_Int, AssemblyOperator.fild_word);
-      m_floatPushMap.Add(Sort.Signed_Long_Int, AssemblyOperator.fild_dword);
-      m_floatPushMap.Add(Sort.Unsigned_Long_Int, AssemblyOperator.fild_dword);
-      m_floatPushMap.Add(Sort.Float, AssemblyOperator.fld_dword);
-      m_floatPushMap.Add(Sort.Double, AssemblyOperator.fld_qword);
-      m_floatPushMap.Add(Sort.Long_Double, AssemblyOperator.fld_qword);
-
-      m_floatTopMap.Add(Sort.Signed_Int, AssemblyOperator.fist_word);
-      m_floatTopMap.Add(Sort.Unsigned_Int, AssemblyOperator.fist_word);
-      m_floatTopMap.Add(Sort.Pointer, AssemblyOperator.fist_word);
-      m_floatTopMap.Add(Sort.Signed_Long_Int, AssemblyOperator.fist_dword);
-      m_floatTopMap.Add(Sort.Unsigned_Long_Int, AssemblyOperator.fist_dword);
-      m_floatTopMap.Add(Sort.Float, AssemblyOperator.fst_dword);
-      m_floatTopMap.Add(Sort.Double, AssemblyOperator.fst_qword);
-      m_floatTopMap.Add(Sort.Long_Double, AssemblyOperator.fst_qword);
-  
-      m_floatPopMap.Add(Sort.Signed_Int, AssemblyOperator.fistp_word);
-      m_floatPopMap.Add(Sort.Unsigned_Int, AssemblyOperator.fistp_word);
-      m_floatPopMap.Add(Sort.Pointer, AssemblyOperator.fistp_word);
-      m_floatPopMap.Add(Sort.Signed_Long_Int, AssemblyOperator.fistp_dword);
-      m_floatPopMap.Add(Sort.Unsigned_Long_Int, AssemblyOperator.fistp_dword);
-      m_floatPopMap.Add(Sort.Float, AssemblyOperator.fstp_dword);
-      m_floatPopMap.Add(Sort.Double, AssemblyOperator.fstp_qword);
-      m_floatPopMap.Add(Sort.Long_Double, AssemblyOperator.fstp_qword);
-
-      m_middleToFloatingMap.Add(MiddleOperator.UnarySubtract, AssemblyOperator.fchs);
-      m_middleToFloatingMap.Add(MiddleOperator.BinaryAdd, AssemblyOperator.fadd);
-      m_middleToFloatingMap.Add(MiddleOperator.BinarySubtract, AssemblyOperator.fsub);
-      m_middleToFloatingMap.Add(MiddleOperator.SignedMultiply, AssemblyOperator.fmul);
-      m_middleToFloatingMap.Add(MiddleOperator.SignedDivide, AssemblyOperator.fdiv);
-
-      m_middleToFloatingMap.Add(MiddleOperator.Equal, AssemblyOperator.je);
-      m_middleToFloatingMap.Add(MiddleOperator.NotEqual, AssemblyOperator.jne);
-      m_middleToFloatingMap.Add(MiddleOperator.SignedLessThan, AssemblyOperator.ja);
-      m_middleToFloatingMap.Add(MiddleOperator.SignedLessThanEqual, AssemblyOperator.jae);
-      m_middleToFloatingMap.Add(MiddleOperator.SignedGreaterThan, AssemblyOperator.jb);
-      m_middleToFloatingMap.Add(MiddleOperator.SignedGreaterThanEqual, AssemblyOperator.jbe);
-    }
+    public static IDictionary<MiddleOperator, AssemblyOperator> m_middleToFloatingMap =
+      new Dictionary<MiddleOperator, AssemblyOperator>() {
+        {MiddleOperator.UnarySubtract, AssemblyOperator.fchs},
+        {MiddleOperator.BinaryAdd, AssemblyOperator.fadd},
+        {MiddleOperator.BinarySubtract, AssemblyOperator.fsub},
+        {MiddleOperator.SignedMultiply, AssemblyOperator.fmul},
+        {MiddleOperator.SignedDivide, AssemblyOperator.fdiv},
+        {MiddleOperator.Equal, AssemblyOperator.je},
+        {MiddleOperator.NotEqual, AssemblyOperator.jne},
+        {MiddleOperator.SignedLessThan, AssemblyOperator.ja},
+        {MiddleOperator.SignedLessThanEqual, AssemblyOperator.jae},
+        {MiddleOperator.SignedGreaterThan, AssemblyOperator.jb},
+        {MiddleOperator.SignedGreaterThanEqual, AssemblyOperator.jbe}
+      };
 
     public void FloatingRelation(MiddleCode middleCode, int index) {
       Assert.ErrorXXX((m_floatStackSize -= 2) >= 0);
@@ -1102,7 +1009,38 @@ namespace CCompiler {
                              leftSymbol, rightSymbol);
       }
     }*/
-  
+
+    public static IDictionary<MiddleOperator,AssemblyOperator> m_middleToIntegralMap =
+                       new Dictionary<MiddleOperator,AssemblyOperator>() {
+      {MiddleOperator.BitwiseNot, AssemblyOperator.not},
+      {MiddleOperator.UnarySubtract, AssemblyOperator.neg},
+      {MiddleOperator.SignedMultiply, AssemblyOperator.imul},
+      {MiddleOperator.SignedDivide, AssemblyOperator.idiv},
+      {MiddleOperator.SignedModulo, AssemblyOperator.idiv},
+      {MiddleOperator.UnsignedMultiply, AssemblyOperator.mul},
+      {MiddleOperator.UnsignedDivide, AssemblyOperator.div},
+      {MiddleOperator.UnsignedModulo, AssemblyOperator.div},
+      {MiddleOperator.Assign, AssemblyOperator.mov},
+      {MiddleOperator.BinaryAdd, AssemblyOperator.add},
+      {MiddleOperator.BinarySubtract, AssemblyOperator.sub},
+      {MiddleOperator.BitwiseAnd, AssemblyOperator.and},
+      {MiddleOperator.BitwiseOr, AssemblyOperator.or},
+      {MiddleOperator.BitwiseXOr, AssemblyOperator.xor},
+      {MiddleOperator.ShiftLeft, AssemblyOperator.shl},
+      {MiddleOperator.ShiftRight, AssemblyOperator.shr},
+      {MiddleOperator.Equal, AssemblyOperator.je},
+      {MiddleOperator.NotEqual, AssemblyOperator.jne},
+      {MiddleOperator.Carry, AssemblyOperator.jc},
+      {MiddleOperator.NotCarry, AssemblyOperator.jnc},
+      {MiddleOperator.SignedLessThan, AssemblyOperator.jl},
+      {MiddleOperator.SignedLessThanEqual,AssemblyOperator.jle},
+      {MiddleOperator.SignedGreaterThan, AssemblyOperator.jg},
+      {MiddleOperator.SignedGreaterThanEqual, AssemblyOperator.jge},
+      {MiddleOperator.UnsignedLessThan, AssemblyOperator.jb},
+      {MiddleOperator.UnsignedLessThanEqual, AssemblyOperator.jbe},
+      {MiddleOperator.UnsignedGreaterThan, AssemblyOperator.ja},
+      {MiddleOperator.UnsignedGreaterThanEqual, AssemblyOperator.jae}};
+
     public void IntegralAdditionBitwiseShift(MiddleCode middleCode) {
       MiddleOperator middleOperator = middleCode.Operator;
       Symbol resultSymbol = (Symbol) middleCode[0],
@@ -1577,7 +1515,8 @@ namespace CCompiler {
         m_trackMap.Remove(symbol.AddressSymbol);
         return addressTrack;
       }
-      else if (symbol.IsExternOrStatic()) {
+      else if ((symbol.Value is BigInteger) ||
+               symbol.IsExternOrStatic()) {
         return symbol.UniqueName;
       }
       else { //resultSymbol.IsAutoOrRegister()
@@ -1652,23 +1591,37 @@ namespace CCompiler {
       AssemblyOperator objectOperator =
         m_middleToIntegralMap[middleCode.Operator];
 
-      Track rightTrack;
-      if (m_trackMap.TryGetValue(rightSymbol, out rightTrack)) {
-        AddAssemblyCode(objectOperator, rightTrack);
-      }
-      else if (rightSymbol.IsTemporary() && (rightSymbol.AddressSymbol == null)) {
+      Track rightTrack = null;
+      m_trackMap.TryGetValue(rightSymbol, out rightTrack);
+
+      if ((rightTrack == null) &&
+          ((rightSymbol.IsTemporary() && (rightSymbol.AddressSymbol == null)) ||
+           (rightSymbol.Value is StaticAddress) ||
+           (rightSymbol.Type.IsArrayFunctionOrString()))) {
         rightTrack = LoadValueToRegister(rightSymbol);
+      }
+
+      if (rightTrack != null) {
         AddAssemblyCode(objectOperator, rightTrack);
       }
+/*      else if (rightSymbol.Type.IsArrayFunctionOrString()) {
+        AddAssemblyCode(objectOperator, rightSymbol.UniqueName);
+      }*/
       else {
         AssemblyOperator sizeOperator =
-          AssemblyCode.OperatorToSize(objectOperator,
-                                      rightSymbol.Type.SizeArray());
-        AddAssemblyCode(sizeOperator, Base(rightSymbol),
-                        Offset(rightSymbol));
+          AssemblyCode.OperatorToSize(objectOperator, typeSize);
 
-        if (rightSymbol.Value != null) {
-          SymbolTable.StaticSet.Add(ConstantExpression.Value(rightSymbol));
+        if (rightSymbol.Value is BigInteger) {
+          StaticSymbol staticSymbol = ConstantExpression.Value(rightSymbol);
+          SymbolTable.StaticSet.Add(staticSymbol);
+          AddAssemblyCode(sizeOperator, rightSymbol.UniqueName, 0);
+        }
+        else if (rightSymbol.IsExternOrStatic()) {
+          AddAssemblyCode(sizeOperator, rightSymbol.UniqueName, 0);
+        }
+        else  {
+          AddAssemblyCode(sizeOperator, Base(rightSymbol),
+                          Offset(rightSymbol));
         }
       }
 
@@ -1699,23 +1652,6 @@ namespace CCompiler {
       Track otherTrack = new Track(resultSymbol, discardRegister);
       AddAssemblyCode(AssemblyOperator.empty, otherTrack);
     }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
     public void Case(MiddleCode middleCode) {
       Symbol switchSymbol = (Symbol) middleCode[1];
@@ -1951,6 +1887,18 @@ namespace CCompiler {
       }
     }
 
+    public static IDictionary<Sort, AssemblyOperator> m_floatPopMap =
+      new Dictionary<Sort, AssemblyOperator>() {
+        {Sort.Signed_Int, AssemblyOperator.fistp_word},
+        {Sort.Unsigned_Int, AssemblyOperator.fistp_word},
+        {Sort.Pointer, AssemblyOperator.fistp_word},
+        {Sort.Signed_Long_Int, AssemblyOperator.fistp_dword},
+        {Sort.Unsigned_Long_Int, AssemblyOperator.fistp_dword},
+        {Sort.Float, AssemblyOperator.fstp_dword},
+        {Sort.Double, AssemblyOperator.fstp_qword},
+        {Sort.Long_Double, AssemblyOperator.fstp_qword}
+      };
+
     public void PushSymbol(Symbol symbol) {
       Assert.ErrorXXX((++m_floatStackSize) <= FloatingStackMaxSize);
       AssemblyOperator objectOperator = m_floatPushMap[symbol.Type.Sort];
@@ -2001,6 +1949,29 @@ namespace CCompiler {
         AddAssemblyCode(objectOperator, Base(symbol), Offset(symbol));
       }
     }
+
+    public static IDictionary<Sort, AssemblyOperator> m_floatPushMap =
+      new Dictionary<Sort, AssemblyOperator>() {
+        {Sort.Signed_Int, AssemblyOperator.fild_word},
+        {Sort.Unsigned_Int, AssemblyOperator.fild_word},
+        {Sort.Signed_Long_Int, AssemblyOperator.fild_dword},
+        {Sort.Unsigned_Long_Int, AssemblyOperator.fild_dword},
+        {Sort.Float, AssemblyOperator.fld_dword},
+        {Sort.Double, AssemblyOperator.fld_qword},
+        {Sort.Long_Double, AssemblyOperator.fld_qword}
+      };
+
+    public static IDictionary<Sort, AssemblyOperator> m_floatTopMap =
+      new Dictionary<Sort, AssemblyOperator>() {
+        {Sort.Signed_Int, AssemblyOperator.fist_word},
+        {Sort.Unsigned_Int, AssemblyOperator.fist_word},
+        {Sort.Pointer, AssemblyOperator.fist_word},
+        {Sort.Signed_Long_Int, AssemblyOperator.fist_dword},
+        {Sort.Unsigned_Long_Int, AssemblyOperator.fist_dword},
+        {Sort.Float, AssemblyOperator.fst_dword},
+        {Sort.Double, AssemblyOperator.fst_qword},
+        {Sort.Long_Double, AssemblyOperator.fst_qword}
+      };
 
     public enum TopOrPop {Top, Pop};
 

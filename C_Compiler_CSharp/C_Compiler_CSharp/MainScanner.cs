@@ -137,22 +137,21 @@ public static FileInfo Path = null;
   public static int Line = 1;
 
   private static IDictionary<char,char> m_slashMap =
-    new Dictionary<char,char>();
-
-  static Scanner() {            // ASCII value
-    m_slashMap.Add('0', '\0');  //  0
-    m_slashMap.Add('a', '\a');  //  7
-    m_slashMap.Add('b', '\b');  //  8
-    m_slashMap.Add('f', '\f');  // 12
-    m_slashMap.Add('n', '\n');  // 10
-    m_slashMap.Add('r', '\r');  // 13
-    m_slashMap.Add('t', '\t');  //  9
-    m_slashMap.Add('v', '\v');  // 11
-    m_slashMap.Add('\'', '\''); // 39
-    m_slashMap.Add('\"', '\"'); // 34
-    m_slashMap.Add('?', '?');   // 63
-    m_slashMap.Add('\\', '\\'); // 92
-  }
+    new Dictionary<char,char>() {
+                    // ASCII value
+      {'0', '\0'},  //  0
+      {'a', '\a'},  //  7
+      {'b', '\b'},  //  8
+      {'f', '\f'},  // 12
+      {'n', '\n'},  // 10
+      {'r', '\r'},  // 13
+      {'t', '\t'},  //  9
+      {'v', '\v'},  // 11
+      {'\'', '\''}, // 39
+      {'\"', '\"'}, // 34
+      {'?', '?'},   // 63
+      {'\\', '\\'}  // 92
+    };
 
   public static string SlashToChar(string text) {
     StringBuilder buffer = new StringBuilder(text);

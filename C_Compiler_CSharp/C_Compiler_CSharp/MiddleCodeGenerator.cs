@@ -1550,6 +1550,14 @@ namespace CCompiler {
       }
     }
 
+    private void AddStaticSymbol(Symbol sizeSymbol) {
+      if (Start.Linux) {
+        StaticSymbolWindows StaticSymbolWindows = new StaticSymbolWindows(sizeSymbol.UniqueName);
+      }
+
+      if (Start.Windows) {
+      }
+    }
     private static Expression PointerArithmetic(MiddleOperator middleOp,
                                                 Expression leftExpression,
                                                 Expression rightExpression) {
@@ -1575,6 +1583,9 @@ namespace CCompiler {
         Symbol multSymbol = new Symbol(Type.PointerTypeX),
                sizeSymbol = new Symbol(Type.PointerTypeX,
                                        (BigInteger) pointerSize);
+        //AddStaticSymbol(sizeSymbol);
+        //StaticSymbol sizeStaticSymbol = new StaticSymbol(sizeSymbol.UniqueName);
+        //SymbolTable.StaticSet.Add(sizeStaticSymbol);
         AddMiddleCode(longList, MiddleOperator.UnsignedMultiply, multSymbol,
                       rightExpression.Symbol, sizeSymbol);
         AddMiddleCode(longList, middleOp, resultSymbol,
@@ -1599,6 +1610,8 @@ namespace CCompiler {
         int pointerSize = rightType.PointerOrArrayType.Size();
         Symbol subtractSymbol = new Symbol(Type.PointerTypeX),
                sizeSymbol = new Symbol(Type.PointerTypeX, (BigInteger) pointerSize);
+        //StaticSymbol sizeStaticSymbol = new StaticSymbol(sizeSymbol.UniqueName);
+        //SymbolTable.StaticSet.Add(sizeStaticSymbol);
         AddMiddleCode(longList, MiddleOperator.BinarySubtract, subtractSymbol,
                       leftExpression.Symbol, rightExpression.Symbol);
         AddMiddleCode(longList, MiddleOperator.UnsignedDivide, resultSymbol,
@@ -2007,6 +2020,8 @@ namespace CCompiler {
         Symbol sizeSymbol = new Symbol(arraySymbol.Type, (BigInteger)
                                arraySymbol.Type.PointerOrArrayType.Size()),
                multSymbol = new Symbol(arraySymbol.Type);
+        //StaticSymbol sizeStaticSymbol = new StaticSymbol(sizeSymbol.UniqueName);
+        //SymbolTable.StaticSet.Add(sizeStaticSymbol);
         AddMiddleCode(longList, MiddleOperator.UnsignedMultiply,
                       multSymbol, indexSymbol, sizeSymbol);
         Symbol addSymbol = new Symbol(arraySymbol.Type);
