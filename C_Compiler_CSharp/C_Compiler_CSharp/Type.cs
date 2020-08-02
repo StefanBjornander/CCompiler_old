@@ -452,7 +452,7 @@ namespace CCompiler {
       return IsPointer() || IsFunctionOrArray();
     }
 
-    public bool IsArrayFunctionStringStructOrUnion() {
+    public bool IsArrayFunctionStringStructOrUnionX() {
       return IsFunctionOrArray() || IsString() || IsStructOrUnion();
     }
 

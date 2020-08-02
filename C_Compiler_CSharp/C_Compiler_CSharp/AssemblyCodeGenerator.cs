@@ -97,6 +97,11 @@ namespace CCompiler {
         }
 
         /*if ((SymbolTable.CurrentFunction != null) &&
+            SymbolTable.CurrentFunction.Name.Equals("printLongIntRec")) {
+          int i = 1;
+        }
+
+        if ((SymbolTable.CurrentFunction != null) &&
             SymbolTable.CurrentFunction.Name.Equals("main") &&
             (middleIndex == 11)) {
           int i = 1;
@@ -544,6 +549,24 @@ namespace CCompiler {
 	
     // -----------------------------------------------------------------------
 
+    private Track ClearRegister(Symbol symbol, Track track, Register? register) {
+      if ((register != null) && (track.Register != null) &&
+          !AssemblyCode.RegisterOverlap(register, track.Register)) {
+        Track newTrack = new Track(symbol, register.Value);
+        AddAssemblyCode(AssemblyOperator.set_track_size,
+                        newTrack, track);
+        AddAssemblyCode(AssemblyOperator.mov, newTrack, track);
+        return newTrack;
+      }
+      else {
+        if (register != null) {
+          track.Register = register;
+        }
+
+        return track;
+      }
+    }
+
     public Track LoadValueToRegister(Symbol symbol,
                                      Register? register = null) {
       if (register != null) {
@@ -551,30 +574,17 @@ namespace CCompiler {
       }
 
       Track track;
-      if (m_trackMap.TryGetValue(symbol, out track)) {
+      if (m_trackMap.TryGetValue(symbol, out track)) {        
         m_trackMap.Remove(symbol);
-
-        if ((register != null) && (track.Register != null) &&
-            !AssemblyCode.RegisterOverlap(register, track.Register)) {
-          Track newTrack = new Track(symbol, register);
-          AddAssemblyCode(AssemblyOperator.set_track_size,
-                          newTrack, track);
-          AddAssemblyCode(AssemblyOperator.mov, newTrack, track);
-          track = newTrack;
-        }
-        else if (register != null) {
-          track.Register = register;
-        }
-
-        return track;
+        return ClearRegister(symbol, track, register);
       }
       else {
         track = new Track(symbol, register);
-        Assert.ErrorXXX(!(symbol.Type.IsFunction()));
+        Assert.ErrorXXX(!symbol.Type.IsFunction());
 
         if ((symbol.Value is BigInteger) ||
             (symbol.IsExternOrStatic() &&
-             symbol.Type.IsArrayFunctionStringStructOrUnion())) {
+             symbol.Type.IsArrayFunctionOrString())) {
           AddAssemblyCode(AssemblyOperator.mov, track,
                           NameOrValue(symbol));
         }
@@ -590,11 +600,8 @@ namespace CCompiler {
         }
         else if (symbol.IsAutoOrRegister() && symbol.Type.IsArray()) {
           AddAssemblyCode(AssemblyOperator.mov, track, Base(symbol));
-
-          if (symbol.Offset != 0) {
-            AddAssemblyCode(AssemblyOperator.add, track,
-                            (BigInteger) symbol.Offset);
-          }
+          AddAssemblyCode(AssemblyOperator.add, track,
+                          (BigInteger) symbol.Offset);
         }
         else {
           AddAssemblyCode(AssemblyOperator.mov, track,
@@ -792,17 +799,20 @@ namespace CCompiler {
             m_trackMap.Add(resultSymbol, resultTrack);
           }
           
-          if ((assignSymbol.Value is BigInteger) ||
-              (assignSymbol.IsExternOrStatic() &&
-              assignSymbol.Type.IsArrayFunctionOrString())) {
+          if (assignSymbol.Value is BigInteger) {
             AddAssemblyCode(AssemblyOperator.mov, resultTrack,
-                            NameOrValue(assignSymbol));
+                            assignSymbol.Value);
           }
-          else if (assignSymbol.Type.IsArrayOrFunction()) {
+          else if (assignSymbol.Type.IsArrayFunctionOrString() ||
+                   (assignSymbol.Value is StaticAddress)) {
             AddAssemblyCode(AssemblyOperator.mov, resultTrack,
                             Base(assignSymbol));
-            AddAssemblyCode(AssemblyOperator.add, resultTrack,
-                            (BigInteger) assignSymbol.Offset);
+
+            int offset = Offset(assignSymbol);
+            if (offset != 0) {
+              AddAssemblyCode(AssemblyOperator.add, resultTrack,
+                              (BigInteger) offset);
+            }
           }
           else {
             AddAssemblyCode(AssemblyOperator.mov, resultTrack,
@@ -833,35 +843,30 @@ namespace CCompiler {
                             Offset(resultSymbol), assignSymbol.Value);
             }
           }
-          else if (assignSymbol.Type.IsArrayFunctionOrString()) {
-            if (assignSymbol.IsAutoOrRegister()) {
-              AddAssemblyCode(AssemblyOperator.mov, Base(resultSymbol),
-                              Offset(resultSymbol), BaseRegister(assignSymbol));
-            }
-            else {
-              AddAssemblyCode(moveSizeOperator, Base(resultSymbol),
-                              Offset(resultSymbol), assignSymbol.UniqueName);
-            }
+          else if (assignSymbol.IsAutoOrRegister() && assignSymbol.Type.IsArray()) {
+            AddAssemblyCode(AssemblyOperator.mov, Base(resultSymbol),
+                            Offset(resultSymbol), BaseRegister(assignSymbol));
+            AssemblyOperator addSizeOperator =
+              AssemblyCode.OperatorToSize(AssemblyOperator.add,
+                                          resultSymbol.Type.SizeArray());
+            AddAssemblyCode(addSizeOperator, Base(resultSymbol),
+                            Offset(resultSymbol), (BigInteger) assignSymbol.Offset);
+          }
+          else if (assignSymbol.Type.IsArrayFunctionOrString() ||
+                   (assignSymbol.Value is StaticAddress)) {
+            AssemblyOperator movSizeOperator =
+              AssemblyCode.OperatorToSize(AssemblyOperator.mov,
+                                          resultSymbol.Type.SizeArray());
+            AddAssemblyCode(movSizeOperator, Base(resultSymbol),
+                            Offset(resultSymbol), Base(assignSymbol));
 
-            if (assignSymbol.Offset != 0) {
+            int offset = Offset(assignSymbol);
+            if (offset != 0) {
               AssemblyOperator addSizeOperator =
                 AssemblyCode.OperatorToSize(AssemblyOperator.add,
                                             resultSymbol.Type.SizeArray());
               AddAssemblyCode(addSizeOperator, Base(resultSymbol),
-                              Offset(resultSymbol), (BigInteger) assignSymbol.Offset);
-            }
-          }
-          else if (assignSymbol.Value is StaticAddress) {
-            StaticAddress staticAddress = (StaticAddress) assignSymbol.Value;
-            AddAssemblyCode(moveSizeOperator, Base(resultSymbol),
-                            Offset(resultSymbol), staticAddress.UniqueName);
-
-            if (staticAddress.Offset != 0) {
-              AssemblyOperator addOperator =
-                AssemblyCode.OperatorToSize(AssemblyOperator.add,
-                                            resultSymbol.Type.SizeArray());
-              AddAssemblyCode(addOperator, Base(resultSymbol),
-                              Offset(resultSymbol), (BigInteger) staticAddress.Offset);
+                              Offset(resultSymbol), (BigInteger) offset);
             }
           }
           else {
@@ -1501,12 +1506,13 @@ namespace CCompiler {
     }
 
     private object Base(Symbol symbol) {
+      Assert.ErrorXXX(!(symbol.Value is BigInteger));
+
       if (symbol.Value is StaticAddress) {
         StaticAddress staticAddress = (StaticAddress) symbol.Value;
         return staticAddress.UniqueName;
       }
       else if (symbol.AddressSymbol != null) {
-        //Assert.ErrorXXX(m_trackMap.ContainsKey(symbol.AddressSymbol)); 
         Track addressTrack = LoadValueToRegister(symbol.AddressSymbol);
         Assert.ErrorXXX((addressTrack.Register == null) ||
                         RegisterAllocator.PointerRegisterSetWithEllipse.
@@ -1515,8 +1521,7 @@ namespace CCompiler {
         m_trackMap.Remove(symbol.AddressSymbol);
         return addressTrack;
       }
-      else if ((symbol.Value is BigInteger) ||
-               symbol.IsExternOrStatic()) {
+      else if (symbol.IsExternOrStatic()) {
         return symbol.UniqueName;
       }
       else { //resultSymbol.IsAutoOrRegister()
@@ -1525,6 +1530,8 @@ namespace CCompiler {
     }
 
     private int Offset(Symbol symbol) {
+      Assert.ErrorXXX(!(symbol.Value is BigInteger));
+
       if (symbol.Value is StaticAddress) {
         StaticAddress staticAddress = (StaticAddress) symbol.Value;
         return staticAddress.Offset;
@@ -1595,7 +1602,7 @@ namespace CCompiler {
       m_trackMap.TryGetValue(rightSymbol, out rightTrack);
 
       if ((rightTrack == null) &&
-          ((rightSymbol.IsTemporary() && (rightSymbol.AddressSymbol == null)) ||
+          (/*(rightSymbol.IsTemporary() && (rightSymbol.AddressSymbol == null)) ||*/
            (rightSymbol.Value is StaticAddress) ||
            (rightSymbol.Type.IsArrayFunctionOrString()))) {
         rightTrack = LoadValueToRegister(rightSymbol);
@@ -1604,16 +1611,12 @@ namespace CCompiler {
       if (rightTrack != null) {
         AddAssemblyCode(objectOperator, rightTrack);
       }
-/*      else if (rightSymbol.Type.IsArrayFunctionOrString()) {
-        AddAssemblyCode(objectOperator, rightSymbol.UniqueName);
-      }*/
       else {
         AssemblyOperator sizeOperator =
           AssemblyCode.OperatorToSize(objectOperator, typeSize);
 
         if (rightSymbol.Value is BigInteger) {
-          StaticSymbol staticSymbol = ConstantExpression.Value(rightSymbol);
-          SymbolTable.StaticSet.Add(staticSymbol);
+          SymbolTable.StaticSet.Add(ConstantExpression.Value(rightSymbol));
           AddAssemblyCode(sizeOperator, rightSymbol.UniqueName, 0);
         }
         else if (rightSymbol.IsExternOrStatic()) {
@@ -1919,7 +1922,7 @@ namespace CCompiler {
         AddAssemblyCode(objectOperator, symbol.UniqueName, 0);
         SymbolTable.StaticSet.Add(ConstantExpression.Value(symbol));
       }
-      else if (symbol.Type.IsArrayFunctionStringStructOrUnion()) {
+      else if (symbol.Type.IsArrayFunctionOrString()) {
         if (symbol.IsAutoOrRegister()) {
           AddAssemblyCode(AssemblyOperator.mov, IntegralStorageName, 0,
                           BaseRegister(symbol));

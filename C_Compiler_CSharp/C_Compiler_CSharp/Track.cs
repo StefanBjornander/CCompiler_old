@@ -33,7 +33,7 @@ namespace CCompiler {
     public Track(Type type) {
       m_name = "track" + (TrackCount++);
       Assert.ErrorXXX(type != null);
-      Assert.ErrorXXX(!type.IsArrayFunctionStringStructOrUnion());
+      Assert.ErrorXXX(!type.IsArrayFunctionOrString());
       m_minSize = m_currSize = m_maxSize = type.Size();
       //m_maxSize = m_currSize = type.IsArray() ? TypeSize.PointerSize : type.Size();
       Assert.ErrorXXX((m_currSize == 1) || (m_currSize == 2) || (m_currSize == 4) || (m_currSize == 8));

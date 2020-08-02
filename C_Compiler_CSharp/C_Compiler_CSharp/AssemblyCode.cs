@@ -26,6 +26,11 @@ namespace CCompiler {
   
     public AssemblyCode(AssemblyOperator objectOp, object operand0,
                         object operand1, object operand2 = null) {
+      /*if ((objectOp == AssemblyOperator.mov) && (operand0 is Register) &&
+          (operand1 is int) && (operand2 is int)) {
+        int i = 1;
+      }*/
+
       m_operator = objectOp;
       m_operandArray[0] = operand0;
       m_operandArray[1] = operand1;
