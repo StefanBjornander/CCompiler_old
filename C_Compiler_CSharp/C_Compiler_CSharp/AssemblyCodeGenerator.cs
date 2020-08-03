@@ -57,9 +57,9 @@ namespace CCompiler {
 
     public AssemblyCode AddAssemblyCode(AssemblyOperator objectOp,
                           object operand0 = null, object operand1 = null,
-                          object operand2 = null) {
+                          object operand2 = null, int size = 0) {
       AssemblyCode assemblyCode =
-        new AssemblyCode(objectOp, operand0, operand1, operand2);
+        new AssemblyCode(objectOp, operand0, operand1, operand2, size);
       m_assemblyCodeList.Add(assemblyCode);
       return assemblyCode;
     }
@@ -1052,6 +1052,7 @@ namespace CCompiler {
              leftSymbol = (Symbol) middleCode[1],
              rightSymbol = (Symbol) middleCode[2];
 
+      int typeSize = leftSymbol.Type.SizeArray();
       Track leftTrack = null, rightTrack = null;
       m_trackMap.TryGetValue(leftSymbol, out leftTrack);
       m_trackMap.TryGetValue(rightSymbol, out rightTrack);
@@ -1094,8 +1095,8 @@ namespace CCompiler {
           AssemblyOperator sizeOperator =
             AssemblyCode.OperatorToSize(objectOperator,
                                         leftSymbol.Type.Size());
-          AddAssemblyCode(sizeOperator, Base(leftSymbol),
-                          Offset(leftSymbol), NameOrValue(rightSymbol));
+          AddAssemblyCode(objectOperator, Base(leftSymbol),
+                          Offset(leftSymbol), NameOrValue(rightSymbol), typeSize);
         }
         else {
           rightTrack = LoadValueToRegister(rightSymbol);
