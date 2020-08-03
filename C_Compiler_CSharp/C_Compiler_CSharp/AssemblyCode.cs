@@ -26,15 +26,11 @@ namespace CCompiler {
   
     public AssemblyCode(AssemblyOperator objectOp, object operand0,
                         object operand1, object operand2 = null, int size = 0) {
-      /*if ((objectOp == AssemblyOperator.mov) && (operand0 is Register) &&
-          (operand1 is int) && (operand2 is int)) {
-        int i = 1;
-      }*/
-
       m_operator = objectOp;
       m_operandArray[0] = operand0;
       m_operandArray[1] = operand1;
       m_operandArray[2] = operand2;
+
       FromAdditionToIncrement();
       CheckSize(size);
     }
@@ -57,17 +53,20 @@ namespace CCompiler {
           m_operator = OperatorToSize(m_operator, size);
         }*/
 
-        if (((operand0 is Register) || (operand0 is String)) &&
-            (operand1 is int) &&
-            ((operand2 is BigInteger) || (operand2 is String))) {
+        if (((operand0 is Register) || (operand0 is Track) || (operand0 is String)) &&
+            (operand1 is int) && ((operand2 is BigInteger) || (operand2 is String))) {
           m_operator = OperatorToSize(m_operator, size);
         }
         else if (((m_operator == AssemblyOperator.neg) ||
                   (m_operator == AssemblyOperator.not) ||
                   (m_operator == AssemblyOperator.inc) ||
-                  (m_operator == AssemblyOperator.dec)) &&
-                  ((operand0 is Register) || (operand0 is String)) &&
-                  (operand1 is int)) {
+                  (m_operator == AssemblyOperator.dec) ||
+                  (m_operator == AssemblyOperator.mul) ||
+                  (m_operator == AssemblyOperator.imul) ||
+                  (m_operator == AssemblyOperator.div) ||
+                  (m_operator == AssemblyOperator.idiv)) &&
+                  ((operand0 is Register) || (operand0 is Track) ||
+                   (operand0 is String)) && (operand1 is int)) {
           m_operator = OperatorToSize(m_operator, size);
         }
       }
@@ -835,10 +834,17 @@ namespace CCompiler {
       }
       // inc [bp + 2]; inc [global + 4]
       else if ((operand0 != null) && (operand1 is int)) {
-        Assert.ErrorXXX((operand0 is Register) || (operand0 is string));
-        Assert.ErrorXXX(operand2 == null);
-        return "\t" + operatorName +
-               " [" + operand0 + WithSign(operand1) + "]";
+        Assert.ErrorXXX(((operand0 is Register) || (operand0 is string)) && (operand2 == null));
+        if ((m_operator == AssemblyOperator.neg) || (m_operator == AssemblyOperator.not) ||
+            (m_operator == AssemblyOperator.inc) || (m_operator == AssemblyOperator.dec) ||
+            (m_operator == AssemblyOperator.mul) || (m_operator == AssemblyOperator.imul) ||
+            (m_operator == AssemblyOperator.div) || (m_operator == AssemblyOperator.idiv) ||
+            (m_operator == AssemblyOperator.fstcw) || (m_operator == AssemblyOperator.fldcw)) {
+          return "\t" + operatorName + " [" + operand0 + WithSign(operand1) + "]";
+        }
+        else {
+          return "\t" + operatorName + " " + operand0 + ", " + operand1;
+        }
       }
       // mov ax, bx; mov ax, 123; mov ax, global
       else if ((operand0 is Register) && (operand1 != null)) {
