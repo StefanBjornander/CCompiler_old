@@ -282,7 +282,7 @@ namespace CCompiler {
         case MiddleOperator.FunctionEnd:
           return "function end " + operand0;
         
-        case MiddleOperator.CallHeader:
+        case MiddleOperator.PreCall:
           if (operand1 != null) {
             int setSize = ((ISet<Symbol>) operand1).Count,
                 stackSize = (int) operand2;

@@ -631,7 +631,7 @@ namespace CCompiler {
             Assert.ErrorXXX((symbol0 == null) && (symbol1 == null) && (symbol2 == null));
             break;
 
-          case MiddleOperator.CallHeader: {
+          case MiddleOperator.PreCall: {
               middleCode[1] = CloneSet(integralSet);
               integralSetStack.Push(integralSet);
               integralSet = new HashSet<Symbol>();
@@ -724,7 +724,7 @@ namespace CCompiler {
                symbol2 = (operand2 is Symbol) ? ((Symbol) operand2) : null;
 
         switch (middleCode.Operator) {
-          case MiddleOperator.CallHeader:
+          case MiddleOperator.PreCall:
             middleCode[2] = stackSize;
             break;
 
