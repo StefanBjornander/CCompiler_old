@@ -1673,6 +1673,8 @@ namespace CCompiler {
         rightTrack = LoadValueToRegister(rightSymbol);
       }
 
+      //Assert.ErrorXXX(!(leftSymbol.Value is BigInteger));
+
       if (leftTrack != null) {
         if (rightTrack != null) {
           AddAssemblyCode(AssemblyOperator.cmp, leftTrack, rightTrack);
@@ -1690,7 +1692,7 @@ namespace CCompiler {
                           Base(rightSymbol), Offset(rightSymbol));
         }
       }
-      else if (leftSymbol.Value is BigInteger) {
+      /*else if (leftSymbol.Value is BigInteger) {
         Assert.ErrorXXX(rightSymbol.Value == null);
 
         if (rightTrack != null) {
@@ -1705,7 +1707,7 @@ namespace CCompiler {
           AddAssemblyCode(AssemblyOperator.cmp, leftSymbol.Value,
                           Base(rightSymbol), Offset(rightSymbol), typeSize);
         }
-      }
+      }*/
       else if (leftSymbol.Type.IsArrayFunctionOrString() ||
                (leftSymbol.Value is StaticAddress)) {
         Assert.ErrorXXX(rightSymbol.Value == null);

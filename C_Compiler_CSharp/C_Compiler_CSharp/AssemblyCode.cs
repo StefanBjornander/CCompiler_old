@@ -835,11 +835,12 @@ namespace CCompiler {
       // inc [bp + 2]; inc [global + 4]
       else if ((operand0 != null) && (operand1 is int)) {
         Assert.ErrorXXX(((operand0 is Register) || (operand0 is string)) && (operand2 == null));
-        if ((m_operator == AssemblyOperator.neg) || (m_operator == AssemblyOperator.not) ||
-            (m_operator == AssemblyOperator.inc) || (m_operator == AssemblyOperator.dec) ||
-            (m_operator == AssemblyOperator.mul) || (m_operator == AssemblyOperator.imul) ||
-            (m_operator == AssemblyOperator.div) || (m_operator == AssemblyOperator.idiv) ||
-            (m_operator == AssemblyOperator.fstcw) || (m_operator == AssemblyOperator.fldcw)) {
+        if (operatorName.StartsWith("neg") || operatorName.StartsWith("not") ||
+            operatorName.StartsWith("inc") || operatorName.StartsWith("dec") ||
+            operatorName.StartsWith("mul") || operatorName.StartsWith("imul") ||
+            operatorName.StartsWith("div") || operatorName.StartsWith("idiv") ||
+            operatorName.StartsWith("fst") || operatorName.StartsWith("fld") ||
+            operatorName.StartsWith("fist") || operatorName.StartsWith("fild")) {
           return "\t" + operatorName + " [" + operand0 + WithSign(operand1) + "]";
         }
         else {

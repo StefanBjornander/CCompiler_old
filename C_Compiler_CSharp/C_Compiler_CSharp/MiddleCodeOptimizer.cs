@@ -28,6 +28,7 @@ namespace CCompiler {
         SematicOptimization();
         //OptimizeRelation(); // XXX
         OptimizeCommutative();
+        SwapRelation();
         RemoveTrivialAssign();
         //OptimizeBinary();
         CheckIntegral(); // XXX
@@ -458,7 +459,7 @@ namespace CCompiler {
 
     // if 1 < x goto
     // if x > 1 goto
-    private void OptimizeRelation() {
+    private void SwapRelation() {
       foreach (MiddleCode middleCode in m_middleCodeList) {
         if (middleCode.IsRelation()) {
           Symbol leftSymbol = (Symbol) middleCode[1],
@@ -500,8 +501,7 @@ namespace CCompiler {
           Symbol leftSymbol = (Symbol) middleCode[1],
                  rightSymbol = (Symbol) middleCode[2];
    
-          if (leftSymbol.Type.IsIntegralPointerArrayOrFunction() && // not 1 - i
-              (leftSymbol.Value is BigInteger)) {            
+          if (leftSymbol.Value is BigInteger) {
             middleCode[1] = rightSymbol;
             middleCode[2] = leftSymbol;
           }
