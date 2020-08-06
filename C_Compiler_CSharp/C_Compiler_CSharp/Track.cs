@@ -45,7 +45,7 @@ namespace CCompiler {
       }
     }
 
-    public int Size {
+    public int CurrentSize {
       get {
         return m_currSize;
       }

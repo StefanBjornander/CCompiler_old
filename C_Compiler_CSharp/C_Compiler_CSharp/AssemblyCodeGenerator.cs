@@ -7,15 +7,9 @@ namespace CCompiler {
     public IDictionary<Symbol,Track> m_trackMap =
       new ListMap<Symbol,Track>();
     public List<AssemblyCode> m_assemblyCodeList;
-    public const int FloatingStackMaxSize = 7;
 
-    private int m_floatStackSize = 0, m_totalRecordSize = 0;
-    private bool m_returnFloating = false;
-    private Stack<int> m_recordSizeStack = new Stack<int>();
-    private Stack<IDictionary<Symbol,Track>> m_trackMapStack =
-      new Stack<IDictionary<Symbol,Track>>();
-    private Stack<IDictionary<Track, int>> m_postMapStack =
-      new Stack<IDictionary<Track, int>>();
+    private int m_floatStackSize = 0;
+    public const int FloatingStackMaxSize = 7;
 
     public static string IntegralStorageName =
       Symbol.SeparatorId + "IntegralStorage" + Symbol.NumberId;
@@ -380,10 +374,10 @@ namespace CCompiler {
           Track track = (Track) operand0;
 
           if (operand1 is int) {
-            track.Size = (int) operand1;
+            track.CurrentSize = (int) operand1;
           }
           else {
-            track.Size = ((Track) operand1).Size;
+            track.CurrentSize = ((Track) operand1).CurrentSize;
           }
 
           assamblyCode.Operator = AssemblyOperator.empty;
@@ -421,37 +415,41 @@ namespace CCompiler {
       }
     }
 
-    public void FunctionPreCall(MiddleCode middleCode) {
-      ISet<Symbol> integralSet = (ISet<Symbol>) middleCode[1];
-      Assert.ErrorXXX(integralSet.SequenceEqual(m_trackMap.Keys));
-      int stackSize = (int) middleCode[2];
-      Assert.ErrorXXX(stackSize == m_floatStackSize);
+    private int m_totalRecordSize = 0;
+    private Stack<int> m_recordSizeStack = new Stack<int>();
+    private Stack<IDictionary<Symbol, Track>> m_trackMapStack =
+      new Stack<IDictionary<Symbol, Track>>();
+    private Stack<IDictionary<Track,int>> m_postMapStack =
+      new Stack<IDictionary<Track,int>>();
 
+    public void FunctionPreCall(MiddleCode middleCode) {
       Register baseRegister = BaseRegister(null);
-      int recordOffset = (int) middleCode[0], recordSize = 0;
+      int recordSize = (int) middleCode[0], extraSize = 0;
 
       IDictionary<Track,int> postMap = new Dictionary<Track,int>();
       foreach (KeyValuePair<Symbol, Track> pair in m_trackMap) {
         Track track = pair.Value;
         AddAssemblyCode(AssemblyOperator.mov, baseRegister,
-                        recordOffset + recordSize, track);
-        postMap.Add(track, recordOffset + recordSize);
+                        recordSize + extraSize, track);
+        postMap.Add(track, recordSize + extraSize);
         Symbol symbol = pair.Key;
-        recordSize += symbol.Type.Size();
+        extraSize += symbol.Type.Size();
       }
 
       for (int count = 0; count < m_floatStackSize; ++count) {
         AddAssemblyCode(AssemblyOperator.fstp_qword, baseRegister,
-                        recordOffset + recordSize);
-        recordSize += 8;
+                        recordSize + extraSize);
+        extraSize += 8;
       }
 
-      m_recordSizeStack.Push(recordSize);
-      m_totalRecordSize += recordSize;
+      m_recordSizeStack.Push(extraSize);
+      m_totalRecordSize += extraSize;
       m_trackMapStack.Push(m_trackMap);
       m_postMapStack.Push(postMap);
       m_trackMap = new Dictionary<Symbol, Track>();
     }
+
+    private bool m_returnFloating = false;
 
     public void FunctionCall(MiddleCode middleCode, int index) {
       int recordSize = ((int) middleCode[1]) +
@@ -1629,7 +1627,7 @@ namespace CCompiler {
 
     private static int m_labelCount = 0;
     public void MemoryCopy(Track targetAddressTrack,
-                           Track sourceAddressTrack, int size, int index) {
+                           Track sourceAddressTrack,int size, int index) {
       Type countType = (size < 256) ? Type.UnsignedCharType
                                     : Type.UnsignedIntegerType;
       Track countTrack = new Track(countType),
