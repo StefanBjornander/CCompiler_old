@@ -886,6 +886,33 @@ namespace CCompiler {
       IntegralAssign(resultSymbol, assignSymbol);
     }
 
+    public void IntegralParameter(MiddleCode middleCode) {
+      Symbol fromSymbol = (Symbol) middleCode[1];
+      Symbol toSymbol; 
+
+      switch (fromSymbol.Type.Sort) {
+        case Sort.Array:
+          toSymbol = new Symbol(null, false, Storage.Auto, new Type(fromSymbol.Type.ArrayType));
+          break;
+
+        case Sort.Function:
+          toSymbol = new Symbol(null, false, Storage.Auto, new Type(fromSymbol.Type));
+          break;
+
+        case Sort.String:
+          toSymbol = new Symbol(null, false, Storage.Auto, new Type(new Type(Sort.Signed_Char)));
+          break;
+
+        default:
+          toSymbol = new Symbol(null, false, Storage.Auto, fromSymbol.Type);
+          break;
+      }
+
+      int parameterOffset = (int) middleCode[2];
+      toSymbol.Offset = m_totalExtraSize + parameterOffset;
+      IntegralAssign(toSymbol, fromSymbol);
+    }
+
     public void IntegralAssign(Symbol resultSymbol, Symbol assignSymbol) {
       Track resultTrack = null, assignTrack = null;
       m_trackMap.TryGetValue(resultSymbol, out resultTrack);
@@ -935,51 +962,41 @@ namespace CCompiler {
                           Offset(resultSymbol), assignTrack);
           m_trackMap.Remove(assignSymbol);
         }
-        else {
-          if (assignSymbol.Value is BigInteger) {
-            if (resultSymbol.Type.Size() == 8) {
-              assignTrack = new Track(assignSymbol);
-              AddAssemblyCode(AssemblyOperator.mov, assignTrack,
-                              assignSymbol.Value);
-              AddAssemblyCode(AssemblyOperator.mov, Base(resultSymbol),
-                            Offset(resultSymbol), assignTrack);
-            }
-            else {
-              AddAssemblyCode(AssemblyOperator.mov, Base(resultSymbol),
-                              Offset(resultSymbol), assignSymbol.Value,
-                              typeSize);
-            }
-          }
-          else if (assignSymbol.Type.IsArrayFunctionOrString() ||
-                   (assignSymbol.Value is StaticAddress)) {
+        else if (assignSymbol.Value is BigInteger) {
+          if (resultSymbol.Type.Size() == 8) {
+            assignTrack = new Track(assignSymbol);
+            AddAssemblyCode(AssemblyOperator.mov, assignTrack,
+                            assignSymbol.Value);
             AddAssemblyCode(AssemblyOperator.mov, Base(resultSymbol),
-                            Offset(resultSymbol), Base(assignSymbol),
-                                   typeSize);
-
-            int offset = Offset(assignSymbol);
-            if (offset != 0) {
-              AddAssemblyCode(AssemblyOperator.add, Base(resultSymbol),
-                              Offset(resultSymbol), (BigInteger) offset,
-                              typeSize);
-            }
+                          Offset(resultSymbol), assignTrack);
           }
           else {
-            assignTrack = LoadValueToRegister(assignSymbol);
             AddAssemblyCode(AssemblyOperator.mov, Base(resultSymbol),
-                            Offset(resultSymbol), assignTrack);
+                            Offset(resultSymbol), assignSymbol.Value,
+                            typeSize);
           }
+        }
+        else if (assignSymbol.Type.IsArrayFunctionOrString() ||
+                  (assignSymbol.Value is StaticAddress)) {
+          AddAssemblyCode(AssemblyOperator.mov, Base(resultSymbol),
+                          Offset(resultSymbol), Base(assignSymbol),
+                                  typeSize);
+
+          int offset = Offset(assignSymbol);
+          if (offset != 0) {
+            AddAssemblyCode(AssemblyOperator.add, Base(resultSymbol),
+                            Offset(resultSymbol), (BigInteger) offset,
+                            typeSize);
+          }
+        }
+        else {
+          assignTrack = LoadValueToRegister(assignSymbol);
+          AddAssemblyCode(AssemblyOperator.mov, Base(resultSymbol),
+                          Offset(resultSymbol), assignTrack);
         }
       }
     }
 
-    public void IntegralParameter(MiddleCode middleCode) {
-      Symbol fromSymbol = (Symbol) middleCode[1];
-      Symbol toSymbol =
-        new Symbol(null, false, Storage.Auto, fromSymbol.Type);
-      int parameterOffset = (int) middleCode[2];
-      toSymbol.Offset = m_totalExtraSize + parameterOffset;
-      IntegralAssign(toSymbol, fromSymbol);
-    }
 
     // Integral Unary
 
@@ -1017,27 +1034,36 @@ namespace CCompiler {
         {MiddleOperator.UnsignedGreaterThanEqual, AssemblyOperator.jae}};
 
     public void IntegralUnary(MiddleCode middleCode) {
-      MiddleOperator middleOperator = middleCode.Operator;
-      if (middleOperator == MiddleOperator.UnaryAdd) {
-        return;
-      }
+      Symbol resultSymbol = (Symbol)middleCode[0],
+             unarySymbol = (Symbol)middleCode[1];
+      IntegralUnary(middleCode.Operator, resultSymbol, unarySymbol);
+    }
 
-      Symbol resultSymbol = (Symbol) middleCode[0],
-             unarySymbol = (Symbol) middleCode[1];
-
+    public void IntegralUnary(MiddleOperator middleOperator,
+                              Symbol resultSymbol, Symbol unarySymbol) {
       AssemblyOperator objectOperator =
         m_middleToIntegralMap[middleOperator];
+      int typeSize = unarySymbol.Type.SizeArray();
 
       Track unaryTrack = null;
       m_trackMap.TryGetValue(unarySymbol, out unaryTrack);
 
-      if ((unaryTrack == null) && (resultSymbol == unarySymbol)) {
-        AddAssemblyCode(objectOperator, Base(unarySymbol),
-                        Offset(unarySymbol), null, unarySymbol.Type.Size());
+      if (unarySymbol.Value is BigInteger) {
+        SymbolTable.StaticSet.Add(ConstantExpression.Value(unarySymbol));
+        AddAssemblyCode(objectOperator, unarySymbol.UniqueName, 0, null, typeSize);
+      }
+      else if ((unaryTrack == null) && (resultSymbol == unarySymbol)) {
+        if (middleOperator != MiddleOperator.UnaryAdd) {
+          AddAssemblyCode(objectOperator, Base(unarySymbol),
+                          Offset(unarySymbol), null, typeSize);
+        }
       }
       else {
         unaryTrack = LoadValueToRegister(unarySymbol);
-        AddAssemblyCode(objectOperator, unaryTrack);
+
+        if (middleOperator != MiddleOperator.UnaryAdd) {
+          AddAssemblyCode(objectOperator, unaryTrack);
+        }
 
         if (resultSymbol.IsTemporary() &&
             (resultSymbol.AddressSymbol == null)) {
@@ -1171,7 +1197,9 @@ namespace CCompiler {
       AddAssemblyCode(AssemblyOperator.xor, clearTrack, clearTrack);
 
       Symbol rightSymbol = (Symbol) middleCode[2];
-      AssemblyOperator objectOperator =
+      IntegralUnary(middleCode.Operator, rightSymbol, rightSymbol);
+
+      /*AssemblyOperator objectOperator =
         m_middleToIntegralMap[middleCode.Operator];
 
       Track rightTrack = null;
@@ -1200,7 +1228,7 @@ namespace CCompiler {
           AddAssemblyCode(objectOperator, Base(rightSymbol),
                           Offset(rightSymbol), null, typeSize);
         }
-      }
+      }*/
 
       Register resultRegister, discardRegister;
       if ((middleCode.Operator == MiddleOperator.SignedModulo) ||

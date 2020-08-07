@@ -94,6 +94,25 @@ namespace CCompiler {
       }
     }
 
+    public bool IsMultiply() {
+      return IsMultiply(m_middleOperator);
+    }
+  
+    public static bool IsMultiply(MiddleOperator middleOperator) {
+      switch (middleOperator) {
+        case MiddleOperator.SignedMultiply:
+        case MiddleOperator.SignedDivide:
+        case MiddleOperator.SignedModulo:
+        case MiddleOperator.UnsignedMultiply:
+        case MiddleOperator.UnsignedDivide:
+        case MiddleOperator.UnsignedModulo:
+          return true;
+        
+        default:
+          return false;
+      }
+    }
+
     public bool IsModulo() {
       return IsModulo(m_middleOperator);
     }
