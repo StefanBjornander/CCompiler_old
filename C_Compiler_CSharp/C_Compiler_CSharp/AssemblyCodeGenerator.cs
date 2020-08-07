@@ -88,6 +88,12 @@ namespace CCompiler {
           }
         }
 
+        /*if ((SymbolTable.CurrentFunction != null) &&
+            SymbolTable.CurrentFunction.Name.Equals("main") &&
+            (middleIndex == 12)) {
+          int i = 1;
+        }*/
+
         switch (middleCode.Operator) {
           case MiddleOperator.PreCall:
             FunctionPreCall(middleCode);
@@ -158,7 +164,7 @@ namespace CCompiler {
           case MiddleOperator.BitwiseXOr:
           case MiddleOperator.ShiftLeft:
           case MiddleOperator.ShiftRight:
-            IntegralBinary(middleCode);
+            IntegralRelation(middleCode);
             break;
           
           case MiddleOperator.BinaryAdd:
@@ -1000,6 +1006,7 @@ namespace CCompiler {
         {MiddleOperator.NotEqual, AssemblyOperator.jne},
         {MiddleOperator.Carry, AssemblyOperator.jc},
         {MiddleOperator.NotCarry, AssemblyOperator.jnc},
+        {MiddleOperator.Compare, AssemblyOperator.cmp},
         {MiddleOperator.SignedLessThan, AssemblyOperator.jl},
         {MiddleOperator.SignedLessThanEqual,AssemblyOperator.jle},
         {MiddleOperator.SignedGreaterThan, AssemblyOperator.jg},
@@ -1047,7 +1054,7 @@ namespace CCompiler {
 
     // Integral Binary
 
-    public void IntegralBinary(MiddleCode middleCode) {
+    /*public void IntegralBinaryX(MiddleCode middleCode) {
       MiddleOperator middleOperator = middleCode.Operator;
       Symbol resultSymbol = (Symbol) middleCode[0],
              leftSymbol = (Symbol) middleCode[1],
@@ -1073,18 +1080,17 @@ namespace CCompiler {
         rightTrack = LoadValueToRegister(rightSymbol);
       }
 
+      if (MiddleCode.IsShift(middleOperator)) {
+        rightTrack =
+          LoadValueToRegister(rightSymbol, AssemblyCode.ShiftRegister);
+      }
+
       AssemblyOperator objectOperator =
         m_middleToIntegralMap[middleOperator];
       int typeSize = leftSymbol.Type.SizeArray();
 
       if ((leftTrack == null) && (resultSymbol == leftSymbol)) {
-        if (MiddleCode.IsShift(middleOperator)) {
-          rightTrack =
-            LoadValueToRegister(rightSymbol, AssemblyCode.ShiftRegister);
-          AddAssemblyCode(objectOperator, Base(leftSymbol),
-                          Offset(leftSymbol), rightTrack);
-        }
-        else if (rightTrack != null) {
+        if (rightTrack != null) {
           AddAssemblyCode(objectOperator, Base(leftSymbol),
                           Offset(leftSymbol), rightTrack);
         }
@@ -1107,12 +1113,7 @@ namespace CCompiler {
       else {
         leftTrack = LoadValueToRegister(leftSymbol);
 
-        if (MiddleCode.IsShift(middleOperator)) {
-          rightTrack =
-            LoadValueToRegister(rightSymbol, AssemblyCode.ShiftRegister);
-          AddAssemblyCode(objectOperator, leftTrack, rightTrack);
-        }
-        else if (rightTrack != null) {
+        if (rightTrack != null) {
           AddAssemblyCode(objectOperator, leftTrack, rightTrack);
         }
         else if (rightSymbol.Value is BigInteger) {
@@ -1120,7 +1121,8 @@ namespace CCompiler {
         }
         else if (rightSymbol.Type.IsArrayFunctionOrString() ||
                  (rightSymbol.Value is StaticAddress)) {
-          AddAssemblyCode(objectOperator, leftTrack, rightSymbol.UniqueName);        }
+          AddAssemblyCode(objectOperator, leftTrack, rightSymbol.UniqueName);
+        }
         else {
           AddAssemblyCode(objectOperator, leftTrack,
                           Base(rightSymbol), Offset(rightSymbol));
@@ -1138,7 +1140,7 @@ namespace CCompiler {
 
       m_trackMap.Remove(leftSymbol);
       m_trackMap.Remove(rightSymbol);
-    }
+    }*/
 
     // Integral Multiplication, Division, and Modulo
 
@@ -1259,10 +1261,27 @@ namespace CCompiler {
 
     // Integral Relation
 
+    public void IntegralBinary(MiddleCode middleCode) {
+      Symbol resultSymbol = (Symbol)middleCode[0],
+             leftSymbol = (Symbol)middleCode[1],
+             rightSymbol = (Symbol)middleCode[2];
+      IntegralBinary(middleCode.Operator, resultSymbol,
+                     leftSymbol, rightSymbol);
+    }
+
     public void IntegralRelation(MiddleCode middleCode) {
       Symbol leftSymbol = (Symbol) middleCode[1],
              rightSymbol = (Symbol) middleCode[2];
-             
+      IntegralBinary(MiddleOperator.Compare, null, leftSymbol, rightSymbol);
+      AssemblyOperator objectOperator =
+        m_middleToIntegralMap[middleCode.Operator];
+      int target = (int) middleCode[0];
+      AddAssemblyCode(objectOperator, null, null, target);
+    }
+
+    public void IntegralBinary(MiddleOperator middleOperator,
+                               Symbol resultSymbol,  Symbol leftSymbol,
+                               Symbol rightSymbol) {
       Track leftTrack = null, rightTrack = null;
       m_trackMap.TryGetValue(leftSymbol, out leftTrack);
       m_trackMap.TryGetValue(rightSymbol, out rightTrack);
@@ -1284,23 +1303,44 @@ namespace CCompiler {
         rightTrack = LoadValueToRegister(rightSymbol);
       }
 
+      if ((resultSymbol != null) && (resultSymbol != leftSymbol)) {
+        leftTrack = LoadValueToRegister(leftSymbol);
+      }
+
+      if (MiddleCode.IsShift(middleOperator)) {
+        rightTrack =
+          LoadValueToRegister(rightSymbol, AssemblyCode.ShiftRegister);
+      }
+
+      AssemblyOperator objectOperator = m_middleToIntegralMap[middleOperator];
       Assert.ErrorXXX(!(leftSymbol.Value is BigInteger));
 
       if (leftTrack != null) {
         if (rightTrack != null) {
-          AddAssemblyCode(AssemblyOperator.cmp, leftTrack, rightTrack);
+          AddAssemblyCode(objectOperator, leftTrack, rightTrack);
         }
         else if (rightSymbol.Value is BigInteger) {
-          AddAssemblyCode(AssemblyOperator.cmp, leftTrack, rightSymbol.Value);
+          AddAssemblyCode(objectOperator, leftTrack, rightSymbol.Value);
         }
         else if (rightSymbol.Type.IsArrayFunctionOrString() ||
                  (rightSymbol.Value is StaticAddress)) {
-          AddAssemblyCode(AssemblyOperator.cmp, leftTrack,
+          AddAssemblyCode(objectOperator, leftTrack,
                           Base(rightSymbol));
         }
         else {
-          AddAssemblyCode(AssemblyOperator.cmp, leftTrack,
+          AddAssemblyCode(objectOperator, leftTrack,
                           Base(rightSymbol), Offset(rightSymbol));
+        }
+
+        if (resultSymbol != null) {
+          if (resultSymbol.IsTemporary() &&
+              (resultSymbol.AddressSymbol == null)) {
+            m_trackMap.Add(resultSymbol, leftTrack);
+          }
+          else {
+            AddAssemblyCode(AssemblyOperator.mov, Base(resultSymbol),
+                            Offset(resultSymbol), leftTrack);
+          }
         }
       }
       else if (leftSymbol.Type.IsArrayFunctionOrString() ||
@@ -1308,50 +1348,46 @@ namespace CCompiler {
         Assert.ErrorXXX(rightSymbol.Value == null);
 
         if (rightTrack != null) {
-          AddAssemblyCode(AssemblyOperator.cmp, Base(leftSymbol), rightTrack);
+          AddAssemblyCode(objectOperator, Base(leftSymbol),
+                          0, rightTrack);
         }
         else if (rightSymbol.Value is BigInteger) {
-          AddAssemblyCode(AssemblyOperator.cmp, Base(leftSymbol),
+          AddAssemblyCode(objectOperator, Base(leftSymbol),
                           rightSymbol.Value, null, typeSize);
         }
         else if (rightSymbol.Type.IsArrayFunctionOrString() ||
                  (rightSymbol.Value is StaticAddress)) {
-          AddAssemblyCode(AssemblyOperator.cmp, Base(leftSymbol),
+          AddAssemblyCode(objectOperator, Base(leftSymbol),
                           Base(rightSymbol), null, typeSize);
         }
         else {
-          AddAssemblyCode(AssemblyOperator.cmp, Base(leftSymbol),
+          AddAssemblyCode(objectOperator, Base(leftSymbol),
                           Base(rightSymbol), Offset(rightSymbol), typeSize);
         }
       }
       else {
         if (rightTrack != null) {
-          AddAssemblyCode(AssemblyOperator.cmp, Base(leftSymbol),
+          AddAssemblyCode(objectOperator, Base(leftSymbol),
                           Offset(leftSymbol), rightTrack);
         }
         else if (rightSymbol.Value is BigInteger) {
-          AddAssemblyCode(AssemblyOperator.cmp, Base(leftSymbol),
+          AddAssemblyCode(objectOperator, Base(leftSymbol),
                           Offset(leftSymbol), rightSymbol.Value, typeSize);
         }
         else if (rightSymbol.Type.IsArrayFunctionOrString() ||
                  (rightSymbol.Value is StaticAddress)) {
-          AddAssemblyCode(AssemblyOperator.cmp, Base(leftSymbol),
+          AddAssemblyCode(objectOperator, Base(leftSymbol),
                           Offset(leftSymbol), Base(rightSymbol), typeSize);
         }
         else {
           leftTrack = LoadValueToRegister(leftSymbol);
-          AddAssemblyCode(AssemblyOperator.cmp, leftTrack,
+          AddAssemblyCode(objectOperator, leftTrack,
                           Base(rightSymbol), Offset(rightSymbol));
         }
       }
 
       m_trackMap.Remove(leftSymbol);
       m_trackMap.Remove(rightSymbol);
-
-      AssemblyOperator objectOperator =
-        m_middleToIntegralMap[middleCode.Operator];
-      int target = (int) middleCode[0];
-      AddAssemblyCode(objectOperator, null, null, target);
     }
 
     // Address
