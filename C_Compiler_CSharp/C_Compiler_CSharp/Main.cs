@@ -102,7 +102,7 @@ namespace CCompiler {
           makeStream.WriteLine();
 
           foreach (string arg in argList) {
-            makeStream.Write(arg.ToLower() + ".o: " + arg.ToLower() + ".c " + arg.ToLower() + ".asmNew");
+            makeStream.Write(arg.ToLower() + ".o: " + arg.ToLower() + ".c " + arg.ToLower() + ".asm");
             ISet<FileInfo> dependencySet = DependencySetMap[arg];
 
             foreach (FileInfo dependency in dependencySet) {
@@ -110,7 +110,7 @@ namespace CCompiler {
             }
 
             makeStream.WriteLine();
-            makeStream.WriteLine("\tnasm -f elf64 -o " + arg.ToLower() + ".o " + arg.ToLower() + ".asmNew");
+            makeStream.WriteLine("\tnasm -f elf64 -o " + arg.ToLower() + ".o " + arg.ToLower() + ".asm");
             makeStream.WriteLine();
           }
 
@@ -281,7 +281,7 @@ namespace CCompiler {
           }
         }
 
-        FileInfo assemblyFile = new FileInfo(file.FullName + ".asmNew");
+        FileInfo assemblyFile = new FileInfo(file.FullName + ".asm");
         File.Delete(assemblyFile.FullName);
         StreamWriter streamWriter = new StreamWriter(assemblyFile.FullName);
 

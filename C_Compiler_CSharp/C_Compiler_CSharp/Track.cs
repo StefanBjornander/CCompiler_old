@@ -88,11 +88,18 @@ namespace CCompiler {
       if ((track1.m_entryList.Count == 0) || (track2.m_entryList.Count == 0)) {
         return false;
       }
-    
+
       TrackEntry minEntry1 = track1.m_entryList[0],
                  minEntry2 = track2.m_entryList[0],
                  maxEntry1 = track1.m_entryList[track1.m_entryList.Count - 1],
                  maxEntry2 = track2.m_entryList[track2.m_entryList.Count - 1];
+
+      bool overlaps = !(((maxEntry1.Line() < minEntry2.Line()) ||
+                       (maxEntry2.Line() < minEntry1.Line())));
+
+      if (overlaps && track1.m_name.Equals("track67")) {
+        int i = 1;
+      }
 
       return !(((maxEntry1.Line() < minEntry2.Line()) ||
                 (maxEntry2.Line() < minEntry1.Line())));

@@ -88,7 +88,7 @@ namespace CCompiler {
           }
         }
 
-        if (middleCode.ToString().Contains("£temporary2307 = daysOfMonths + £temporary2306")) {
+        if (middleCode.ToString().Contains("currBlockPtr = £field123 -> currBlockPtr")) {
           int i = 1;
         }
 
@@ -881,6 +881,11 @@ namespace CCompiler {
     public void IntegralAssign(MiddleCode middleCode) {
       Symbol resultSymbol = (Symbol) middleCode[0],
              assignSymbol = (Symbol) middleCode[1];
+
+      if (middleCode.ToString().Contains("currBlockPtr = £field123 -> currBlockPtr")) {
+        int i = 1;
+      }
+
       IntegralAssign(resultSymbol, assignSymbol);
     }
 
@@ -955,7 +960,18 @@ namespace CCompiler {
         }
       }
       else {
-        //IntegralBinary(MiddleOperator.Assign, null, resultSymbol, assignSymbol);
+        /*resultTrack = IntegralBinary(MiddleOperator.Assign, null, resultSymbol, assignSymbol);
+
+        if (resultTrack != null) {
+          if (resultSymbol.IsTemporary() &&
+              (resultSymbol.AddressSymbol == null)) {
+            m_trackMap.Add(resultSymbol, resultTrack);
+          }
+          else {
+            AddAssemblyCode(AssemblyOperator.mov, Base(resultSymbol),
+                            Offset(resultSymbol), resultTrack);
+          }
+        }*/
 
         if (assignTrack != null) {
           AddAssemblyCode(AssemblyOperator.mov, Base(resultSymbol),
@@ -998,7 +1014,6 @@ namespace CCompiler {
         }
       }
     }
-
 
     // Integral Unary
 
@@ -1309,9 +1324,9 @@ namespace CCompiler {
       AddAssemblyCode(objectOperator, null, null, target);
     }
 
-    public void IntegralBinary(MiddleOperator middleOperator,
-                               Symbol resultSymbol,  Symbol leftSymbol,
-                               Symbol rightSymbol) {
+    public Track IntegralBinary(MiddleOperator middleOperator,
+                                Symbol resultSymbol,  Symbol leftSymbol,
+                                Symbol rightSymbol) {
       Track leftTrack = null, rightTrack = null;
       m_trackMap.TryGetValue(leftSymbol, out leftTrack);
       m_trackMap.TryGetValue(rightSymbol, out rightTrack);
@@ -1369,6 +1384,9 @@ namespace CCompiler {
                           Base(rightSymbol), Offset(rightSymbol));
         }
 
+        m_trackMap.Remove(leftSymbol);
+        m_trackMap.Remove(rightSymbol);
+
         if (resultSymbol != null) {
           if (resultSymbol.IsTemporary() &&
               (resultSymbol.AddressSymbol == null)) {
@@ -1378,6 +1396,9 @@ namespace CCompiler {
             AddAssemblyCode(AssemblyOperator.mov, Base(resultSymbol),
                             Offset(resultSymbol), leftTrack);
           }
+        }
+        else {
+          return leftTrack;
         }
       }
       else {
@@ -1427,10 +1448,12 @@ namespace CCompiler {
           AddAssemblyCode(objectOperator, Base(leftSymbol),
                           Offset(leftSymbol), rightTrack);
         }
-      }
 
-      m_trackMap.Remove(leftSymbol);
-      m_trackMap.Remove(rightSymbol);
+        m_trackMap.Remove(leftSymbol);
+        m_trackMap.Remove(rightSymbol);
+      }
+    
+      return null;
     }
 
     /*else if (leftSymbol.Type.IsArrayFunctionOrString() ||

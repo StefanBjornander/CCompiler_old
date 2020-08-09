@@ -48,7 +48,7 @@
     <Compile Include="AssemblyCode.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="AssemblyCodeGeneratorNew.cs">
+    <Compile Include="AssemblyCodeGenerator.cs">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="ZAssemblyCodeOptimizer.cs" />
