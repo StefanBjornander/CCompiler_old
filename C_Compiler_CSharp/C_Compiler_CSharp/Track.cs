@@ -18,7 +18,7 @@ namespace CCompiler {
 
       Assert.ErrorXXX(symbol != null);
       Type type = symbol.Type;
-      Assert.ErrorXXX(!type.IsFunction() && !type.IsStructOrUnion());
+      Assert.ErrorXXX(/*!type.IsFunction() &&*/ !type.IsStructOrUnion());
     
       if (type.IsArrayFunctionOrString()) {
         m_minSize = m_currSize = m_maxSize = TypeSize.PointerSize;

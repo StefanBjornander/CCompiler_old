@@ -88,11 +88,9 @@ namespace CCompiler {
           }
         }
 
-        /*if ((SymbolTable.CurrentFunction != null) &&
-            SymbolTable.CurrentFunction.Name.Equals("main") &&
-            (middleIndex == 12)) {
+        if (middleCode.ToString().Contains("£temporary2307 = daysOfMonths + £temporary2306")) {
           int i = 1;
-        }*/
+        }
 
         switch (middleCode.Operator) {
           case MiddleOperator.PreCall:
@@ -603,7 +601,7 @@ namespace CCompiler {
       }
       else {
         track = new Track(symbol, register);
-        Assert.ErrorXXX(!(symbol.Type.IsFunction()));
+        //Assert.ErrorXXX(!(symbol.Type.IsFunction()));
 
         if (symbol.Value is BigInteger)  {
           AddAssemblyCode(AssemblyOperator.mov, track, symbol.Value);
@@ -888,7 +886,7 @@ namespace CCompiler {
 
     public void IntegralParameter(MiddleCode middleCode) {
       Symbol fromSymbol = (Symbol) middleCode[1];
-      Symbol toSymbol; 
+      Symbol toSymbol; // = new Symbol(null, false, Storage.Auto, fromSymbol.Type); 
 
       switch (fromSymbol.Type.Sort) {
         case Sort.Array:
@@ -957,30 +955,34 @@ namespace CCompiler {
         }
       }
       else {
+        //IntegralBinary(MiddleOperator.Assign, null, resultSymbol, assignSymbol);
+
         if (assignTrack != null) {
           AddAssemblyCode(AssemblyOperator.mov, Base(resultSymbol),
                           Offset(resultSymbol), assignTrack);
           m_trackMap.Remove(assignSymbol);
         }
         else if (assignSymbol.Value is BigInteger) {
-          if (resultSymbol.Type.Size() == 8) {
+          BigInteger bigValue = (BigInteger) assignSymbol.Value;
+
+          if ((-2147483648 <= bigValue) && (bigValue <= 2147483647)) {
+            AddAssemblyCode(AssemblyOperator.mov, Base(resultSymbol),
+                            Offset(resultSymbol), assignSymbol.Value,
+                            typeSize);
+          }
+          else {
             assignTrack = new Track(assignSymbol);
             AddAssemblyCode(AssemblyOperator.mov, assignTrack,
                             assignSymbol.Value);
             AddAssemblyCode(AssemblyOperator.mov, Base(resultSymbol),
                           Offset(resultSymbol), assignTrack);
           }
-          else {
-            AddAssemblyCode(AssemblyOperator.mov, Base(resultSymbol),
-                            Offset(resultSymbol), assignSymbol.Value,
-                            typeSize);
-          }
         }
         else if (assignSymbol.Type.IsArrayFunctionOrString() ||
                   (assignSymbol.Value is StaticAddress)) {
           AddAssemblyCode(AssemblyOperator.mov, Base(resultSymbol),
                           Offset(resultSymbol), Base(assignSymbol),
-                                  typeSize);
+                          typeSize);
 
           int offset = Offset(assignSymbol);
           if (offset != 0) {
@@ -1313,33 +1315,35 @@ namespace CCompiler {
       Track leftTrack = null, rightTrack = null;
       m_trackMap.TryGetValue(leftSymbol, out leftTrack);
       m_trackMap.TryGetValue(rightSymbol, out rightTrack);
-      int typeSize = leftSymbol.Type.Size();
 
-      if ((leftTrack == null) && 
-          ((leftSymbol.Value is StaticAddress) &&
-           (((StaticAddress) leftSymbol.Value).Offset != 0)) ||
-          (leftSymbol.IsAutoOrRegister() &&
-           leftSymbol.Type.IsArray())) {
+      if ((leftTrack == null) &&
+          (((resultSymbol != null) && (resultSymbol != leftSymbol)) ||
+            leftSymbol.Type.IsArrayFunctionOrString() ||
+            (leftSymbol.Value is StaticAddress))) {
         leftTrack = LoadValueToRegister(leftSymbol);
       }
 
-      if ((rightTrack == null) && 
-          ((rightSymbol.Value is StaticAddress) &&
-           (((StaticAddress) rightSymbol.Value).Offset != 0)) ||
-          (rightSymbol.IsAutoOrRegister() &&
-           rightSymbol.Type.IsArray())) {
+      if ((rightTrack == null) &&
+          /*(middleOperator != MiddleOperator.BinaryAdd) &&
+          (middleOperator != MiddleOperator.BinarySubtract) &&*/
+          (middleOperator != MiddleOperator.Assign) &&
+          (((rightSymbol.Value is StaticAddress) &&
+            (((StaticAddress) rightSymbol.Value).Offset != 0)) ||
+           (rightSymbol.IsAutoOrRegister() &&
+            rightSymbol.Type.IsArray()))) {
         rightTrack = LoadValueToRegister(rightSymbol);
       }
 
-      if ((resultSymbol != null) && (resultSymbol != leftSymbol)) {
+      /*if ((resultSymbol != null) && (resultSymbol != leftSymbol)) {
         leftTrack = LoadValueToRegister(leftSymbol);
-      }
+      }*/
 
       if (MiddleCode.IsShift(middleOperator)) {
         rightTrack =
           LoadValueToRegister(rightSymbol, AssemblyCode.ShiftRegister);
       }
 
+      int typeSize = leftSymbol.Type.Size();
       AssemblyOperator objectOperator = m_middleToIntegralMap[middleOperator];
       Assert.ErrorXXX(!(leftSymbol.Value is BigInteger));
 
@@ -1352,8 +1356,13 @@ namespace CCompiler {
         }
         else if (rightSymbol.Type.IsArrayFunctionOrString() ||
                  (rightSymbol.Value is StaticAddress)) {
-          AddAssemblyCode(objectOperator, leftTrack,
-                          Base(rightSymbol));
+          AddAssemblyCode(objectOperator, leftTrack, Base(rightSymbol));
+
+          int rightOffset = Offset(rightSymbol);
+          Assert.ErrorXXX(rightOffset == 0);
+          if (rightOffset != 0) {
+            AddAssemblyCode(objectOperator, leftTrack, rightOffset);
+          }
         }
         else {
           AddAssemblyCode(objectOperator, leftTrack,
@@ -1371,46 +1380,52 @@ namespace CCompiler {
           }
         }
       }
-      else if (leftSymbol.Type.IsArrayFunctionOrString() ||
-               (leftSymbol.Value is StaticAddress)) {
-        Assert.ErrorXXX(rightSymbol.Value == null);
-
-        if (rightTrack != null) {
-          AddAssemblyCode(objectOperator, Base(leftSymbol),
-                          0, rightTrack);
-        }
-        else if (rightSymbol.Value is BigInteger) {
-          AddAssemblyCode(objectOperator, Base(leftSymbol),
-                          rightSymbol.Value, null, typeSize);
-        }
-        else if (rightSymbol.Type.IsArrayFunctionOrString() ||
-                 (rightSymbol.Value is StaticAddress)) {
-          AddAssemblyCode(objectOperator, Base(leftSymbol),
-                          Base(rightSymbol), null, typeSize);
-        }
-        else {
-          AddAssemblyCode(objectOperator, Base(leftSymbol),
-                          Base(rightSymbol), Offset(rightSymbol), typeSize);
-        }
-      }
       else {
         if (rightTrack != null) {
           AddAssemblyCode(objectOperator, Base(leftSymbol),
                           Offset(leftSymbol), rightTrack);
         }
         else if (rightSymbol.Value is BigInteger) {
-          AddAssemblyCode(objectOperator, Base(leftSymbol),
-                          Offset(leftSymbol), rightSymbol.Value, typeSize);
+          BigInteger bigValue = (BigInteger) rightSymbol.Value;
+
+          if ((-2147483648 <= bigValue) && (bigValue <= 2147483647)) {
+            AddAssemblyCode(objectOperator, Base(leftSymbol),
+                            Offset(leftSymbol), rightSymbol.Value, typeSize);
+          }
+          else {
+            rightTrack = new Track(rightSymbol);
+            AddAssemblyCode(AssemblyOperator.mov, rightTrack,
+                            rightSymbol.Value);
+            AddAssemblyCode(AssemblyOperator.mov, Base(leftSymbol),
+                          Offset(leftSymbol), rightTrack);
+          }
         }
         else if (rightSymbol.Type.IsArrayFunctionOrString() ||
                  (rightSymbol.Value is StaticAddress)) {
           AddAssemblyCode(objectOperator, Base(leftSymbol),
                           Offset(leftSymbol), Base(rightSymbol), typeSize);
+
+          int rightOffset = Offset(rightSymbol);
+          //Assert.ErrorXXX(rightOffset == 0);
+          if (rightOffset != 0) {
+            if (middleOperator == MiddleOperator.Assign) {
+              AddAssemblyCode(AssemblyOperator.add, Base(leftSymbol),
+                              Offset(leftSymbol), (BigInteger) rightOffset, typeSize);
+            }
+            else {
+              AddAssemblyCode(objectOperator, Base(leftSymbol),
+                              Offset(leftSymbol), (BigInteger) rightOffset, typeSize);
+            }
+          }
         }
         else {
-          leftTrack = LoadValueToRegister(leftSymbol);
+          /*leftTrack = LoadValueToRegister(leftSymbol);
           AddAssemblyCode(objectOperator, leftTrack,
-                          Base(rightSymbol), Offset(rightSymbol));
+                          Base(rightSymbol), Offset(rightSymbol));*/
+
+          rightTrack = LoadValueToRegister(rightSymbol);
+          AddAssemblyCode(objectOperator, Base(leftSymbol),
+                          Offset(leftSymbol), rightTrack);
         }
       }
 
@@ -1418,6 +1433,33 @@ namespace CCompiler {
       m_trackMap.Remove(rightSymbol);
     }
 
+    /*else if (leftSymbol.Type.IsArrayFunctionOrString() ||
+              (leftSymbol.Value is StaticAddress)) {
+      Assert.ErrorXXX(rightSymbol.Value == null);
+
+      if (rightTrack != null) {
+        AddAssemblyCode(objectOperator, Base(leftSymbol), rightTrack);
+      }
+      else if (rightSymbol.Value is BigInteger) {
+        AddAssemblyCode(objectOperator, Base(leftSymbol),
+                        rightSymbol.Value, null, typeSize);
+      }
+      else if (rightSymbol.Type.IsArrayFunctionOrString() ||
+                (rightSymbol.Value is StaticAddress)) {
+        AddAssemblyCode(objectOperator, Base(leftSymbol),
+                        Base(rightSymbol), null, typeSize);
+
+        int rightOffset = Offset(rightSymbol);
+        if (rightOffset != 0) {
+          AddAssemblyCode(objectOperator, Base(leftSymbol),
+                          rightOffset, null, typeSize);
+        }
+      }	
+      else {
+        AddAssemblyCode(objectOperator, Base(leftSymbol),
+                        Base(rightSymbol), Offset(rightSymbol), typeSize);
+      }
+    }*/
     // Address
 
     public void Address(MiddleCode middleCode) {

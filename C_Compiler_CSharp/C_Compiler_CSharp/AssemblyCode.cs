@@ -31,6 +31,10 @@ namespace CCompiler {
       m_operandArray[1] = operand1;
       m_operandArray[2] = operand2;
 
+      /*if ((operand0 is Register) && (operand1 is int) && (operand2 is int)) {
+        int i = 1;
+      }*/
+
       FromAdditionToIncrement();
       CheckSize(size);
     }
