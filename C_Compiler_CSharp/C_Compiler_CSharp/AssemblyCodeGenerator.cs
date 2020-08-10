@@ -960,9 +960,10 @@ namespace CCompiler {
         }
       }
       else {
-        /*resultTrack = IntegralBinary(MiddleOperator.Assign, null, resultSymbol, assignSymbol);
+        //resultTrack = 
+        //IntegralBinary(MiddleOperator.Assign, resultSymbol, resultSymbol, assignSymbol);
 
-        if (resultTrack != null) {
+        /*if (resultTrack != null) {
           if (resultSymbol.IsTemporary() &&
               (resultSymbol.AddressSymbol == null)) {
             m_trackMap.Add(resultSymbol, resultTrack);
