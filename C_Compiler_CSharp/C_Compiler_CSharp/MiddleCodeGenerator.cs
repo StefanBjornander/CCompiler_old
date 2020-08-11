@@ -2263,18 +2263,23 @@ namespace CCompiler {
       List<MiddleCode> longList = new List<MiddleCode>();
       longList.AddRange(functionExpression.LongList);
 
-      int count = 0, offset = SymbolTable.FunctionHeaderSize, extra = 0;
+      int index = 0, offset = SymbolTable.FunctionHeaderSize, extra = 0;
       foreach (Expression argumentExpression in argumentList) {
         longList.AddRange(argumentExpression.LongList);
 
-        if ((typeList == null) || (count++ >= typeList.Count)) {
-          extra += ParameterSize(argumentExpression.Symbol);
+        Type type;
+        if ((typeList != null) && (index < typeList.Count)) {
+          type = typeList[index++];
+        }
+        else {
+          type = ParameterType(argumentExpression.Symbol);
+          extra += type.Size();
         }
 
-        AddMiddleCode(longList, MiddleOperator.Parameter, null,
+        AddMiddleCode(longList, MiddleOperator.Parameter, type,
                       argumentExpression.Symbol, SymbolTable.CurrentTable.
                       CurrentOffset + totalOffset + offset);
-        offset += ParameterSize(argumentExpression.Symbol);
+        offset += type.Size();
       }
 
       Symbol functionSymbol = functionExpression.Symbol;
@@ -2334,20 +2339,25 @@ namespace CCompiler {
       }
 
       int offset = ParameterOffsetStack.Pop();
-      ParameterOffsetStack.Push(offset + ParameterSize(expression.Symbol));
+      ParameterOffsetStack.Push(offset +
+                                ParameterType(expression.Symbol).Size());
       return (new Expression(expression.Symbol, expression.LongList,
                              expression.LongList));
-    }
+                                                }
  
-    private static int ParameterSize(Symbol symbol) {
+    private static Type ParameterType(Symbol symbol) {
       switch (symbol.Type.Sort) {
         case Sort.Array:
-        case Sort.String:
+          return (new Type(symbol.Type.ArrayType));
+
         case Sort.Function:
-          return TypeSize.PointerSize;
+          return (new Type(symbol.Type));
+
+        case Sort.String:
+          return (new Type(new Type(Sort.Signed_Char)));
 
         default:
-          return symbol.Type.Size();
+          return symbol.Type;
       }
     }
    

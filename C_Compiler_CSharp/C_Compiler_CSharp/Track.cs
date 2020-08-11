@@ -97,10 +97,6 @@ namespace CCompiler {
       bool overlaps = !(((maxEntry1.Line() < minEntry2.Line()) ||
                        (maxEntry2.Line() < minEntry1.Line())));
 
-      if (overlaps && track1.m_name.Equals("track67")) {
-        int i = 1;
-      }
-
       return !(((maxEntry1.Line() < minEntry2.Line()) ||
                 (maxEntry2.Line() < minEntry1.Line())));
     }
