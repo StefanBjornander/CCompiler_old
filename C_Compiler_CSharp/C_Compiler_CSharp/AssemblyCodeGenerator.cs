@@ -911,58 +911,8 @@ namespace CCompiler {
         }
       }
       else {
-        IntegralBinary(MiddleOperator.Assign, resultSymbol, resultSymbol, assignSymbol);
-
-        /*if (resultTrack != null) {
-          if (resultSymbol.IsTemporary() &&
-              (resultSymbol.AddressSymbol == null)) {
-            m_trackMap.Add(resultSymbol, resultTrack);
-          }
-          else {
-            AddAssemblyCode(AssemblyOperator.mov, Base(resultSymbol),
-                            Offset(resultSymbol), resultTrack);
-          }
-        }
-
-        if (assignTrack != null) {
-          AddAssemblyCode(AssemblyOperator.mov, Base(resultSymbol),
-                          Offset(resultSymbol), assignTrack);
-          m_trackMap.Remove(assignSymbol);
-        }
-        else if (assignSymbol.Value is BigInteger) {
-          BigInteger bigValue = (BigInteger) assignSymbol.Value;
-
-          if ((-2147483648 <= bigValue) && (bigValue <= 2147483647)) {
-            AddAssemblyCode(AssemblyOperator.mov, Base(resultSymbol),
-                            Offset(resultSymbol), assignSymbol.Value,
-                            typeSize);
-          }
-          else {
-            assignTrack = new Track(assignSymbol);
-            AddAssemblyCode(AssemblyOperator.mov, assignTrack,
-                            assignSymbol.Value);
-            AddAssemblyCode(AssemblyOperator.mov, Base(resultSymbol),
-                          Offset(resultSymbol), assignTrack);
-          }
-        }
-        else if (assignSymbol.Type.IsArrayFunctionOrString() ||
-                 (assignSymbol.Value is StaticAddress)) {
-          AddAssemblyCode(AssemblyOperator.mov, Base(resultSymbol),
-                          Offset(resultSymbol), Base(assignSymbol),
-                          typeSize);
-
-          int offset = Offset(assignSymbol);
-          if (offset != 0) {
-            AddAssemblyCode(AssemblyOperator.add, Base(resultSymbol),
-                            Offset(resultSymbol), (BigInteger) offset,
-                            typeSize);
-          }
-        }
-        else {
-          assignTrack = LoadValueToRegister(assignSymbol);
-          AddAssemblyCode(AssemblyOperator.mov, Base(resultSymbol),
-                          Offset(resultSymbol), assignTrack);
-        }*/
+        IntegralBinary(MiddleOperator.Assign, resultSymbol,
+                       resultSymbol, assignSymbol);
       }
     }
 
@@ -1020,7 +970,8 @@ namespace CCompiler {
         SymbolTable.StaticSet.Add(ConstantExpression.Value(unarySymbol));
         AddAssemblyCode(objectOperator, unarySymbol.UniqueName, 0, null, typeSize);
       }
-      else if ((unaryTrack == null) && (resultSymbol == unarySymbol)) {
+      else if (resultSymbol == unarySymbol) {
+        Assert.ErrorXXX(unaryTrack == null);
         if (middleOperator != MiddleOperator.UnaryAdd) {
           AddAssemblyCode(objectOperator, Base(unarySymbol),
                           Offset(unarySymbol), null, typeSize);
@@ -1033,17 +984,17 @@ namespace CCompiler {
           AddAssemblyCode(objectOperator, unaryTrack);
         }
 
-        if (resultSymbol.IsTemporary() &&
-            (resultSymbol.AddressSymbol == null)) {
+        if (resultSymbol.IsTemporary()) {
+          Assert.ErrorXXX(resultSymbol.AddressSymbol == null);
           m_trackMap.Add(resultSymbol, unaryTrack);
         }
         else {
           AddAssemblyCode(AssemblyOperator.mov, Base(resultSymbol),
                           Offset(resultSymbol), unaryTrack);
         }
-      }
 
-      m_trackMap.Remove(unarySymbol);
+        m_trackMap.Remove(unarySymbol);
+      }
     }
 
     // Integral Multiplication, Division, and Modulo
@@ -1091,8 +1042,8 @@ namespace CCompiler {
       Symbol resultSymbol = (Symbol) middleCode[0];
       Track resultTrack = new Track(resultSymbol, resultRegister);
 
-      if (resultSymbol.IsTemporary() &&
-          (resultSymbol.AddressSymbol == null)) {
+      if (resultSymbol.IsTemporary()) {
+        Assert.ErrorXXX(resultSymbol.AddressSymbol == null);
         m_trackMap.Add(resultSymbol, resultTrack);
         AddAssemblyCode(AssemblyOperator.empty, resultTrack);
       }
@@ -1154,8 +1105,8 @@ namespace CCompiler {
       AddAssemblyCode(objectOperator, null, null, target);
     }
 
-    public Track IntegralBinary(MiddleOperator middleOperator,
-                                Symbol resultSymbol,  Symbol leftSymbol,
+    public void IntegralBinary(MiddleOperator middleOperator,
+                               Symbol resultSymbol,  Symbol leftSymbol,
                                 Symbol rightSymbol) {
       Track leftTrack = null, rightTrack = null;
       m_trackMap.TryGetValue(leftSymbol, out leftTrack);
@@ -1170,7 +1121,7 @@ namespace CCompiler {
 
       if ((rightTrack == null) &&
           (middleOperator != MiddleOperator.BinaryAdd) &&
-          //(middleOperator != MiddleOperator.BinarySubtract) &&
+          (middleOperator != MiddleOperator.BinarySubtract) &&
           (middleOperator != MiddleOperator.Assign) &&
           (((rightSymbol.Value is StaticAddress) &&
             (((StaticAddress) rightSymbol.Value).Offset != 0)) ||
@@ -1216,21 +1167,15 @@ namespace CCompiler {
                           Base(rightSymbol), Offset(rightSymbol));
         }
 
-        m_trackMap.Remove(leftSymbol);
-        m_trackMap.Remove(rightSymbol);
-
         if (resultSymbol != null) {
-          if (resultSymbol.IsTemporary() &&
-              (resultSymbol.AddressSymbol == null)) {
+          if (resultSymbol.IsTemporary()) {
+            Assert.ErrorXXX(resultSymbol.AddressSymbol == null);
             m_trackMap.Add(resultSymbol, leftTrack);
           }
           else {
             AddAssemblyCode(AssemblyOperator.mov, Base(resultSymbol),
                             Offset(resultSymbol), leftTrack);
           }
-        }
-        else {
-          return leftTrack;
         }
       }
       else {
@@ -1262,11 +1207,13 @@ namespace CCompiler {
           if (rightOffset != 0) {
             if (middleOperator == MiddleOperator.Assign) {
               AddAssemblyCode(AssemblyOperator.add, Base(leftSymbol),
-                              Offset(leftSymbol), (BigInteger) rightOffset, typeSize);
+                              Offset(leftSymbol), (BigInteger) rightOffset,
+                              typeSize);
             }
             else {
               AddAssemblyCode(objectOperator, Base(leftSymbol),
-                              Offset(leftSymbol), (BigInteger) rightOffset, typeSize);
+                              Offset(leftSymbol), (BigInteger) rightOffset,
+                              typeSize);
             }
           }
         }
@@ -1275,12 +1222,10 @@ namespace CCompiler {
           AddAssemblyCode(objectOperator, Base(leftSymbol),
                           Offset(leftSymbol), rightTrack);
         }
-
-        m_trackMap.Remove(leftSymbol);
-        m_trackMap.Remove(rightSymbol);
       }
-    
-      return null;
+
+      m_trackMap.Remove(leftSymbol);
+      m_trackMap.Remove(rightSymbol);
     }
 
     // Address
