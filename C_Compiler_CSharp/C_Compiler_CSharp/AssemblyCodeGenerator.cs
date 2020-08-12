@@ -873,8 +873,9 @@ namespace CCompiler {
       m_trackMap.TryGetValue(assignSymbol, out assignTrack);
       int typeSize = assignSymbol.Type.SizeArray();
 
-      if ((resultSymbol.IsTemporary()) &&
-          (resultSymbol.AddressSymbol == null)) {
+      if (resultSymbol.IsTemporary()) {
+        Assert.ErrorXXX(resultSymbol.AddressSymbol == null);
+
         if (assignTrack != null) {
           if (resultTrack != null) {
             resultTrack.Replace(m_assemblyCodeList, assignTrack);
@@ -1003,7 +1004,7 @@ namespace CCompiler {
       new Dictionary<int,Register>() {{1, Register.al}, {2, Register.ax},
                                       {4, Register.eax}, {8, Register.rax}};
 
-    public static IDictionary<int,Register> m_clearRegisterMap =
+    public static IDictionary<int,Register> m_zeroRegisterMap =
       new Dictionary<int,Register>() {{1, Register.ah}, {2, Register.dx},
                                       {4, Register.edx}, {8, Register.rdx}};
 
@@ -1021,14 +1022,15 @@ namespace CCompiler {
       Register leftRegister = m_leftRegisterMap[typeSize];
       Track leftTrack = LoadValueToRegister(leftSymbol, leftRegister);
 
-      Register clearRegister = m_clearRegisterMap[typeSize];
-      Track clearTrack = new Track(leftSymbol, clearRegister);
-      AddAssemblyCode(AssemblyOperator.xor, clearTrack, clearTrack);
+      Register zeroRegister = m_zeroRegisterMap[typeSize];
+      Track zeroTrack = new Track(leftSymbol, zeroRegister);
+      AddAssemblyCode(AssemblyOperator.xor, zeroTrack, zeroTrack);
 
       Symbol rightSymbol = (Symbol) middleCode[2];
       IntegralUnary(middleCode.Operator, rightSymbol, rightSymbol);
 
       Register resultRegister, discardRegister;
+
       if ((middleCode.Operator == MiddleOperator.SignedModulo) ||
           (middleCode.Operator == MiddleOperator.UnsignedModulo)) {
         resultRegister = m_remainderRegisterMap[typeSize];
@@ -1052,8 +1054,8 @@ namespace CCompiler {
                         Offset(resultSymbol), resultTrack);
       }
 
-      Track otherTrack = new Track(resultSymbol, discardRegister);
-      AddAssemblyCode(AssemblyOperator.empty, otherTrack);
+      Track discaredTrack = new Track(resultSymbol, discardRegister);
+      AddAssemblyCode(AssemblyOperator.empty, discaredTrack);
     }
 
     // Case
