@@ -1062,24 +1062,13 @@ namespace CCompiler {
 
     public void Case(MiddleCode middleCode) {
       Symbol switchSymbol = (Symbol) middleCode[1];
-      Track switchTrack;
-
-      if (m_trackMap.ContainsKey(switchSymbol)) {
-        switchTrack = m_trackMap[switchSymbol];
-      }
-      else {
-        switchTrack = new Track(switchSymbol);
-        m_trackMap.Add(switchSymbol, switchTrack);
-        AddAssemblyCode(AssemblyOperator.mov, switchTrack,
-                        Base(switchSymbol), Offset(switchSymbol));
-      }
-
+      Track switchTrack = LoadValueToRegister(switchSymbol);
       Symbol caseSymbol = (Symbol) middleCode[2];
       BigInteger caseValue = (BigInteger) caseSymbol.Value; // cmp ax, 123
       AddAssemblyCode(AssemblyOperator.cmp, switchTrack, caseValue);
-      // Note: no m_trackMap.Remove(symbol);
       int target = (int) middleCode[0];
       AddAssemblyCode(AssemblyOperator.je, null, null, target);
+      m_trackMap.Add(switchSymbol, switchTrack);
     }
     
     public void CaseEnd(MiddleCode middleCode) {
@@ -1240,14 +1229,16 @@ namespace CCompiler {
       m_trackMap.Remove(addressSymbol);
     }
 
-    public void FloatingDereference(MiddleCode middleCode) {
+    public void IntegralDereference(MiddleCode middleCode) {
       Symbol resultSymbol = (Symbol) middleCode[0];
+      Assert.ErrorXXX(resultSymbol.AddressSymbol != null);
       Track addressTrack = LoadValueToRegister(resultSymbol.AddressSymbol);
       m_trackMap.Add(resultSymbol.AddressSymbol, addressTrack);
     }
 
-    public void IntegralDereference(MiddleCode middleCode) {
+    public void FloatingDereference(MiddleCode middleCode) {
       Symbol resultSymbol = (Symbol) middleCode[0];
+      Assert.ErrorXXX(resultSymbol.AddressSymbol != null);
       Track addressTrack = LoadValueToRegister(resultSymbol.AddressSymbol);
       m_trackMap.Add(resultSymbol.AddressSymbol, addressTrack);
     }
@@ -1281,10 +1272,11 @@ namespace CCompiler {
     }
 
     public void FloatingParameter(MiddleCode middleCode) {
-      Symbol paramSymbol = (Symbol) middleCode[1];
-      Symbol saveSymbol = new Symbol(paramSymbol.Type);
-      saveSymbol.Offset = ((int) middleCode[2]) + m_totalExtraSize;
-      TopPopSymbol(saveSymbol, TopOrPop.Pop);
+      Type paramType = (Type) middleCode[0];
+      Symbol paramSymbol = new Symbol(paramType);
+      int paramOffset = (int) middleCode[2];
+      paramSymbol.Offset = m_totalExtraSize + paramOffset;
+      TopPopSymbol(paramSymbol, TopOrPop.Pop);
     }
 
     // Floating Relation
@@ -1330,19 +1322,20 @@ namespace CCompiler {
         AddAssemblyCode(AssemblyOperator.fld1);
       }
       else if ((symbol.Value is BigInteger) || (symbol.Value is decimal)) {
-        AddAssemblyCode(objectOperator, symbol.UniqueName, 0);
         SymbolTable.StaticSet.Add(ConstantExpression.Value(symbol));
+        AddAssemblyCode(objectOperator, symbol.UniqueName, 0);
       }
       else if (m_trackMap.TryGetValue(symbol, out track)) {
         m_trackMap.Remove(symbol);
-        AddAssemblyCode(AssemblyOperator.mov, IntegralStorageName, 0,
-                        track);
+        AddAssemblyCode(AssemblyOperator.mov, IntegralStorageName, 0, track);
+        //string registerName = "Register" + symbol.Type.Size();
+        //SymbolTable.StaticSet.Add(ConstantExpression.Value(registerName, symbol.Type, null));
         AddAssemblyCode(objectOperator, IntegralStorageName, 0);
       }
-      else if (symbol.Value is BigInteger) {
+/*      else if (symbol.Value is BigInteger) {
         AddAssemblyCode(objectOperator, symbol.UniqueName, 0);
         SymbolTable.StaticSet.Add(ConstantExpression.Value(symbol));
-      }
+      }*/
       else if (symbol.Type.IsArrayFunctionOrString()) {
         AddAssemblyCode(AssemblyOperator.mov, IntegralStorageName, 0,
                         Base(symbol), TypeSize.PointerSize);
