@@ -1351,8 +1351,10 @@ namespace CCompiler {
     }
 
     private static string AddStaticContainer(Type type) {
-      string containerName = "container" + type.Size() + "bytes" + Symbol.NumberId;
-      SymbolTable.StaticSet.Add(ConstantExpression.Value(containerName, type, null));
+      string containerName = "container" + type.Size() +
+                             "bytes" + Symbol.NumberId;
+      SymbolTable.StaticSet.Add(ConstantExpression.Value(containerName,
+                                                         type, null));
       return containerName;
     }
 
@@ -1386,7 +1388,7 @@ namespace CCompiler {
       string containerName = AddStaticContainer(Type.LongDoubleType);
       AddAssemblyCode(AssemblyOperator.fistp_word, containerName, 0);
     }
-      
+
     public void TopPopSymbol(Symbol symbol, TopOrPop topOrPop) {
       Assert.ErrorXXX(symbol != null);
       AssemblyOperator objectOperator;
@@ -1398,7 +1400,7 @@ namespace CCompiler {
       else {
         objectOperator = m_floatTopMap[symbol.Type.Sort];
       }
-    
+
       if (symbol.IsTemporary() && (symbol.AddressSymbol == null) &&
           (symbol.Offset == 0)) {
         string containerName = AddStaticContainer(symbol.Type);
@@ -1422,9 +1424,12 @@ namespace CCompiler {
       int toSize = toType.SizeArray(), fromSize = fromType.SizeArray();
 
       Track fromTrack = LoadValueToRegister(fromSymbol);
-      AddAssemblyCode(AssemblyOperator.set_track_size, fromTrack, toSize);
+
+      //Assert.ErrorXXX(fromSize != toSize);
 
       if (fromSize != toSize) {
+        AddAssemblyCode(AssemblyOperator.set_track_size, fromTrack, toSize);
+
         if (fromSize < toSize) {
           if (toSize == 8) {
             Track toTrack = new Track(toSymbol);
@@ -1436,7 +1441,6 @@ namespace CCompiler {
             AddAssemblyCode(AssemblyOperator.and, fromTrack,
                             TypeSize.GetMask(fromType.Sort));
           }
-
         }
 
         if (fromType.IsSigned() && toType.IsSigned()) {
@@ -1480,9 +1484,8 @@ namespace CCompiler {
       Symbol sourceSymbol = (Symbol) middleCode[1];
       Symbol targetSymbol = new Symbol(Type.PointerTypeX);
 
-      int paramOffset = ((int) middleCode[2]) +
-                        m_totalExtraSize;
-      targetSymbol.Offset = paramOffset;
+      int paramOffset = (int) middleCode[2];
+      targetSymbol.Offset = m_totalExtraSize + paramOffset;
 
       Track sourceAddressTrack = LoadAddressToRegister(sourceSymbol);
       Track targetAddressTrack = LoadAddressToRegister(targetSymbol);
@@ -1506,8 +1509,9 @@ namespace CCompiler {
     }
 
     private static int m_labelCount = 0;
-    public void MemoryCopy(Track targetAddressTrack,
-                           Track sourceAddressTrack,int size, int index) {
+
+    private void MemoryCopy(Track targetAddressTrack,
+                            Track sourceAddressTrack, int size, int index) {
       Type countType = (size < 256) ? Type.UnsignedCharType
                                     : Type.UnsignedIntegerType;
       Track countTrack = new Track(countType),
@@ -1515,7 +1519,8 @@ namespace CCompiler {
 
       AddAssemblyCode(AssemblyOperator.mov, countTrack, (BigInteger) size);
       int labelIndex = m_labelCount++;
-      AddAssemblyCode(AssemblyOperator.label, "x" + labelIndex);
+      string labelText = AssemblyCode.MakeMemoryLabel(labelIndex);
+      AddAssemblyCode(AssemblyOperator.label, labelText);
       AddAssemblyCode(AssemblyOperator.mov, valueTrack,
                       sourceAddressTrack, 0);
       AddAssemblyCode(AssemblyOperator.mov, targetAddressTrack,

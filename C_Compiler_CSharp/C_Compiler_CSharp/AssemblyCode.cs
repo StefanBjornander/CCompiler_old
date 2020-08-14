@@ -800,7 +800,10 @@ namespace CCompiler {
           return "\t" + operatorName + " " + operand2;
         }
         else {
-          return "\t" + operatorName + " x" + operand1;
+          int labelIndex = (int) operand1;
+          string labelText = MakeMemoryLabel(labelIndex);
+          return "\t" + operatorName + " " + labelText;
+          //return "\t" + operatorName + " x" + operand1;
         }
       }
       // mov ax, [bp + 2]; mov ax, [global + 4]
@@ -873,6 +876,10 @@ namespace CCompiler {
       }
     }
   
+    public static string MakeMemoryLabel(int labelIndex) {
+      return "memorycopy" + labelIndex;
+    }
+
     private string WithSign(object value) {
       int offset = (int) value;
       
