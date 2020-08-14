@@ -11,8 +11,8 @@ namespace CCompiler {
     private int m_floatStackSize = 0;
     public const int FloatingStackMaxSize = 7;
 
-    public static string IntegralStorageName =
-      Symbol.SeparatorId + "IntegralStorage" + Symbol.NumberId;
+    //public static string IntegralStorageName =
+      //Symbol.SeparatorId + "IntegralStorage" + Symbol.NumberId;
     public static string MainName = "main";
     public static string InitializerName = Symbol.SeparatorId + "initializer";
     public static string ArgsName = Symbol.SeparatorId + "args";
@@ -72,7 +72,8 @@ namespace CCompiler {
         AddAssemblyCode(AssemblyOperator.new_middle_code, middleIndex);
 
         if (SymbolTable.CurrentFunction != null) {
-          if (middleCode.Operator == MiddleOperator.Initializer) {
+          if ((middleCode.Operator == MiddleOperator.Initializer) ||
+              (middleCode.Operator == MiddleOperator.InitializerZero)) {
             AddAssemblyCode(AssemblyOperator.label, null,
                             middleCode.ToString());
           }
@@ -1327,30 +1328,32 @@ namespace CCompiler {
       }
       else if (m_trackMap.TryGetValue(symbol, out track)) {
         m_trackMap.Remove(symbol);
-        AddAssemblyCode(AssemblyOperator.mov, IntegralStorageName, 0, track);
-        //string registerName = "Register" + symbol.Type.Size();
-        //SymbolTable.StaticSet.Add(ConstantExpression.Value(registerName, symbol.Type, null));
-        AddAssemblyCode(objectOperator, IntegralStorageName, 0);
+        string containerName = AddStaticContainer(symbol.Type);
+        AddAssemblyCode(AssemblyOperator.mov, containerName, 0, track);
+        AddAssemblyCode(objectOperator, containerName, 0);
       }
-/*      else if (symbol.Value is BigInteger) {
-        AddAssemblyCode(objectOperator, symbol.UniqueName, 0);
-        SymbolTable.StaticSet.Add(ConstantExpression.Value(symbol));
-      }*/
       else if (symbol.Type.IsArrayFunctionOrString()) {
-        AddAssemblyCode(AssemblyOperator.mov, IntegralStorageName, 0,
+        string containerName = AddStaticContainer(symbol.Type);
+        AddAssemblyCode(AssemblyOperator.mov, containerName, 0,
                         Base(symbol), TypeSize.PointerSize);
 
         int offset = Offset(symbol);
         if (offset != 0) {
-          AddAssemblyCode(AssemblyOperator.add, IntegralStorageName, 0,
+          AddAssemblyCode(AssemblyOperator.add, containerName, 0,
                           (BigInteger) offset, TypeSize.PointerSize);
         }
 
-        AddAssemblyCode(objectOperator, IntegralStorageName, 0);
+        AddAssemblyCode(objectOperator, containerName, 0);
       }
       else {
         AddAssemblyCode(objectOperator, Base(symbol), Offset(symbol));
       }
+    }
+
+    private static string AddStaticContainer(Type type) {
+      string containerName = "container" + type.Size() + "bytes" + Symbol.NumberId;
+      SymbolTable.StaticSet.Add(ConstantExpression.Value(containerName, type, null));
+      return containerName;
     }
 
     public static IDictionary<Sort, AssemblyOperator> m_floatPopMap =
@@ -1380,8 +1383,8 @@ namespace CCompiler {
     public enum TopOrPop {Top, Pop};
 
     public void PopEmpty() {
-      AddAssemblyCode(AssemblyOperator.fistp_word,
-                      AssemblyCodeGenerator.IntegralStorageName, 0);
+      string containerName = AddStaticContainer(Type.LongDoubleType);
+      AddAssemblyCode(AssemblyOperator.fistp_word, containerName, 0);
     }
       
     public void TopPopSymbol(Symbol symbol, TopOrPop topOrPop) {
@@ -1398,11 +1401,10 @@ namespace CCompiler {
     
       if (symbol.IsTemporary() && (symbol.AddressSymbol == null) &&
           (symbol.Offset == 0)) {
-        AddAssemblyCode(objectOperator,
-                        AssemblyCodeGenerator.IntegralStorageName, 0);
+        string containerName = AddStaticContainer(symbol.Type);
+        AddAssemblyCode(objectOperator, containerName, 0);
         Track track = new Track(symbol);
-        AddAssemblyCode(AssemblyOperator.mov, track,
-                        AssemblyCodeGenerator.IntegralStorageName, 0);
+        AddAssemblyCode(AssemblyOperator.mov, track, containerName, 0);
         m_trackMap.Add(symbol, track);
       }
       else {

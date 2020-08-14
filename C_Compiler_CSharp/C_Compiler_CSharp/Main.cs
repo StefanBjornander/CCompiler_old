@@ -181,8 +181,8 @@ namespace CCompiler {
       try {
         SymbolTable.CurrentTable = new SymbolTable(null, Scope.Global);
 
-        StaticSymbol integralStorageSymbol = ConstantExpression.Value(AssemblyCodeGenerator.IntegralStorageName, Type.UnsignedLongIntegerType, null);
-        SymbolTable.StaticSet.Add(integralStorageSymbol);
+        //StaticSymbol integralStorageSymbol = ConstantExpression.Value(AssemblyCodeGenerator.IntegralStorageName, Type.UnsignedLongIntegerType, null);
+        //SymbolTable.StaticSet.Add(integralStorageSymbol);
 
         CCompiler_Main.Scanner.Path = sourceFile;
         CCompiler_Main.Scanner.Line = 1;
