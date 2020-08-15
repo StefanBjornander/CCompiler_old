@@ -1,10 +1,10 @@
-﻿using System;
+﻿/*using System;
 using System.IO;
 using System.Text;
 using System.Collections.Generic;
 
 namespace CCompiler {
-/*  public class LinkerLinux : Linker {
+  public class LinkerLinux : Linker {
     public static string StackTopName = Symbol.SeparatorId + "StackTop";
     //private int m_totalSize = 256;
   
@@ -106,5 +106,5 @@ namespace CCompiler {
       int index = name.LastIndexOf(Symbol.SeparatorId);
       return (index != -1) ? name.Substring(0, index) : name;
     }  
-  }*/
-}
+  }
+}*/

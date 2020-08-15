@@ -117,7 +117,7 @@ namespace CCompiler {
     //Too_few_initializers,
     //A_union_can_be_initializeralized_by_one_value_only,
     Duplicate_global_name,
-    Missing_external_variable,
+    //Missing_external_variable,
     Missing_external_function,
     Reached_the_end_of_a_non__void_function,
     Floating_stack_overflow,

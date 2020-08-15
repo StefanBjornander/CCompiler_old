@@ -5,7 +5,7 @@ using System.Collections.Generic;
 namespace CCompiler {
   public class AssemblyCodeGenerator {
     public IDictionary<Symbol,Track> m_trackMap =
-      new ListMap<Symbol,Track>();
+      new Dictionary<Symbol,Track>();
     public List<AssemblyCode> m_assemblyCodeList;
 
     private int m_floatStackSize = 0;
@@ -42,8 +42,8 @@ namespace CCompiler {
        ISet<int> returnSet) {
       AssemblyCodeGenerator objectCodeGenerator =
         new AssemblyCodeGenerator(assemblyCodeList);
-      objectCodeGenerator.JumpInfo();
-      objectCodeGenerator.TargetByteList
+      objectCodeGenerator.WindowsJumpInfo();
+      objectCodeGenerator.WindowsByteList
                           (byteList, accessMap, callMap, returnSet);
     }
 
@@ -1572,7 +1572,7 @@ namespace CCompiler {
       if (Start.Linux) {
         List<string> textList = new List<string>();
         ISet<string> externSet = new HashSet<string>();
-        AssemblyCodeGenerator.TextList(assemblyCodeList, textList, externSet);
+        AssemblyCodeGenerator.LinuxTextList(assemblyCodeList, textList, externSet);
         SymbolTable.StaticSet.Add(new StaticSymbolLinux
           (StaticSymbolLinux.TextOrData.Text,
            AssemblyCodeGenerator.InitializerName, textList, externSet));
@@ -1636,7 +1636,7 @@ namespace CCompiler {
 
         List<string> textList = new List<string>();
         ISet<string> externSet = new HashSet<string>();
-        AssemblyCodeGenerator.TextList(assemblyCodeList, textList, externSet);
+        AssemblyCodeGenerator.LinuxTextList(assemblyCodeList, textList, externSet);
         SymbolTable.StaticSet.
           Add(new StaticSymbolLinux(StaticSymbolLinux.TextOrData.Text,
                       AssemblyCodeGenerator.ArgsName, textList, externSet));
@@ -1714,7 +1714,7 @@ namespace CCompiler {
     
     // Jump Info
 
-    private void JumpInfo() {
+    private void WindowsJumpInfo() {
       IDictionary<int,int> middleToAssemblyMap = new Dictionary<int,int>();
 
       for (int assemblyIndex = 0;
@@ -1805,9 +1805,9 @@ namespace CCompiler {
     
     // Text List
     
-    public static void TextList(IList<AssemblyCode> assemblyCodeList,
-                                IList<string> textList,
-                                ISet<string> externSet) {
+    public static void LinuxTextList(IList<AssemblyCode> assemblyCodeList,
+                                     IList<string> textList,
+                                     ISet<string> externSet) {
       foreach (AssemblyCode assemblyCode in assemblyCodeList) {
         AssemblyOperator assemblyOperator = assemblyCode.Operator;
         object operand0 = assemblyCode[0],
@@ -1861,9 +1861,10 @@ namespace CCompiler {
 
     // Target Byte List
 
-    private void TargetByteList(List<byte> byteList,
-                       IDictionary<int,string> accessMap,
-                       IDictionary<int,string> callMap, ISet<int> returnSet) {
+    private void WindowsByteList(List<byte> byteList,
+                                 IDictionary<int,string> accessMap,
+                                 IDictionary<int,string> callMap,
+                                 ISet<int> returnSet) {
       int lastSize = 0;
       for (int line = 0; line < m_assemblyCodeList.Count; ++line) {
         AssemblyCode assemblyCode = m_assemblyCodeList[line];

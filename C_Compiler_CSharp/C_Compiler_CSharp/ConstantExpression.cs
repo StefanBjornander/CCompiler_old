@@ -546,7 +546,7 @@ namespace CCompiler {
         List<string> textList = new List<string>();
         textList.Add("\n" + uniqueName + ":");
         ISet<string> externSet = new HashSet<string>();
-        AssemblyCodeGenerator.TextList(assemblyCodeList, textList, externSet); 
+        AssemblyCodeGenerator.LinuxTextList(assemblyCodeList, textList, externSet); 
         return (new StaticSymbolLinux(StaticSymbolLinux.TextOrData.Data,
                                       uniqueName, textList, externSet));
       }

@@ -66,7 +66,7 @@ namespace CCompiler {
 
             AssemblyCodeGenerator.PathText = "C:\\D\\" + argList[0] + ".com";
             targetFile = new FileInfo(AssemblyCodeGenerator.PathText);
-            Linker linker = new LinkerWindows(targetFile);
+            LinkerWindows linker = new LinkerWindows();
 
             CCompiler_Main.Scanner.Path = null;
             foreach (string arg in argList) {
@@ -79,7 +79,7 @@ namespace CCompiler {
               ReadObjectFile(file, linker);
             }
 
-            linker.Generate();
+            linker.Generate(targetFile);
           }
           else if (print) {
             Console.Out.WriteLine(pathName + argList[0] +".com is up-to-date.");
@@ -129,7 +129,7 @@ namespace CCompiler {
       }
     }
 
-    public static void ReadObjectFile(FileInfo file, Linker linker) {
+    public static void ReadObjectFile(FileInfo file, LinkerWindows linker) {
       FileInfo objectFile = new FileInfo(file.FullName + ".obj");
 
       try {

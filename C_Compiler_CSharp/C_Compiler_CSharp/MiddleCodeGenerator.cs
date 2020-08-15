@@ -186,7 +186,7 @@ namespace CCompiler {
       if (Start.Linux) {
         List<string> textList = new List<string>();
         ISet<string> externSet = new HashSet<string>();
-        AssemblyCodeGenerator.TextList(assemblyCodeList, textList, externSet);
+        AssemblyCodeGenerator.LinuxTextList(assemblyCodeList, textList, externSet);
         //GenerateStaticInitializerLinux.TextList(assemblyCodeList,
         //                                      textList, externSet);
         StaticSymbol staticSymbol =
@@ -471,7 +471,7 @@ namespace CCompiler {
           List<string> textList = new List<string>();
           ISet<string> externSet = new HashSet<string>();
           textList.Add("\n" + symbol.UniqueName + ":");
-          AssemblyCodeGenerator.TextList(assemblyCodeList, textList, externSet);
+          AssemblyCodeGenerator.LinuxTextList(assemblyCodeList, textList, externSet);
           //GenerateStaticInitializerLinux.TextList(assemblyCodeList, textList, externSet);
           SymbolTable.CurrentTable.AddSymbol(symbol);
           StaticSymbol staticSymbol = new StaticSymbolLinux(StaticSymbolLinux.TextOrData.Data, symbol.UniqueName, textList, externSet);
@@ -1550,14 +1550,6 @@ namespace CCompiler {
       }
     }
 
-    private void AddStaticSymbol(Symbol sizeSymbol) {
-      if (Start.Linux) {
-        StaticSymbolWindows StaticSymbolWindows = new StaticSymbolWindows(sizeSymbol.UniqueName);
-      }
-
-      if (Start.Windows) {
-      }
-    }
     private static Expression PointerArithmetic(MiddleOperator middleOp,
                                                 Expression leftExpression,
                                                 Expression rightExpression) {
