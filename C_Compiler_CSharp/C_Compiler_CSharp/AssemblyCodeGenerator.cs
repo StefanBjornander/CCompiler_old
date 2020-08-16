@@ -1714,6 +1714,76 @@ namespace CCompiler {
     
     // Jump Info
 
+/*    private void WindowsJumpInfo() {
+      IDictionary<int,int> middleToAssemblyMap = new Dictionary<int,int>();
+
+      for (int assemblyIndex = 0;
+           assemblyIndex < m_assemblyCodeList.Count; ++assemblyIndex) {
+        AssemblyCode assemblyCode = m_assemblyCodeList[assemblyIndex];
+
+        if (assemblyCode.Operator == AssemblyOperator.new_middle_code) {
+          int middleIndex = (int) assemblyCode[0];
+          middleToAssemblyMap.Add(middleIndex, assemblyIndex);
+          assemblyCode.Operator = AssemblyOperator.empty;
+        }
+      }
+
+      for (int line = 0; line < m_assemblyCodeList.Count; ++line) {
+        AssemblyCode assemblyCode = m_assemblyCodeList[line];
+
+        if (assemblyCode.IsRelationNotRegister() ||
+            assemblyCode.IsJumpNotRegister()) {
+          if (!(assemblyCode[1] is int)) {
+            int middleTarget = (int) assemblyCode[2];
+            assemblyCode[1] = middleToAssemblyMap[middleTarget];
+          }
+        }
+      }
+
+      IDictionary<int,int> assemblyToByteMap = new Dictionary<int,int>();
+
+      { int byteSize = 0, line = 0;
+        foreach (AssemblyCode assemblyCode in m_assemblyCodeList) {
+          assemblyToByteMap.Add(line++, byteSize);
+  
+          if (!(assemblyCode.IsRelationNotRegister() ||
+                assemblyCode.IsJumpNotRegister())) {
+            byteSize += assemblyCode.ByteList().Count;
+          }
+        }
+        assemblyToByteMap.Add(m_assemblyCodeList.Count, byteSize);
+      }
+
+      for (int line = 0; line < (m_assemblyCodeList.Count - 1); ++line) {
+        AssemblyCode thisCode = m_assemblyCodeList[line],
+                     nextCode = m_assemblyCodeList[line + 1];
+
+        if (thisCode.IsRelationNotRegister() ||
+            thisCode.IsJumpNotRegister()) {
+          int assemblyTarget = (int) thisCode[1];
+          int byteSource = assemblyToByteMap[line + 1],
+              byteTarget = assemblyToByteMap[assemblyTarget];
+          int byteDistance = byteTarget - byteSource;
+          Assert.ErrorXXX(byteDistance != 0);
+          thisCode[0] = byteDistance;
+        }
+      }
+
+      for (int line = 0; line < (m_assemblyCodeList.Count - 1); ++line) {
+        AssemblyCode assemblyCode = m_assemblyCodeList[line];
+
+        if (assemblyCode.Operator == AssemblyOperator.address_return) {
+          int middleAddress = (int) ((BigInteger) assemblyCode[2]);
+          int assemblyAddress = middleToAssemblyMap[middleAddress];
+          int byteAddress = assemblyToByteMap[assemblyAddress];
+          int nextAddress = assemblyToByteMap[line + 1];
+          BigInteger byteReturn = byteAddress - nextAddress +
+                                  TypeSize.PointerSize;
+          assemblyCode[2] = byteReturn;
+        }
+      }
+    }*/
+
     private void WindowsJumpInfo() {
       IDictionary<int,int> middleToAssemblyMap = new Dictionary<int,int>();
 
