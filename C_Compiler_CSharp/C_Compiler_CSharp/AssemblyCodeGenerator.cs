@@ -1714,7 +1714,7 @@ namespace CCompiler {
     
     // Jump Info
 
-/*    private void WindowsJumpInfo() {
+    /*private void WindowsJumpInfo() {
       IDictionary<int,int> middleToAssemblyMap = new Dictionary<int,int>();
 
       for (int assemblyIndex = 0;
