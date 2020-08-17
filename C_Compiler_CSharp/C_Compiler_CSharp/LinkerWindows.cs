@@ -112,40 +112,40 @@ namespace CCompiler {
     private void GenerateAccess(IDictionary<int,string> accessMap,
                                 List<byte> byteList) {
       foreach (KeyValuePair<int,string> entry in accessMap) {
-        int address = entry.Key;
+        int sourceAddress = entry.Key;
         string name = entry.Value;
-        byte oldLowByte = byteList[address],
-             oldHighByte = byteList[address + 1];
-        int oldTarget = ((int) oldHighByte << 8) + oldLowByte;
-        int newTarget = oldTarget + m_addressMap[name];
-        byteList[address] = (byte) newTarget;
-        byteList[address + 1] = (byte) (newTarget >> 8);
+        byte lowByte = byteList[sourceAddress],
+             highByte = byteList[sourceAddress + 1];
+        int targetAddress = ((int) highByte << 8) + lowByte;
+        targetAddress += m_addressMap[name];
+        byteList[sourceAddress] = (byte) targetAddress;
+        byteList[sourceAddress + 1] = (byte) (targetAddress >> 8);
       }
     }
 
-    private void GenerateCall(int startAddress, IDictionary<int,string> callMap,
+    private void GenerateCall(int callerStartAddress,
+                              IDictionary<int,string> callMap,
                               List<byte> byteList) {
       foreach (KeyValuePair<int,string> entry in callMap) {
-        int address = entry.Key;
-        int callerAddress = startAddress + address + 2;
-        int calleeAddress = m_addressMap[entry.Value];
-        int relativeAddress = calleeAddress - callerAddress;
-        byteList[address] = (byte) ((sbyte) relativeAddress);
-        byteList[address + 1] = (byte) ((sbyte) (relativeAddress >> 8));
+        int sourceAddress = entry.Key;
+        string sourceName = entry.Value;
+        int nextAddress = (sourceAddress + 2) + callerStartAddress;
+        int calleeAddress = m_addressMap[sourceName];
+        int relativeAddress = calleeAddress - nextAddress;
+        byteList[sourceAddress] = (byte) ((sbyte) relativeAddress);
+        byteList[sourceAddress + 1] = (byte) ((sbyte) (relativeAddress >> 8));
       }
     }
   
-    private void GenerateReturn(int startAddress, ISet<int> returnSet,
+    private void GenerateReturn(int functionStartAddress, ISet<int> returnSet,
                                 List<byte> byteList) {
-      foreach (int address in returnSet) {
-        int relativeLowByte = byteList[address],
-            relativeHighByte = byteList[address + 1];
-        int relativeAddress = (relativeHighByte << 8) + relativeLowByte;
-        int globalAddress = startAddress + address + relativeAddress;
-        byte globalLowByte = (byte) ((sbyte) globalAddress);
-        byte globaHighByte = (byte) ((sbyte) (globalAddress >> 8));
-        byteList[address] = globalLowByte;
-        byteList[address + 1] = globaHighByte;
+      foreach (int sourceAddress in returnSet) {
+        int lowByte = byteList[sourceAddress],
+            highByte = byteList[sourceAddress + 1];
+        int targetAddress = (highByte << 8) + lowByte;
+        targetAddress += functionStartAddress;
+        byteList[sourceAddress] = (byte) targetAddress;
+        byteList[sourceAddress + 1] = (byte) (targetAddress >> 8);
       }
     }
 

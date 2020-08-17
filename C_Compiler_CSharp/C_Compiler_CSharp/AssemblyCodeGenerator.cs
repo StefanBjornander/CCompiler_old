@@ -1858,7 +1858,20 @@ namespace CCompiler {
         }
       }
 
-      for (int line = 0; line < (m_assemblyCodeList.Count - 1); ++line) {
+      for (int line = 0; line < m_assemblyCodeList.Count; ++line) {        
+        AssemblyCode assemblyCode = m_assemblyCodeList[line];
+
+        if (assemblyCode.Operator == AssemblyOperator.address_return) {
+          int middleAddress = (int) ((BigInteger) assemblyCode[2]);
+          int assemblyAddress = middleToAssemblyMap[middleAddress];
+          int byteAddress = assemblyToByteMap[assemblyAddress];
+          assemblyCode[2] = (BigInteger) byteAddress;
+        }
+      }
+    }
+    
+/*
+      for (int line = 0; line < m_assemblyCodeList.Count; ++line) {
         AssemblyCode assemblyCode = m_assemblyCodeList[line];
 
         if (assemblyCode.Operator == AssemblyOperator.address_return) {
@@ -1871,8 +1884,7 @@ namespace CCompiler {
           assemblyCode[2] = byteReturn;
         }
       }
-    }
-    
+*/
     // Text List
     
     public static void LinuxTextList(IList<AssemblyCode> assemblyCodeList,
