@@ -1947,23 +1947,13 @@ namespace CCompiler {
                                  IDictionary<int,string> accessMap,
                                  IDictionary<int,string> callMap,
                                  ISet<int> returnSet) {
-      int lastSize = 0;
-      for (int line = 0; line < m_assemblyCodeList.Count; ++line) {
-        AssemblyCode assemblyCode = m_assemblyCodeList[line];
-
+      foreach (AssemblyCode assemblyCode in m_assemblyCodeList) {
         byteList.AddRange(assemblyCode.ByteList());
-        int codeSize = byteList.Count - lastSize;
-        lastSize = byteList.Count;
-    
-        AssemblyOperator objectOp = assemblyCode.Operator;
-        object operand0 = assemblyCode[0],
-               operand1 = assemblyCode[1],
-               operand2 = assemblyCode[2];
 
         if ((assemblyCode.Operator != AssemblyOperator.label) &&
             (assemblyCode.Operator != AssemblyOperator.comment) &&
             (assemblyCode.Operator != AssemblyOperator.define_zero_sequence)){
-           if (assemblyCode.Operator == AssemblyOperator.define_address) {
+          if (assemblyCode.Operator == AssemblyOperator.define_address) {
             string name = (string) assemblyCode[0];
             accessMap.Add(byteList.Count - TypeSize.PointerSize, name);
           }
@@ -1993,35 +1983,44 @@ namespace CCompiler {
             int address = byteList.Count - TypeSize.PointerSize;
             returnSet.Add(address);
           }
-          else if (operand0 is string) { // Add [g + 1], 2
-            int size = 0;
-            if (operand2 is BigInteger) {
-               size = AssemblyCode.SizeOfValue((BigInteger) operand2,
-                                               assemblyCode.Operator);
+          else if (assemblyCode[0] is string) { // Add [g + 1], 2
+            if (assemblyCode[2] is BigInteger) {
+              int size = AssemblyCode.SizeOfValue((BigInteger)assemblyCode[2],
+                                                  assemblyCode.Operator);
+              int address = byteList.Count - TypeSize.PointerSize - size;
+              accessMap.Add(address, (string) assemblyCode[0]);
             }
-          
-            int address = byteList.Count - TypeSize.PointerSize - size;
-            accessMap.Add(address, (string) operand0);
-          }
-          else if (operand1 is string) {
-            if (operand2 is int) { // mov ax, [g + 1]
+            else {
               int address = byteList.Count - TypeSize.PointerSize;
-              accessMap.Add(address, (string) operand1);
-            }
-            else { // mov ax, g
-              int address = byteList.Count - TypeSize.PointerSize;
-              accessMap.Add(address, (string) operand1);
+              accessMap.Add(address, (string) assemblyCode[0]);
             }
           }
-          else if (operand2 is string) { // Add [bp + 2], g
+          else if (assemblyCode[1] is string) { // mov ax, [g + 1]; mov ax, g
             int address = byteList.Count - TypeSize.PointerSize;
-            accessMap.Add(address, (string) operand2);
+            accessMap.Add(address, (string) assemblyCode[1]);
+          }
+          else if (assemblyCode[2] is string) { // Add [bp + 2], g
+            int address = byteList.Count - TypeSize.PointerSize;
+            accessMap.Add(address, (string) assemblyCode[2]);
           }
         }
       }
     }
   }
 }
+
+/*
+          else if (assemblyCode[1] is string) {
+            if (assemblyCode[2] is int) { // mov ax, [g + 1]
+              int address = byteList.Count - TypeSize.PointerSize;
+              accessMap.Add(address, (string) assemblyCode[1]);
+            }
+            else { // mov ax, g
+              int address = byteList.Count - TypeSize.PointerSize;
+              accessMap.Add(address, (string) assemblyCode[1]);
+            }
+          }
+*/
 
     /* e = x;     d => ax
        a = b / c; b => ax  
