@@ -51,6 +51,7 @@
     <Compile Include="AssemblyCodeGenerator.cs">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="Track.cs" />
     <Compile Include="ZAssemblyCodeOptimizer.cs" />
     <Compile Include="Assert.cs" />
     <Compile Include="ZBigDecimal.cs" />
@@ -109,7 +110,6 @@
     <Compile Include="SymbolTable.cs" />
     <Compile Include="ZSystemCode.cs" />
     <Compile Include="Token.cs" />
-    <Compile Include="Track.cs" />
     <Compile Include="TrackEntry.cs" />
     <Compile Include="Triple.cs" />
     <Compile Include="Type.cs" />

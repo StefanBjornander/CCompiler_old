@@ -67,9 +67,7 @@ namespace CCompiler {
     }
 
     public Type PointerOrArrayType {
-      get {
-        return (m_sort == Sort.Pointer) ? m_pointerType : m_arrayType;
-      }
+      get { return (m_sort == Sort.Pointer) ? m_pointerType : m_arrayType; }
     }
 
     // ------------------------------------------------------------------------

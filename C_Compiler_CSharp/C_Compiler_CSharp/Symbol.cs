@@ -240,12 +240,8 @@ namespace CCompiler {
     }
 
     public bool Temporary {
-      get {
-        return m_temporary;
-      }
-      set {
-        m_temporary = value;
-      }
+      get { return m_temporary; }
+      set { m_temporary = value; }
     }
 
     public object Value {

@@ -8,16 +8,16 @@ namespace CCompiler {
       m_size = size;
     }
 
-    public int Line() {
-      return m_line;
+    public int Line {
+      get { return m_line; }
     }
   
-    public int Position() {
-      return m_position;
+    public int Position {
+      get { return m_position; }
     }
   
-    public int Size() {
-      return m_size;
+    public int Size {
+      get { return m_size; }
     }
   }
 }

@@ -95,27 +95,23 @@ namespace CCompiler {
 
     public object this[int index] {
       get { return m_operandArray[index]; }
-      set { Assert.ErrorXXX((index >= 0) && (index < 3));
-            m_operandArray[index] = value; }
+      set { m_operandArray[index] = value; }
     }
 
-    // -----------------------------------------------------------------------
-  
     public bool IsUnary() {
-      switch (m_operator) {
-        case AssemblyOperator.neg:
-        case AssemblyOperator.not:
-        case AssemblyOperator.inc:
-        case AssemblyOperator.dec:
-        case AssemblyOperator.mul:
-        case AssemblyOperator.imul:
-        case AssemblyOperator.div:
-        case AssemblyOperator.idiv:
-          return true;
-
-        default:
-          return false;
-      }
+      string operatorName = Enum.GetName(typeof(AssemblyOperator), Operator);
+      return operatorName.StartsWith("neg") ||
+             operatorName.StartsWith("not") ||
+             operatorName.StartsWith("inc") ||
+             operatorName.StartsWith("dec") ||
+             operatorName.StartsWith("mul") ||
+             operatorName.StartsWith("imul") ||
+             operatorName.StartsWith("div") ||
+             operatorName.StartsWith("idiv") ||
+             operatorName.StartsWith("fst") ||
+             operatorName.StartsWith("fld") ||
+             operatorName.StartsWith("fist") ||
+             operatorName.StartsWith("fild");
     }
 
     public bool IsJumpRegister() {
@@ -159,8 +155,6 @@ namespace CCompiler {
       }
     }
   
-    // -----------------------------------------------------------------------
-  
     public static bool RegisterOverlap(Register? register1,
                                        Register? register2) {
       if ((register1 == null) || (register2 == null)) {
@@ -174,19 +168,13 @@ namespace CCompiler {
       string name1 = Enum.GetName(typeof(Register), register1),
              name2 = Enum.GetName(typeof(Register), register2);
 
-      name1 = (name1.Length == 3) ? name1.Substring(1) : name1; // eax, rax
-      name2 = (name2.Length == 3) ? name2.Substring(1) : name2;
-
       if ((name1.Contains("h") && name2.Contains("l")) ||
           (name1.Contains("l") && name2.Contains("h"))) {
         return false;
       }
-    
-      name1 = (name1.Contains("h") || name1.Contains("l") ||
-               name1.Contains("x")) ? name1.Substring(0, 1) : name1;
-      name2 = (name2.Contains("h") || name2.Contains("l") ||
-               name2.Contains("x")) ? name2.Substring(0, 1) : name2;
 
+      name1 = name1.Replace("h", "").Replace("l", "").Replace("x", "").Replace("e", "").Replace("r", "");
+      name2 = name2.Replace("h", "").Replace("l", "").Replace("x", "").Replace("e", "").Replace("r", "");
       return name1.Equals(name2);
     }
   
@@ -256,11 +244,8 @@ namespace CCompiler {
   
     public static AssemblyOperator OperatorToSize
                                    (AssemblyOperator objectOp, int size) {
-      string name = Enum.GetName(typeof(AssemblyOperator), objectOp);
-    
-      if (objectOp == AssemblyOperator.interrupt) {
-        return AssemblyOperator.interrupt;
-      }
+      string name = Enum.GetName(typeof(AssemblyOperator), objectOp);    
+      Assert.ErrorXXX(objectOp != AssemblyOperator.interrupt);
     
       switch (size) {
         case 1:
@@ -281,7 +266,7 @@ namespace CCompiler {
       }
 
       Assert.ErrorXXX(name.Contains("_"));
-      return (AssemblyOperator)Enum.Parse(typeof(AssemblyOperator), name);
+      return ((AssemblyOperator) Enum.Parse(typeof(AssemblyOperator), name));
     }
 
     public static int SizeOfValue(BigInteger value, AssemblyOperator op) {
@@ -315,8 +300,6 @@ namespace CCompiler {
         return 8;
       }
     }
-
-    // -----------------------------------------------------------------------
 
     public override string ToString() {
       object operand0 = m_operandArray[0],
@@ -439,7 +422,6 @@ namespace CCompiler {
           int labelIndex = (int) operand1;
           string labelText = MakeMemoryLabel(labelIndex);
           return "\t" + operatorName + " " + labelText;
-          //return "\t" + operatorName + " x" + operand1;
         }
       }
       // mov ax, [bp + 2]; mov ax, [global + 4]
@@ -474,12 +456,7 @@ namespace CCompiler {
       // inc [bp + 2]; inc [global + 4]
       else if ((operand0 != null) && (operand1 is int)) {
         Assert.ErrorXXX(((operand0 is Register) || (operand0 is string)) && (operand2 == null));
-        if (operatorName.StartsWith("neg") || operatorName.StartsWith("not") ||
-            operatorName.StartsWith("inc") || operatorName.StartsWith("dec") ||
-            operatorName.StartsWith("mul") || operatorName.StartsWith("imul") ||
-            operatorName.StartsWith("div") || operatorName.StartsWith("idiv") ||
-            operatorName.StartsWith("fst") || operatorName.StartsWith("fld") ||
-            operatorName.StartsWith("fist") || operatorName.StartsWith("fild")) {
+        if (IsUnary()) {
           return "\t" + operatorName + " [" + operand0 + WithSign(operand1) + "]";
         }
         else {
@@ -530,8 +507,6 @@ namespace CCompiler {
       }
     }
 
-    // -----------------------------------------------------------------------
-  
     public List<byte> ByteList() {
       object operand0 = m_operandArray[0],
              operand1 = m_operandArray[1],
@@ -635,8 +610,9 @@ namespace CCompiler {
         LoadByteList(byteList, byteList.Count - size, size, address);
         return byteList;
       }
+      // mov ax, [bp + 2]
       else if ((operand0 is Register) && (operand1 is Register) &&
-              (operand2 is int)) { // mov ax, [bp + 2]
+               (operand2 is int)) {
         Register toRegister = (Register) operand0,
                  baseRegister = (Register) operand1;
         int offset = (int) operand2;
@@ -658,8 +634,9 @@ namespace CCompiler {
                      TypeSize.PointerSize, offset);
         return byteList; 
       }
+      // mov [bp + 2], ax
       else if ((operand0 is Register) && (operand1 is int) &&
-               (operand2 is Register)) { // mov [bp + 2], ax
+               (operand2 is Register)) {
         Register baseRegister = (Register) operand0,
                  fromRegister = (Register) operand2;
         int offset = (int) operand1;
@@ -680,8 +657,9 @@ namespace CCompiler {
                      TypeSize.PointerSize, offset);
         return byteList; 
       }
+      // mov [bp + 2], 123
       else if ((operand0 is Register) && (operand1 is int) &&
-               (operand2 is BigInteger)) { // mov [bp + 2], 123
+               (operand2 is BigInteger)) {
         Register baseRegister = (Register) operand0;
         int offset = (int) operand1;
         BigInteger value = (BigInteger) operand2;
@@ -695,8 +673,9 @@ namespace CCompiler {
                      valueSize, value);
         return byteList;
       }
+      // mov [bp + 2], global
       else if ((operand0 is Register) && (operand1 is int) &&
-               (operand2 is string)) { // mov [bp + 2], global
+               (operand2 is string)) {
         Register baseRegister = (Register) operand0;
         int offset = (int) operand1;
         int offsetSize = SizeOfValue(offset);
@@ -751,7 +730,8 @@ namespace CCompiler {
         LoadByteList(byteList, byteList.Count - size, size, 0);
         return byteList;
       }
-      else if ((operand0 is Register) && (operand1 is int)) { // inc [bp + 2]
+      // inc [bp + 2]
+      else if ((operand0 is Register) && (operand1 is int)) {
         Assert.ErrorXXX(operand2 == null);
         Register baseRegister = (Register) operand0;
         int offset = (int) operand1;
@@ -760,7 +740,8 @@ namespace CCompiler {
         LoadByteList(byteList, byteList.Count - size, size, offset);
         return byteList;
       }
-      else if (operand1 is int) { // inc [global + 4]; inc [null + 4]
+      // inc [global + 4]; inc [null + 4]
+      else if (operand1 is int) {
         Assert.ErrorXXX((operand0 is string) || (operand0 == null));
         Assert.ErrorXXX(operand2 == null);
         int offset = (int) operand1;
@@ -770,12 +751,14 @@ namespace CCompiler {
                      TypeSize.PointerSize, offset);
         return byteList;
       }
-      else if (operand0 is Register) { // inc ax
+      // inc ax
+      else if (operand0 is Register) {
         Assert.ErrorXXX((operand1 == null) && (operand2 == null));
         Register register = (Register) operand0;
         return LookupByteArray(Operator, register);
       }
-      else if (operand0 is BigInteger) { // int 33
+      // int 33
+      else if (operand0 is BigInteger) {
         Assert.ErrorXXX((operand1 == null) && (operand2 == null));
         BigInteger value = (BigInteger) operand0;
         int size = SizeOfValue(value);
@@ -783,7 +766,8 @@ namespace CCompiler {
         LoadByteList(byteList, byteList.Count - size, size, value);
         return byteList;
       }
-      else { // lahf
+      // lahf
+      else {
         Assert.ErrorXXX((operand0 == null) && (operand1 == null) &&
                         (operand2 == null));
         return LookupByteArray(Operator);
@@ -863,6 +847,5 @@ namespace CCompiler {
 
       return byteList;
     }
-
   }
 }
