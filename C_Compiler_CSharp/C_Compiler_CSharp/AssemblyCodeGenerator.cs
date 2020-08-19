@@ -58,9 +58,10 @@ namespace CCompiler {
 
     public static AssemblyCode AddAssemblyCode(List<AssemblyCode> list,
                     AssemblyOperator objectOp, object operand0 = null,
-                    object operand1 = null, object operand2 = null) {
+                    object operand1 = null, object operand2 = null,
+                    int size = 0) {
       AssemblyCode assemblyCode =
-        new AssemblyCode(objectOp, operand0, operand1, operand2);
+        new AssemblyCode(objectOp, operand0, operand1, operand2, size);
       list.Add(assemblyCode);
       return assemblyCode;
     }

@@ -22,7 +22,8 @@ namespace CCompiler {
     private object[] m_operandArray = new object[3];
   
     public AssemblyCode(AssemblyOperator objectOp, object operand0,
-                        object operand1, object operand2 = null, int size = 0) {
+                        object operand1, object operand2 = null,
+                        int size = 0) {
       m_operator = objectOp;
       m_operandArray[0] = operand0;
       m_operandArray[1] = operand1;
@@ -31,71 +32,55 @@ namespace CCompiler {
       CheckSize(size);
     }
 
-    private void CheckSize(int size) {
-      if (size != 0) {
-        object operand0 = m_operandArray[0],
-               operand1 = m_operandArray[1],
-               operand2 = m_operandArray[2];
-
-        if (((operand0 is Register) || (operand0 is Track) || (operand0 is String)) &&
-            (operand1 is int) && ((operand2 is BigInteger) || (operand2 is String))) {
-          m_operator = OperatorToSize(m_operator, size);
-        }
-        else if (IsUnary() && ((operand0 is Register) || (operand0 is Track) ||
-                  (operand0 is String)) && (operand1 is int)) {
-          m_operator = OperatorToSize(m_operator, size);
-        }
-      }
-    }
-
     public AssemblyOperator Operator {
       get { return m_operator; }
       set { m_operator = value; }
     }
 
-    public void FromAdditionToIncrement() {
-      object operand0 = m_operandArray[0],
-             operand1 = m_operandArray[1],
-             operand2 = m_operandArray[2];
+    public object this[int index] {
+      get { return m_operandArray[index]; }
+      set { m_operandArray[index] = value; }
+    }
 
+    public void FromAdditionToIncrement() {
       if (((Operator == AssemblyOperator.add) ||
            (Operator == AssemblyOperator.sub)) &&
-          ((operand0 is Register) || (operand0 is string)) &&
-          (operand1 is int) && (operand2 is BigInteger)) {
-        int value = (int) ((BigInteger) operand2);
+          ((m_operandArray[0] is Track) || (m_operandArray[0] is Register) ||
+           (m_operandArray[0] is string))) {
 
-        if (((Operator == AssemblyOperator.add) && (value == 1)) ||
-            ((Operator == AssemblyOperator.sub) && (value == -1))) {
-          m_operator = AssemblyOperator.inc;
-          m_operandArray[2] = null;
+        if ((m_operandArray[1] is int) && (m_operandArray[2] is BigInteger)) {
+          CheckIncrement(2);
         }
-        else if (((Operator == AssemblyOperator.add) && (value == -1)) ||
-                 ((Operator == AssemblyOperator.sub) && (value == 1))) {
-          m_operator = AssemblyOperator.dec;
-          m_operandArray[2] = null;
-        }
-      }
-      else if (((Operator == AssemblyOperator.add) ||
-                (Operator == AssemblyOperator.sub)) && (operand0 is Track) &&
-                (operand1 is BigInteger) && (operand2 == null)){
-        BigInteger value = (BigInteger) operand1;
-
-        if (((Operator == AssemblyOperator.add) && (value == 1)) ||
-            ((Operator == AssemblyOperator.sub) && (value == -1))) {
-          Operator = AssemblyOperator.inc;
-          m_operandArray[1] = null;
-        }
-        else if (((Operator == AssemblyOperator.sub) && (value == 1)) ||
-                 ((Operator == AssemblyOperator.add) && (value == -1))) {
-          Operator = AssemblyOperator.dec;
-          m_operandArray[1] = null;
+        else if ((m_operandArray[1] is BigInteger) &&
+                 (m_operandArray[2] == null)) {
+          CheckIncrement(1);
         }
       }
     }
 
-    public object this[int index] {
-      get { return m_operandArray[index]; }
-      set { m_operandArray[index] = value; }
+    private void CheckIncrement(int valueIndex) {
+      int value = (int) ((BigInteger) m_operandArray[valueIndex]);
+
+      if (((Operator == AssemblyOperator.add) && (value == 1)) ||
+          ((Operator == AssemblyOperator.sub) && (value == -1))) {
+        m_operator = AssemblyOperator.inc;
+        m_operandArray[valueIndex] = null;
+      }
+      else if (((Operator == AssemblyOperator.add) && (value == -1)) ||
+               ((Operator == AssemblyOperator.sub) && (value == 1))) {
+        m_operator = AssemblyOperator.dec;
+        m_operandArray[valueIndex] = null;
+      }
+    }
+
+    private void CheckSize(int size) {
+      if ((size != 0) && ((m_operandArray[0] is Register) ||
+           (m_operandArray[0] is Track)|| (m_operandArray[0] is String)) &&
+          (m_operandArray[1] is int) &&
+          (IsUnary() || ((m_operandArray[2] is BigInteger) ||
+                         (m_operandArray[2] is String)))) {
+        m_operator = OperatorToSize(m_operator, size);
+      }
     }
 
     public bool IsUnary() {
