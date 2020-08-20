@@ -73,22 +73,19 @@ namespace CCompiler {
         AddAssemblyCode(AssemblyOperator.new_middle_code, middleIndex);
 
         if (SymbolTable.CurrentFunction != null) {
-          if ((middleCode.Operator == MiddleOperator.Initializer) ||
-              (middleCode.Operator == MiddleOperator.InitializerZero)) {
-            AddAssemblyCode(AssemblyOperator.label, null,
-                            middleCode.ToString());
-          }
-          else {
-            string label = SymbolTable.CurrentFunction.UniqueName;
+          if ((middleCode.Operator != MiddleOperator.Initializer) &&
+              (middleCode.Operator != MiddleOperator.InitializerZero)) {
+            string labelText = SymbolTable.CurrentFunction.UniqueName;
             
             if (middleIndex > 0) {
-              label += Symbol.SeparatorId + middleIndex;
+              labelText += Symbol.SeparatorId + middleIndex;
             }
-            
-            AddAssemblyCode(AssemblyOperator.label, label,
-                            middleCode.ToString());
+
+            AddAssemblyCode(AssemblyOperator.label, labelText);
           }
         }
+
+        AddAssemblyCode(AssemblyOperator.comment, middleCode.ToString());
 
         switch (middleCode.Operator) {
           case MiddleOperator.PreCall:

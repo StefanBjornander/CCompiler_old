@@ -28,6 +28,7 @@ namespace CCompiler {
       m_operandArray[0] = operand0;
       m_operandArray[1] = operand1;
       m_operandArray[2] = operand2;
+
       FromAdditionToIncrement();
       CheckSize(size);
     }
@@ -298,16 +299,15 @@ namespace CCompiler {
         return null;
       }
       else if (Operator == AssemblyOperator.label) {
-        return ((operand0 != null) ? ("\n" + operand0 + ":") : "") +
-                ((operand1 != null) ? ("\t; " + operand1) : "");
+        return "\n " + operand0 + ":";
       }
       else if (Operator == AssemblyOperator.comment) {
-        return "\n\t" + ((operand0 != null) ? ("; " + operand0) : "");
+        return "\t; " + operand0;
       }
       else if (Operator == AssemblyOperator.define_address) {
-        string aname = (string) operand0;
+        string name = (string) operand0;
         int offset = (int) operand1;
-        return "\tdq " + aname + WithSign(offset);
+        return "\tdq " + name + WithSign(offset);
       }
       else if (Operator == AssemblyOperator.define_zero_sequence) {
         int size = (int) operand0;
@@ -318,45 +318,13 @@ namespace CCompiler {
         object value = operand1;
 
         if (sort == Sort.String) {
-          StringBuilder buffer = new StringBuilder();
-          string text = (string) operand1;
-          bool graph = false;
-
-          foreach (char c in text) {
-            if (Char.IsControl(c) || (c == '\"') || (c == '\'')) {
-              if (graph) {
-                buffer.Append("\", " + ((int) c).ToString() + ", ");
-                graph = false;
-              }
-              else {
-                buffer.Append(((int) c).ToString() + ", ");
-              }
-            }
-            else {
-              if (graph) {
-                buffer.Append(c);
-              }
-              else {
-                buffer.Append("\"" + c.ToString());
-                graph = true;
-              }
-            }
-          }
-
-          if (graph) {
-            buffer.Append("\", 0");
-          }
-          else {
-            buffer.Append("0");
-          }
-
-          return "\tdb " + buffer.ToString();
+          return "\tdb " + ToVisibleString((string) operand1);
         }
         else {
           string text = operand1.ToString();
 
           if (((sort == Sort.Float) || (sort == Sort.Double) ||
-                (sort == Sort.Long_Double)) && !text.Contains(".")) {
+              (sort == Sort.Long_Double)) && !text.Contains(".")) {
             text += ".0";
           }
 
@@ -370,23 +338,14 @@ namespace CCompiler {
             case 4:
               return "\tdd " + text;
 
-            case 8:
+            default: // case 8:
               return "\tdq " + text;
-
-            default:
-              Assert.ErrorXXX(false);
-              return null;
           }
         }
       }
       else if (IsJumpRegister() || IsCallRegister() ||
                IsCallNotRegister()) {
-        if (operand2 is string) {
-          return "\tjmp " + operand2;
-        }
-        else {
-          return "\tjmp " + operand0;
-        }
+        return "\tjmp " + operand0;
       }
       else if (Operator == AssemblyOperator.address_return) {
         string target = SymbolTable.CurrentFunction.UniqueName +
@@ -410,21 +369,22 @@ namespace CCompiler {
         }
       }
       // mov ax, [bp + 2]; mov ax, [global + 4]
-      else if ((operand0 is Register) && (operand1 != null) &&
-               (operand2 is int)) {
+      else if ((operand0 is Register) && ((operand1 is Register) ||
+               (operand1 is string)) && (operand2 is int)) {
         Assert.ErrorXXX((operand1 is Register) || (operand1 is string));
         return "\t" + operatorName + " " + operand0 +
                ", [" + operand1 + WithSign(operand2) + "]";
       }
       // mov ax, [null + 4]
-      else if ((operand0 is Register) && (operand1 == null) &&
+      /*else if ((operand0 is Register) && (operand1 == null) &&
                (operand2 is int)) {
         return "\t" + operatorName + " " + operand0 +
                 ", [" + operand2 + "]";
-      }
+      }*/
       // mov [bp + 2], ax; mov [global + 4], ax; mov [bp + 2], 123; mov [global + 4], 123; mov [bp + 2], global; mov [global + 4], global
-      else if ((operand0 != null) && (operand1 is int) &&
-               (operand2 != null)) {
+      else if (((operand0 is Register) || (operand0 is string)) &&
+               (operand1 is int) && ((operand2 is Register) ||
+                (operand2 is string) || (operand2 is BigInteger))) {
         Assert.ErrorXXX((operand0 is Register) || (operand0 is string));
         Assert.ErrorXXX((operand2 is Register) || (operand2 is BigInteger)
                       || (operand2 is string));
@@ -473,7 +433,42 @@ namespace CCompiler {
         return "\t" + operatorName + " ";
       }
     }
-  
+
+    private static string ToVisibleString(string text) {
+      StringBuilder buffer = new StringBuilder();
+      bool insideString = false;
+
+      foreach (char c in text) {
+        if (Char.IsControl(c) || (c == '\"') || (c == '\'')) {
+          if (insideString) {
+            buffer.Append("\", " + ((int) c).ToString() + ", ");
+            insideString = false;
+          }
+          else {
+            buffer.Append(((int) c).ToString() + ", ");
+          }
+        }
+        else {
+          if (insideString) {
+            buffer.Append(c);
+          }
+          else {
+            buffer.Append("\"" + c.ToString());
+            insideString = true;
+          }
+        }
+      }
+
+      if (insideString) {
+        buffer.Append("\", 0");
+      }
+      else {
+        buffer.Append("0");
+      }
+
+      return buffer.ToString();
+    }
+
     public static string MakeMemoryLabel(int labelIndex) {
       return "memorycopy" + labelIndex;
     }
