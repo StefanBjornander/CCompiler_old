@@ -50,6 +50,12 @@ namespace CCompiler {
     public AssemblyCode AddAssemblyCode(AssemblyOperator objectOp,
                           object operand0 = null, object operand1 = null,
                           object operand2 = null, int size = 0) {
+                                    /*if ((SymbolTable.CurrentFunction != null) &&
+                                        SymbolTable.CurrentFunction.Name.Equals("mainc") &&
+                                        (m_assemblyCodeList.Count == 32)) {
+                                      int i = 1;
+                                    }*/
+
       AssemblyCode assemblyCode =
         new AssemblyCode(objectOp, operand0, operand1, operand2, size);
       m_assemblyCodeList.Add(assemblyCode);
@@ -654,7 +660,8 @@ namespace CCompiler {
 
         int offset = Offset(symbol);
         if (offset != 0) {
-          AddAssemblyCode(AssemblyOperator.add, addressTrack, offset);
+          AddAssemblyCode(AssemblyOperator.add, addressTrack,
+                          (BigInteger) offset);
         }
 
         return addressTrack;
@@ -1142,10 +1149,12 @@ namespace CCompiler {
 
           int rightOffset = Offset(rightSymbol);
           if (middleOperator == MiddleOperator.Assign) {
-            AddAssemblyCode(AssemblyOperator.add, leftTrack, rightOffset);
+            AddAssemblyCode(AssemblyOperator.add, leftTrack,
+                            (BigInteger) rightOffset);
           }
           else {
-            AddAssemblyCode(objectOperator, leftTrack, rightOffset);
+            AddAssemblyCode(objectOperator, leftTrack,
+                            (BigInteger) rightOffset);
           }
         }
         else {
@@ -1888,7 +1897,9 @@ namespace CCompiler {
     public static void LinuxTextList(IList<AssemblyCode> assemblyCodeList,
                                      IList<string> textList,
                                      ISet<string> externSet) {
-      foreach (AssemblyCode assemblyCode in assemblyCodeList) {
+//      foreach (AssemblyCode assemblyCode in assemblyCodeList) {
+      for (int index = 0; index < assemblyCodeList.Count; ++index) {
+        AssemblyCode assemblyCode = assemblyCodeList[index];
         AssemblyOperator assemblyOperator = assemblyCode.Operator;
         object operand0 = assemblyCode[0],
                operand1 = assemblyCode[1],
