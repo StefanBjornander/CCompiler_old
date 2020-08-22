@@ -1120,8 +1120,8 @@ namespace CCompiler {
       if ((leftTrack == null) &&
           (middleOperator != MiddleOperator.Assign) &&
           (((resultSymbol != null) && (resultSymbol != leftSymbol)) ||
-            ((rightSymbol.IsAutoOrRegister() &&
-              rightSymbol.Type.IsArray()) ||
+            ((leftSymbol.Type.IsArrayFunctionOrString() &&
+              leftSymbol.Offset != 0) ||
             ((leftSymbol.Value is StaticAddress) &&
              (((StaticAddress) leftSymbol.Value).Offset != 0))))) {
         leftTrack = LoadValueToRegister(leftSymbol);
@@ -1131,11 +1131,23 @@ namespace CCompiler {
           (middleOperator != MiddleOperator.BinaryAdd) &&
           (middleOperator != MiddleOperator.BinarySubtract) &&
           (middleOperator != MiddleOperator.Assign) &&
-          (((rightSymbol.Value is StaticAddress) &&
-            (((StaticAddress) rightSymbol.Value).Offset != 0)) ||
-           (rightSymbol.IsAutoOrRegister() &&
-            rightSymbol.Type.IsArray()))) {
+          ((rightSymbol.Type.IsArrayFunctionOrString() &&
+           (rightSymbol.Offset != 0)) ||
+           ((rightSymbol.Value is StaticAddress) &&
+            (((StaticAddress) rightSymbol.Value).Offset != 0)))) {
         rightTrack = LoadValueToRegister(rightSymbol);
+      }
+
+      if ((rightTrack == null) && (rightSymbol.Value is BigInteger) &&
+          ((middleOperator != MiddleOperator.Assign) ||
+           ((leftTrack == null) &&
+            !(leftSymbol.Type.IsArrayFunctionOrString() ||
+             (leftSymbol.Value is StaticAddress))))) {
+        BigInteger bigValue = (BigInteger) rightSymbol.Value;
+
+        if (!((-2147483648 <= bigValue) && (bigValue <= 2147483647))) {
+          rightTrack = LoadValueToRegister(rightSymbol);
+        }
       }
 
       if (MiddleCode.IsShift(middleOperator)) {
@@ -1190,23 +1202,14 @@ namespace CCompiler {
       }
       else if ((leftSymbol.Type.IsArrayFunctionOrString() ||
                (leftSymbol.Value is StaticAddress))) {
+        Assert.ErrorXXX(objectOperator == AssemblyOperator.cmp);
+
         if (rightTrack != null) {
           AddAssemblyCode(objectOperator, leftSymbol.UniqueName, rightTrack);
         }
         else if (rightSymbol.Value is BigInteger) {
-          BigInteger bigValue = (BigInteger) rightSymbol.Value;
-
-          if ((-2147483648 <= bigValue) && (bigValue <= 2147483647)) {
-            AddAssemblyCode(objectOperator, leftSymbol.UniqueName,
-                            rightSymbol.Value, null, typeSize);
-          }
-          else {
-            rightTrack = new Track(rightSymbol);
-            AddAssemblyCode(AssemblyOperator.mov, rightTrack,
-                            rightSymbol.Value);
-            AddAssemblyCode(AssemblyOperator.mov, leftSymbol.UniqueName,
-                            rightTrack);
-          }
+          AddAssemblyCode(objectOperator, leftSymbol.UniqueName,
+                          rightSymbol.Value, null, typeSize);
         }
         else if (rightSymbol.Type.IsArrayFunctionOrString() ||
                  (rightSymbol.Value is StaticAddress)) {
@@ -1225,19 +1228,8 @@ namespace CCompiler {
                           Offset(leftSymbol), rightTrack);
         }
         else if (rightSymbol.Value is BigInteger) {
-          BigInteger bigValue = (BigInteger) rightSymbol.Value;
-
-          if ((-2147483648 <= bigValue) && (bigValue <= 2147483647)) {
-            AddAssemblyCode(objectOperator, Base(leftSymbol),
-                            Offset(leftSymbol), rightSymbol.Value, typeSize);
-          }
-          else {
-            rightTrack = new Track(rightSymbol);
-            AddAssemblyCode(AssemblyOperator.mov, rightTrack,
-                            rightSymbol.Value);
-            AddAssemblyCode(AssemblyOperator.mov, Base(leftSymbol),
-                          Offset(leftSymbol), rightTrack);
-          }
+          AddAssemblyCode(objectOperator, Base(leftSymbol),
+                          Offset(leftSymbol), rightSymbol.Value, typeSize);
         }
         else if (rightSymbol.Type.IsArrayFunctionOrString() ||
                  (rightSymbol.Value is StaticAddress)) {
