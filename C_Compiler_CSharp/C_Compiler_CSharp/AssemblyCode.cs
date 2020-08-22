@@ -367,6 +367,12 @@ namespace CCompiler {
           return "\t" + operatorName + " " + labelText;
         }
       }
+      // mov ax, bx; mov ax, global; mov ax, 123; cmp global, bx; cmp global, global; cmp global, 123
+      else if (((operand0 is Register) || (operand0 is string)) &&
+               ((operand1 is Register) || (operand1 is string) || (operand1 is BigInteger)) &&
+                (operand2 == null)) {
+        return "\t" + operatorName + " " + operand0 + ", " + operand1;
+      }
       // mov ax, [bp + 2]; mov ax, [global + 4]
       else if ((operand0 is Register) && ((operand1 is Register) ||
                (operand1 is string)) && (operand2 is int)) {
@@ -386,23 +392,19 @@ namespace CCompiler {
         return "\t" + operatorName + " [" + operand0 +
                WithSign(operand1) + "]";
       }
-      // mov ax, bx; mov ax, global
-      else if ((operand0 is Register) && ((operand1 is Register) ||
-                (operand1 is string) || (operand1 is BigInteger)) &&
-                (operand2 == null)) {
-        return "\t" + operatorName + " " + operand0 + ", " + operand1;
-      }
-      // inc ax; int 33
-      else if (((operand0 is Register) || (operand0 is BigInteger)) &&
-               (operand1 == null) && (operand2 == null)) {
+      // inc ax
+      else if ((operand0 is Register) && (operand1 == null) &&
+               (operand2 == null)) {
+        Assert.ErrorXXX(!(operand0 is BigInteger));
         return "\t" + operatorName + " " + operand0;
       }
-      // lahf
+      // lahf; syscall
       else if ((operand0 == null) &&  (operand1 == null) &&
                (operand2 == null)) {
         return "\t" + operatorName;
       }
 
+      Assert.ErrorXXX(false);
       return null;
     }
 
@@ -600,30 +602,6 @@ namespace CCompiler {
         LoadByteList(byteList, byteList.Count - size, size, 0);
         return byteList;
       }
-      // mov ax, [bp + 2]
-      else if ((operand0 is Register) && (operand1 is Register) &&
-               (operand2 is int)) {
-        Register toRegister = (Register) operand0,
-                 baseRegister = (Register) operand1;
-        int offset = (int) operand2;
-        int size = SizeOfValue(offset);
-        List<byte> byteList =
-          LookupByteArray(Operator, toRegister, baseRegister, size);
-        LoadByteList(byteList, byteList.Count - size, size, offset);
-        return byteList; 
-      }
-      // mov ax, [global + 4]
-      else if ((operand0 is Register) && ((operand1 is string) ||
-                (operand1 == null)) && (operand2 is int)) {
-        Register toRegister = (Register) operand0;
-        int offset = (int) operand2;
-        List<byte> byteList =
-          LookupByteArray(Operator, toRegister, null, TypeSize.PointerSize);
-        LoadByteList(byteList, byteList.Count - TypeSize.PointerSize,
-                     TypeSize.PointerSize, offset);
-        return byteList; 
-      }
-
 
 
       // mov [bp + 2], ax
@@ -699,6 +677,30 @@ namespace CCompiler {
       }
 
 
+
+      // mov ax, [bp + 2]
+      else if ((operand0 is Register) && (operand1 is Register) &&
+               (operand2 is int)) {
+        Register toRegister = (Register) operand0,
+                 baseRegister = (Register) operand1;
+        int offset = (int) operand2;
+        int size = SizeOfValue(offset);
+        List<byte> byteList =
+          LookupByteArray(Operator, toRegister, baseRegister, size);
+        LoadByteList(byteList, byteList.Count - size, size, offset);
+        return byteList; 
+      }
+      // mov ax, [global + 4]
+      else if ((operand0 is Register) && ((operand1 is string) ||
+                (operand1 == null)) && (operand2 is int)) {
+        Register toRegister = (Register) operand0;
+        int offset = (int) operand2;
+        List<byte> byteList =
+          LookupByteArray(Operator, toRegister, null, TypeSize.PointerSize);
+        LoadByteList(byteList, byteList.Count - TypeSize.PointerSize,
+                     TypeSize.PointerSize, offset);
+        return byteList; 
+      }
 
       // inc ax
       else if ((operand0 is Register) && (operand1 == null) && (operand2 == null)) {

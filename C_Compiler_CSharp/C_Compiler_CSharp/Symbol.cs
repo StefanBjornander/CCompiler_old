@@ -136,7 +136,7 @@ namespace CCompiler {
                + Symbol.SeparatorId + staticAddress.Offset + Symbol.NumberId;
       }
       else if (type.IsArray()) {
-        return "Array_" + Symbol.NumberId; // + ((value != null) ? value : "");
+        return "Array_" + value.ToString() + Symbol.NumberId; // + ((value != null) ? value : "");
       }
       else if (type.IsFloating()) {
         return "float" + type.Size().ToString() + Symbol.SeparatorId +

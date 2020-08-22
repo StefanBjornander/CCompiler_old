@@ -489,7 +489,7 @@ namespace CCompiler {
         Assert.ErrorXXX((sourceValue is BigInteger) || (sourceValue is decimal));
         Symbol targetSymbol = null;
 
-        if (sourceType.IsIntegralArrayOrPointer() &&targetType.IsFloating()) {
+        if (sourceType.IsIntegralArrayOrPointer() && targetType.IsFloating()){
           targetSymbol =
             new Symbol(targetType, (decimal) ((BigInteger) sourceValue));
         }

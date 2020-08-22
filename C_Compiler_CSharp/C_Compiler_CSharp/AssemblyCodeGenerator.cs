@@ -93,6 +93,14 @@ namespace CCompiler {
 
         AddAssemblyCode(AssemblyOperator.comment, middleCode.ToString());
 
+        /*if (middleCode.ToString().Contains("parameter s, offset 113")) {
+          int i = 1;
+        }
+
+        if (middleCode.ToString().Contains("if arr >= Array_1000# goto 5")) {
+          int i = 1;
+        }*/
+
         switch (middleCode.Operator) {
           case MiddleOperator.PreCall:
             FunctionPreCall(middleCode);
@@ -1110,9 +1118,12 @@ namespace CCompiler {
       m_trackMap.TryGetValue(rightSymbol, out rightTrack);
 
       if ((leftTrack == null) &&
+          (middleOperator != MiddleOperator.Assign) &&
           (((resultSymbol != null) && (resultSymbol != leftSymbol)) ||
-            leftSymbol.Type.IsArrayFunctionOrString() ||
-            (leftSymbol.Value is StaticAddress))) {
+            ((rightSymbol.IsAutoOrRegister() &&
+              rightSymbol.Type.IsArray()) ||
+            ((leftSymbol.Value is StaticAddress) &&
+             (((StaticAddress) leftSymbol.Value).Offset != 0))))) {
         leftTrack = LoadValueToRegister(leftSymbol);
       }
 
@@ -1175,6 +1186,37 @@ namespace CCompiler {
             AddAssemblyCode(AssemblyOperator.mov, Base(resultSymbol),
                             Offset(resultSymbol), leftTrack);
           }
+        }
+      }
+      else if ((leftSymbol.Type.IsArrayFunctionOrString() ||
+               (leftSymbol.Value is StaticAddress))) {
+        if (rightTrack != null) {
+          AddAssemblyCode(objectOperator, leftSymbol.UniqueName, rightTrack);
+        }
+        else if (rightSymbol.Value is BigInteger) {
+          BigInteger bigValue = (BigInteger) rightSymbol.Value;
+
+          if ((-2147483648 <= bigValue) && (bigValue <= 2147483647)) {
+            AddAssemblyCode(objectOperator, leftSymbol.UniqueName,
+                            rightSymbol.Value, null, typeSize);
+          }
+          else {
+            rightTrack = new Track(rightSymbol);
+            AddAssemblyCode(AssemblyOperator.mov, rightTrack,
+                            rightSymbol.Value);
+            AddAssemblyCode(AssemblyOperator.mov, leftSymbol.UniqueName,
+                            rightTrack);
+          }
+        }
+        else if (rightSymbol.Type.IsArrayFunctionOrString() ||
+                 (rightSymbol.Value is StaticAddress)) {
+          AddAssemblyCode(objectOperator, leftSymbol.UniqueName,
+                          rightSymbol.UniqueName, null, typeSize);
+        }
+        else {
+          rightTrack = LoadValueToRegister(rightSymbol);
+          AddAssemblyCode(objectOperator, leftSymbol.UniqueName,
+                          Offset(leftSymbol), rightTrack);
         }
       }
       else {
