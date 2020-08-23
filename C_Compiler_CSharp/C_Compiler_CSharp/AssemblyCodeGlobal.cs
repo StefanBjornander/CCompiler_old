@@ -372,12 +372,10 @@ namespace CCompiler {
           return "\t" + operatorName + " " + labelText;
         }
       }
-      // mov ax, bx; mov ax, global; mov ax, 123
-      // cmp global, bx; cmp global, global; cmp global, 123
+      // mov ax, bx; mov ax, global; mov ax, 123; cmp global, bx; cmp global, global; cmp global, 123
       else if (((operand0 is Register) || (operand0 is string)) &&
                ((operand1 is Register) || (operand1 is string) || (operand1 is BigInteger)) &&
                 (operand2 == null)) {
-        Assert.ErrorXXX(!(operand0 is string));
         return "\t" + operatorName + " " + operand0 + ", " + operand1;
       }
       // mov ax, [bp + 2]; mov ax, [global + 4]
@@ -612,7 +610,7 @@ namespace CCompiler {
 
 
 
-      /*//	cmp global, bx
+      //	cmp global, bx
       else if (((operand0 is string) || (operand0 == null)) &&
                (operand1 is Register) && (operand2 == null)) {
         Assert.ErrorXXX(Operator == AssemblyOperator.cmp);
@@ -638,7 +636,7 @@ namespace CCompiler {
                (operand2 == null)) {
         Assert.ErrorXXX(Operator == AssemblyOperator.cmp);
         return LookupByteArray(Operator, TypeSize.PointerSize, TypeSize.PointerSize);
-      }*/
+      }
 
 
 
@@ -741,7 +739,7 @@ namespace CCompiler {
         return byteList; 
       }
 
-      /*// cmp global, [bp + 2]
+      // cmp global, [bp + 2]
       else if (((operand0 is string) || (operand0 == null)) &&
                (operand1 is Register) && (operand2 is int)) {
         Assert.ErrorXXX(Operator == AssemblyOperator.cmp);
@@ -752,7 +750,7 @@ namespace CCompiler {
           LookupByteArray(Operator, null, baseRegister, size);
         LoadByteList(byteList, byteList.Count - size, size, offset);
         return byteList; 
-      }*/
+      }
 
       // mov ax, [global + 4]
       else if ((operand0 is Register) && ((operand1 is string) ||
@@ -767,7 +765,7 @@ namespace CCompiler {
       }
 
 
-      /*// cmp global, [global + 4]
+      // cmp global, [global + 4]
       else if (((operand0 is string) || (operand0 == null)) &&
                ((operand1 is string) || (operand1 == null)) &&
                (operand2 is int)) {
@@ -777,7 +775,7 @@ namespace CCompiler {
         LoadByteList(byteList, byteList.Count - TypeSize.PointerSize,
                      TypeSize.PointerSize, offset);
         return byteList; 
-      }*/
+      }
 
 
 

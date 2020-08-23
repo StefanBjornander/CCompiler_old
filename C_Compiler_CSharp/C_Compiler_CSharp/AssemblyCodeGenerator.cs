@@ -1120,10 +1120,8 @@ namespace CCompiler {
       if ((leftTrack == null) &&
           (middleOperator != MiddleOperator.Assign) &&
           (((resultSymbol != null) && (resultSymbol != leftSymbol)) ||
-            ((leftSymbol.Type.IsArrayFunctionOrString() &&
-              leftSymbol.Offset != 0) ||
-            ((leftSymbol.Value is StaticAddress) &&
-             (((StaticAddress) leftSymbol.Value).Offset != 0))))) {
+            (leftSymbol.Type.IsArrayFunctionOrString() ||
+            (leftSymbol.Value is StaticAddress)))) {
         leftTrack = LoadValueToRegister(leftSymbol);
       }
 
@@ -1137,6 +1135,16 @@ namespace CCompiler {
             (((StaticAddress) rightSymbol.Value).Offset != 0)))) {
         rightTrack = LoadValueToRegister(rightSymbol);
       }
+
+/*      if ((leftTrack == null) &&
+          (middleOperator != MiddleOperator.Assign) &&
+          (((resultSymbol != null) && (resultSymbol != leftSymbol)) ||
+            ((leftSymbol.Type.IsArrayFunctionOrString() &&
+              leftSymbol.Offset != 0) ||
+            ((leftSymbol.Value is StaticAddress) &&
+             (((StaticAddress) leftSymbol.Value).Offset != 0))))) {
+        leftTrack = LoadValueToRegister(leftSymbol);
+      }*/
 
       if ((rightTrack == null) && (rightSymbol.Value is BigInteger) &&
           ((middleOperator != MiddleOperator.Assign) ||
@@ -1171,13 +1179,15 @@ namespace CCompiler {
           AddAssemblyCode(objectOperator, leftTrack, Base(rightSymbol));
 
           int rightOffset = Offset(rightSymbol);
-          if (middleOperator == MiddleOperator.Assign) {
-            AddAssemblyCode(AssemblyOperator.add, leftTrack,
-                            (BigInteger) rightOffset);
-          }
-          else {
-            AddAssemblyCode(objectOperator, leftTrack,
-                            (BigInteger) rightOffset);
+          if (rightOffset != 0) {
+            if (middleOperator == MiddleOperator.Assign) {
+              AddAssemblyCode(AssemblyOperator.add, leftTrack,
+                              (BigInteger) rightOffset);
+            }
+            else {
+              AddAssemblyCode(objectOperator, leftTrack,
+                              (BigInteger) rightOffset);
+            }
           }
         }
         else {
@@ -1200,7 +1210,7 @@ namespace CCompiler {
           }
         }
       }
-      else if ((leftSymbol.Type.IsArrayFunctionOrString() ||
+      /*else if ((leftSymbol.Type.IsArrayFunctionOrString() ||
                (leftSymbol.Value is StaticAddress))) {
         Assert.ErrorXXX(objectOperator == AssemblyOperator.cmp);
 
@@ -1221,7 +1231,7 @@ namespace CCompiler {
           AddAssemblyCode(objectOperator, leftSymbol.UniqueName,
                           Offset(leftSymbol), rightTrack);
         }
-      }
+      }*/
       else {
         if (rightTrack != null) {
           AddAssemblyCode(objectOperator, Base(leftSymbol),
@@ -1303,8 +1313,7 @@ namespace CCompiler {
           {MiddleOperator.SignedGreaterThanEqual, AssemblyOperator.jbe}
         };
 
-    public void FloatingBinary(MiddleCode middleCode)
-    {
+    public void FloatingBinary(MiddleCode middleCode) {
       Assert.ErrorXXX((--m_floatStackSize) >= 0);
       AddAssemblyCode(m_middleToFloatingMap[middleCode.Operator]);
     }
