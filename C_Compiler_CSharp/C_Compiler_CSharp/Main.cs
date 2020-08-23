@@ -7,7 +7,7 @@ using System.Collections.Generic;
 
 namespace CCompiler {
   public class Start {
-    public static bool Windows = false, Linux = true;
+    public static bool Windows = true, Linux = false;
     public static IDictionary<string,ISet<FileInfo>> DependencySetMap = new Dictionary<string,ISet<FileInfo>>();
 
 

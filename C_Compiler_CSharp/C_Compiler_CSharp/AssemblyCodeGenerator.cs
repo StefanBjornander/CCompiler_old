@@ -1148,11 +1148,8 @@ namespace CCompiler {
 
       if ((rightTrack == null) && (rightSymbol.Value is BigInteger) &&
           ((middleOperator != MiddleOperator.Assign) ||
-           ((leftTrack == null) &&
-            !(leftSymbol.Type.IsArrayFunctionOrString() ||
-             (leftSymbol.Value is StaticAddress))))) {
+           (leftTrack == null))) {
         BigInteger bigValue = (BigInteger) rightSymbol.Value;
-
         if (!((-2147483648 <= bigValue) && (bigValue <= 2147483647))) {
           rightTrack = LoadValueToRegister(rightSymbol);
         }
@@ -1645,123 +1642,132 @@ namespace CCompiler {
     // Command Line Arguments
 
     public static void ArgumentCodeList() {
-      List<AssemblyCode> assemblyCodeList = new List<AssemblyCode>();
-
       if (Start.Linux) {
-        AddAssemblyCode(assemblyCodeList, AssemblyOperator.comment,
-                        "Initializerialize Command Line Arguments");
-        AddAssemblyCode(assemblyCodeList, AssemblyOperator.pop, Register.rbx);
-        AddAssemblyCode(assemblyCodeList, AssemblyOperator.mov,
-                        Register.rax, Register.rbx);
-        AddAssemblyCode(assemblyCodeList, AssemblyOperator.mov,
-                        Register.rdx, Register.rbp);
-
-        AddAssemblyCode(assemblyCodeList, AssemblyOperator.label,
-                        "$args$loop");
-        AddAssemblyCode(assemblyCodeList, AssemblyOperator.cmp,
-                        Register.rbx, BigInteger.Zero);
-        AddAssemblyCode(assemblyCodeList, AssemblyOperator.je,
-                        null, null, "$args$exit");
-
-        AddAssemblyCode(assemblyCodeList, AssemblyOperator.pop, Register.rsi);
-        AddAssemblyCode(assemblyCodeList, AssemblyOperator.mov,
-                        Register.rbp, 0, Register.rsi);
-        AddAssemblyCode(assemblyCodeList, AssemblyOperator.add, Register.rbp,
-                        (BigInteger) TypeSize.PointerSize);
-        AddAssemblyCode(assemblyCodeList, AssemblyOperator.dec, Register.rbx);
-        AddAssemblyCode(assemblyCodeList, AssemblyOperator.jmp,
-                        null, null, "$args$loop");
-
-        AddAssemblyCode(assemblyCodeList, AssemblyOperator.label,
-                        "$args$exit");
-        AddAssemblyCode(assemblyCodeList, AssemblyOperator.mov_qword,
-                        Register.rbp, 0, BigInteger.Zero);
-        AddAssemblyCode(assemblyCodeList, AssemblyOperator.add, Register.rbp,
-                        (BigInteger) TypeSize.PointerSize);
-        AddAssemblyCode(assemblyCodeList, AssemblyOperator.mov, Register.rbp,
-                        SymbolTable.FunctionHeaderSize, Register.eax);
-        AddAssemblyCode(assemblyCodeList, AssemblyOperator.mov, Register.rbp,
-                        SymbolTable.FunctionHeaderSize +
-                        TypeSize.SignedIntegerSize, Register.rdx);
-
-        List<string> textList = new List<string>();
-        ISet<string> externSet = new HashSet<string>();
-        AssemblyCodeGenerator.LinuxTextList(assemblyCodeList, textList, externSet);
-        SymbolTable.StaticSet.
-          Add(new StaticSymbolLinux(StaticSymbolLinux.TextOrData.Text,
-                      AssemblyCodeGenerator.ArgsName, textList, externSet));
+        ArgumentCodeListLinux();
       }
-
-      if (Start.Windows) {
-        AddAssemblyCode(assemblyCodeList, AssemblyOperator.mov,
-                        Register.si, Register.bp);
-        AddAssemblyCode(assemblyCodeList, AssemblyOperator.mov_word,
-                        Register.bp, 0, AssemblyCodeGenerator.PathName);
-        AddAssemblyCode(assemblyCodeList, AssemblyOperator.add,
-                        Register.bp, (BigInteger) 2);
-        AddAssemblyCode(assemblyCodeList, AssemblyOperator.mov,
-                        Register.ax, BigInteger.One);
-        AddAssemblyCode(assemblyCodeList, AssemblyOperator.mov,
-                        Register.bx, (BigInteger) 129);
-
-        AddAssemblyCode(assemblyCodeList, AssemblyOperator.cmp_byte,
-                        Register.bx, 0, (BigInteger) 32);
-        AddAssemblyCode(assemblyCodeList, AssemblyOperator.je,
-                        null, assemblyCodeList.Count + 5);
-        AddAssemblyCode(assemblyCodeList, AssemblyOperator.cmp_byte,
-                        Register.bx, 0, (BigInteger) 13);
-        AddAssemblyCode(assemblyCodeList, AssemblyOperator.je,
-                        null, assemblyCodeList.Count + 13);
-        AddAssemblyCode(assemblyCodeList, AssemblyOperator.inc, Register.bx);
-        AddAssemblyCode(assemblyCodeList, AssemblyOperator.jmp,
-                        null, assemblyCodeList.Count - 5);
-
-        AddAssemblyCode(assemblyCodeList, AssemblyOperator.cmp,
-                        Register.ax, BigInteger.One);
-        AddAssemblyCode(assemblyCodeList, AssemblyOperator.je,
-                        null, assemblyCodeList.Count + 2);
-        AddAssemblyCode(assemblyCodeList, AssemblyOperator.mov_byte,
-                        Register.bx, 0, BigInteger.Zero);
-
-        AddAssemblyCode(assemblyCodeList, AssemblyOperator.inc, Register.bx);
-        AddAssemblyCode(assemblyCodeList, AssemblyOperator.cmp_byte,
-                        Register.bx, 0, (BigInteger) 32);
-        AddAssemblyCode(assemblyCodeList, AssemblyOperator.je,
-                        null, assemblyCodeList.Count - 2);
-    
-        AddAssemblyCode(assemblyCodeList, AssemblyOperator.mov,
-                        Register.bp, 0, Register.bx);
-        AddAssemblyCode(assemblyCodeList, AssemblyOperator.add,
-                        Register.bp, (BigInteger) 2);
-        AddAssemblyCode(assemblyCodeList, AssemblyOperator.inc, Register.ax);
-        AddAssemblyCode(assemblyCodeList, AssemblyOperator.jmp,
-                        null, assemblyCodeList.Count - 15);
-
-        AddAssemblyCode(assemblyCodeList, AssemblyOperator.mov_byte,
-                        Register.bx, 0, BigInteger.Zero);
-        AddAssemblyCode(assemblyCodeList, AssemblyOperator.mov_word,
-                        Register.bp, 0, BigInteger.Zero);
-        AddAssemblyCode(assemblyCodeList, AssemblyOperator.add,
-                        Register.bp, (BigInteger) 2);
-        AddAssemblyCode(assemblyCodeList, AssemblyOperator.mov,
-                        Register.bp, 6, Register.ax);
-        AddAssemblyCode(assemblyCodeList, AssemblyOperator.mov,
-                        Register.bp, 8, Register.si);
-
-        List<byte> byteList = new List<byte>();
-        IDictionary<int, string> accessMap = new Dictionary<int, string>();
-        IDictionary<int, string> callMap = new Dictionary<int, string>();
-        ISet<int> returnSet = new HashSet<int>();
-        AssemblyCodeGenerator.
-          GenerateTargetWindows(assemblyCodeList, byteList,
-                                accessMap, callMap, returnSet);
-        StaticSymbol staticSymbol =
-          new StaticSymbolWindows(AssemblyCodeGenerator.ArgsName, byteList,
-                                  accessMap, callMap, returnSet);
-        SymbolTable.StaticSet.Add(staticSymbol);
+      else {
+        ArgumentCodeListWindows();
       }
     }
+
+    public static void ArgumentCodeListLinux() {
+      List<AssemblyCode> assemblyCodeList = new List<AssemblyCode>();
+
+      AddAssemblyCode(assemblyCodeList, AssemblyOperator.comment,
+                      "Initializerialize Command Line Arguments");
+      AddAssemblyCode(assemblyCodeList, AssemblyOperator.pop, Register.rbx);
+      AddAssemblyCode(assemblyCodeList, AssemblyOperator.mov,
+                      Register.rax, Register.rbx);
+      AddAssemblyCode(assemblyCodeList, AssemblyOperator.mov,
+                      Register.rdx, Register.rbp);
+
+      AddAssemblyCode(assemblyCodeList, AssemblyOperator.label, "$args$loop");
+      AddAssemblyCode(assemblyCodeList, AssemblyOperator.cmp,
+                      Register.rbx, BigInteger.Zero);
+      AddAssemblyCode(assemblyCodeList, AssemblyOperator.je,
+                      null, null, "$args$exit");
+
+      AddAssemblyCode(assemblyCodeList, AssemblyOperator.pop, Register.rsi);
+      AddAssemblyCode(assemblyCodeList, AssemblyOperator.mov,
+                      Register.rbp, 0, Register.rsi);
+      AddAssemblyCode(assemblyCodeList, AssemblyOperator.add, Register.rbp,
+                      (BigInteger) TypeSize.PointerSize);
+      AddAssemblyCode(assemblyCodeList, AssemblyOperator.dec, Register.rbx);
+      AddAssemblyCode(assemblyCodeList, AssemblyOperator.jmp,
+                      null, null, "$args$loop");
+
+      AddAssemblyCode(assemblyCodeList, AssemblyOperator.label,
+                      "$args$exit");
+      AddAssemblyCode(assemblyCodeList, AssemblyOperator.mov_qword,
+                      Register.rbp, 0, BigInteger.Zero);
+      AddAssemblyCode(assemblyCodeList, AssemblyOperator.add, Register.rbp,
+                      (BigInteger) TypeSize.PointerSize);
+      AddAssemblyCode(assemblyCodeList, AssemblyOperator.mov, Register.rbp,
+                      SymbolTable.FunctionHeaderSize, Register.eax);
+      AddAssemblyCode(assemblyCodeList, AssemblyOperator.mov, Register.rbp,
+                      SymbolTable.FunctionHeaderSize +
+                      TypeSize.SignedIntegerSize, Register.rdx);
+
+      List<string> textList = new List<string>();
+      ISet<string> externSet = new HashSet<string>();
+      AssemblyCodeGenerator.LinuxTextList(assemblyCodeList, textList,
+                              externSet);
+      SymbolTable.StaticSet.
+      Add(new StaticSymbolLinux(StaticSymbolLinux.TextOrData.Text,
+                  AssemblyCodeGenerator.ArgsName, textList, externSet));
+    }
+
+    public static void ArgumentCodeListWindows() {
+      List<AssemblyCode> assemblyCodeList = new List<AssemblyCode>();
+
+      AddAssemblyCode(assemblyCodeList, AssemblyOperator.mov,
+                      Register.si, Register.bp);
+      AddAssemblyCode(assemblyCodeList, AssemblyOperator.mov_word,
+                      Register.bp, 0, AssemblyCodeGenerator.PathName);
+      AddAssemblyCode(assemblyCodeList, AssemblyOperator.add,
+                      Register.bp, (BigInteger) 2);
+      AddAssemblyCode(assemblyCodeList, AssemblyOperator.mov,
+                      Register.ax, BigInteger.One);
+      AddAssemblyCode(assemblyCodeList, AssemblyOperator.mov,
+                      Register.bx, (BigInteger) 129);
+
+      AddAssemblyCode(assemblyCodeList, AssemblyOperator.cmp_byte,
+                      Register.bx, 0, (BigInteger) 32);
+      AddAssemblyCode(assemblyCodeList, AssemblyOperator.je,
+                      null, assemblyCodeList.Count + 5);
+      AddAssemblyCode(assemblyCodeList, AssemblyOperator.cmp_byte,
+                      Register.bx, 0, (BigInteger) 13);
+      AddAssemblyCode(assemblyCodeList, AssemblyOperator.je,
+                      null, assemblyCodeList.Count + 13);
+      AddAssemblyCode(assemblyCodeList, AssemblyOperator.inc, Register.bx);
+      AddAssemblyCode(assemblyCodeList, AssemblyOperator.jmp,
+                      null, assemblyCodeList.Count - 5);
+
+      AddAssemblyCode(assemblyCodeList, AssemblyOperator.cmp,
+                      Register.ax, BigInteger.One);
+      AddAssemblyCode(assemblyCodeList, AssemblyOperator.je,
+                      null, assemblyCodeList.Count + 2);
+      AddAssemblyCode(assemblyCodeList, AssemblyOperator.mov_byte,
+                      Register.bx, 0, BigInteger.Zero);
+
+      AddAssemblyCode(assemblyCodeList, AssemblyOperator.inc, Register.bx);
+      AddAssemblyCode(assemblyCodeList, AssemblyOperator.cmp_byte,
+                      Register.bx, 0, (BigInteger) 32);
+      AddAssemblyCode(assemblyCodeList, AssemblyOperator.je,
+                      null, assemblyCodeList.Count - 2);
     
+      AddAssemblyCode(assemblyCodeList, AssemblyOperator.mov,
+                      Register.bp, 0, Register.bx);
+      AddAssemblyCode(assemblyCodeList, AssemblyOperator.add,
+                      Register.bp, (BigInteger) 2);
+      AddAssemblyCode(assemblyCodeList, AssemblyOperator.inc, Register.ax);
+      AddAssemblyCode(assemblyCodeList, AssemblyOperator.jmp,
+                      null, assemblyCodeList.Count - 15);
+
+      AddAssemblyCode(assemblyCodeList, AssemblyOperator.mov_byte,
+                      Register.bx, 0, BigInteger.Zero);
+      AddAssemblyCode(assemblyCodeList, AssemblyOperator.mov_word,
+                      Register.bp, 0, BigInteger.Zero);
+      AddAssemblyCode(assemblyCodeList, AssemblyOperator.add,
+                      Register.bp, (BigInteger) 2);
+      AddAssemblyCode(assemblyCodeList, AssemblyOperator.mov,
+                      Register.bp, 6, Register.ax);
+      AddAssemblyCode(assemblyCodeList, AssemblyOperator.mov,
+                      Register.bp, 8, Register.si);
+
+      List<byte> byteList = new List<byte>();
+      IDictionary<int, string> accessMap = new Dictionary<int, string>();
+      IDictionary<int, string> callMap = new Dictionary<int, string>();
+      ISet<int> returnSet = new HashSet<int>();
+      AssemblyCodeGenerator.
+        GenerateTargetWindows(assemblyCodeList, byteList,
+                              accessMap, callMap, returnSet);
+      StaticSymbol staticSymbol =
+        new StaticSymbolWindows(AssemblyCodeGenerator.ArgsName, byteList,
+                                accessMap, callMap, returnSet);
+      SymbolTable.StaticSet.Add(staticSymbol);
+    }
+        
     // Jump Info
 
     /*private void WindowsJumpInfo() {
