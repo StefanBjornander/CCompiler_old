@@ -1,12 +1,13 @@
 namespace CCompiler {
   public enum AssemblyOperator {
-    add, add_byte, add_dword, add_qword, add_word, address_return,
+    add, add_byte, add_dword, add_qword, add_word, return_address,
     and, and_byte, and_dword, and_qword, and_word, call,
     cmp, cmp_byte, cmp_dword, cmp_qword, cmp_word, comment,
     dec, dec_byte, dec_dword, dec_qword, dec_word,
     define_address, define_value, define_zero_sequence,
     div, div_byte, div_dword, div_qword, div_word, empty,
-    fabs, fadd, faddp, fchs, fcompp, fdiv, fdivp, fdivr,
+    //fabs,
+    fadd, faddp, fchs, fcompp, fdiv, fdivp, fdivr,
     fdivrp, fild_dword, fild_qword, fild_word,
     fist_dword, fist_qword, fist_word,
     fistp_dword, fistp_qword, fistp_word,

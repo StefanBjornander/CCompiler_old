@@ -42,7 +42,7 @@ namespace CCompiler {
       set { m_operandArray[index] = value; }
     }
 
-    public void FromAdditionToIncrement() {
+    private void FromAdditionToIncrement() {      
       if (((Operator == AssemblyOperator.add) ||
            (Operator == AssemblyOperator.sub)) &&
           ((m_operandArray[0] is Track) || (m_operandArray[0] is Register) ||
@@ -88,6 +88,20 @@ namespace CCompiler {
       }
     }
 
+    public bool IsNullary() {
+      string operatorName = Enum.GetName(typeof(AssemblyOperator), Operator);
+      return operatorName.StartsWith("fldz") ||
+             operatorName.StartsWith("fld1") ||
+             operatorName.StartsWith("fchs") ||
+             operatorName.StartsWith("fadd") ||
+             operatorName.StartsWith("fsub") ||
+             operatorName.StartsWith("fmul") ||
+             operatorName.StartsWith("fdiv") ||
+             operatorName.StartsWith("sahf") ||
+             operatorName.StartsWith("fcomp") ||
+             operatorName.StartsWith("syscall");
+    }
+
     public bool IsUnary() {
       string operatorName = Enum.GetName(typeof(AssemblyOperator), Operator);
       return operatorName.StartsWith("neg") ||
@@ -101,7 +115,22 @@ namespace CCompiler {
              operatorName.StartsWith("fst") ||
              operatorName.StartsWith("fld") ||
              operatorName.StartsWith("fist") ||
-             operatorName.StartsWith("fild");
+             operatorName.StartsWith("fild") ||
+             operatorName.StartsWith("pop") ||
+             operatorName.StartsWith("int");
+    }
+
+    public bool IsBinary() {
+      string operatorName = Enum.GetName(typeof(AssemblyOperator), Operator);
+      return operatorName.StartsWith("mov") ||
+             operatorName.StartsWith("add") ||
+             operatorName.StartsWith("sub") ||
+             operatorName.StartsWith("and") ||
+             operatorName.StartsWith("or") ||
+             operatorName.StartsWith("xor") ||
+             operatorName.StartsWith("shl") ||
+             operatorName.StartsWith("shr") ||
+             operatorName.StartsWith("cmp");
     }
 
     public bool IsJumpRegister() {
@@ -298,9 +327,46 @@ namespace CCompiler {
       string operatorName = Enum.GetName(typeof(AssemblyOperator),
                                          Operator).Replace("_", " ");
 
-      if ((Operator == AssemblyOperator.empty) ||
-          (Operator == AssemblyOperator.new_middle_code)) {
-        return null;
+      // lahf; syscall
+      if (IsNullary()) {
+        Assert.ErrorXXX((operand0 == null) &&  (operand1 == null) && (operand2 == null));
+        return "\t" + operatorName;
+      }
+      else if (IsUnary()) {
+        // inc [bp + 2]; inc [global + 4]
+        if (((operand0 is Register) || (operand0 is string)) &&
+                 (operand1 is int) && (operand2 == null)) {
+          return "\t" + operatorName + " [" + operand0 +
+                 WithSign(operand1) + "]";
+        }
+        // inc ax
+        else if ((operand0 is Register) && (operand1 == null) &&
+                 (operand2 == null)) {
+          Assert.ErrorXXX(!(operand0 is BigInteger));
+          return "\t" + operatorName + " " + operand0;
+        }
+      }
+      else if (IsBinary()) {
+        // mov ax, bx; mov ax, global; mov ax, 123
+        if ((operand0 is Register) && ((operand1 is Register) ||
+            (operand1 is string) || (operand1 is BigInteger)) &&
+            (operand2 == null)) {
+          Assert.ErrorXXX(!(operand0 is string));
+          return "\t" + operatorName + " " + operand0 + ", " + operand1;
+        }
+        // mov ax, [bp + 2]; mov ax, [global + 4]
+        else if ((operand0 is Register) && ((operand1 is Register) ||
+                 (operand1 is string)) && (operand2 is int)) {
+          return "\t" + operatorName + " " + operand0 +
+                 ", [" + operand1 + WithSign(operand2) + "]";
+        }
+        // mov [bp + 2], ax; mov [global + 4], ax; mov [bp + 2], 123; mov [global + 4], 123; mov [bp + 2], global; mov [global + 4], global
+        else if (((operand0 is Register) || (operand0 is string)) &&
+                 (operand1 is int) && ((operand2 is Register) ||
+                  (operand2 is string) || (operand2 is BigInteger))) {
+          return "\t" + operatorName +
+                 " [" + operand0 + WithSign(operand1) + "], " + operand2;
+        }
       }
       else if (Operator == AssemblyOperator.label) {
         return "\n " + operand0 + ":";
@@ -342,7 +408,7 @@ namespace CCompiler {
             case 4:
               return "\tdd " + text;
 
-            default: // case 8:
+            case 8: 
               return "\tdq " + text;
           }
         }
@@ -351,7 +417,7 @@ namespace CCompiler {
                IsCallNotRegister()) {
         return "\tjmp " + operand0;
       }
-      else if (Operator == AssemblyOperator.address_return) {
+      else if (Operator == AssemblyOperator.return_address) {
         string target = SymbolTable.CurrentFunction.UniqueName +
                         Symbol.SeparatorId + operand2;
         return "\tmov qword [" + operand0 + WithSign(operand1) + "], " +
@@ -372,43 +438,11 @@ namespace CCompiler {
           return "\t" + operatorName + " " + labelText;
         }
       }
-      // mov ax, bx; mov ax, global; mov ax, 123
-      // cmp global, bx; cmp global, global; cmp global, 123
-      else if (((operand0 is Register) || (operand0 is string)) &&
-               ((operand1 is Register) || (operand1 is string) || (operand1 is BigInteger)) &&
-                (operand2 == null)) {
-        Assert.ErrorXXX(!(operand0 is string));
-        return "\t" + operatorName + " " + operand0 + ", " + operand1;
+      else if (Operator == AssemblyOperator.empty) { // XXX
+        return null;
       }
-      // mov ax, [bp + 2]; mov ax, [global + 4]
-      else if ((operand0 is Register) && ((operand1 is Register) ||
-               (operand1 is string)) && (operand2 is int)) {
-        return "\t" + operatorName + " " + operand0 +
-               ", [" + operand1 + WithSign(operand2) + "]";
-      }
-      // mov [bp + 2], ax; mov [global + 4], ax; mov [bp + 2], 123; mov [global + 4], 123; mov [bp + 2], global; mov [global + 4], global
-      else if (((operand0 is Register) || (operand0 is string)) &&
-               (operand1 is int) && ((operand2 is Register) ||
-                (operand2 is string) || (operand2 is BigInteger))) {
-        return "\t" + operatorName +
-               " [" + operand0 + WithSign(operand1) + "], " + operand2;
-      }
-      // inc [bp + 2]; inc [global + 4]
-      else if (((operand0 is Register) || (operand0 is string)) &&
-               (operand1 is int) && (operand2 == null)) {
-        return "\t" + operatorName + " [" + operand0 +
-               WithSign(operand1) + "]";
-      }
-      // inc ax
-      else if ((operand0 is Register) && (operand1 == null) &&
-               (operand2 == null)) {
-        Assert.ErrorXXX(!(operand0 is BigInteger));
-        return "\t" + operatorName + " " + operand0;
-      }
-      // lahf; syscall
-      else if ((operand0 == null) &&  (operand1 == null) &&
-               (operand2 == null)) {
-        return "\t" + operatorName;
+      else if (Operator == AssemblyOperator.new_middle_code) {
+        return null;
       }
 
       Assert.ErrorXXX(false);
@@ -550,7 +584,7 @@ namespace CCompiler {
                      TypeSize.PointerSize, 0);
         return byteList;
       }
-      else if (Operator == AssemblyOperator.address_return) {
+      else if (Operator == AssemblyOperator.return_address) {
         Register register = (Register) operand0;
         int offset = (int) operand1;
         int size = SizeOfValue(offset);

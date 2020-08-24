@@ -479,7 +479,7 @@ namespace CCompiler {
       Register frameRegister = callerEllipse ? AssemblyCode.EllipseRegister
                                              : AssemblyCode.FrameRegister;               
 
-      AddAssemblyCode(AssemblyOperator.address_return, frameRegister,
+      AddAssemblyCode(AssemblyOperator.return_address, frameRegister,
                       recordSize + SymbolTable.ReturnAddressOffset,
                       (BigInteger) (index + 1));
 
@@ -1917,7 +1917,7 @@ namespace CCompiler {
       for (int line = 0; line < m_assemblyCodeList.Count; ++line) {        
         AssemblyCode assemblyCode = m_assemblyCodeList[line];
 
-        if (assemblyCode.Operator == AssemblyOperator.address_return) {
+        if (assemblyCode.Operator == AssemblyOperator.return_address) {
           int middleAddress = (int) ((BigInteger) assemblyCode[2]);
           int assemblyAddress = middleToAssemblyMap[middleAddress];
           int byteAddress = assemblyToByteMap[assemblyAddress];
@@ -2037,7 +2037,7 @@ namespace CCompiler {
             int address = byteList.Count - TypeSize.PointerSize;
             callMap.Add(address, calleeName);
           }
-          else if (assemblyCode.Operator == AssemblyOperator.address_return) {
+          else if (assemblyCode.Operator == AssemblyOperator.return_address) {
             int address = byteList.Count - TypeSize.PointerSize;
             returnSet.Add(address);
           }
