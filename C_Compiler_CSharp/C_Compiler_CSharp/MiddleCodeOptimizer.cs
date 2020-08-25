@@ -464,8 +464,10 @@ namespace CCompiler {
         if (middleCode.IsRelation()) {
           Symbol leftSymbol = (Symbol) middleCode[1],
                  rightSymbol = (Symbol) middleCode[2];
-
-          if (leftSymbol.Value is BigInteger) {
+          if ((leftSymbol.Value is BigInteger) ||
+              (leftSymbol.Type.IsArrayFunctionOrString()) &&
+              !rightSymbol.Type.IsArrayFunctionOrString() &&
+              !(rightSymbol.Value is BigInteger)) {
             middleCode.Operator = m_swapMap[middleCode.Operator];
             middleCode[1] = rightSymbol;
             middleCode[2] = leftSymbol;
