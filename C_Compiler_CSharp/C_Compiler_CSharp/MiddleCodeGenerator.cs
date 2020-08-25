@@ -295,7 +295,7 @@ namespace CCompiler {
 
       AssemblyCodeGenerator.GenerateAssembly(statement.CodeList, assemblyCodeList);
 
-      if (Start.Windows) {
+      if (Start.W) {
         List<byte> byteList = new List<byte>();
         IDictionary<int,string> accessMap = new Dictionary<int,string>();
         IDictionary<int,string> callMap = new Dictionary<int,string>();
@@ -306,7 +306,7 @@ namespace CCompiler {
         SymbolTable.StaticSet.Add(staticSymbol);
       }
       
-      if (Start.Linux) {
+      if (Start.L) {
         List<string> textList = new List<string>();
         ISet<string> externSet = new HashSet<string>();
         GenerateStaticInitializerLinux.TextList(assemblyCodeList, textList, externSet);
@@ -455,19 +455,14 @@ namespace CCompiler {
         List<MiddleCode> middleCodeList = GenerateStaticInitializer.GenerateStatic(type, initializer);
 
         Symbol symbol = new Symbol(name, specifier.ExternalLinkage, storage.Value, type);
-        List<AssemblyCode> assemblyCodeList = new List<AssemblyCode>();
-        AssemblyCodeGenerator.GenerateAssembly(middleCodeList, assemblyCodeList);
+        SymbolTable.CurrentTable.AddSymbol(symbol);
+        //List<AssemblyCode> assemblyCodeList = new List<AssemblyCode>();
+        //AssemblyCodeGenerator.GenerateAssembly(middleCodeList, assemblyCodeList);
 
-        if (Start.Windows) {
-          List<byte> byteList = new List<byte>();
-          IDictionary<int,string> accessMap = new Dictionary<int,string>();
-          AssemblyCodeGenerator.GenerateTargetWindows(assemblyCodeList, byteList, accessMap, null, null);
-          SymbolTable.CurrentTable.AddSymbol(symbol);
-          StaticSymbol staticSymbol = new StaticSymbolWindows(symbol.UniqueName, byteList, accessMap);
-          SymbolTable.StaticSet.Add(staticSymbol);
-        }
+        StaticSymbol staticSymbol = ConstantExpression.Value(symbol.UniqueName, type, middleCodeList);
+        SymbolTable.StaticSet.Add(staticSymbol);
         
-        if (Start.Linux) {
+        /*if (Start.L) {
           List<string> textList = new List<string>();
           ISet<string> externSet = new HashSet<string>();
           textList.Add("\n" + symbol.UniqueName + ":");
@@ -477,6 +472,15 @@ namespace CCompiler {
           StaticSymbol staticSymbol = new StaticSymbolLinux(StaticSymbolLinux.TextOrData.Data, symbol.UniqueName, textList, externSet);
           SymbolTable.StaticSet.Add(staticSymbol);
         }
+
+        if (Start.W) {
+          List<byte> byteList = new List<byte>();
+          IDictionary<int,string> accessMap = new Dictionary<int,string>();
+          AssemblyCodeGenerator.GenerateTargetWindows(assemblyCodeList, byteList, accessMap, null, null);
+          SymbolTable.CurrentTable.AddSymbol(symbol);
+          StaticSymbol staticSymbol = new StaticSymbolWindows(symbol.UniqueName, byteList, accessMap);
+          SymbolTable.StaticSet.Add(staticSymbol);
+        }*/
 
         return (new List<MiddleCode>());
       }

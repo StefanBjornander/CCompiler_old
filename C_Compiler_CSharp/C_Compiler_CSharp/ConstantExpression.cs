@@ -518,20 +518,36 @@ namespace CCompiler {
 
     public static StaticSymbol Value(string uniqueName, Type type,
                                      object value) {
-      List<MiddleCode> middleCodeList = new List<MiddleCode>();
-      
-      if (value != null) {
-        middleCodeList.Add(new MiddleCode(MiddleOperator.Initializer,
-                                          type.Sort, value));
+      List<MiddleCode> middleCodeList;
+
+      if (value is List<MiddleCode>) {
+        middleCodeList = (List<MiddleCode>) value;
       }
       else {
-        middleCodeList.Add(new MiddleCode(MiddleOperator.InitializerZero,
-                                          type.Size()));
+        middleCodeList = new List<MiddleCode>();
+      
+        if (value != null) {
+          middleCodeList.Add(new MiddleCode(MiddleOperator.Initializer,
+                                            type.Sort, value));
+        }
+        else {
+          middleCodeList.Add(new MiddleCode(MiddleOperator.InitializerZero,
+                                            type.Size()));
+        }
       }
 
       List<AssemblyCode> assemblyCodeList = new List<AssemblyCode>();
       AssemblyCodeGenerator.GenerateAssembly(middleCodeList,
                                              assemblyCodeList);
+
+      if (Start.Linux) {
+        List<string> textList = new List<string>();
+        textList.Add("\n" + uniqueName + ":");
+        ISet<string> externSet = new HashSet<string>();
+        AssemblyCodeGenerator.LinuxTextList(assemblyCodeList, textList, externSet); 
+        return (new StaticSymbolLinux(StaticSymbolLinux.TextOrData.Data,
+                                      uniqueName, textList, externSet));
+      }
 
       if (Start.Windows) {
         List<byte> byteList = new List<byte>();
@@ -542,15 +558,6 @@ namespace CCompiler {
         return (new StaticSymbolWindows(uniqueName, byteList, accessMap));
       }
       
-      if (Start.Linux) {
-        List<string> textList = new List<string>();
-        textList.Add("\n" + uniqueName + ":");
-        ISet<string> externSet = new HashSet<string>();
-        AssemblyCodeGenerator.LinuxTextList(assemblyCodeList, textList, externSet); 
-        return (new StaticSymbolLinux(StaticSymbolLinux.TextOrData.Data,
-                                      uniqueName, textList, externSet));
-      }
-
       return null;
     }
   }

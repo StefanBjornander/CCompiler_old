@@ -61,32 +61,6 @@ namespace CCompiler {
           }
         }
 
-        if (Start.Windows) {
-          if (!noLink && doLink) {
-            FileInfo targetFile;
-
-            AssemblyCodeGenerator.PathText = "C:\\D\\" + argList[0] + ".com";
-            targetFile = new FileInfo(AssemblyCodeGenerator.PathText);
-            LinkerWindows linker = new LinkerWindows();
-
-            CCompiler_Main.Scanner.Path = null;
-            foreach (string arg in argList) {
-              FileInfo file = new FileInfo(pathName + arg);
-
-              if (print) {
-                Console.Out.WriteLine("Loading \"" + file.FullName + ".obj\".");
-              }
-          
-              ReadObjectFile(file, linker);
-            }
-
-            linker.Generate(targetFile);
-          }
-          else if (print) {
-            Console.Out.WriteLine(pathName + argList[0] +".com is up-to-date.");
-          }
-        }
-        
         if (Start.Linux) {
           StreamWriter makeStream = new StreamWriter(@"C:\Users\Stefan\Documents\vagrant\homestead\code\code\makefile");
           makeStream.Write("main:");
@@ -123,6 +97,32 @@ namespace CCompiler {
           makeStream.WriteLine("\trm main");
           makeStream.Close();
         }
+
+        if (Start.Windows) {
+          if (!noLink && doLink) {
+            FileInfo targetFile;
+
+            AssemblyCodeGenerator.PathText = "C:\\D\\" + argList[0] + ".com";
+            targetFile = new FileInfo(AssemblyCodeGenerator.PathText);
+            LinkerWindows linker = new LinkerWindows();
+
+            CCompiler_Main.Scanner.Path = null;
+            foreach (string arg in argList) {
+              FileInfo file = new FileInfo(pathName + arg);
+
+              if (print) {
+                Console.Out.WriteLine("Loading \"" + file.FullName + ".obj\".");
+              }
+          
+              ReadObjectFile(file, linker);
+            }
+
+            linker.Generate(targetFile);
+          }
+          else if (print) {
+            Console.Out.WriteLine(pathName + argList[0] +".com is up-to-date.");
+          }
+        }
       }
       catch (Exception exception) {
         Console.Out.WriteLine(exception.StackTrace);
@@ -157,12 +157,12 @@ namespace CCompiler {
                middleFile = new FileInfo(file.FullName + ".mid");
       Preprocessor.MacroMap = new Dictionary<string,Macro>();
 
-      if (Start.Windows) {
-        Preprocessor.MacroMap.Add("__WINDOWS__", new Macro(0, new List<Token>()));
-      }
-      
       if (Start.Linux) {
         Preprocessor.MacroMap.Add("__LINUX__", new Macro(0, new List<Token>()));
+      }
+
+      if (Start.Windows) {
+        Preprocessor.MacroMap.Add("__WINDOWS__", new Macro(0, new List<Token>()));
       }
 
       Preprocessor.IncludeSet = new HashSet<FileInfo>();
@@ -192,27 +192,6 @@ namespace CCompiler {
       }
       catch (IOException ioException) {
         Assert.Error(false, ioException.StackTrace, Message.Syntax_error);
-      }
-
-      if (Start.Windows) {
-        FileInfo depFile = new FileInfo(file.FullName + ".dep");
-        StreamWriter includeWriter = new StreamWriter(File.Open(depFile.FullName, FileMode.Create));
-        bool first = true;
-        foreach (FileInfo includeFile in Preprocessor.IncludeSet) {
-          includeWriter.Write((first ? "" : " ") + includeFile.Name);
-          first = false;
-        }
-        includeWriter.Close();
-
-        FileInfo objectFile = new FileInfo(file.FullName + ".obj");
-        BinaryWriter binaryWriter = new BinaryWriter(File.Open(objectFile.FullName, FileMode.Create));
-
-        binaryWriter.Write(SymbolTable.StaticSet.Count);    
-        foreach (StaticSymbol staticSymbol in SymbolTable.StaticSet) {
-          staticSymbol.Save(binaryWriter);
-        }
-
-        binaryWriter.Close();
       }
 
       if (Start.Linux) {
@@ -267,6 +246,15 @@ namespace CCompiler {
             totalGlobalSet.Add(staticSymbolLinux.UniqueName);
           }
  
+          /*if (staticSymbolLinux.UniqueName.Equals(AssemblyCodeGenerator.MainName)) {
+            totalTextList.Add("_start:");
+            totalTextList.AddRange(staticSymbolLinux.TextList);
+            totalDataList.Add("$StackTop:\ttimes 65536 db 0");
+          }
+          else {
+            totalTextList.AddRange(staticSymbolLinux.TextList);
+          }*/
+
           if (staticSymbolLinux.TextOrDataX == StaticSymbolLinux.TextOrData.Text) {
             if (staticSymbolLinux.UniqueName.Equals(AssemblyCodeGenerator.MainName)) {
               totalTextList.Add("_start:");
@@ -312,6 +300,27 @@ namespace CCompiler {
         }
 
         streamWriter.Close();
+      }
+
+      if (Start.Windows) {
+        FileInfo depFile = new FileInfo(file.FullName + ".dep");
+        StreamWriter includeWriter = new StreamWriter(File.Open(depFile.FullName, FileMode.Create));
+        bool first = true;
+        foreach (FileInfo includeFile in Preprocessor.IncludeSet) {
+          includeWriter.Write((first ? "" : " ") + includeFile.Name);
+          first = false;
+        }
+        includeWriter.Close();
+
+        FileInfo objectFile = new FileInfo(file.FullName + ".obj");
+        BinaryWriter binaryWriter = new BinaryWriter(File.Open(objectFile.FullName, FileMode.Create));
+
+        binaryWriter.Write(SymbolTable.StaticSet.Count);    
+        foreach (StaticSymbol staticSymbol in SymbolTable.StaticSet) {
+          staticSymbol.Save(binaryWriter);
+        }
+
+        binaryWriter.Close();
       }
     }
 
