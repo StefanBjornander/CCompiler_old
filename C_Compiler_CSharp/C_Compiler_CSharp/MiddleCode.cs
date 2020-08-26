@@ -16,11 +16,7 @@ namespace CCompiler {
 
     public MiddleOperator Operator {
       get { return m_middleOperator; }
-      set { m_middleOperator = value;
-            if (m_middleOperator == MiddleOperator.Empty) {
-              m_operandArray[0] = m_operandArray[1] = m_operandArray[2] = null;
-            }
-          }
+      set { m_middleOperator = value; }
     }
 
     public object this[int index] {
@@ -36,25 +32,16 @@ namespace CCompiler {
     }
 
     public bool IsGoto() {
-      return (m_middleOperator == MiddleOperator.Goto) /*||
-             (m_middleOperator == MiddleOperator.CarryFlag)*/;
+      return (m_middleOperator == MiddleOperator.Goto);
     }
 
     public bool IsCarry() {
-      return IsCarry(m_middleOperator);
-    }
-  
-    public static bool IsCarry(MiddleOperator middleOperator) {
-      return (middleOperator == MiddleOperator.Carry) ||
-             (middleOperator == MiddleOperator.NotCarry);
+      return (m_middleOperator == MiddleOperator.Carry) ||
+             (m_middleOperator == MiddleOperator.NotCarry);
     }
 
     public bool IsRelation() {
-      return IsRelation(m_middleOperator);
-    }
-  
-    public static bool IsRelation(MiddleOperator middleOperator) {
-      switch (middleOperator) {
+      switch (m_middleOperator) {
         case MiddleOperator.Case:
         case MiddleOperator.Equal:
         case MiddleOperator.NotEqual:
@@ -77,27 +64,6 @@ namespace CCompiler {
       return IsRelation() || IsCarry() || IsGoto();
     }
 
-    public bool IsArithmetic() {
-      return IsArithmetic(m_middleOperator);
-    }
-
-    public static bool IsArithmetic(MiddleOperator middleOperator) {
-      switch (middleOperator) {
-        case MiddleOperator.BinaryAdd:
-        case MiddleOperator.BinarySubtract:
-        case MiddleOperator.SignedMultiply:
-        case MiddleOperator.SignedDivide:
-          return true;
-        
-        default:
-          return false;
-      }
-    }
-
-    public bool IsMultiply() {
-      return IsMultiply(m_middleOperator);
-    }
-  
     public static bool IsMultiply(MiddleOperator middleOperator) {
       switch (middleOperator) {
         case MiddleOperator.SignedMultiply:
@@ -113,10 +79,6 @@ namespace CCompiler {
       }
     }
 
-    public bool IsModulo() {
-      return IsModulo(m_middleOperator);
-    }
-  
     public static bool IsModulo(MiddleOperator middleOperator) {
       switch (middleOperator) {
         case MiddleOperator.SignedModulo:
@@ -129,11 +91,7 @@ namespace CCompiler {
     }
 
     public bool IsCommutative() {
-      return IsCommutative(m_middleOperator);
-    }
-  
-    public static bool IsCommutative(MiddleOperator middleOp) {
-      switch (middleOp) {
+      switch (m_middleOperator) {
         case MiddleOperator.BinaryAdd:
         case MiddleOperator.SignedMultiply:
         case MiddleOperator.UnsignedMultiply:
@@ -147,10 +105,6 @@ namespace CCompiler {
       }
     }
 
-    public bool IsAssociative() {
-      return IsAssociative(m_middleOperator);
-    }
-  
     public static bool IsAssociative(MiddleOperator middleOperator) {
       switch (middleOperator) {
         case MiddleOperator.BinaryAdd:
@@ -166,10 +120,6 @@ namespace CCompiler {
       }
     }
 
-    public bool IsShift() {
-      return IsShift(m_middleOperator);
-    }
-  
     public static bool IsShift(MiddleOperator middleOp) {
       switch (middleOp) {
         case MiddleOperator.ShiftLeft:
@@ -181,29 +131,8 @@ namespace CCompiler {
       }
     }
 
-    public bool IsUnary() {
-      return IsUnary(m_middleOperator);
-    }
-  
-    public static bool IsUnary(MiddleOperator middleOp) {
-      switch (middleOp) {
-        case MiddleOperator.UnaryAdd:
-        case MiddleOperator.UnarySubtract:
-        case MiddleOperator.BitwiseNot:
-        case MiddleOperator.Address:
-          return true;
-        
-        default:
-          return false;
-      }
-    }
-
     public bool IsBinary() {
-      return IsBinary(m_middleOperator);
-    }
-  
-    public static bool IsBinary(MiddleOperator middleOp) {
-      switch (middleOp) {
+      switch (m_middleOperator) {
         case MiddleOperator.BinaryAdd:
         case MiddleOperator.BinarySubtract:
         case MiddleOperator.SignedMultiply:
@@ -271,9 +200,22 @@ namespace CCompiler {
         {MiddleOperator.FloatingToIntegral, "float_to_int"}
       };
  
+    public bool IsUnaryXXX() {
+      switch (m_middleOperator) {
+        case MiddleOperator.UnaryAdd:
+        case MiddleOperator.UnarySubtract:
+        case MiddleOperator.BitwiseNot:
+        case MiddleOperator.Address:
+          return true;
+        
+        default:
+          return false;
+      }
+    }
+
     private string opToText() {
       if (OpToTextMap.ContainsKey(m_middleOperator)) {
-        if (IsUnary()) {
+        if (IsUnaryXXX()) {
           return OpToTextMap[m_middleOperator];
         }
         else {

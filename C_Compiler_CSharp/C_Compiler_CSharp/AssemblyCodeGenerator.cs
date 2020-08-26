@@ -1586,16 +1586,16 @@ namespace CCompiler {
       AddAssemblyCode(assemblyCodeList, AssemblyOperator.comment,
                       "Initializerialize Stack Pointer");
       AddAssemblyCode(assemblyCodeList, AssemblyOperator.mov,
-                 AssemblyCode.FrameRegister, LinkerWindows.StackTopName);
+                 AssemblyCode.FrameRegister, Linker.StackTopName);
 
       if (Start.Linux) {
         AddAssemblyCode(assemblyCodeList, AssemblyOperator.comment,
                         "Initializerialize Heap Pointer");
         AddAssemblyCode(assemblyCodeList, AssemblyOperator.mov_dword,
-                        LinkerWindows.StackTopName, 65534,
-                        LinkerWindows.StackTopName);
+                        Linker.StackTopName, 65534,
+                        Linker.StackTopName);
         AddAssemblyCode(assemblyCodeList, AssemblyOperator.add_dword,
-                        LinkerWindows.StackTopName, 65534,
+                        Linker.StackTopName, 65534,
                         (BigInteger) 65534);
         AddAssemblyCode(assemblyCodeList, AssemblyOperator.comment,
                         "Initializerialize FPU Control Word, truncate mode " +

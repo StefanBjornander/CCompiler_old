@@ -7,7 +7,7 @@ using System.Collections.Generic;
 
 namespace CCompiler {
   public class Start {
-    public static bool Windows = false, Linux = true;
+    public static bool Windows = true, Linux = false;
     public static IDictionary<string,ISet<FileInfo>> DependencySetMap = new Dictionary<string,ISet<FileInfo>>();
 
 
@@ -104,7 +104,7 @@ namespace CCompiler {
 
             AssemblyCodeGenerator.PathText = "C:\\D\\" + argList[0] + ".com";
             targetFile = new FileInfo(AssemblyCodeGenerator.PathText);
-            LinkerWindows linker = new LinkerWindows();
+            Linker linker = new Linker();
 
             CCompiler_Main.Scanner.Path = null;
             foreach (string arg in argList) {
@@ -130,7 +130,7 @@ namespace CCompiler {
       }
     }
 
-    public static void ReadObjectFile(FileInfo file, LinkerWindows linker) {
+    public static void ReadObjectFile(FileInfo file, Linker linker) {
       FileInfo objectFile = new FileInfo(file.FullName + ".obj");
 
       try {

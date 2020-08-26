@@ -4,7 +4,7 @@ using System.Numerics;
 using System.Collections.Generic;
 
 namespace CCompiler {
-  public class GenerateStaticInitializerWindows {
+  public class GenerateStaticInitializerWindowsX {
     /*public static void ByteListX(IList<AssemblyCode> assemblyCodeList, List<byte> byteList,
                                         IDictionary<int,string> accessMap) {
       foreach (AssemblyCode assemblyCode in assemblyCodeList) {

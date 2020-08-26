@@ -630,7 +630,7 @@ namespace CCompiler {
 
         switch (middleCode.Operator) {
           case MiddleOperator.Empty:
-            Assert.ErrorXXX((symbol0 == null) && (symbol1 == null) && (symbol2 == null));
+            //Assert.ErrorXXX((symbol0 == null) && (symbol1 == null) && (symbol2 == null));
             break;
 
           case MiddleOperator.PreCall: {

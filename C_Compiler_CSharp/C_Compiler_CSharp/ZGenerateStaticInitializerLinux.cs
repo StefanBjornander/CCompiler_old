@@ -5,7 +5,7 @@ using System.Globalization;
 using System.Collections.Generic;
 
 namespace CCompiler {
-  public class GenerateStaticInitializerLinux {
+  public class GenerateStaticInitializerLinuxX {
     /*public static void TextList(IList<AssemblyCode> assemblyCodeList, IList<string> textList,
                                         ISet<string> externSet) {
       foreach (AssemblyCode assemblyCode in assemblyCodeList) {

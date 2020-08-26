@@ -1,10 +1,10 @@
 using System.Collections.Generic;
 
 namespace CCompiler {
-  public class AssemblyCodeOptimizerx {
+  public class AssemblyCodeOptimizerX {
     public List<AssemblyCode> m_assemblyCodeList;
 
-    public AssemblyCodeOptimizerx(List<AssemblyCode> assemblyCodeList) {
+    public AssemblyCodeOptimizerX(List<AssemblyCode> assemblyCodeList) {
       m_assemblyCodeList = assemblyCodeList;
     }
 

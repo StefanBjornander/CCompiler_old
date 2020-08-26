@@ -55,7 +55,7 @@
     <Compile Include="ZAssemblyCodeOptimizer.cs" />
     <Compile Include="Assert.cs" />
     <Compile Include="ZBigDecimal.cs" />
-    <Compile Include="Linker.cs" />
+    <Compile Include="ZLinker.cs" />
     <Compile Include="ConstantExpression.cs" />
     <Compile Include="Declarator.cs" />
     <Compile Include="Expression.cs" />
@@ -63,12 +63,12 @@
     <Compile Include="ExpressionScanner.cs" />
     <Compile Include="GenerateAutoInitializer.cs" />
     <Compile Include="GenerateStaticInitializer.cs" />
-    <Compile Include="GenerateStaticInitializerLinux.cs" />
-    <Compile Include="GenerateStaticInitializerWindows.cs" />
-    <Compile Include="LinkerLinux.cs" />
+    <Compile Include="ZGenerateStaticInitializerLinux.cs" />
+    <Compile Include="ZGenerateStaticInitializerWindows.cs" />
+    <Compile Include="ZLinkerLinux.cs" />
     <Compile Include="MiddleCodeGenerator.cs" />
     <Compile Include="Graph.cs" />
-    <Compile Include="LinkerWindows.cs" />
+    <Compile Include="Linker.cs" />
     <Compile Include="ListMap.cs" />
     <Compile Include="ListMapEnumerator.cs" />
     <Compile Include="ListSet.cs" />

@@ -6,7 +6,6 @@ namespace CCompiler {
     private ISet<MiddleCode> m_nextSet;
   
     public Statement(List<MiddleCode> list, ISet<MiddleCode> nextSet = null) {
-      Assert.ErrorXXX(list != null);
       m_list = list;
       m_nextSet = (nextSet != null) ? nextSet : (new HashSet<MiddleCode>());
     }
