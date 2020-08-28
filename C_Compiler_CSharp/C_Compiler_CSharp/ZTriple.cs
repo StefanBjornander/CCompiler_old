@@ -19,9 +19,11 @@ namespace CCompiler {
 
     public override bool Equals(object obj) {
       if (obj is Triple<FirstType,SecondType,ThirdType>) {
-        Triple<FirstType,SecondType,ThirdType> triple =
-          (Triple<FirstType,SecondType,ThirdType>) obj;
-        return base.Equals(triple) && m_third.Equals(triple.m_third);
+        Triple<FirstType, SecondType, ThirdType> triple = (Triple<FirstType, SecondType, ThirdType>) obj;
+        return base.Equals((Pair<FirstType,SecondType>)triple) &&
+               (((m_third == null) && (triple.m_third == null)) ||
+                ((m_third != null) && (triple.m_third != null) &&
+                 m_third.Equals(triple.m_third)));
       }
     
       return false;

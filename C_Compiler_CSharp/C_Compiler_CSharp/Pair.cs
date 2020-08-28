@@ -1,7 +1,7 @@
 namespace CCompiler {
   public class Pair<FirstType,SecondType> {
-    protected FirstType m_first;
-    protected SecondType m_second;
+    private FirstType m_first;
+    private SecondType m_second;
 
     public Pair(FirstType first, SecondType second) {
       m_first = first;
@@ -18,30 +18,17 @@ namespace CCompiler {
       set { m_second = value; }
     }
 
+    public override int GetHashCode() {
+      return m_first.GetHashCode() + m_second.GetHashCode();
+    }
+
     public override bool Equals(object obj) {
       if (obj is Pair<FirstType,SecondType>) {
-        Pair<FirstType, SecondType> pair = (Pair<FirstType, SecondType>)obj;
-        return ((((m_first == null) && (pair.m_first == null)) ||
-                ((m_first != null) && (pair.m_first != null) &&
-                 m_first.Equals(pair.m_first))) &&
-                (((m_second == null) && (pair.m_second == null)) ||
-                ((m_second != null) && (pair.m_second != null) &&
-                 m_second.Equals(pair.m_second))));
+        Pair<FirstType, SecondType> pair = (Pair<FirstType, SecondType>) obj;
+        return m_first.Equals(pair.m_first) && m_second.Equals(m_second);
       }
     
       return false;
-    }
-  
-    public override int GetHashCode() {
-      //return base.GetHashCode();
-      return ((m_first != null) ? m_first.GetHashCode() : 0) +
-             ((m_second != null) ? m_second.GetHashCode() : 0);           
-    }
-
-    public override string ToString() {
-      string firstText = (m_first != null) ? m_first.ToString() : "<null>",
-             secondText = (m_second != null) ? m_second.ToString() : "<null>";
-      return "(" + firstText + "," + secondText + ")";
     }
   }
 }

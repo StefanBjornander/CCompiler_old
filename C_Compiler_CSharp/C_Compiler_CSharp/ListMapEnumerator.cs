@@ -3,7 +3,8 @@ using System.Collections;
 using System.Collections.Generic;
 
 namespace CCompiler {
-  class ListMapEnumerator<KeyType,ValueType> : IEnumerator<KeyValuePair<KeyType,ValueType>> {
+  class ListMapEnumerator<KeyType,ValueType> :
+        IEnumerator<KeyValuePair<KeyType,ValueType>> {
     private int m_index = -1;
     private List<KeyValuePair<KeyType, ValueType>> m_list;
 
@@ -20,7 +21,8 @@ namespace CCompiler {
       m_index = 0;
     }
 
-    KeyValuePair<KeyType,ValueType> IEnumerator<KeyValuePair<KeyType,ValueType>>.Current {
+    KeyValuePair<KeyType,ValueType> 
+    IEnumerator<KeyValuePair<KeyType,ValueType>>.Current {
       get {
         if (m_index < m_list.Count) {
           return m_list[m_index];

@@ -4,8 +4,10 @@ using System.Collections;
 using System.Collections.Generic;
 
 namespace CCompiler {
-  public class ListMap<KeyType,ValueType> : IDictionary<KeyType,ValueType> {
-    private List<KeyValuePair<KeyType,ValueType>> m_list = new List<KeyValuePair<KeyType,ValueType>>();
+  public class ListMap<KeyType,ValueType> :
+               IDictionary<KeyType,ValueType> {
+    private List<KeyValuePair<KeyType,ValueType>> m_list =
+      new List<KeyValuePair<KeyType,ValueType>>();
 
     public int Count {
       get { return m_list.Count; }
@@ -16,11 +18,15 @@ namespace CCompiler {
     }
 
     public bool IsReadOnly {
-      get { return true; }
+      get { return false; }
     }
 
     public ValueType this[KeyType key] {
       get {
+        if (key == null) {
+          throw (new ArgumentNullException());
+        }
+
         ValueType value;
 
         if (TryGetValue(key, out value)) {
@@ -42,25 +48,25 @@ namespace CCompiler {
 
     public ICollection<KeyType> Keys {
       get {
-        ICollection<KeyType> set = new List<KeyType>();
+        ICollection<KeyType> collection = new ListSet<KeyType>();
 
         foreach (KeyValuePair<KeyType,ValueType> pair in m_list) {
-          set.Add(pair.Key);
+          collection.Add(pair.Key);
         }
 
-        return set;
+        return collection;
       }
     }
 
     public ICollection<ValueType> Values {
       get {
-        ICollection<ValueType> set = new List<ValueType>();
+        ICollection<ValueType> collection = new ListSet<ValueType>();
 
         foreach (KeyValuePair<KeyType,ValueType> pair in m_list) {
-          set.Add(pair.Value);
+          collection.Add(pair.Value);
         }
 
-        return set;
+        return collection;
       }
     }
 
@@ -68,16 +74,12 @@ namespace CCompiler {
       Add(new KeyValuePair<KeyType,ValueType>(key, value));
     }
 
-    public void Add(KeyValuePair<KeyType,ValueType> addpair) {
-      for (int index = 0; index < m_list.Count; ++index) {
-        KeyValuePair<KeyType,ValueType> pair = m_list[index];
-
-        if (pair.Key.Equals(addpair.Key)) {
-          throw (new InvalidOperationException());
-        }
+    public void Add(KeyValuePair<KeyType,ValueType> pair) {
+      if (ContainsKey(pair.Key)) {
+        throw (new ArgumentException());
       }
-
-      m_list.Add(addpair);
+      
+      m_list.Add(pair);
     }
 
     public bool ContainsKey(KeyType key) {
@@ -90,24 +92,14 @@ namespace CCompiler {
       return false;
     }
 
-    public bool Contains(KeyValuePair<KeyType,ValueType> containspair) {
-      for (int index = 0; index < m_list.Count; ++index) {
-        KeyValuePair<KeyType,ValueType> pair = m_list[index];
-
-        if (pair.Key.Equals(containspair)) {
-          return true;
-        }
-      }
-
-      return false;
+    public bool Contains(KeyValuePair<KeyType,ValueType> pair) {
+      return m_list.Contains(pair);
     }
 
     public bool Remove(KeyType key) {
-      for (int index = 0; index < m_list.Count; ++index) {
-        KeyValuePair<KeyType,ValueType> pair = m_list[index];
-
-        if (pair.Key.Equals(key)) {
-          m_list.RemoveAt(index);
+      foreach (KeyValuePair<KeyType,ValueType> pair in m_list) {
+        if (key.Equals(pair.Key)) {
+          m_list.Remove(pair);
           return true;
         }
       }
@@ -115,14 +107,10 @@ namespace CCompiler {
       return false;
     }
 
-    public bool Remove(KeyValuePair<KeyType,ValueType> Removepair) {
-      for (int index = 0; index < m_list.Count; ++index) {
-        KeyValuePair<KeyType,ValueType> pair = m_list[index];
-
-        if (pair.Key.Equals(Removepair)) {
-          m_list.RemoveAt(index);
-          return true;
-        }
+    public bool Remove(KeyValuePair<KeyType,ValueType> pair) {
+      if (m_list.Contains(pair)) {
+        m_list.Remove(pair);
+        return true;
       }
 
       return false;
@@ -136,7 +124,7 @@ namespace CCompiler {
 
     public bool TryGetValue(KeyType key, out ValueType value) {
       foreach (KeyValuePair<KeyType,ValueType> pair in m_list) {
-        if (pair.Key.Equals(key)) {
+        if (key.Equals(pair.Key)) {
           value = pair.Value;
           return true;
         }
@@ -150,7 +138,8 @@ namespace CCompiler {
       return (new ListMapEnumerator<KeyType,ValueType>(m_list));
     }
 
-    IEnumerator<KeyValuePair<KeyType,ValueType>> IEnumerable<KeyValuePair<KeyType,ValueType>>.GetEnumerator() {
+    IEnumerator<KeyValuePair<KeyType,ValueType>>
+    IEnumerable<KeyValuePair<KeyType,ValueType>>.GetEnumerator() {
       return (new ListMapEnumerator<KeyType,ValueType>(m_list));
     }
 

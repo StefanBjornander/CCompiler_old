@@ -1,4 +1,3 @@
-using System.Text;
 using System.Collections.Generic;
 
 namespace CCompiler {
@@ -49,24 +48,29 @@ namespace CCompiler {
     public void AddVertex(VertexType vertex) {
       m_vertexSet.Add(vertex);
     }
-  
+ 
     public void EraseVertex(VertexType vertex) {
+      ISet<UnorderedPair<VertexType,VertexType>> edgeSetCopy =
+        new HashSet<UnorderedPair<VertexType,VertexType>>(m_edgeSet);
+
+      foreach (UnorderedPair<VertexType,VertexType> edge in edgeSetCopy) {
+        if ((vertex.Equals(edge.First)) || (vertex.Equals(edge.Second))) {
+          m_edgeSet.Remove(edge);
+        }
+      }
+
       m_vertexSet.Remove(vertex);
     }
-  
+
     public void AddEdge(VertexType vertex1, VertexType vertex2) {
-      m_edgeSet.Add(new UnorderedPair<VertexType,VertexType>(vertex1, vertex2));
-    }
-  
-    public void AddEdge(UnorderedPair<VertexType,VertexType> edge) {
+      UnorderedPair<VertexType,VertexType> edge =
+        new UnorderedPair<VertexType,VertexType>(vertex1, vertex2);
       m_edgeSet.Add(edge);
     }
-  
-    public void EraseEdge(VertexType vertex1, VertexType vertex2) {
-      m_edgeSet.Remove(new UnorderedPair<VertexType,VertexType>(vertex1, vertex2));
-    }
 
-    public void EraseEdge(UnorderedPair<VertexType,VertexType> edge) {
+    public void EraseEdge(VertexType vertex1, VertexType vertex2) {
+      UnorderedPair<VertexType,VertexType> edge =
+        new UnorderedPair<VertexType,VertexType>(vertex1, vertex2);
       m_edgeSet.Remove(edge);
     }
 
@@ -83,10 +87,10 @@ namespace CCompiler {
       foreach (ISet<VertexType> vertexSet in subgraphSet) {
         graphSet.Add(InducedSubGraph(vertexSet));
       }
-    
+
       return graphSet;
     }
-  
+
     private void DeepSearch(VertexType vertex, ISet<VertexType> resultSet) {
       if (!resultSet.Contains(vertex)) {
         resultSet.Add(vertex);

@@ -4,10 +4,10 @@ using System.Collections.Generic;
 
 namespace CCompiler {
   public class ListSet<SetType> : ISet<SetType> {
-    private List<SetType> m_list;
+    private List<SetType> m_list = new List<SetType>();
 
     public ListSet() {
-      m_list = new List<SetType>();
+      // Empty.
     }
 
     public int Count {
@@ -15,26 +15,19 @@ namespace CCompiler {
     }
 
     public bool IsReadOnly {
-      get { return true; }
+      get { return false; }
     }
 
     public ListSet(SetType value) {
-      m_list = new List<SetType>();
       m_list.Add(value);
     }
   
     public ListSet(SetType[] array) {
-      m_list = new List<SetType>();
-      foreach (SetType value in array) {
-        m_list.Add(value);
-      }
+      m_list.AddRange(array);
     }
 
     public ListSet(IEnumerable<SetType> enumerable) {
-      m_list = new List<SetType>();
-      foreach (SetType value in enumerable) {
-        m_list.Add(value);
-      }
+      m_list.AddRange(enumerable);
     }
 
     public void CopyTo(SetType[] array, int index) {
@@ -112,18 +105,28 @@ namespace CCompiler {
     }
 
     public void SymmetricExceptWith(IEnumerable<SetType> enumerable) {
+      List<SetType> result = new List<SetType>();
       foreach (SetType value in enumerable) {
         if (!m_list.Contains(value)) {
-          m_list.Add(value);
+          result.Add(value);
         }
       }
+
+      ICollection<SetType> collection = new List<SetType>(enumerable);
+      foreach (SetType value in m_list) {
+        if (!collection.Contains(value)) {
+          result.Add(value);
+        }
+      }
+
+      m_list = result;
     }
 
     public bool IsSubsetOf(IEnumerable<SetType> enumerable) {
-      List<SetType> enumerableList = new List<SetType>(enumerable);
+      ICollection<SetType> collection = new List<SetType>(enumerable);
 
       foreach (SetType value in m_list) {
-        if (!enumerableList.Contains(value)) {
+        if (!collection.Contains(value)) {
           return false;
         }
       }
@@ -151,7 +154,7 @@ namespace CCompiler {
 
     public bool Overlaps(IEnumerable<SetType> enumerable) {
       foreach (SetType value in enumerable) {
-        if (!m_list.Contains(value)) {
+        if (m_list.Contains(value)) {
           return true;
         }
       }
@@ -160,7 +163,17 @@ namespace CCompiler {
     }
 
     public bool SetEquals(IEnumerable<SetType> enumerable) {
-      return Equals(enumerable);
+      int count = 0;
+
+      foreach (SetType value in enumerable) {
+        if (!m_list.Contains(value)) {
+          return false;
+        }
+
+        ++count;
+      }
+
+      return (count == m_list.Count);
     }
 
     public override int GetHashCode() {
@@ -170,17 +183,7 @@ namespace CCompiler {
     public override bool Equals(object obj) {
       if (obj is IEnumerable<SetType>) {
         IEnumerable<SetType> enumerable = (IEnumerable<SetType>) obj;
-        int count = 0;
-
-        foreach (SetType value in enumerable) {
-          if (!m_list.Contains(value)) {
-            return false;
-          }
-
-          ++count;
-        }
-
-        return (count == m_list.Count);
+        return SetEquals(enumerable);
       }
 
       return false;
