@@ -41,8 +41,7 @@ namespace CCompiler {
       }*/
 
       TraverseLineList(lineList);
-      Assert.Error(Preprocessor.IfStack.Count ==
-        stackSize, Message.Unbalanced_if_and_endif_directive_structure);
+      Assert.Error(Preprocessor.IfStack.Count == stackSize, Message.Unbalanced_if_and_endif_directive_structure);
     }
 
     private static IDictionary<char,char> TriGraphMap =
@@ -52,8 +51,7 @@ namespace CCompiler {
 
     public void GenerateTriGraphs(StringBuilder buffer) {
       for (int index = 0; index < (buffer.Length - 1); ++index) {
-        if ((buffer[index] == '?') &&
-            TriGraphMap.ContainsKey(buffer[index + 1]) &&
+        if ((buffer[index] == '?') && TriGraphMap.ContainsKey(buffer[index + 1]) &&
             !((index > 0) && (buffer[index - 1] == '\\'))) {
           buffer[index] = TriGraphMap[buffer[index + 1]];
           buffer.Remove(index + 1, 1);
@@ -62,13 +60,15 @@ namespace CCompiler {
     }
 
     public void TraverseBuffer(StringBuilder buffer) {
-      for (int index = 0; index < buffer.Length; ++index) {
+      //buffer.Append("\0");
+
+      for (int index = 0; index < buffer.Length /*buffer[index] != '\0'*/; ++index) {
         if ((buffer[index] == '/') && (buffer[index + 1] == '*')) {
           buffer[index++] = ' ';
           buffer[index++] = ' ';
 
           for (; true; ++index) {
-            if (index == buffer.Length) {
+            if (index == buffer.Length /*buffer[index] == '\0'*/) {
               Assert.Error(Message.Unfinished_block_comment);
             }
             else if ((buffer[index] == '*') && (buffer[index + 1] == '/')) {
@@ -78,6 +78,10 @@ namespace CCompiler {
             }
             else if (buffer[index] == '\n') {
               ++CCompiler_Main.Scanner.Line;
+              
+              /*if (CCompiler_Main.Scanner.Path.Name.Contains("AssertTest")) {
+                Console.Out.WriteLine("1: " + CCompiler_Main.Scanner.Line);
+              }*/
             }
             else {
               buffer[index] = ' ';
@@ -89,7 +93,7 @@ namespace CCompiler {
           buffer[index++] = ' ';
 
           for (; true; ++index) {
-            if ((index == buffer.Length) || (buffer[index] == '\n')) {
+            if ((index == buffer.Length /*buffer[index] == '\0'*/) || (buffer[index] == '\n')) {
               break;
             }
             else {
@@ -101,7 +105,7 @@ namespace CCompiler {
           ++index;
 
           for (; true; ++index) {
-            if (index == buffer.Length) {
+            if (index == buffer.Length /*buffer[index] == '\0'*/) {
               Assert.Error(Message.Unfinished_character);
             }
             else if (buffer[index] == '\n') {
@@ -119,7 +123,7 @@ namespace CCompiler {
           ++index;
 
           for (; true; ++index) {
-            if (index == buffer.Length) {
+            if (index == buffer.Length /*buffer[index] == '\0'*/) {
               Assert.Error(Message.Unfinished_string);
             }
             else if (buffer[index] == '\n') {
@@ -135,8 +139,14 @@ namespace CCompiler {
         }
         else if (buffer[index] == '\n') {
           ++CCompiler_Main.Scanner.Line;
+
+          /*if (CCompiler_Main.Scanner.Path.Name.Contains("AssertTest")) {
+            Console.Out.WriteLine("2: " + CCompiler_Main.Scanner.Line);
+          }*/
         }
       }
+
+      //buffer.Remove(buffer.Length - 1, 1);
     }
 
     private List<string> GenerateLineList(string text) {
@@ -144,6 +154,7 @@ namespace CCompiler {
       foreach (string line in text.Split('\n')) {
         trimList.Add(line.Trim());
       }
+      //trimList.Add(null);
 
       int index = 0;
       List<string> resultList = new List<string>();
@@ -152,23 +163,28 @@ namespace CCompiler {
         if (trimList[index].StartsWith("#")) {
           StringBuilder buffer = new StringBuilder();
 
-          for (; (index < trimList.Count) && trimList[index].EndsWith("\\");
-               ++index) {
-            buffer.Append(trimList[index].
-                          Substring(0, trimList[index].Length - 1) + "\n");
+          for (; (index < trimList.Count) && trimList[index].EndsWith("\\"); ++index) {
+            //Assert.Error(index < (trimList.Count - 1), "unfinished preprocessor directive");
+            buffer.Append(trimList[index].Substring(0, trimList[index].Length - 1) + "\n");
           }
 
           if (index < trimList.Count) {
             buffer.Append(trimList[index++] + "\n");
           }
 
+          /*for (; trimList[index].EndsWith("\\"); ++index) {
+            Assert.Error(index < (trimList.Count - 1), "unfinished preprocessor directive");
+            buffer.Append(trimList[index].Substring(0, trimList[index].Length - 1) + "\n");
+          }
+
+          buffer.Append(trimList[index++] + "\n");*/
+
           resultList.Add(buffer.ToString());
         }
         else {
           StringBuilder buffer = new StringBuilder();
 
-          for (; (index < trimList.Count) && !trimList[index].StartsWith("#");
-               ++index) {
+          for (; (index < trimList.Count) && !trimList[index].StartsWith("#"); ++index) {
             buffer.Append(trimList[index] + "\n");
           }
 
@@ -193,6 +209,11 @@ namespace CCompiler {
           break;
         }
       }
+
+      /*do {
+        tokenId = (CCompiler_Pre.Tokens) scanner.yylex();
+        tokenList.Add(new Token(tokenId, scanner.yylval.name));
+      } while (tokenId != CCompiler_Pre.Tokens.EOF);*/
 
       memoryStream.Close();
       return tokenList;
@@ -260,11 +281,19 @@ namespace CCompiler {
                 DoLine(tokenList);
               }
               else if (secondTokenName.Equals("error")) {
-                Assert.Error(TokenListToString
-                             (tokenList.GetRange(1, tokenList.Count - 1)));
+                Assert.Error(TokenListToString(tokenList.GetRange(1, tokenList.Count - 1)));
               }
+              /*else {
+                Assert.Error(secondTokenName.Equals("pragma"),
+                             TokenListToString(tokenList), "invalid preprocessor directive");
+              }*/
             }
           }
+
+          /*else {
+            Assert.Error(secondToken.Id == CCompiler_Pre.Tokens.EOF,
+                          TokenListToString(tokenList), "invalid preprocessor directive");
+          }*/
 
           AddNewlinesToBuffer(tokenList);
         }
@@ -283,8 +312,13 @@ namespace CCompiler {
     }
 
     private void AddTokenListToBuffer(List<Token> tokenList) {
+      /*if (CCompiler_Main.Scanner.Path.Name.Contains("AssertTest")) {
+        Console.Out.WriteLine("3: " + CCompiler_Main.Scanner.Line);
+      }*/
+
       foreach (Token token in tokenList) {
         m_outputBuffer.Append(token.ToNewlineString() + token.ToString());
+        //CCompiler_Main.Scanner.Line += token.GetNewlineCount();
       }
     }
   
@@ -293,6 +327,10 @@ namespace CCompiler {
         m_outputBuffer.Append(token.ToNewlineString());
         CCompiler_Main.Scanner.Line += token.GetNewlineCount();
       }
+
+      /*if (CCompiler_Main.Scanner.Path.Name.Contains("AssertTest")) {
+        Console.Out.WriteLine("4: " + CCompiler_Main.Scanner.Line);
+      }*/
     }
   
     private bool IsVisible() {
@@ -306,17 +344,16 @@ namespace CCompiler {
       
       return true;
     }
+
     private void DoLine(List<Token> tokenList) {
       int listSize = tokenList.Count;
     
       if ((listSize == 4) || (listSize == 5)) {
         string lineText = (string) tokenList[2].Value;
-        Assert.Error(int.TryParse(lineText, out CCompiler_Main.Scanner.Line),
-                                  lineText, Message.Invalid_line_number);
+        Assert.Error(int.TryParse(lineText, out CCompiler_Main.Scanner.Line), lineText, Message.Invalid_line_number);
 
         if (listSize == 5) {
-          CCompiler_Main.Scanner.Path =
-            new FileInfo((string) tokenList[3].Value);
+          CCompiler_Main.Scanner.Path = new FileInfo((string) tokenList[3].Value);
         }
       }
       else {
@@ -324,44 +361,36 @@ namespace CCompiler {
                      Message.Invalid_preprocessor_directive);
       }
 
-      m_outputBuffer.Append(Symbol.SeparatorId + CCompiler_Main.Scanner.Path +
-                            "," + CCompiler_Main.Scanner.Line +
-                            Symbol.SeparatorId + "\n");
+      m_outputBuffer.Append(Symbol.SeparatorId + CCompiler_Main.Scanner.Path + "," +
+                      CCompiler_Main.Scanner.Line + Symbol.SeparatorId + "\n");
     }
 
     // ------------------------------------------------------------------------
-
-    private void DoInclude(List<Token> tokenList)
-    {
+  
+    private void DoInclude(List<Token> tokenList) {
       FileInfo includeFile = null;
-
+    
       if ((tokenList[2].Id == CCompiler_Pre.Tokens.STRING) &&
-          (tokenList[3].Id == CCompiler_Pre.Tokens.EOF))
-      {
+          (tokenList[3].Id == CCompiler_Pre.Tokens.EOF)) {
         string text = tokenList[2].ToString();
         string file = text.ToString().Substring(1, text.Length - 1);
         includeFile = new FileInfo(IncludePath + file);
       }
-      else
-      {
+      else {
         StringBuilder buffer = new StringBuilder();
 
-        foreach (Token token in tokenList.GetRange(2, tokenList.Count - 2))
-        {
+        foreach (Token token in tokenList.GetRange(2, tokenList.Count - 2)) {
           buffer.Append(token.ToString());
         }
-
+      
         string text = buffer.ToString();
 
-        if (text.StartsWith("<") && text.EndsWith(">"))
-        {
+        if (text.StartsWith("<") && text.EndsWith(">")) {
           string file = text.ToString().Substring(1, text.Length - 2);
           includeFile = new FileInfo(IncludePath + file);
         }
-        else
-        {
-          Assert.Error(TokenListToString(tokenList),
-                       Message.Invalid_preprocessor_directive);
+        else {
+          Assert.Error(TokenListToString(tokenList), Message.Invalid_preprocessor_directive);
         }
       }
 
@@ -373,24 +402,21 @@ namespace CCompiler {
       int oldLine = CCompiler_Main.Scanner.Line;
       CCompiler_Main.Scanner.Path = includeFile;
       CCompiler_Main.Scanner.Line = 1;
-      m_outputBuffer.Append(Symbol.SeparatorId + CCompiler_Main.Scanner.Path +
-                            "," + CCompiler_Main.Scanner.Line +
-                            Symbol.SeparatorId + "\n");
+      m_outputBuffer.Append(Symbol.SeparatorId + CCompiler_Main.Scanner.Path + "," +
+                      CCompiler_Main.Scanner.Line + Symbol.SeparatorId + "\n");
       DoProcess(includeFile);
       CCompiler_Main.Scanner.Line = oldLine;// + 1;
       CCompiler_Main.Scanner.Path = oldPath;
-      m_outputBuffer.Append(Symbol.SeparatorId + CCompiler_Main.Scanner.Path +
-                            "," + (CCompiler_Main.Scanner.Line - 1) +
-                            Symbol.SeparatorId + "\n");
+      m_outputBuffer.Append(Symbol.SeparatorId + CCompiler_Main.Scanner.Path + "," +
+                      (CCompiler_Main.Scanner.Line - 1) + Symbol.SeparatorId + "\n");
       Preprocessor.IncludeStack.Pop();
     }
 
     // ------------------------------------------------------------------------
-
+  
     public void DoDefine(List<Token> tokenList) {
       Assert.Error(tokenList[2].Id == CCompiler_Pre.Tokens.NAME,
-                   TokenListToString(tokenList),
-                   Message.Invalid_define_directive);
+                   TokenListToString(tokenList), Message.Invalid_define_directive);
       string name = tokenList[2].ToString();
       Macro macro;
 
@@ -402,8 +428,7 @@ namespace CCompiler {
         while (true) {
           Token nextToken = tokenList[tokenIndex++];
           Assert.Error(nextToken.Id == CCompiler_Pre.Tokens.NAME,
-                       nextToken.ToString(),
-                       Message.Invalid_macro_definitializerion);
+                       nextToken.ToString(), Message.Invalid_macro_definitializerion);
           string paramName = (string) nextToken.Value;
           Assert.Error(!paramMap.ContainsKey(paramName),
                        paramName, Message.Repeated_macro_parameter);
@@ -417,13 +442,11 @@ namespace CCompiler {
             break;
           }
           else {
-            Assert.Error(nextToken.ToString(),
-                         Message.Invalid_macro_definitializerion);
+            Assert.Error(nextToken.ToString(), Message.Invalid_macro_definitializerion);
           }
         }
       
-        List<Token> macroList =
-          tokenList.GetRange(tokenIndex, tokenList.Count - tokenIndex);
+        List<Token> macroList = tokenList.GetRange(tokenIndex, tokenList.Count - tokenIndex);
 
         foreach (Token macroToken in macroList) {
           if (macroToken.Id == CCompiler_Pre.Tokens.NAME) {
@@ -454,20 +477,16 @@ namespace CCompiler {
     public void DoUndef(List<Token> tokenList) {
       Assert.Error((tokenList[2].Id == CCompiler_Pre.Tokens.NAME) &&
                    (tokenList[3].Id == CCompiler_Pre.Tokens.EOF),
-                   TokenListToString(tokenList),
-                   Message.Invalid_undef_directive);
+                   TokenListToString(tokenList), Message.Invalid_undef_directive);
       string name = tokenList[2].ToString();
-      Assert.Error(Preprocessor.MacroMap.Remove(name),
-                   name, Message.Macro_not_defined);
+      Assert.Error(Preprocessor.MacroMap.Remove(name), name, Message.Macro_not_defined);
     }
 
     // ------------------------------------------------------------------------
 
     private void DoIf(List<Token> tokenList) {
-      bool result = ParseExpression(TokenListToString
-                         (tokenList.GetRange(2, tokenList.Count - 2)));
-      Preprocessor.IfStack.Push(new Triple<bool,bool,bool>
-                                    (result, result, false));
+      bool result = ParseExpression(TokenListToString(tokenList.GetRange(2, tokenList.Count - 2)));
+      Preprocessor.IfStack.Push(new Triple<bool,bool,bool>(result, result, false));
     }
 
     public static object PreProcessorResult;
@@ -478,10 +497,8 @@ namespace CCompiler {
       try {
         byte[] byteArray = Encoding.ASCII.GetBytes(line);
         MemoryStream memoryStream = new MemoryStream(byteArray);
-        CCompiler_Exp.Scanner expressionScanner =
-          new CCompiler_Exp.Scanner(memoryStream);
-        CCompiler_Exp.Parser expressionParser =
-          new CCompiler_Exp.Parser(expressionScanner);
+        CCompiler_Exp.Scanner expressionScanner = new CCompiler_Exp.Scanner(memoryStream);
+        CCompiler_Exp.Parser expressionParser = new CCompiler_Exp.Parser(expressionScanner);
         Assert.Error(expressionParser.Parse(), Message.Preprocessor_parser);
         result = (int) PreProcessorResult;
         memoryStream.Close();
@@ -497,70 +514,53 @@ namespace CCompiler {
     private void DoIfDefined(List<Token> tokenList) {
       Assert.Error((tokenList[2].Id == CCompiler_Pre.Tokens.NAME) &&
                    (tokenList[3].Id == CCompiler_Pre.Tokens.EOF),
-                   TokenListToString(tokenList),
-                   Message.Invalid_preprocessor_directive);
-      bool result =
-        Preprocessor.MacroMap.ContainsKey((string) tokenList[2].Value);
-      Preprocessor.IfStack.Push(new Triple<bool,bool,bool>
-                                    (result, result, false));
+                   TokenListToString(tokenList), Message.Invalid_preprocessor_directive);
+      bool result = Preprocessor.MacroMap.ContainsKey((string) tokenList[2].Value);
+      Preprocessor.IfStack.Push(new Triple<bool,bool,bool>(result, result, false));
     }
 
     private void DoIfNotDefined(List<Token> tokenList) {
       Assert.Error((tokenList[2].Id == CCompiler_Pre.Tokens.NAME) &&
                    (tokenList[3].Id == CCompiler_Pre.Tokens.EOF),
-                   TokenListToString(tokenList),
-                   Message.Invalid_preprocessor_directive);
-      bool result =
-        !Preprocessor.MacroMap.ContainsKey((string)tokenList[2].Value);
-      Preprocessor.IfStack.Push(new Triple<bool, bool, bool>
-                                    (result, result, false));
+                   TokenListToString(tokenList), Message.Invalid_preprocessor_directive);
+      bool result = !Preprocessor.MacroMap.ContainsKey((string)tokenList[2].Value);
+      Preprocessor.IfStack.Push(new Triple<bool, bool, bool>(result, result, false));
     }
 
     private void DoElseIf(List<Token> tokenList) {
-      Assert.Error(Preprocessor.IfStack.Count > 0, Message.
-       Elif_directive_without_preceeding_if____ifdef____or_ifndef_directive);
+      Assert.Error(Preprocessor.IfStack.Count > 0, Message.Elif_directive_without_preceeding_if____ifdef____or_ifndef_directive);
       Triple<bool,bool,bool> triple = Preprocessor.IfStack.Pop();
 
       bool elseStatus = triple.Third;
-      Assert.Error(!elseStatus,
-                   Message.Elif_directive_following_else_directive);
+      Assert.Error(!elseStatus, Message.Elif_directive_following_else_directive);
 
       bool totalStatus = triple.First;
       if (totalStatus) {
-        Preprocessor.IfStack.Push(new Triple<bool,bool,bool>
-                                 (true, false, false));
+        Preprocessor.IfStack.Push(new Triple<bool,bool,bool>(true, false, false));
       }
       else {
-        bool result =
-          ParseExpression(TokenListToString
-                         (tokenList.GetRange(2, tokenList.Count - 2)));
-        Preprocessor.IfStack.Push(new Triple<bool,bool,bool>
-                                      (result, result, false));
+        bool result = ParseExpression(TokenListToString(tokenList.GetRange(2, tokenList.Count - 2)));
+        Preprocessor.IfStack.Push(new Triple<bool,bool,bool>(result, result, false));
       }
     }
 
     private void DoElse(List<Token> tokenList) {
-      Assert.Error(Preprocessor.IfStack.Count > 0, Message.
-       Else_directive_without_preceeding_if____ifdef____or_ifndef_directive);
+      Assert.Error(Preprocessor.IfStack.Count > 0, Message.Else_directive_without_preceeding_if____ifdef____or_ifndef_directive);
       Assert.Error(tokenList[2].Id == CCompiler_Pre.Tokens.EOF,
-                   TokenListToString(tokenList),
-                   Message.Invalid_preprocessor_directive);
+                   TokenListToString(tokenList), Message.Invalid_preprocessor_directive);
 
       Triple<bool,bool,bool> triple = Preprocessor.IfStack.Pop();
       bool elseStatus = triple.Third;
       Assert.Error(!elseStatus, Message.Else_directive_after_else_directive);
 
       bool totalStatus = triple.First;
-      Preprocessor.IfStack.Push(new Triple<bool, bool, bool>
-                                          (!totalStatus, !totalStatus, true));
+      Preprocessor.IfStack.Push(new Triple<bool, bool, bool>(!totalStatus, !totalStatus, true));
     }
 
     private void DoEndIf(List<Token> tokenList) {
-      Assert.Error(Preprocessor.IfStack.Count > 0, Message.
-      Endif_directive_without_preceeding_if____ifdef____or_ifndef_directive);
+      Assert.Error(Preprocessor.IfStack.Count > 0, Message.Endif_directive_without_preceeding_if____ifdef____or_ifndef_directive);
       Assert.Error(tokenList[2].Id == CCompiler_Pre.Tokens.EOF,
-                   tokenList[2].ToString(),
-                   Message.Invalid_preprocessor_directive);
+                   tokenList[2].ToString(), Message.Invalid_preprocessor_directive);
       Preprocessor.IfStack.Pop();
     }
 
@@ -570,14 +570,17 @@ namespace CCompiler {
                                  Stack<string> nameStack) {
       for (int index = 0; index < tokenList.Count; ++index) {
         Token thisToken = tokenList[index];
+        
+        /*if (CCompiler_Main.Scanner.Path.Name.Contains("AssertTest")) {
+          Console.Out.WriteLine("5: " + CCompiler_Main.Scanner.Line);
+        }*/
         CCompiler_Main.Scanner.Line += thisToken.GetNewlineCount();
 
         if (thisToken.Id == CCompiler_Pre.Tokens.NAME) {
           string name = (string) thisToken.Value;
           int beginNewlineCount = thisToken.GetNewlineCount();
 
-          if (!nameStack.Contains(name) &&
-              Preprocessor.MacroMap.ContainsKey(name)) {
+          if (!nameStack.Contains(name) && Preprocessor.MacroMap.ContainsKey(name)) {
             Token nextToken = tokenList[index + 1];
 
             if ((nextToken.Id == CCompiler_Pre.Tokens.LEFT_PARENTHESIS) &&
@@ -591,6 +594,11 @@ namespace CCompiler {
                 int newlineCount = nextToken.GetNewlineCount();
                 totalNewlineCount += newlineCount;
                 CCompiler_Main.Scanner.Line += newlineCount;
+
+                /*if (CCompiler_Main.Scanner.Path.Name.Contains("AssertTest")) {
+                  Console.Out.WriteLine("6: " + CCompiler_Main.Scanner.Line);
+                }*/
+
                 nextToken.ClearNewlineCount();
               
                 Token token = tokenList[countIndex];
@@ -610,10 +618,8 @@ namespace CCompiler {
                     break;
                   
                   default:
-                    if ((level == 1) &&
-                        (token.Id == CCompiler_Pre.Tokens.COMMA)) {
-                      Assert.Error(subList.Count > 0, name,
-                                   Message.Empty_macro_parameter);
+                    if ((level == 1) && (token.Id == CCompiler_Pre.Tokens.COMMA)) {
+                      Assert.Error(subList.Count > 0, name, Message.Empty_macro_parameter);
                       SearchForMacros(subList, nameStack); // XXX
                       mainList.Add(subList);
                       subList = new List<Token>();
@@ -625,8 +631,7 @@ namespace CCompiler {
                 }
               
                 if (level == 0) {
-                  Assert.Error(subList.Count > 0, name,
-                               Message.Empty_macro_parameter_list);
+                  Assert.Error(subList.Count > 0, name, Message.Empty_macro_parameter_list);
                   mainList.Add(subList);
                   break;
                 }
@@ -636,12 +641,11 @@ namespace CCompiler {
 
               Macro macro = Preprocessor.MacroMap[name];
               Assert.Error(macro.Parameters() == mainList.Count, name,
-                         Message.Invalid_number_of_parameters_in_macro_call);
+                           Message.Invalid_number_of_parameters_in_macro_call);
             
               List<Token> cloneListX = CloneList(macro.TokenList());
             
-              for (int macroIndex = (cloneListX.Count - 1);
-                   macroIndex >= 0; --macroIndex) {
+              for (int macroIndex = (cloneListX.Count - 1); macroIndex >= 0; --macroIndex) {
                 Token macroToken = cloneListX[macroIndex];
 
                 if (macroToken.Id == CCompiler_Pre.Tokens.MARK) {
@@ -649,11 +653,9 @@ namespace CCompiler {
                   cloneListX.RemoveAt(macroIndex);
                   List<Token> replaceList = CloneList(mainList[markIndex]);
 
-                  if ((macroIndex > 0) && (cloneListX[macroIndex - 1].Id ==
-                                           CCompiler_Pre.Tokens.SHARP)) {
+                  if ((macroIndex > 0) && (cloneListX[macroIndex - 1].Id == CCompiler_Pre.Tokens.SHARP)) {
                     string text = "\"" + TokenListToString(replaceList) + "\"";
-                    cloneListX.Insert(macroIndex,
-                                new Token(CCompiler_Pre.Tokens.STRING, text));
+                    cloneListX.Insert(macroIndex, new Token(CCompiler_Pre.Tokens.STRING, text));
                     cloneListX.RemoveAt(--macroIndex);
                   }
                   else {
@@ -666,17 +668,20 @@ namespace CCompiler {
               SearchForMacros(cloneListX, nameStack);
               nameStack.Pop();
 
+              /*for (int removeCount = index; removeCount <= countIndex; ++removeCount) {
+                tokenList.RemoveAt(index);
+              }*/
+
               tokenList.RemoveRange(index, countIndex - index + 1);
               tokenList.InsertRange(index, cloneListX);
               tokenList[index].AddNewlineCount(beginNewlineCount);
-              tokenList[index +
-                        cloneListX.Count].AddNewlineCount(totalNewlineCount);
+              tokenList[index + cloneListX.Count].AddNewlineCount(totalNewlineCount);
               index += cloneListX.Count - 1;
             }
             else {
               Macro macro = Preprocessor.MacroMap[name];
-              Assert.Error(macro.Parameters() == 0, name, Message.
-                           Invalid_number_of_parameters_in_macro_call);
+              Assert.Error(macro.Parameters() == 0, name,
+                           Message.Invalid_number_of_parameters_in_macro_call);
               List<Token> cloneListX = CloneList(macro.TokenList());
               nameStack.Push(name);
               SearchForMacros(cloneListX, nameStack);
@@ -689,29 +694,26 @@ namespace CCompiler {
             }
           }
           else if (name.Equals("__STDC__")) {
-            tokenList[index] =
-              new Token(CCompiler_Pre.Tokens.TOKEN, 1, beginNewlineCount);
+            tokenList[index] = new Token(CCompiler_Pre.Tokens.TOKEN, 1, beginNewlineCount);
           }
           else if (name.Equals("__FILE__")) {
-            string text = "\"" + CCompiler_Main.Scanner.Path
-                          .FullName.Replace("\\", "\\\\") + "\"";
-            tokenList[index] =
-              new Token(CCompiler_Pre.Tokens.TOKEN, text, beginNewlineCount);
+            string text = "\"" + CCompiler_Main.Scanner.Path.FullName.Replace("\\", "\\\\") + "\"";
+            tokenList[index] = new Token(CCompiler_Pre.Tokens.TOKEN, text, beginNewlineCount);
           }
           else if (name.Equals("__LINE__")) {
-            tokenList[index] =
-              new Token(CCompiler_Pre.Tokens.TOKEN,
-                        CCompiler_Main.Scanner.Line, beginNewlineCount);
+            /*if (CCompiler_Main.Scanner.Path.Name.Contains("AssertTest")) {
+              Console.Out.WriteLine("__LINE__ " + CCompiler_Main.Scanner.Line);
+            }*/
+
+            tokenList[index] = new Token(CCompiler_Pre.Tokens.TOKEN, CCompiler_Main.Scanner.Line, beginNewlineCount);
           }
           else if (name.Equals("__DATE__")) {
             string text = "\"" + DateTime.Now.ToString("MMMM dd yyyy") + "\"";
-            tokenList[index] =
-              new Token(CCompiler_Pre.Tokens.TOKEN, text, beginNewlineCount);
+            tokenList[index] = new Token(CCompiler_Pre.Tokens.TOKEN, text, beginNewlineCount);
           }
           else if (name.Equals("__TIME__")) {
             string text = "\"" + DateTime.Now.ToString("HH:mm:ss") + "\"";
-            tokenList[index] =
-              new Token(CCompiler_Pre.Tokens.TOKEN, text, beginNewlineCount);
+            tokenList[index] = new Token(CCompiler_Pre.Tokens.TOKEN, text, beginNewlineCount);
           }
         }
       }
@@ -722,8 +724,7 @@ namespace CCompiler {
         Token thisToken = tokenList[index];
 
         if (thisToken.Id == CCompiler_Pre.Tokens.DOUBLE_SHARP) {
-          Token prevToken = tokenList[index - 1],
-                nextToken = tokenList[index + 1];
+          Token prevToken = tokenList[index - 1], nextToken = tokenList[index + 1];
 
           if ((prevToken.Id == CCompiler_Pre.Tokens.STRING) ||
               (nextToken.Id == CCompiler_Pre.Tokens.STRING)) {
@@ -747,11 +748,9 @@ namespace CCompiler {
             
         if ((thisToken.Id == CCompiler_Pre.Tokens.STRING) &&
             (nextToken.Id == CCompiler_Pre.Tokens.STRING)) {
-          string thisText = thisToken.ToString(),
-                 nextText = nextToken.ToString();
-          thisToken.Value =
-            thisText.ToString().Substring(0, thisText.Length - 1) +
-            nextText.ToString().Substring(1, nextText.Length - 1);
+          string thisText = thisToken.ToString(), nextText = nextToken.ToString();
+          thisToken.Value = thisText.ToString().Substring(0, thisText.Length - 1) +
+                            nextText.ToString().Substring(1, nextText.Length - 1);
           thisToken.AddNewlineCount(nextToken.GetNewlineCount());
           tokenList.RemoveAt(index + 1);
         }

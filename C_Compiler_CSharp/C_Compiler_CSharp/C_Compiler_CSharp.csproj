@@ -51,6 +51,7 @@
     <Compile Include="AssemblyCodeGenerator.cs">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="Preprocessor.cs" />
     <Compile Include="Track.cs" />
     <Compile Include="Triple.cs">
       <SubType>Code</SubType>
@@ -93,7 +94,6 @@
     <Compile Include="AssemblyOperator.cs" />
     <Compile Include="Pair.cs" />
     <Compile Include="PreParser.cs" />
-    <Compile Include="Preprocessor.cs" />
     <Compile Include="PreScanner.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Register.cs" />

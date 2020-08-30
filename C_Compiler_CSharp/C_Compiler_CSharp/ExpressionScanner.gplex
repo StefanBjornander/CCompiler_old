@@ -57,14 +57,16 @@ WHITE_SPACE [ \t\r\n\f]
 }
 
 {OCTAL_VALUE} {
-  { string text = yytext.ToLower().Replace("u", "").Replace("s", "").Replace("l", "");
+  { string text = yytext.ToLower().Replace("u", "").Replace("s", "")
+                                  .Replace("l", "");
     yylval.integer_value = Convert.ToInt32(text, 8);
     return ((int) Tokens.VALUE);
   }
 }
 
 {DECIMAL_VALUE} {
-  { string text = yytext.ToLower().Replace("u", "").Replace("s", "").Replace("l", "");
+  { string text = yytext.ToLower().Replace("u", "").Replace("s", "")
+                                  .Replace("l", "");
     yylval.integer_value = Convert.ToInt32(text, 10);
     return ((int) Tokens.VALUE);
   }

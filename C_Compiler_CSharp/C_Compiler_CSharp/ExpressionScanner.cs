@@ -6,9 +6,9 @@
 //
 //  GPLEX Version:  1.2.2
 //  Machine:  STEFAN1968
-//  DateTime: 2020-08-27 15:21:21
+//  DateTime: 2020-08-30 21:48:33
 //  UserName: Stefan
-//  GPLEX input file <ExpressionScanner.gplex - 2020-05-11 12:33:08>
+//  GPLEX input file <ExpressionScanner.gplex - 2020-08-30 20:44:20>
 //  GPLEX frame file <embedded resource>
 //
 //  Option settings: parser, minimize
@@ -775,7 +775,8 @@ return ((int) Tokens.DIVIDE);
         case 41:
         case 42:
         case 47:
-{ string text = yytext.ToLower().Replace("u", "").Replace("s", "").Replace("l", "");
+{ string text = yytext.ToLower().Replace("u", "").Replace("s", "")
+                                  .Replace("l", "");
     yylval.integer_value = Convert.ToInt32(text, 8);
     return ((int) Tokens.VALUE);
   }
@@ -784,7 +785,8 @@ return ((int) Tokens.DIVIDE);
         case 37:
         case 38:
         case 39:
-{ string text = yytext.ToLower().Replace("u", "").Replace("s", "").Replace("l", "");
+{ string text = yytext.ToLower().Replace("u", "").Replace("s", "")
+                                  .Replace("l", "");
     yylval.integer_value = Convert.ToInt32(text, 10);
     return ((int) Tokens.VALUE);
   }
