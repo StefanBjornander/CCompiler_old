@@ -6,7 +6,6 @@ namespace CCompiler {
     dec, dec_byte, dec_dword, dec_qword, dec_word,
     define_address, define_value, define_zero_sequence,
     div, div_byte, div_dword, div_qword, div_word, empty,
-    //fabs,
     fadd, faddp, fchs, fcompp, fdiv, fdivp, fdivr,
     fdivrp, fild_dword, fild_qword, fild_word,
     fist_dword, fist_qword, fist_word,
