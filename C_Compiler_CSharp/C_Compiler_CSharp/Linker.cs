@@ -3,9 +3,8 @@ using System.IO;
 using System.Collections.Generic;
 
 namespace CCompiler {
-  public class Linker {
-    public static string StackTopName = Symbol.SeparatorId + "StackTop";
-    
+  public class Linker {    
+    public static string StackTopName = Symbol.SeparatorId + "StackTop";    
     private int m_totalSize = 256;
     private IDictionary<string,StaticSymbolWindows> m_globalMap =
       new Dictionary<string,StaticSymbolWindows>();
