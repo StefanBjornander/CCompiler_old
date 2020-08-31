@@ -8,11 +8,11 @@
 %token ASSIGN READ WRITE NEWLINE EQUAL PLUS MINUS TIMES DIVIDE SIN COS TAN LOG EXP LOG10 EXP10 SQRT LEFT_PAREN RIGHT_PAREN COMMA SEMICOLON
 
 %union {
-  public String name;
-  public String text;
-  public Double value;
-  public List<String> nameList;
-  public List<Double> valueList;
+  public string name;
+  public string text;
+  public double value;
+  public List<string> nameList;
+  public List<double> valueList;
 }
 
 %token <text> TEXT
@@ -36,8 +36,8 @@ statement:
 
   | READ optional_output name_list SEMICOLON {
       try {
-        String buffer = Console.In.ReadLine();
-        String[] textArray = buffer.Split(',');
+        string buffer = Console.In.ReadLine();
+        string[] textArray = buffer.Split(',');
 
         if ($3.Count != textArray.Length) {
           Console.Error.WriteLine("Invalid number of values.");
@@ -45,9 +45,9 @@ statement:
         }
       
         for (int index = 0; index < $3.Count; ++index) {
-          String name = $3[index], text = textArray[index];
-          double value = Double.Parse(text);
-//          double value = Double.Parse(text, NumberStyles.Any, CultureInfo.InvariantCulture);
+          string name = $3[index], text = textArray[index];
+          double value = double.Parse(text);
+//          double value = double.Parse(text, NumberStyles.Any, CultureInfo.InvariantCulture);
           MainX.VariableMap[name] = value;
         }
       }
@@ -59,7 +59,7 @@ statement:
 
   | WRITE optional_output expression_list SEMICOLON {
       bool first = true;
-      foreach (Double value in $3) {
+      foreach (double value in $3) {
         Console.Out.Write((first ? "" : ", ") + value);
         first = false;
       }
@@ -79,7 +79,7 @@ optional_output:
 
 name_list:
     NAME {
-      $$ = new List<String>();
+      $$ = new List<string>();
       $$.Add($1);
     }
   | name_list COMMA NAME {
@@ -89,7 +89,7 @@ name_list:
 
 expression_list:
     expression {
-      $$ = new List<Double>();
+      $$ = new List<double>();
       $$.Add($1);
     }
   | expression_list COMMA expression {

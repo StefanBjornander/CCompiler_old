@@ -6,8 +6,8 @@ using System.Collections.Generic;
 
 namespace Calculator {
   class MainX {
-    public static Dictionary<String,Double> VariableMap =
-      new Dictionary<String,Double>();
+    public static Dictionary<string,double> VariableMap =
+      new Dictionary<string,double>();
           
     static void Main(string[] args) {
       if (args.Length != 1) {
@@ -28,7 +28,7 @@ namespace Calculator {
       string u = s.Substring(1, s.Length - 2);
       string v = s.Substring(1, t.Length - 2);
 
-      //String text = Console.In.ReadLine();
+      //string text = Console.In.ReadLine();
 
       try {
         FileStream file = new FileStream(args[0], FileMode.Open);

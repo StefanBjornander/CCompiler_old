@@ -17,3 +17,4 @@ C:\Users\Stefan\Documents\A A A C_Compiler_Assembler - CSharp\C_Compiler_CSharp\
 C:\Users\Stefan\Documents\A A A C_Compiler_Assembler - CSharp\C_Compiler_CSharp\Calculator_CS\obj\Debug\Calculator_CS.pdb
 C:\Users\Stefan\Documents\A A A C_Compiler_Assembler - CSharp\C_Compiler_CSharp\Calculator_CS\bin\Debug\Calculator_CS.exe
 C:\Users\Stefan\Documents\A A A C_Compiler_Assembler - CSharp\C_Compiler_CSharp\Calculator_CS\bin\Debug\Calculator_CS.pdb
+C:\Users\Stefan\Documents\A A A C_Compiler_Assembler - CSharp\C_Compiler_CSharp\Calculator_CS\obj\Debug\Calculator_CS.csprojResolveAssemblyReference.cache
