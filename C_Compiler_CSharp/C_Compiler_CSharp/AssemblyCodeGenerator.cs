@@ -681,16 +681,37 @@ namespace CCompiler {
     public void Return(MiddleCode middleCode) {
       Assert.ErrorXXX(m_floatStackSize == 0);
       Track track = new Track(Type.VoidPointerType);
-      AddAssemblyCode(AssemblyOperator.mov, track,
-                      AssemblyCode.FrameRegister,
-                      SymbolTable.ReturnAddressOffset);                
-      AddAssemblyCode(AssemblyOperator.mov, AssemblyCode.EllipseRegister,
-                      AssemblyCode.FrameRegister,
-                      SymbolTable.EllipseFrameOffset);
-      AddAssemblyCode(AssemblyOperator.mov, AssemblyCode.FrameRegister,
-                      AssemblyCode.FrameRegister,
-                      SymbolTable.RegularFrameOffset);
-      AddAssemblyCode(AssemblyOperator.jmp, track);
+
+      if (SymbolTable.CurrentFunction.UniqueName.Equals(AssemblyCodeGenerator.MainName)) {
+        /*AddAssemblyCode(AssemblyOperator.mov, track,
+                        AssemblyCode.FrameRegister,
+                        SymbolTable.ReturnAddressOffset);
+        AddAssemblyCode(AssemblyOperator.cmp, track, BigInteger.Zero);
+        int labelIndex = m_labelCount++;
+        string labelText = AssemblyCode.MakeLabel(labelIndex);
+        AddAssemblyCode(AssemblyOperator.je, null, m_assemblyCodeList.Count + 4, labelText);
+        AddAssemblyCode(AssemblyOperator.mov, AssemblyCode.EllipseRegister,
+                        AssemblyCode.FrameRegister,
+                        SymbolTable.EllipseFrameOffset);
+        AddAssemblyCode(AssemblyOperator.mov, AssemblyCode.FrameRegister,
+                        AssemblyCode.FrameRegister,
+                        SymbolTable.RegularFrameOffset);
+        AddAssemblyCode(AssemblyOperator.jmp, track);
+        AddAssemblyCode(AssemblyOperator.label, labelText);*/
+        Exit(middleCode);
+      }
+      else {
+        AddAssemblyCode(AssemblyOperator.mov, track,
+                        AssemblyCode.FrameRegister,
+                        SymbolTable.ReturnAddressOffset);
+        AddAssemblyCode(AssemblyOperator.mov, AssemblyCode.EllipseRegister,
+                        AssemblyCode.FrameRegister,
+                        SymbolTable.EllipseFrameOffset);
+        AddAssemblyCode(AssemblyOperator.mov, AssemblyCode.FrameRegister,
+                        AssemblyCode.FrameRegister,
+                        SymbolTable.RegularFrameOffset);
+        AddAssemblyCode(AssemblyOperator.jmp, track);
+      }
     }
 
     public void IntegralGetReturnValue(MiddleCode middleCode) {
@@ -714,7 +735,7 @@ namespace CCompiler {
     }
 
     public void Exit(MiddleCode middleCode) {
-      Symbol exitSymbol = (Symbol) middleCode[0];
+      Symbol exitSymbol = (Symbol) middleCode[1];
 
       if (Start.Linux) {
         if (exitSymbol != null) {
@@ -1524,7 +1545,7 @@ namespace CCompiler {
             sourceAddressTrack = LoadAddressToRegister(sourceSymbol);
 
       MemoryCopy(targetAddressTrack, sourceAddressTrack,
-                         targetSymbol.Type.Size(), index);
+                 targetSymbol.Type.Size(), index);
     }
 
     public void StructUnionParameter(MiddleCode middleCode, int index) {
@@ -1538,7 +1559,7 @@ namespace CCompiler {
       Track targetAddressTrack = LoadAddressToRegister(targetSymbol);
 
       MemoryCopy(targetAddressTrack, sourceAddressTrack,
-                         sourceSymbol.Type.Size(), index);    
+                 sourceSymbol.Type.Size(), index);    
     }
 
     public void StructUnionGetReturnValue(MiddleCode middleCode) {
@@ -1566,7 +1587,7 @@ namespace CCompiler {
 
       AddAssemblyCode(AssemblyOperator.mov, countTrack, (BigInteger) size);
       int labelIndex = m_labelCount++;
-      string labelText = AssemblyCode.MakeMemoryLabel(labelIndex);
+      string labelText = AssemblyCode.MakeLabel(labelIndex);
       AddAssemblyCode(AssemblyOperator.label, labelText);
       AddAssemblyCode(AssemblyOperator.mov, valueTrack,
                       sourceAddressTrack, 0);

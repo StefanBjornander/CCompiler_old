@@ -434,7 +434,7 @@ namespace CCompiler {
         }
         else {
           int labelIndex = (int) operand1;
-          string labelText = MakeMemoryLabel(labelIndex);
+          string labelText = MakeLabel(labelIndex);
           return "\t" + operatorName + " " + labelText;
         }
       }
@@ -484,8 +484,8 @@ namespace CCompiler {
       return buffer.ToString();
     }
 
-    public static string MakeMemoryLabel(int labelIndex) {
-      return "memorycopy" + labelIndex;
+    public static string MakeLabel(int labelIndex) {
+      return "label" + Symbol.SeparatorId + labelIndex;
     }
 
     private string WithSign(object value) {

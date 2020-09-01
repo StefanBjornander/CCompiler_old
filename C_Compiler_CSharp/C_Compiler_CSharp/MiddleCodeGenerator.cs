@@ -134,7 +134,7 @@ namespace CCompiler {
         AddMiddleCode(statement.CodeList, MiddleOperator.Empty);
       Backpatch(statement.NextSet, nextCode);
 
-      if (SymbolTable.CurrentFunction.Type.ReturnType.IsVoid()) {
+      /*if (SymbolTable.CurrentFunction.Type.ReturnType.IsVoid()) {
         if (SymbolTable.CurrentFunction.UniqueName.Equals(AssemblyCodeGenerator.MainName)) {
           Type signedShortType = new Type(Sort.Signed_Short_Int);
           Symbol zeroSymbol = new Symbol(signedShortType, ((BigInteger) 0));
@@ -144,6 +144,10 @@ namespace CCompiler {
         else {
           AddMiddleCode(statement.CodeList, MiddleOperator.Return);
         }
+      }*/
+
+      if (SymbolTable.CurrentFunction.Type.ReturnType.IsVoid()) {
+        AddMiddleCode(statement.CodeList, MiddleOperator.Return);
       }
 
       AddMiddleCode(statement.CodeList, MiddleOperator.FunctionEnd,
@@ -941,14 +945,14 @@ namespace CCompiler {
                               SymbolTable.CurrentFunction.Type.ReturnType);
         codeList = expression.LongList;
 
-        if (SymbolTable.CurrentFunction.UniqueName.Equals(AssemblyCodeGenerator.MainName)) {
+        /*if (SymbolTable.CurrentFunction.UniqueName.Equals(AssemblyCodeGenerator.MainName)) {
           AddMiddleCode(codeList, MiddleOperator.Exit,
                         null, expression.Symbol);
         }
-        else {
+        else*/ {
           AddMiddleCode(codeList, MiddleOperator.SetReturnValue,
                         null, expression.Symbol);
-          AddMiddleCode(codeList, MiddleOperator.Return);
+          AddMiddleCode(codeList, MiddleOperator.Return, null, expression.Symbol);
         }
       }
       else {
@@ -956,14 +960,16 @@ namespace CCompiler {
                      Message.Void_returned_from_non__void_function);
         codeList = new List<MiddleCode>();
 
-        if (SymbolTable.CurrentFunction.UniqueName.Equals(AssemblyCodeGenerator.MainName)) {
+        /*if (SymbolTable.CurrentFunction.UniqueName.Equals(AssemblyCodeGenerator.MainName)) {
           AddMiddleCode(codeList, MiddleOperator.Exit);
         }
         else {
           AddMiddleCode(codeList, MiddleOperator.Return);
-        }
+        }*/
+
+        AddMiddleCode(codeList, MiddleOperator.Return);
       }
-    
+
       return (new Statement(codeList));
     }
 
