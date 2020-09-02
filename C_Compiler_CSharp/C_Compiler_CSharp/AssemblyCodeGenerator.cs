@@ -1998,10 +1998,6 @@ namespace CCompiler {
         }
         else if ((assemblyOperator != AssemblyOperator.label) &&
                  (assemblyOperator != AssemblyOperator.comment)) {
-          if ((assemblyOperator == AssemblyOperator.call) && operand0.ToString().Equals("main")) {
-            int i = 1;
-          }
-
           if (operand0 is string) {
             string name0 = (string) operand0;
                
@@ -2043,10 +2039,6 @@ namespace CCompiler {
       foreach (AssemblyCode assemblyCode in m_assemblyCodeList) {
         byteList.AddRange(assemblyCode.ByteList());
 
-        if (assemblyCode.Operator == AssemblyOperator.je) {
-          int i = 1;
-        }
-
         if (!assemblyCode.IsJumpNotRegister() &&
             !assemblyCode.IsRelationNotRegister() &&
             (assemblyCode.Operator != AssemblyOperator.label) &&
@@ -2083,10 +2075,6 @@ namespace CCompiler {
             returnSet.Add(address);
           }
           else if (assemblyCode[0] is string) { // Add [g + 1], 2
-            if (assemblyCode[0].ToString().Contains("label$")) {
-              int i = 1;
-            }
-
             if (assemblyCode[2] is BigInteger) {
               int size = AssemblyCode.SizeOfValue((BigInteger)assemblyCode[2],
                                                   assemblyCode.Operator);
@@ -2099,18 +2087,10 @@ namespace CCompiler {
             }
           }
           else if (assemblyCode[1] is string) { // mov ax, [g + 1]; mov ax, g
-            if (assemblyCode[1].ToString().Contains("label$")) {
-              int i = 1;
-            }
-
             int address = byteList.Count - TypeSize.PointerSize;
             accessMap.Add(address, (string) assemblyCode[1]);
           }
           else if (assemblyCode[2] is string) { // Add [bp + 2], g
-            if (assemblyCode[2].ToString().Contains("label$")) {
-              int i = 1;
-            }
-
             int address = byteList.Count - TypeSize.PointerSize;
             accessMap.Add(address, (string) assemblyCode[2]);
           }
