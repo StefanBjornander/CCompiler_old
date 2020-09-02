@@ -344,7 +344,7 @@ namespace CCompiler {
             }
             break;
           
-          case MiddleOperator.SetReturnValue: {
+          /*case MiddleOperator.SetReturnValue: {
               Symbol returnSymbol = (Symbol) middleCode[1];
 
               if (returnSymbol.Type.IsStructOrUnion()) {
@@ -357,7 +357,7 @@ namespace CCompiler {
                 IntegralSetReturnValue(middleCode);
               }
             }
-            break;
+            break;*/
 
           case MiddleOperator.Dot:
           case MiddleOperator.FunctionEnd:
@@ -679,10 +679,8 @@ namespace CCompiler {
     // Return, Exit, and Goto --------------------------------------------------------------------------
 
     public void Return(MiddleCode middleCode) {
-      Assert.ErrorXXX(m_floatStackSize == 0);
-
       if (SymbolTable.CurrentFunction.UniqueName.Equals(AssemblyCodeGenerator.MainName)) {
-        
+        Assert.ErrorXXX(m_floatStackSize == 0);
         AddAssemblyCode(AssemblyOperator.cmp, AssemblyCode.FrameRegister,
                         SymbolTable.ReturnAddressOffset, BigInteger.Zero, TypeSize.PointerSize);
         int labelIndex = m_labelCount++;
@@ -695,7 +693,25 @@ namespace CCompiler {
         Exit(middleCode);
       }
       else {
+        SetReturnValue(middleCode);
+        Assert.ErrorXXX(m_floatStackSize == 0);
         Return();
+      }
+    }
+
+    private void SetReturnValue(MiddleCode middleCode) {
+      if (middleCode[1] != null) {
+        Symbol returnSymbol = (Symbol) middleCode[1];
+
+        if (returnSymbol.Type.IsStructOrUnion()) {
+          StructUnionSetReturnValue(middleCode);
+        }
+        else if (returnSymbol.Type.IsFloating()) {
+          Assert.ErrorXXX((--m_floatStackSize) == 0);
+        }
+        else {
+          IntegralSetReturnValue(middleCode);
+        }
       }
     }
 

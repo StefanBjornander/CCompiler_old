@@ -20,7 +20,7 @@ namespace CCompiler {
                               Call, PostCall, DecreaseStack, CheckTrackMapFloatStack,
                               Parameter, Empty, Return, Increment, Decrement, /*Exit,*/ PreCall,
                               FunctionEnd, //SystemInitializer, SystemParameter,
-                              Conditional, SetReturnValue, GetReturnValue,
+                              Conditional, /*SetReturnValue,*/ GetReturnValue,
                               IntegralToIntegral, IntegralToFloating, FloatingToIntegral,
                               ArrayToPointer, FunctionToPointer, StringToPointer,
                               ValueOffset, AddressOffset, /*CarryFlag,*/ Case, CaseEnd,

@@ -316,7 +316,7 @@ namespace CCompiler {
           return "parameter " + operand1 + ", offset " + operand2;
 
         case MiddleOperator.Return:
-         return "return";
+         return "return" + ((operand1 != null) ? (" " + operand1.ToString()) : "");
 
         /*case MiddleOperator.Exit:
           return "exit " + operand1;*/
@@ -409,8 +409,8 @@ namespace CCompiler {
         case MiddleOperator.GetReturnValue:
           return operand0 + " = return_value";
         
-        case MiddleOperator.SetReturnValue:
-          return "return_value = " + operand1;
+        /*case MiddleOperator.SetReturnValue:
+          return "return_value = " + operand1;*/
         
         case MiddleOperator.Dereference:
           if (((int) operand2) != 0) {

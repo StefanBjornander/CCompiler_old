@@ -950,8 +950,8 @@ namespace CCompiler {
                         null, expression.Symbol);
         }
         else*/ {
-          AddMiddleCode(codeList, MiddleOperator.SetReturnValue,
-                        null, expression.Symbol);
+          /*AddMiddleCode(codeList, MiddleOperator.SetReturnValue,
+                        null, expression.Symbol);*/
           AddMiddleCode(codeList, MiddleOperator.Return, null, expression.Symbol);
         }
       }
