@@ -318,8 +318,8 @@ namespace CCompiler {
         case MiddleOperator.Return:
          return "return";
 
-        case MiddleOperator.Exit:
-          return "exit " + operand1;
+        /*case MiddleOperator.Exit:
+          return "exit " + operand1;*/
         
         case MiddleOperator.IntegralToIntegral:
         case MiddleOperator.IntegralToFloating:

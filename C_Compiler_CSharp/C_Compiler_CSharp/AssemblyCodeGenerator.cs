@@ -118,9 +118,9 @@ namespace CCompiler {
             Return(middleCode);
             break;
 
-          case MiddleOperator.Exit:
+          /*case MiddleOperator.Exit:
             Exit(middleCode);
-            break;
+            break;*/
 
           case MiddleOperator.Goto:
             Goto(middleCode);
@@ -680,38 +680,37 @@ namespace CCompiler {
 
     public void Return(MiddleCode middleCode) {
       Assert.ErrorXXX(m_floatStackSize == 0);
-      Track track = new Track(Type.VoidPointerType);
 
       if (SymbolTable.CurrentFunction.UniqueName.Equals(AssemblyCodeGenerator.MainName)) {
-        /*AddAssemblyCode(AssemblyOperator.mov, track,
-                        AssemblyCode.FrameRegister,
-                        SymbolTable.ReturnAddressOffset);
-        AddAssemblyCode(AssemblyOperator.cmp, track, BigInteger.Zero);
+        
+        AddAssemblyCode(AssemblyOperator.cmp, AssemblyCode.FrameRegister,
+                        SymbolTable.ReturnAddressOffset, BigInteger.Zero, TypeSize.PointerSize);
         int labelIndex = m_labelCount++;
         string labelText = AssemblyCode.MakeLabel(labelIndex);
-        AddAssemblyCode(AssemblyOperator.je, null, m_assemblyCodeList.Count + 4, labelText);
-        AddAssemblyCode(AssemblyOperator.mov, AssemblyCode.EllipseRegister,
-                        AssemblyCode.FrameRegister,
-                        SymbolTable.EllipseFrameOffset);
-        AddAssemblyCode(AssemblyOperator.mov, AssemblyCode.FrameRegister,
-                        AssemblyCode.FrameRegister,
-                        SymbolTable.RegularFrameOffset);
-        AddAssemblyCode(AssemblyOperator.jmp, track);
-        AddAssemblyCode(AssemblyOperator.label, labelText);*/
+
+        AssemblyCode jumpCode = AddAssemblyCode(AssemblyOperator.je, null, null, labelText);
+        Return();
+        jumpCode[1] = m_assemblyCodeList.Count;
+        AddAssemblyCode(AssemblyOperator.label, labelText);
         Exit(middleCode);
       }
       else {
-        AddAssemblyCode(AssemblyOperator.mov, track,
-                        AssemblyCode.FrameRegister,
-                        SymbolTable.ReturnAddressOffset);
-        AddAssemblyCode(AssemblyOperator.mov, AssemblyCode.EllipseRegister,
-                        AssemblyCode.FrameRegister,
-                        SymbolTable.EllipseFrameOffset);
-        AddAssemblyCode(AssemblyOperator.mov, AssemblyCode.FrameRegister,
-                        AssemblyCode.FrameRegister,
-                        SymbolTable.RegularFrameOffset);
-        AddAssemblyCode(AssemblyOperator.jmp, track);
+        Return();
       }
+    }
+
+    private void Return() {
+      Track track = new Track(Type.VoidPointerType);
+      AddAssemblyCode(AssemblyOperator.mov, track,
+                  AssemblyCode.FrameRegister,
+                  SymbolTable.ReturnAddressOffset);
+      AddAssemblyCode(AssemblyOperator.mov, AssemblyCode.EllipseRegister,
+                      AssemblyCode.FrameRegister,
+                      SymbolTable.EllipseFrameOffset);
+      AddAssemblyCode(AssemblyOperator.mov, AssemblyCode.FrameRegister,
+                      AssemblyCode.FrameRegister,
+                      SymbolTable.RegularFrameOffset);
+      AddAssemblyCode(AssemblyOperator.jmp, track);
     }
 
     public void IntegralGetReturnValue(MiddleCode middleCode) {
@@ -1606,8 +1605,9 @@ namespace CCompiler {
       List<AssemblyCode> assemblyCodeList = new List<AssemblyCode>();
       AddAssemblyCode(assemblyCodeList, AssemblyOperator.comment,
                       "Initializerialize Stack Pointer");
+
       AddAssemblyCode(assemblyCodeList, AssemblyOperator.mov,
-                 AssemblyCode.FrameRegister, Linker.StackTopName);
+                      AssemblyCode.FrameRegister, Linker.StackTopName);
 
       if (Start.Linux) {
         AddAssemblyCode(assemblyCodeList, AssemblyOperator.comment,
@@ -1627,6 +1627,13 @@ namespace CCompiler {
                         AssemblyCode.FrameRegister, 0, (BigInteger) 0x0C00);
         AddAssemblyCode(assemblyCodeList, AssemblyOperator.fldcw,
                         AssemblyCode.FrameRegister, 0);
+
+        AddAssemblyCode(assemblyCodeList, AssemblyOperator.mov,
+                        Linker.StackTopName, 0, BigInteger.Zero, TypeSize.PointerSize);
+/*        AddAssemblyCode(assemblyCodeList, AssemblyOperator.mov,
+                        Linker.StackTopName, TypeSize.PointerSize, BigInteger.Zero, TypeSize.PointerSize);
+        AddAssemblyCode(assemblyCodeList, AssemblyOperator.mov,
+                        Linker.StackTopName, 2 * TypeSize.PointerSize, BigInteger.Zero, TypeSize.PointerSize);*/
 
         List<string> textList = new List<string>();
         ISet<string> externSet = new HashSet<string>();
@@ -1651,6 +1658,13 @@ namespace CCompiler {
                         AssemblyCode.FrameRegister, 0, (BigInteger) 0x0C00);
         AddAssemblyCode(assemblyCodeList, AssemblyOperator.fldcw,
                         AssemblyCode.FrameRegister, 0);
+
+        AddAssemblyCode(assemblyCodeList, AssemblyOperator.mov,
+                        Linker.StackTopName, 0, BigInteger.Zero, TypeSize.PointerSize);
+        /*AddAssemblyCode(assemblyCodeList, AssemblyOperator.mov,
+                        Linker.StackTopName, TypeSize.PointerSize, BigInteger.Zero, TypeSize.PointerSize);
+        AddAssemblyCode(assemblyCodeList, AssemblyOperator.mov,
+                        Linker.StackTopName, 2 * TypeSize.PointerSize, BigInteger.Zero, TypeSize.PointerSize);*/
 
         List<byte> byteList = new List<byte>();
         IDictionary<int, string> accessMap = new Dictionary<int, string>();
@@ -1984,6 +1998,10 @@ namespace CCompiler {
         }
         else if ((assemblyOperator != AssemblyOperator.label) &&
                  (assemblyOperator != AssemblyOperator.comment)) {
+          if ((assemblyOperator == AssemblyOperator.call) && operand0.ToString().Equals("main")) {
+            int i = 1;
+          }
+
           if (operand0 is string) {
             string name0 = (string) operand0;
                
@@ -2002,7 +2020,7 @@ namespace CCompiler {
 
           if (operand2 is string) {
             string name2 = (string) operand2;
-               
+            
             if (!name2.Contains(Symbol.SeparatorId)) {
               externSet.Add(name2);
             }

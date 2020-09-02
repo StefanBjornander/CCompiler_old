@@ -7,7 +7,7 @@ using System.Collections.Generic;
 
 namespace CCompiler {
   public class Start {
-    public static bool Windows = true, Linux = false;
+    public static bool Windows = false, Linux = true;
     public static IDictionary<string,ISet<FileInfo>> DependencySetMap = new Dictionary<string,ISet<FileInfo>>();
 
 
@@ -236,6 +236,8 @@ namespace CCompiler {
         if (mainSymbol != null) {
           totalTextList.AddRange(mainSymbol.TextList);
           SymbolTable.StaticSet.Remove(mainSymbol);
+          totalExternSet.Remove(mainSymbol.UniqueName);
+          totalGlobalSet.Add(mainSymbol.UniqueName);
         }
 
         foreach (StaticSymbol staticSymbol in SymbolTable.StaticSet) {
@@ -256,12 +258,16 @@ namespace CCompiler {
           }*/
 
           if (staticSymbolLinux.TextOrDataX == StaticSymbolLinux.TextOrData.Text) {
-            if (staticSymbolLinux.UniqueName.Equals(AssemblyCodeGenerator.MainName)) {
+            /*if (staticSymbolLinux.UniqueName.Equals(AssemblyCodeGenerator.MainName)) {
+              if (staticSymbolLinux == mainSymbol) {
+                int i = 1;
+              }
+
               totalTextList.Add("_start:");
               totalTextList.AddRange(staticSymbolLinux.TextList);
               totalDataList.Add("$StackTop:\ttimes 65536 db 0");
             }
-            else {
+            else*/ {
               totalTextList.AddRange(staticSymbolLinux.TextList);
             }
           }

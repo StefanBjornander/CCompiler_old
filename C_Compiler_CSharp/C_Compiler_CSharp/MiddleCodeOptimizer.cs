@@ -207,7 +207,7 @@ namespace CCompiler {
           SearchReachableCode(target, visitedSet);
           return;
         }
-        else if ((middleCode.Operator == MiddleOperator.Exit) ||
+        else if (/*(middleCode.Operator == MiddleOperator.Exit) ||*/
                  (middleCode.Operator == MiddleOperator.Return)) {
           return;
         }
