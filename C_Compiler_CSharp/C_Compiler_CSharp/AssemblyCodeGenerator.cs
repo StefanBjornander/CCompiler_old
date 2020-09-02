@@ -2043,7 +2043,13 @@ namespace CCompiler {
       foreach (AssemblyCode assemblyCode in m_assemblyCodeList) {
         byteList.AddRange(assemblyCode.ByteList());
 
-        if ((assemblyCode.Operator != AssemblyOperator.label) &&
+        if (assemblyCode.Operator == AssemblyOperator.je) {
+          int i = 1;
+        }
+
+        if (!assemblyCode.IsJumpNotRegister() &&
+            !assemblyCode.IsRelationNotRegister() &&
+            (assemblyCode.Operator != AssemblyOperator.label) &&
             (assemblyCode.Operator != AssemblyOperator.comment) &&
             (assemblyCode.Operator != AssemblyOperator.define_zero_sequence)){
           if (assemblyCode.Operator == AssemblyOperator.define_address) {
@@ -2077,6 +2083,10 @@ namespace CCompiler {
             returnSet.Add(address);
           }
           else if (assemblyCode[0] is string) { // Add [g + 1], 2
+            if (assemblyCode[0].ToString().Contains("label$")) {
+              int i = 1;
+            }
+
             if (assemblyCode[2] is BigInteger) {
               int size = AssemblyCode.SizeOfValue((BigInteger)assemblyCode[2],
                                                   assemblyCode.Operator);
@@ -2089,10 +2099,18 @@ namespace CCompiler {
             }
           }
           else if (assemblyCode[1] is string) { // mov ax, [g + 1]; mov ax, g
+            if (assemblyCode[1].ToString().Contains("label$")) {
+              int i = 1;
+            }
+
             int address = byteList.Count - TypeSize.PointerSize;
             accessMap.Add(address, (string) assemblyCode[1]);
           }
           else if (assemblyCode[2] is string) { // Add [bp + 2], g
+            if (assemblyCode[2].ToString().Contains("label$")) {
+              int i = 1;
+            }
+
             int address = byteList.Count - TypeSize.PointerSize;
             accessMap.Add(address, (string) assemblyCode[2]);
           }
