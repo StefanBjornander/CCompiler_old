@@ -150,6 +150,12 @@ namespace CCompiler {
         AddMiddleCode(statement.CodeList, MiddleOperator.Return);
       }
 
+      /*if (SymbolTable.CurrentFunction.Type.ReturnType.IsVoid()) {
+        Symbol zeroSymbol = new Symbol(Type.SignedShortIntegerType, BigInteger.Zero);
+        AddMiddleCode(statement.CodeList, MiddleOperator.Return,
+                      null, zeroSymbol);
+      }*/
+
       AddMiddleCode(statement.CodeList, MiddleOperator.FunctionEnd,
                     SymbolTable.CurrentFunction);
 
@@ -944,29 +950,13 @@ namespace CCompiler {
         expression = TypeCast.ImplicitCast(expression,
                               SymbolTable.CurrentFunction.Type.ReturnType);
         codeList = expression.LongList;
-
-        /*if (SymbolTable.CurrentFunction.UniqueName.Equals(AssemblyCodeGenerator.MainName)) {
-          AddMiddleCode(codeList, MiddleOperator.Exit,
-                        null, expression.Symbol);
-        }
-        else*/ {
-          /*AddMiddleCode(codeList, MiddleOperator.SetReturnValue,
-                        null, expression.Symbol);*/
-          AddMiddleCode(codeList, MiddleOperator.Return, null, expression.Symbol);
-        }
+        AddMiddleCode(codeList, MiddleOperator.Return,
+                      null, expression.Symbol);
       }
       else {
         Assert.Error(SymbolTable.CurrentFunction.Type.ReturnType.IsVoid(),
                      Message.Void_returned_from_non__void_function);
         codeList = new List<MiddleCode>();
-
-        /*if (SymbolTable.CurrentFunction.UniqueName.Equals(AssemblyCodeGenerator.MainName)) {
-          AddMiddleCode(codeList, MiddleOperator.Exit);
-        }
-        else {
-          AddMiddleCode(codeList, MiddleOperator.Return);
-        }*/
-
         AddMiddleCode(codeList, MiddleOperator.Return);
       }
 

@@ -93,13 +93,11 @@ namespace CCompiler {
 
         AddAssemblyCode(AssemblyOperator.comment, middleCode.ToString());
 
-        /*if (middleCode.ToString().Contains("parameter s, offset 113")) {
+        if ((SymbolTable.CurrentFunction != null) &&
+            SymbolTable.CurrentFunction.Name.Contains("printLongInt") &&
+            middleCode.ToString().Contains("return")) {
           int i = 1;
         }
-
-        if (middleCode.ToString().Contains("if arr >= Array_1000# goto 5")) {
-          int i = 1;
-        }*/
 
         switch (middleCode.Operator) {
           case MiddleOperator.PreCall:
@@ -679,14 +677,17 @@ namespace CCompiler {
     // Return, Exit, and Goto --------------------------------------------------------------------------
 
     public void Return(MiddleCode middleCode) {
-      if (SymbolTable.CurrentFunction.UniqueName.Equals(AssemblyCodeGenerator.MainName)) {
+      if (SymbolTable.CurrentFunction.UniqueName.Equals
+                      (AssemblyCodeGenerator.MainName)) {
         Assert.ErrorXXX(m_floatStackSize == 0);
         AddAssemblyCode(AssemblyOperator.cmp, AssemblyCode.FrameRegister,
-                        SymbolTable.ReturnAddressOffset, BigInteger.Zero, TypeSize.PointerSize);
+                        SymbolTable.ReturnAddressOffset, BigInteger.Zero,
+                        TypeSize.PointerSize);
         int labelIndex = m_labelCount++;
         string labelText = AssemblyCode.MakeLabel(labelIndex);
 
-        AssemblyCode jumpCode = AddAssemblyCode(AssemblyOperator.je, null, null, labelText);
+        AssemblyCode jumpCode =
+          AddAssemblyCode(AssemblyOperator.je, null, null, labelText);
         Return();
         jumpCode[1] = m_assemblyCodeList.Count;
         AddAssemblyCode(AssemblyOperator.label, labelText);
@@ -762,7 +763,7 @@ namespace CCompiler {
         }
 
         AddAssemblyCode(AssemblyOperator.mov, Register.rax,
-                        (BigInteger)60); // 0x3C
+                        (BigInteger) 60); // 0x3C
         AddAssemblyCode(AssemblyOperator.syscall);
       }
 
