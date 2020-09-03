@@ -23,6 +23,6 @@ namespace CCompiler {
                               Conditional, /*SetReturnValue,*/ GetReturnValue,
                               IntegralToIntegral, IntegralToFloating, FloatingToIntegral,
                               ArrayToPointer, FunctionToPointer, StringToPointer,
-                              ValueOffset, AddressOffset, /*CarryFlag,*/ Case, CaseEnd,
+                              ValueOffset, AddressOffset, /*CarryFlag,*/ Case, CaseEnd, StackTop,
                               Index, Dot, Arrow, Variable, Value, Initializer, InitializerZero};
 }

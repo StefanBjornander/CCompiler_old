@@ -93,11 +93,11 @@ namespace CCompiler {
 
         AddAssemblyCode(AssemblyOperator.comment, middleCode.ToString());
 
-        if ((SymbolTable.CurrentFunction != null) &&
+        /*if ((SymbolTable.CurrentFunction != null) &&
             SymbolTable.CurrentFunction.Name.Contains("printLongInt") &&
             middleCode.ToString().Contains("return")) {
           int i = 1;
-        }
+        }*/
 
         switch (middleCode.Operator) {
           case MiddleOperator.PreCall:
@@ -356,6 +356,10 @@ namespace CCompiler {
               }
             }
             break;*/
+
+          case MiddleOperator.StackTop:
+            StackTop(middleCode);
+            break;
 
           case MiddleOperator.Dot:
           case MiddleOperator.FunctionEnd:
@@ -780,6 +784,13 @@ namespace CCompiler {
                         (BigInteger) 76); // 0x4C
         AddAssemblyCode(AssemblyOperator.interrupt, (BigInteger) 33); // 0x21
       }
+    }
+
+    private void StackTop(MiddleCode middleCode) {
+      Symbol symbol = (Symbol) middleCode[0];
+      Track track = new Track(symbol);
+      m_trackMap.Add(symbol, track);
+      AddAssemblyCode(AssemblyOperator.mov, track, Linker.StackTopName);
     }
 
     public void Goto(MiddleCode middleCode) {
@@ -2017,7 +2028,7 @@ namespace CCompiler {
                  (assemblyOperator != AssemblyOperator.comment)) {
           if (operand0 is string) {
             string name0 = (string) operand0;
-               
+
             if (!name0.Contains(Symbol.SeparatorId)) {
               externSet.Add(name0);
             }

@@ -147,6 +147,7 @@ WHITE_SPACE [ \t\r\n\f]
 "short"         { return ((int) Tokens.SHORT);           }
 "signed"        { return ((int) Tokens.SIGNED);          }
 "sizeof"        { return ((int) Tokens.SIZEOF);          }
+"stack_top"     { return ((int) Tokens.STACK_TOP);       }
 "static"        { return ((int) Tokens.STATIC);          }
 "struct"        { return ((int) Tokens.STRUCT);          }
 "switch"        { return ((int) Tokens.SWITCH);          }

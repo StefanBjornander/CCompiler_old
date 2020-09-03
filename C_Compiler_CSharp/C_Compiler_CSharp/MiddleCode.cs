@@ -473,6 +473,9 @@ namespace CCompiler {
         case MiddleOperator.CaseEnd:
           return "case end " + operand0.ToString();
 
+        case MiddleOperator.StackTop:
+          return "stack_top";
+
         default:
           Assert.ErrorXXX(false);
           return null;

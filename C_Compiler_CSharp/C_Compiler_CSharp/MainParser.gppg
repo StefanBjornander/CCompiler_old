@@ -25,7 +25,7 @@
        LOGICAL_OR LOGICAL_AND LOGICAL_NOT BITWISE_XOR BITWISE_OR
        BITWISE_NOT QUESTION_MARK IF ELSE SWITCH CASE DEFAULT
        FOR WHILE DO CONTINUE BREAK RETURN GOTO INTERRUPT
-       JUMP_REGISTER SYSCALL CARRY_FLAG
+       JUMP_REGISTER SYSCALL CARRY_FLAG STACK_TOP
 
 %union {
   public string name;
@@ -845,6 +845,9 @@ primary_expression:
     }
   | CARRY_FLAG {
       $$ = MiddleCodeGenerator.CarryFlagExpression();
+    }
+  | STACK_TOP {
+      $$ = MiddleCodeGenerator.StackTopExpression();
     }
   | LEFT_PARENTHESIS expression RIGHT_PARENTHESIS {
       $$ = $2; 

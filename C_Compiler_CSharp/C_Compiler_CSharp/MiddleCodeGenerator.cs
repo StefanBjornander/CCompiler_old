@@ -2429,6 +2429,13 @@ namespace CCompiler {
       return (new Expression(symbol, new List<MiddleCode>(), longList));
     }
 
+    public static Expression StackTopExpression() {
+      List<MiddleCode> longList = new List<MiddleCode>();
+      Symbol symbol = new Symbol(new Type(Type.UnsignedCharType));
+      AddMiddleCode(longList, MiddleOperator.StackTop, symbol);
+      return (new Expression(symbol, new List<MiddleCode>(), longList));
+    }
+
     /*public static Expression FlagbyteExpression() {
       List<MiddleCode> longList = new List<MiddleCode>();
       Symbol symbol = new Symbol(Type.UnsignedCharType);

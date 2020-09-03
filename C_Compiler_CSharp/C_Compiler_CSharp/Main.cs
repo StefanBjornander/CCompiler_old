@@ -7,9 +7,8 @@ using System.Collections.Generic;
 
 namespace CCompiler {
   public class Start {
-    public static bool Windows = true, Linux = false;
+    public static bool Windows = false, Linux = true;
     public static IDictionary<string,ISet<FileInfo>> DependencySetMap = new Dictionary<string,ISet<FileInfo>>();
-
 
     public static void Main(string[] args){
       Assert.ErrorXXX((Windows && !Linux) || (!Windows && Linux));
@@ -225,7 +224,12 @@ namespace CCompiler {
           totalTextList.Add("_start:");
           totalTextList.AddRange(initSymbol.TextList);
           SymbolTable.StaticSet.Remove(initSymbol);
-          totalDataList.Add("$StackTop:\ttimes 65536 db 0");
+          //totalDataList.Add(Linker.StackTopName + ":\ttimes 65536 db 0");
+          totalDataList.Add(Linker.StackTopName + ":\ttimes 1048576 db 0");
+          totalGlobalSet.Add(Linker.StackTopName);
+        }
+        else {
+          totalExternSet.Add(Linker.StackTopName);
         }
 
         if (argsSymbol != null) {
