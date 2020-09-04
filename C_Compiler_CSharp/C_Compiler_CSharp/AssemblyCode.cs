@@ -30,6 +30,12 @@ namespace CCompiler {
       m_operandArray[2] = operand2;
       FromAdditionToIncrement();
       CheckSize(size);
+
+      /*if ((Operator == AssemblyOperator.define_value) &&
+          (((Sort) operand0) == Sort.Pointer) &&
+          (operand1 is BigInteger)) {
+        int i = 1;
+      }*/
     }
 
     public AssemblyOperator Operator {
@@ -302,7 +308,34 @@ namespace CCompiler {
       }
     }
 
+    public static int SizeOfValue(BigInteger value, AssemblyOperator op, Register register) {
+      if ((op == AssemblyOperator.mov) || (op == AssemblyOperator.and)) {
+        return SizeOfRegister(register);
+      }
+      else {
+        return SizeOfValue(value);
+      }
+    }
+
     public static int SizeOfValue(BigInteger value) {
+      if (value == 0) {
+        return 0;
+      }
+      else if ((-128 <= value) && (value <= 127)) {
+        return 1;
+      }
+      else if ((-32768 <= value) && (value <= 32767)) {
+        return 2;
+      }
+      else if ((-2147483648 <= value) && (value <= 2147483647)) {
+        return 4;
+      }
+      else {
+        return 8;
+      }
+    }
+
+    /*public static int SizeOfValue(BigInteger value) {
       if (value == 0) {
         return 0;
       }
@@ -318,7 +351,7 @@ namespace CCompiler {
       else {
         return 8;
       }
-    }
+    }*/
 
     public override string ToString() {
       object operand0 = m_operandArray[0],
@@ -515,8 +548,7 @@ namespace CCompiler {
       else if (Operator == AssemblyOperator.define_address) {
         int offset = (int) operand1;
         List<byte> byteList = new List<byte>(new byte[TypeSize.PointerSize]);
-        AssemblyCode.LoadByteList(byteList, 0, TypeSize.PointerSize,
-                                  (BigInteger) offset);
+        LoadByteList(byteList, 0, TypeSize.PointerSize, (BigInteger)offset); 
         return byteList;
       }
       else if (Operator == AssemblyOperator.define_zero_sequence) {
@@ -526,69 +558,54 @@ namespace CCompiler {
       else if (Operator == AssemblyOperator.define_value) {
         Sort sort = (Sort) operand0;
         object value = operand1;
+        List<byte> byteList;
 
-        if (sort == Sort.Pointer) {
-          List<byte> byteList = new List<byte>(new byte[TypeSize.PointerSize]);
-
-          if (value is string) {
-            AssemblyCode.LoadByteList(byteList, 0, TypeSize.PointerSize,
-                                      BigInteger.Zero);
-          }
-          else if (value is StaticAddress) {
-            StaticAddress staticAddress = (StaticAddress) value;
-            int offset = staticAddress.Offset;
-            AssemblyCode.LoadByteList(byteList, 0, TypeSize.PointerSize,
-                                      (BigInteger) offset);
-          }
-          else {
-            AssemblyCode.LoadByteList(byteList, 0, TypeSize.PointerSize,
-                                      (BigInteger) value);
-          }
-
-          return byteList;
-        }
-        else if (sort == Sort.Float) {
+        if (sort == Sort.Float) {
           float floatValue = (float) ((decimal) operand0);
-          return (new List<byte>(BitConverter.GetBytes(floatValue)));
+          byteList =  new List<byte>(BitConverter.GetBytes(floatValue));
         }
         else if ((sort == Sort.Double) || (sort == Sort.Long_Double)) {
           double doubleValue = (double) ((decimal) value);
-          return (new List<byte>(BitConverter.GetBytes(doubleValue)));
+          byteList = new List<byte>(BitConverter.GetBytes(doubleValue));
         }
         else if (sort == Sort.String) {
           string text = (string) value;
-          List<byte> byteList = new List<byte>();
+          byteList = new List<byte>();
 
           foreach (char c in text) {
             byteList.Add((byte) c);
           }
 
           byteList.Add((byte) 0);
-          return byteList;
         }
         else {
           int size = TypeSize.Size(sort);
-          List<byte> byteList = new List<byte>(new byte[size]);
-          AssemblyCode.LoadByteList(byteList, 0, size, (BigInteger) value);
-          return byteList;
+          byteList = new List<byte>(new byte[size]);
+          
+          if (value is StaticAddress) {
+            StaticAddress staticAddress = (StaticAddress) value;
+            LoadByteList(byteList, 0, size,
+                         (BigInteger)staticAddress.Offset);
+          }
+          else {
+            LoadByteList(byteList, 0, size, (BigInteger) value);         
+          }
         }
+
+        return byteList;
       }
       else if (IsJumpRegister() || IsCallRegister()) {
         Register register = (Register) operand0;
         return LookupByteArray(AssemblyOperator.jmp, register);
       }
       else if (IsCallNotRegister()) {
-        List<byte> byteList =
-          LookupByteArray(AssemblyOperator.jmp, TypeSize.PointerSize);
-        LoadByteList(byteList, byteList.Count - TypeSize.PointerSize,
-                     TypeSize.PointerSize, 0);
-        return byteList;
+        return LookupByteArray(AssemblyOperator.jmp, TypeSize.PointerSize);
       }
       else if (Operator == AssemblyOperator.return_address) {
         Register register = (Register) operand0;
         int offset = (int) operand1;
         int size = SizeOfValue(offset);
-        int address = (int)((BigInteger)operand2);
+        int address = (int) ((BigInteger) operand2);
         List<byte> byteList =
           LookupByteArray(AssemblyOperator.mov_word, register,
                           size, TypeSize.PointerSize);
@@ -600,7 +617,8 @@ namespace CCompiler {
       }
       else if (IsRelationNotRegister() || IsJumpNotRegister()) {
         int address = (int) operand0;
-        int size = ((address >= -128) && (address <= 127)) ? 1 : 2;
+        Assert.ErrorXXX(address != 0);
+        int size = SizeOfValue(address);
         List<byte> byteList = LookupByteArray(Operator, size);
         LoadByteList(byteList, byteList.Count - size, size, address);
         return byteList;
@@ -639,8 +657,11 @@ namespace CCompiler {
         LoadByteList(byteList, byteList.Count - size, size, value);
         return byteList;
       }
+
+
+
       // inc [bp + 2]
-      else if ((operand0 is Register) && (operand1 is int) &&
+      /*else if ((operand0 is Register) && (operand1 is int) &&
                (operand2 == null)) {
         Register register = (Register) operand0;
         int offset = (int) operand1;
@@ -658,6 +679,18 @@ namespace CCompiler {
         LoadByteList(byteList, byteList.Count - TypeSize.PointerSize,
                      TypeSize.PointerSize, offset);
         return byteList;
+      }*/
+
+      // inc [bp + 2] ; inc [global + 4]
+      else if (((operand0 is Register) || (operand0 is string)) &&
+               (operand1 is int) && (operand2 == null)) {
+        object registerOrNull = (operand0 is Register) ? operand0 : null;
+        int offset = (int) operand1;
+        int size = (operand0 is Register) ? SizeOfValue(offset)
+                                          : TypeSize.PointerSize;
+        List<byte> byteList = LookupByteArray(Operator, registerOrNull, size);
+        LoadByteList(byteList, byteList.Count - size, size, offset);
+        return byteList;
       }
 
       // mov ax, bx
@@ -671,9 +704,10 @@ namespace CCompiler {
       else if ((operand0 is Register) && (operand1 is string) &&
                (operand2 == null)) {
         Register register = (Register) operand0;
-        int size = SizeOfRegister(register);
-        List<byte> byteList = LookupByteArray(Operator, register, size);
-        LoadByteList(byteList, byteList.Count - size, size, 0);
+        List<byte> byteList =
+          LookupByteArray(Operator, register, TypeSize.PointerSize);
+        LoadByteList(byteList, byteList.Count - TypeSize.PointerSize,
+                     TypeSize.PointerSize, 0);
         return byteList;
       }
       // mov ax, 123
@@ -688,7 +722,10 @@ namespace CCompiler {
         LoadByteList(byteList, byteList.Count - size, size, value);
         return byteList;
       }
-      // mov [bp + 2], ax
+
+
+
+      /*// mov [bp + 2], ax
       else if ((operand0 is Register) && (operand1 is int) &&
                (operand2 is Register)) {
         Register baseRegister = (Register) operand0,
@@ -700,8 +737,37 @@ namespace CCompiler {
         LoadByteList(byteList, byteList.Count - size, size, offset);
         return byteList; 
       }
+      // mov [global + 4], ax
+      else if ((operand0 is string) && (operand1 is int) &&
+               (operand2 is Register)) {
+        int offset = (int) operand1;
+        Register fromRegister = (Register) operand2;
+        List<byte> byteList =
+          LookupByteArray(Operator, null, TypeSize.PointerSize, fromRegister);
+        LoadByteList(byteList, byteList.Count - TypeSize.PointerSize,
+                     TypeSize.PointerSize, offset);
+        return byteList; 
+      }*/
+
+      // mov [bp + 2], ax; mov [global + 4], ax
+      else if (((operand0 is Register) || (operand0 is string)) &&
+               (operand1 is int) && (operand2 is Register)) {
+        object registerOrNull = (operand0 is Register) ? operand0 : null;
+        Register register = (Register) operand2;
+        int offset = (int) operand1;
+        int size = (operand0 is Register) ? SizeOfValue(offset)
+                                          : TypeSize.PointerSize;
+        List<byte> byteList =
+          LookupByteArray(Operator, registerOrNull, size, register);
+        LoadByteList(byteList, byteList.Count - size, size, offset);
+        return byteList; 
+      }
+      
+      
+
+
       // mov [bp + 2], global
-      else if ((operand0 is Register) && (operand1 is int) &&
+      /*else if ((operand0 is Register) && (operand1 is int) &&
                (operand2 is string)) {
         Register baseRegister = (Register) operand0;
         int offset = (int) operand1;
@@ -715,7 +781,35 @@ namespace CCompiler {
                      TypeSize.PointerSize, 0);
         return byteList; 
       }
-      // mov [bp + 2], 123
+      // mov [global + 4], global
+      else if ((operand0 is string) && (operand1 is int) &&
+               (operand2 is string)) {
+        int offset = (int) operand1;
+        List<byte> byteList = LookupByteArray(Operator, null, null, TypeSize.PointerSize);
+        LoadByteList(byteList, byteList.Count -
+                    (TypeSize.PointerSize + TypeSize.PointerSize), TypeSize.PointerSize, offset);
+        LoadByteList(byteList, byteList.Count - TypeSize.PointerSize,
+                     TypeSize.PointerSize, 0);
+        return byteList; 
+      }*/
+      // mov [bp + 2], global; mov [global + 4], global
+      else if (((operand0 is Register) || (operand0 is string)) &&
+               (operand1 is int) && (operand2 is string)) {
+        object registerOrNull = (operand0 is Register) ? operand0 : null;
+        int offset = (int) operand1;
+        int size = (operand0 is Register) ? SizeOfValue(offset)
+                                          : TypeSize.PointerSize;
+        List<byte> byteList = LookupByteArray(Operator, registerOrNull, size, TypeSize.PointerSize);
+        LoadByteList(byteList, byteList.Count -
+                    (size + TypeSize.PointerSize), size, offset);
+        LoadByteList(byteList, byteList.Count - TypeSize.PointerSize,
+                     TypeSize.PointerSize, 0);
+        return byteList; 
+      }
+
+
+
+      /*// mov [bp + 2], 123
       else if ((operand0 is Register) && (operand1 is int) &&
                (operand2 is BigInteger)) {
         Register baseRegister = (Register) operand0;
@@ -731,26 +825,6 @@ namespace CCompiler {
                      valueSize, value);
         return byteList;
       }
-      // mov [global + 4], ax
-      else if ((operand0 is string) && (operand1 is int) &&
-               (operand2 is Register)) {
-        int offset = (int) operand1;
-        Register fromRegister = (Register)operand2;
-        List<byte> byteList =
-          LookupByteArray(Operator, null, TypeSize.PointerSize, fromRegister);
-        LoadByteList(byteList, byteList.Count - TypeSize.PointerSize,
-                     TypeSize.PointerSize, offset);
-        return byteList; 
-      }
-      // mov [global + 4], global
-      else if ((operand0 is string) && (operand1 is int) &&
-               (operand2 is string)) {
-        int offset = (int) operand1;
-        int size = SizeOfValue(offset);
-        List<byte> byteList = LookupByteArray(Operator, null, null, size);
-        LoadByteList(byteList, byteList.Count - size, size, offset);
-        return byteList; 
-      }
       // mov [global + 4], 123
       else if ((operand0 is string) && (operand1 is int) &&
                (operand2 is BigInteger)) {
@@ -764,8 +838,27 @@ namespace CCompiler {
         LoadByteList(byteList, byteList.Count - valueSize,
                      valueSize, value);
         return byteList; 
+      }*/
+
+      // mov [bp + 2], 123; mov [global + 4], 123; mov [null + 4], 123; Special case
+      else if (((operand0 is Register) || (operand0 is string) || (operand0 == null)) &&
+               (operand1 is int) && (operand2 is BigInteger)) {
+        object registerOrNull = (operand0 is Register) ? operand0 : null;
+        int offset = (int) operand1;
+        BigInteger value = (BigInteger) operand2;
+        int offsetSize = (operand0 is Register) ? SizeOfValue(offset)
+                                                : TypeSize.PointerSize,
+            valueSize = SizeOfValue(value, Operator);
+        List<byte> byteList =
+          LookupByteArray(Operator, registerOrNull, offsetSize, valueSize);
+        LoadByteList(byteList, byteList.Count - (offsetSize + valueSize),
+                     offsetSize, offset);
+        LoadByteList(byteList, byteList.Count - valueSize,
+                     valueSize, value);
+        return byteList;
       }
-      // mov ax, [bp + 2]
+
+      /*// mov ax, [bp + 2]
       else if ((operand0 is Register) && (operand1 is Register) &&
                (operand2 is int)) {
         Register toRegister = (Register) operand0,
@@ -787,9 +880,24 @@ namespace CCompiler {
         LoadByteList(byteList, byteList.Count - TypeSize.PointerSize,
                      TypeSize.PointerSize, offset);
         return byteList; 
+      }*/
+
+      // mov ax, [bp + 2]; mov ax, [global + 4]; mov [null + 4], 123; Special case
+      else if ((operand0 is Register) && ((operand1 is Register) ||
+               (operand1 is string)) && (operand2 is int)) {
+        Register register = (Register) operand0;
+        object registerOrNull = (operand1 is Register) ? operand1 : null;
+        int offset = (int) operand2;
+        int size = (operand1 is Register) ? SizeOfValue(offset)
+                                          : TypeSize.PointerSize;
+        List<byte> byteList =
+          LookupByteArray(Operator, register, registerOrNull, size);
+        LoadByteList(byteList, byteList.Count - size, size, offset);
+        return byteList; 
       }
-      // mov [null + 4], 123
-      else if ((operand0 == null) && (operand1 is int) &&
+
+      // mov [null + 4], 123; Special case
+      /*else if ((operand0 == null) && (operand1 is int) &&
                (operand2 is BigInteger)) {
         int offset = (int) operand1;
         BigInteger value = (BigInteger) operand2;
@@ -801,7 +909,7 @@ namespace CCompiler {
         LoadByteList(byteList, byteList.Count - valueSize,
                      valueSize, value);
         return byteList; 
-      }
+      }*/
 
       Assert.ErrorXXX(false);
       return null;
@@ -859,17 +967,17 @@ namespace CCompiler {
     }
 
     public static List<byte> LookupByteArray(AssemblyOperator objectOp,
-                      object operand1 = null, object operand2 = null,
-                      object operand3 = null) {
+                      object operand0 = null, object operand1 = null,
+                      object operand2 = null) {
       if ((objectOp == AssemblyOperator.shl) ||
           (objectOp == AssemblyOperator.shr)) {
+        operand0 = (operand0 is BigInteger) ? 0L : operand0;
         operand1 = (operand1 is BigInteger) ? 0L : operand1;
         operand2 = (operand2 is BigInteger) ? 0L : operand2;
-        operand3 = (operand3 is BigInteger) ? 0L : operand3;
       }
 
       ObjectCodeInfo info =
-        new ObjectCodeInfo(objectOp, operand1, operand2, operand3);
+        new ObjectCodeInfo(objectOp, operand0, operand1, operand2);
       byte[] byteArray = ObjectCodeTable.MainArrayMap[info];
       Assert.ErrorXXX(byteArray != null);
       List<byte> byteList = new List<byte>();
