@@ -1,5 +1,6 @@
 namespace CCompiler {
   public class TrackEntry {
+    //private AssemblyCode m_code;
     private int m_line, m_position, m_size;
 
     public TrackEntry(int position, int line, int size) {
