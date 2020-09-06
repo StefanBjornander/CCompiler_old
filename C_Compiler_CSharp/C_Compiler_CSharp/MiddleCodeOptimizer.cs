@@ -368,6 +368,15 @@ namespace CCompiler {
                     (leftSymbol.Value.Equals(BigInteger.Zero))) {
             newSymbol = rightSymbol;
           }
+          // t0 = 0 - i; t0 = -i
+          else if ((thisCode.Operator == MiddleOperator.BinarySubtract) &&
+                    (leftSymbol.Value is BigInteger) &&
+                    (leftSymbol.Value.Equals(BigInteger.Zero))) {
+            thisCode.Operator = MiddleOperator.UnarySubtract;
+            thisCode[0] = thisCode[1];
+            thisCode[1] = null;
+          }
+
           // t0 = i + 0
           // t0 = i - 0
           else if (((thisCode.Operator == MiddleOperator.BinaryAdd) ||
@@ -399,10 +408,13 @@ namespace CCompiler {
           }
           // t0 = i * 1
           // t0 = i / 1
+          // t0 = i % 1
           else if (((thisCode.Operator == MiddleOperator.SignedMultiply) ||
                     (thisCode.Operator == MiddleOperator.UnsignedMultiply) ||
                     (thisCode.Operator == MiddleOperator.SignedDivide) ||
-                    (thisCode.Operator == MiddleOperator.UnsignedDivide)) &&
+                    (thisCode.Operator == MiddleOperator.UnsignedDivide) ||
+                    (thisCode.Operator == MiddleOperator.SignedModulo) ||
+                    (thisCode.Operator == MiddleOperator.UnsignedModulo)) &&
                     (rightSymbol.Value is BigInteger) &&
                     (rightSymbol.Value.Equals(BigInteger.One))) {
             newSymbol = leftSymbol;
