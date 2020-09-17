@@ -1655,44 +1655,31 @@ namespace CCompiler {
                         AssemblyCode.FrameRegister, 0, (BigInteger) 0x0C00);
         AddAssemblyCode(assemblyCodeList, AssemblyOperator.fldcw,
                         AssemblyCode.FrameRegister, 0);
-
         AddAssemblyCode(assemblyCodeList, AssemblyOperator.mov,
-                        Linker.StackTopName, 0, BigInteger.Zero, TypeSize.PointerSize);
-/*        AddAssemblyCode(assemblyCodeList, AssemblyOperator.mov,
-                        Linker.StackTopName, TypeSize.PointerSize, BigInteger.Zero, TypeSize.PointerSize);
-        AddAssemblyCode(assemblyCodeList, AssemblyOperator.mov,
-                        Linker.StackTopName, 2 * TypeSize.PointerSize, BigInteger.Zero, TypeSize.PointerSize);*/
+                        Linker.StackTopName, 0, BigInteger.Zero,
+                        TypeSize.PointerSize);
 
         List<string> textList = new List<string>();
         ISet<string> externSet = new HashSet<string>();
-        AssemblyCodeGenerator.LinuxTextList(assemblyCodeList, textList, externSet);
+        AssemblyCodeGenerator.LinuxTextList(assemblyCodeList, textList,
+                                            externSet);
         SymbolTable.StaticSet.Add(new StaticSymbolLinux
           (StaticSymbolLinux.TextOrData.Text,
            AssemblyCodeGenerator.InitializerName, textList, externSet));
       }
 
       if (Start.Windows) {
-        AddAssemblyCode(assemblyCodeList, AssemblyOperator.comment,
-                        "Initializerialize Heap Pointer");
         AddAssemblyCode(assemblyCodeList, AssemblyOperator.mov_word,
                         null, 65534, (BigInteger)65534);
-
-        AddAssemblyCode(assemblyCodeList, AssemblyOperator.comment,
-                        "Initializerialize FPU Control Word, truncate mode " +
-                        "=> set bit 10 and 11.");
         AddAssemblyCode(assemblyCodeList, AssemblyOperator.fstcw,
                         AssemblyCode.FrameRegister, 0);
         AddAssemblyCode(assemblyCodeList, AssemblyOperator.or_word,
                         AssemblyCode.FrameRegister, 0, (BigInteger) 0x0C00);
         AddAssemblyCode(assemblyCodeList, AssemblyOperator.fldcw,
                         AssemblyCode.FrameRegister, 0);
-
         AddAssemblyCode(assemblyCodeList, AssemblyOperator.mov,
-                        Linker.StackTopName, 0, BigInteger.Zero, TypeSize.PointerSize);
-        /*AddAssemblyCode(assemblyCodeList, AssemblyOperator.mov,
-                        Linker.StackTopName, TypeSize.PointerSize, BigInteger.Zero, TypeSize.PointerSize);
-        AddAssemblyCode(assemblyCodeList, AssemblyOperator.mov,
-                        Linker.StackTopName, 2 * TypeSize.PointerSize, BigInteger.Zero, TypeSize.PointerSize);*/
+                        Linker.StackTopName, 0, BigInteger.Zero,
+                        TypeSize.PointerSize);
 
         List<byte> byteList = new List<byte>();
         IDictionary<int, string> accessMap = new Dictionary<int, string>();
@@ -1721,7 +1708,8 @@ namespace CCompiler {
         AddAssemblyCode(assemblyCodeList, AssemblyOperator.mov,
                         Register.rdx, Register.rbp);
 
-        AddAssemblyCode(assemblyCodeList, AssemblyOperator.label, "$args$loop");
+        AddAssemblyCode(assemblyCodeList, AssemblyOperator.label,
+                        "$args$loop");
         AddAssemblyCode(assemblyCodeList, AssemblyOperator.cmp,
                         Register.rbx, BigInteger.Zero);
         AddAssemblyCode(assemblyCodeList, AssemblyOperator.je,

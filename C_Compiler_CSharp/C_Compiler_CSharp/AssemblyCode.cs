@@ -5,17 +5,17 @@ using System.Collections.Generic;
 
 namespace CCompiler {
   public class AssemblyCode {
-    public static Register FrameRegister;
-    public static Register EllipseRegister;
-    public static Register ReturnValueRegister;
-    public static Register ReturnPointerRegister;
+    public static Register FrameRegister, EllipseRegister, 
+                           ReturnValueRegister, ReturnPointerRegister;
+                           //StorageRegister;
     public const Register ShiftRegister = Register.cl;
 
     static AssemblyCode() {
       FrameRegister = RegisterToSize(Register.bp, TypeSize.PointerSize);
       EllipseRegister = RegisterToSize(Register.di, TypeSize.PointerSize);
       ReturnValueRegister = RegisterToSize(Register.bx, TypeSize.PointerSize);
-      ReturnPointerRegister =RegisterToSize(Register.bx,TypeSize.PointerSize);
+      ReturnPointerRegister = RegisterToSize(Register.bx, TypeSize.PointerSize);
+      //StorageRegister = RegisterToSize(Register.si, TypeSize.PointerSize);
     }
 
     private AssemblyOperator m_operator;

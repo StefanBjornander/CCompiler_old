@@ -211,9 +211,11 @@ namespace CCompiler {
         IDictionary<int,string> accessMap = new Dictionary<int,string>();
         IDictionary<int,string> callMap = new Dictionary<int,string>();
         ISet<int> returnSet = new HashSet<int>();
-        AssemblyCodeGenerator.GenerateTargetWindows(assemblyCodeList, byteList, accessMap, callMap, returnSet);
-        StaticSymbol staticSymbol = new StaticSymbolWindows(SymbolTable.CurrentFunction.UniqueName,
-                                                     byteList, accessMap, callMap, returnSet);
+        AssemblyCodeGenerator.GenerateTargetWindows
+          (assemblyCodeList, byteList, accessMap, callMap, returnSet);
+        StaticSymbol staticSymbol =
+          new StaticSymbolWindows(SymbolTable.CurrentFunction.UniqueName,
+                                  byteList, accessMap, callMap, returnSet);
         SymbolTable.StaticSet.Add(staticSymbol);
       }
 

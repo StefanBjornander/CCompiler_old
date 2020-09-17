@@ -78,11 +78,15 @@ namespace CCompiler {
 
     static RegisterAllocator() {
       PointerRegisterSetWithEllipse.
+        Add(AssemblyCode.RegisterToSize(Register.bp, TypeSize.PointerSize));
+      PointerRegisterSetWithEllipse.
         Add(AssemblyCode.RegisterToSize(Register.si, TypeSize.PointerSize));
       PointerRegisterSetWithEllipse.
         Add(AssemblyCode.RegisterToSize(Register.di, TypeSize.PointerSize));
       PointerRegisterSetWithEllipse.
         Add(AssemblyCode.RegisterToSize(Register.bx, TypeSize.PointerSize));
+      PointerRegisterSetWithEllipse.Remove(AssemblyCode.FrameRegister);
+
 //The PointerRegisterSetWithoutEllipse holds the registers of PointerRegisterSetWithEllipse minus the EllipseRegister register since we need it to keep track of the ellipse frame pointer in elliptic functions.
       PointerRegisterSetWithoutEllipse.
         UnionWith(PointerRegisterSetWithEllipse);
