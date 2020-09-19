@@ -6,9 +6,9 @@
 //
 //  GPLEX Version:  1.2.2
 //  Machine:  STEFAN1968
-//  DateTime: 2020-09-03 11:59:07
+//  DateTime: 2020-09-19 21:56:14
 //  UserName: Stefan
-//  GPLEX input file <MainScanner.gplex - 2020-09-03 11:59:02>
+//  GPLEX input file <MainScanner.gplex - 2020-09-19 21:35:33>
 //  GPLEX frame file <embedded resource>
 //
 //  Option settings: parser, minimize
@@ -2220,6 +2220,7 @@ return ((int) Tokens.DIVIDE);
       type = CCompiler.Type.SignedIntegerType;
     }
     
+    //text = text.Replace("x", "").Replace("s", "").Replace("l", "").Replace("u", "");
   
     try {
       ulong unsignedValue = Convert.ToUInt64(text, fromBase);
@@ -2235,7 +2236,7 @@ return ((int) Tokens.DIVIDE);
       SymbolTable.StaticSet.Add(yylval.symbol.StaticSymbol);*/
     }
     catch (OverflowException) {
-      Assert.Error("X " + type + ": " + text, Message.Value_overflow);
+      Assert.Error(type + ": " + text, Message.Value_overflow);
     }
 
     return ((int) Tokens.VALUE);

@@ -293,6 +293,7 @@ WHITE_SPACE [ \t\r\n\f]
       type = CCompiler.Type.SignedIntegerType;
     }
     
+    //text = text.Replace("x", "").Replace("s", "").Replace("l", "").Replace("u", "");
   
     try {
       ulong unsignedValue = Convert.ToUInt64(text, fromBase);
@@ -308,7 +309,7 @@ WHITE_SPACE [ \t\r\n\f]
       SymbolTable.StaticSet.Add(yylval.symbol.StaticSymbol);*/
     }
     catch (OverflowException) {
-      Assert.Error("X " + type + ": " + text, Message.Value_overflow);
+      Assert.Error(type + ": " + text, Message.Value_overflow);
     }
 
     return ((int) Tokens.VALUE);

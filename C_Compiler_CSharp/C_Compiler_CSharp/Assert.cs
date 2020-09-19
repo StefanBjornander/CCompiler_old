@@ -1,7 +1,6 @@
 //Huawei Kundtjänst 08-51255555
 
 using System;
-using System.IO;
 
 namespace CCompiler {
   public class Assert {
@@ -56,12 +55,10 @@ namespace CCompiler {
         funcText = " in function " + SymbolTable.CurrentFunction.UniqueName;
       }
       else {
-        funcText = "";
+        funcText = " in global space";
       }
 
       string extraText = (text != null) ? (": " + text) : "";
-      /*TextWriter errorStream = (Start.ErrorStream != null) ?
-                               Start.ErrorStream : Console.Error;*/
     
       if ((message != null) &&
           (CCompiler_Main.Scanner.Path != null)) {
