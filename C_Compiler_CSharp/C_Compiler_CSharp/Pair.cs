@@ -8,6 +8,19 @@ namespace CCompiler {
       m_second = second;
     }
 
+    public void Add(FirstType first, SecondType second) {
+      m_first = first;
+      m_second = second;
+    }
+
+/*    public void Add(FirstType first) {
+      m_first = first;
+    }
+
+    public void Add(SecondType second) {
+      m_second = second;
+    }*/
+
     public FirstType First {
       get { return m_first; }
       set { m_first = value; }

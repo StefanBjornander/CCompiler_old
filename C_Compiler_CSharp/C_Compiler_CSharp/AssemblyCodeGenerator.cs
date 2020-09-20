@@ -50,12 +50,6 @@ namespace CCompiler {
     public AssemblyCode AddAssemblyCode(AssemblyOperator objectOp,
                           object operand0 = null, object operand1 = null,
                           object operand2 = null, int size = 0) {
-                                    /*if ((SymbolTable.CurrentFunction != null) &&
-                                        SymbolTable.CurrentFunction.Name.Equals("mainc") &&
-                                        (m_assemblyCodeList.Count == 32)) {
-                                      int i = 1;
-                                    }*/
-
       AssemblyCode assemblyCode =
         new AssemblyCode(objectOp, operand0, operand1, operand2, size);
       m_assemblyCodeList.Add(assemblyCode);
@@ -749,7 +743,7 @@ namespace CCompiler {
       Symbol returnSymbol = (Symbol)middleCode[1];
       Register returnRegister =
         AssemblyCode.RegisterToSize(AssemblyCode.ReturnValueRegister,
-                                    returnSymbol.Type.Size());
+                                    returnSymbol.Type.SizeArray()); 
       LoadValueToRegister(returnSymbol, returnRegister);
       m_trackMap.Remove(returnSymbol);
     }

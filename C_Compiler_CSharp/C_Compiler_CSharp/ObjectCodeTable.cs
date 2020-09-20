@@ -5284,7 +5284,7 @@ namespace CCompiler {
       MainArrayMap.Add(new ObjectCodeInfo(AssemblyOperator.neg_word, Register.si, 0, null), new byte[]{247, 28});
       MainArrayMap.Add(new ObjectCodeInfo(AssemblyOperator.neg_word, Register.si, 1, null), new byte[]{247, 92, 1});
       MainArrayMap.Add(new ObjectCodeInfo(AssemblyOperator.neg_word, Register.si, 2, null), new byte[]{247, 156, 0, 1});
-      MainArrayMap.Add(new ObjectCodeInfo(AssemblyOperator.nop, null, null, null), new byte[]{});
+      //MainArrayMap.Add(new ObjectCodeInfo(AssemblyOperator.nop, null, null, null), new byte[]{});
       MainArrayMap.Add(new ObjectCodeInfo(AssemblyOperator.not, Register.ah, null, null), new byte[]{246, 212});
       MainArrayMap.Add(new ObjectCodeInfo(AssemblyOperator.not, Register.al, null, null), new byte[]{246, 208});
       MainArrayMap.Add(new ObjectCodeInfo(AssemblyOperator.not, Register.ax, null, null), new byte[]{247, 208});

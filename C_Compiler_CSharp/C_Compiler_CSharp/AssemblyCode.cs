@@ -179,9 +179,49 @@ namespace CCompiler {
           return false;        
       }
     }
-  
+
+    private static ISet<ISet<Register>> m_registerOverlapSet =
+      new HashSet<ISet<Register>>() {
+        new HashSet<Register>() {Register.al, Register.ax,
+                                  Register.eax, Register.rax},
+        new HashSet<Register>() {Register.ah, Register.ax,
+                                  Register.eax, Register.rax},
+        new HashSet<Register>() {Register.bl, Register.bx,
+                                  Register.ebx, Register.rbx},
+        new HashSet<Register>() {Register.bh, Register.bx,
+                                  Register.ebx, Register.rbx},
+        new HashSet<Register>() {Register.cl, Register.cx,
+                                  Register.ecx, Register.rcx},
+        new HashSet<Register>() {Register.ch, Register.cx,
+                                  Register.ecx, Register.rcx},
+        new HashSet<Register>() {Register.dl, Register.dx,
+                                  Register.edx, Register.rdx},
+        new HashSet<Register>() {Register.dh, Register.dx,
+                                  Register.edx, Register.rdx},
+        new HashSet<Register>() {Register.si, Register.esi, Register.rsi},
+        new HashSet<Register>() {Register.di, Register.edi, Register.rdi},
+        new HashSet<Register>() {Register.bp, Register.ebp, Register.rbp},
+        new HashSet<Register>() {Register.sp, Register.esp, Register.rsp}
+      };
+
     public static bool RegisterOverlap(Register? register1,
                                        Register? register2) {
+      if ((register1 == null) || (register2 == null)) {
+        return false;
+      }
+
+      foreach (ISet<Register> registerSet in m_registerOverlapSet) {
+        if (registerSet.Contains(register1.Value) &&
+            registerSet.Contains(register2.Value)) {
+          return true;
+        }
+      }
+
+      return false;
+    }
+
+    /*public static bool RegisterOverlapX(Register? register1,
+                                        Register? register2) {
       if ((register1 == null) || (register2 == null)) {
         return false;
       }
@@ -203,7 +243,7 @@ namespace CCompiler {
       return name1.Equals(name2);
     }
   
-    public static int SizeOfRegister(Register register) {
+    public static int SizeOfRegisterX(Register register) {
       string name = Enum.GetName(typeof(Register), register);
     
       if (name.Contains("r")) {
@@ -218,9 +258,9 @@ namespace CCompiler {
       else {
         return 2;
       }
-    }
+    }*/
 
-    public static Register RegisterToSize(Register register, int size) {
+    /*public static Register RegisterToSizeX(Register register, int size) {
       string name = Enum.GetName(typeof(Register), register);
 
       switch (size) {
@@ -247,8 +287,237 @@ namespace CCompiler {
       }
 
       return (Register) Enum.Parse(typeof(Register), name);
+    }*/
+
+    private static IDictionary<Register,int> m_registerSizeMap =
+      new Dictionary<Register,int>() {
+       {Register.al, 1}, {Register.bl, 1}, {Register.cl, 1}, {Register.dl, 1},
+       {Register.ah, 1}, {Register.bh, 1}, {Register.ch, 1}, {Register.dh, 1},
+       {Register.ax, 2}, {Register.bx, 2}, {Register.cx, 2}, {Register.dx, 2},
+       {Register.eax,4}, {Register.ebx,4}, {Register.ecx,4}, {Register.edx,4},
+       {Register.rax,8}, {Register.rbx,8}, {Register.rcx,8}, {Register.rdx,8},
+       {Register.si, 2}, {Register.di, 2}, {Register.sp, 2}, {Register.bp, 2},
+       {Register.esi,4}, {Register.edi,4}, {Register.esp,4}, {Register.ebp,4},
+       {Register.rsi,8}, {Register.rdi,8}, {Register.rsp,8}, {Register.rbp, 8}
+      };
+
+    public static int SizeOfRegister(Register register) {
+      return m_registerSizeMap[register];
     }
-  
+
+    /*private static IList<ISet<Register>> m_registerSetList =
+      new HashSet<Register>[]{
+        new HashSet<Register>() {Register.al, Register.bl, Register.cl, Register.dl,
+                                 Register.ah, Register.bh, Register.ch, Register.dh},
+        new HashSet<Register>() {Register.ax, Register.bx, Register.cx, Register.dx,
+                                 Register.si, Register.di, Register.bp, Register.sp},
+        new HashSet<Register>() {Register.eax, Register.ebx, Register.ecx, Register.edx,
+                                 Register.esi, Register.edi, Register.ebp, Register.esp},
+        new HashSet<Register>() {Register.rax, Register.rbx, Register.rcx, Register.rdx,
+                                 Register.rsi, Register.rdi, Register.rbp, Register.rsp}
+     };
+
+    private static IDictionary<int,int> m_indexToSizeMap =
+      new Dictionary<int,int>() {{0, 1}, {1, 2}, {2, 4}, {3, 8}};
+
+    public static int SizeOfRegister(Register register) {
+      for (int index = 0; index < m_registerSetList.Count; ++index)
+      if (m_registerSetList[index].Contains(register)) {
+        return m_indexToSizeMap[index];
+      }
+
+      Assert.ErrorXXX(false);
+      return 0;
+    }*/
+
+    private static ISet<IList<Register>> m_registerListSet =
+      new HashSet<IList<Register>>() {
+        new Register[] {Register.al, Register.ax, Register.eax, Register.rax},
+        new Register[] {Register.bl, Register.bx, Register.ebx, Register.rbx},
+        new Register[] {Register.cl, Register.cx, Register.ecx, Register.rcx},
+        new Register[] {Register.dl, Register.dx, Register.edx, Register.rdx},
+        new Register[] {default(Register), Register.si, Register.esi, Register.rsi},
+        new Register[] {default(Register), Register.di, Register.edi, Register.rdi},
+        new Register[] {default(Register), Register.bp, Register.ebp, Register.rbp},
+        new Register[] {default(Register), Register.sp, Register.esp, Register.rsp}
+      };
+
+    private static IDictionary<int,int> m_sizeToIndexMap =
+      new Dictionary<int, int>() {{1, 0}, {2, 1}, {4, 2}, {8, 3}};
+
+    public static Register RegisterToSize(Register register, int size) {
+      if (m_registerSizeMap[register] == size) {
+        return register;
+      }
+
+      foreach (IList<Register> registerList in m_registerListSet) {
+        if (registerList.Contains(register)) {
+          int index = m_sizeToIndexMap[size];
+          Assert.ErrorXXX((index >= 0) && (index < registerList.Count));
+          return registerList[index];
+        }
+      }
+
+      Assert.ErrorXXX(false);
+      return default(Register);
+    }
+
+    /*private static IDictionary<Pair<Register,int>,Register> m_registerToSizeMap =
+      new Dictionary<Pair<Register,int>,Register>() {
+       {new Pair<Register,int>(Register.al, 2), Register.ax},
+       {new Pair<Register,int>(Register.al, 4), Register.eax},
+       {new Pair<Register,int>(Register.al, 8), Register.rax},
+       {new Pair<Register,int>(Register.ax, 1), Register.al},
+       {new Pair<Register,int>(Register.ax, 4), Register.eax},
+       {new Pair<Register,int>(Register.ax, 8), Register.rax},
+       {new Pair<Register,int>(Register.eax, 1), Register.al},
+       {new Pair<Register,int>(Register.eax, 2), Register.ax},
+       {new Pair<Register,int>(Register.eax, 8), Register.rax},
+       {new Pair<Register,int>(Register.rax, 1), Register.al},
+       {new Pair<Register,int>(Register.rax, 2), Register.ax},
+       {new Pair<Register,int>(Register.rax, 4), Register.eax},
+
+       {new Pair<Register,int>(Register.bl, 2), Register.bx},
+       {new Pair<Register,int>(Register.bl, 4), Register.ebx},
+       {new Pair<Register,int>(Register.bl, 8), Register.rbx},
+       {new Pair<Register,int>(Register.bx, 1), Register.bl},
+       {new Pair<Register,int>(Register.bx, 4), Register.ebx},
+       {new Pair<Register,int>(Register.bx, 8), Register.rbx},
+       {new Pair<Register,int>(Register.ebx, 1), Register.bl},
+       {new Pair<Register,int>(Register.ebx, 2), Register.bx},
+       {new Pair<Register,int>(Register.ebx, 8), Register.rbx},
+       {new Pair<Register,int>(Register.rbx, 1), Register.bl},
+       {new Pair<Register,int>(Register.rbx, 2), Register.bx},
+       {new Pair<Register,int>(Register.rbx, 4), Register.ebx},
+
+       {new Pair<Register,int>(Register.cl, 2), Register.cx},
+       {new Pair<Register,int>(Register.cl, 4), Register.ecx},
+       {new Pair<Register,int>(Register.cl, 8), Register.rcx},
+       {new Pair<Register,int>(Register.cx, 1), Register.cl},
+       {new Pair<Register,int>(Register.cx, 4), Register.ecx},
+       {new Pair<Register,int>(Register.cx, 8), Register.rcx},
+       {new Pair<Register,int>(Register.ecx, 1), Register.cl},
+       {new Pair<Register,int>(Register.ecx, 2), Register.cx},
+       {new Pair<Register,int>(Register.ecx, 8), Register.rcx},
+       {new Pair<Register,int>(Register.rcx, 1), Register.cl},
+       {new Pair<Register,int>(Register.rcx, 2), Register.cx},
+       {new Pair<Register,int>(Register.rcx, 4), Register.ecx},
+
+       {new Pair<Register,int>(Register.dl, 2), Register.dx},
+       {new Pair<Register,int>(Register.dl, 4), Register.edx},
+       {new Pair<Register,int>(Register.dl, 8), Register.rdx},
+       {new Pair<Register,int>(Register.dx, 1), Register.dl},
+       {new Pair<Register,int>(Register.dx, 4), Register.edx},
+       {new Pair<Register,int>(Register.dx, 8), Register.rdx},
+       {new Pair<Register,int>(Register.edx, 1), Register.dl},
+       {new Pair<Register,int>(Register.edx, 2), Register.dx},
+       {new Pair<Register,int>(Register.edx, 8), Register.rdx},
+       {new Pair<Register,int>(Register.rdx, 1), Register.dl},
+       {new Pair<Register,int>(Register.rdx, 2), Register.dx},
+       {new Pair<Register,int>(Register.rdx, 4), Register.edx},
+
+       {new Pair<Register,int>(Register.si, 4), Register.esi},
+       {new Pair<Register,int>(Register.si, 8), Register.rsi},
+       {new Pair<Register,int>(Register.esi, 2), Register.si},
+       {new Pair<Register,int>(Register.esi, 8), Register.rsi},
+       {new Pair<Register,int>(Register.rsi, 2), Register.si},
+       {new Pair<Register,int>(Register.rsi, 4), Register.esi},
+
+       {new Pair<Register,int>(Register.di, 4), Register.edi},
+       {new Pair<Register,int>(Register.di, 8), Register.rdi},
+       {new Pair<Register,int>(Register.edi, 2), Register.di},
+       {new Pair<Register,int>(Register.edi, 8), Register.rdi},
+       {new Pair<Register,int>(Register.rdi, 2), Register.di},
+       {new Pair<Register,int>(Register.rdi, 4), Register.edi},
+
+       {new Pair<Register,int>(Register.bp, 4), Register.ebp},
+       {new Pair<Register,int>(Register.bp, 8), Register.rbp},
+       {new Pair<Register,int>(Register.ebp, 2), Register.bp},
+       {new Pair<Register,int>(Register.ebp, 8), Register.rbp},
+       {new Pair<Register,int>(Register.rbp, 2), Register.bp},
+       {new Pair<Register,int>(Register.rbp, 4), Register.ebp},
+
+       {new Pair<Register,int>(Register.sp, 4), Register.esp},
+       {new Pair<Register,int>(Register.sp, 8), Register.rsp},
+       {new Pair<Register,int>(Register.esp, 2), Register.sp},
+       {new Pair<Register,int>(Register.esp, 8), Register.rsp},
+       {new Pair<Register,int>(Register.rsp, 2), Register.sp},
+       {new Pair<Register,int>(Register.rsp, 4), Register.esp},
+      };
+
+    public static Register RegisterToSize(Register register, int size) {
+      Assert.ErrorXXX((size == 1) || (size == 2) || (size == 4) || (size == 8));
+
+      if (m_registerSizeMap[register] == size) {
+        return register;
+      }
+      else {
+        Pair<Register,int> pair = new Pair<Register,int>(register, size);
+        Assert.ErrorXXX(m_registerToSizeMap.ContainsKey(pair));
+        return m_registerToSizeMap[pair];
+      }
+    }
+
+    private static IDictionary<AssemblyOperator,int> m_operatorSizeMap =
+      new Dictionary<AssemblyOperator,int>() {
+       {AssemblyOperator.mov_byte, 1}, {AssemblyOperator.mov_word, 2},
+       {AssemblyOperator.mov_dword, 4}, {AssemblyOperator.mov_qword, 8},
+       {AssemblyOperator.cmp_byte, 1}, {AssemblyOperator.cmp_word, 2},
+       {AssemblyOperator.cmp_dword, 4}, {AssemblyOperator.cmp_qword, 8},
+
+       {AssemblyOperator.add_byte, 1}, {AssemblyOperator.add_word, 2},
+       {AssemblyOperator.add_dword, 4}, {AssemblyOperator.add_qword, 8},
+       {AssemblyOperator.sub_byte, 1}, {AssemblyOperator.sub_word, 2},
+       {AssemblyOperator.sub_dword, 4}, {AssemblyOperator.sub_qword, 8},
+
+       {AssemblyOperator.mul_byte, 1}, {AssemblyOperator.mul_word, 2},
+       {AssemblyOperator.mul_dword, 4}, {AssemblyOperator.mul_qword, 8},
+       {AssemblyOperator.div_byte, 1}, {AssemblyOperator.div_word, 2},
+       {AssemblyOperator.div_dword, 4}, {AssemblyOperator.div_qword, 8},
+
+       {AssemblyOperator.imul_byte, 1}, {AssemblyOperator.imul_word, 2},
+       {AssemblyOperator.imul_dword, 4}, {AssemblyOperator.imul_qword, 8},
+       {AssemblyOperator.idiv_byte, 1}, {AssemblyOperator.idiv_word, 2},
+       {AssemblyOperator.idiv_dword, 4}, {AssemblyOperator.idiv_qword, 8},
+
+       {AssemblyOperator.inc_byte, 1}, {AssemblyOperator.inc_word, 2},
+       {AssemblyOperator.inc_dword, 4}, {AssemblyOperator.inc_qword, 8},
+       {AssemblyOperator.dec_byte, 1}, {AssemblyOperator.dec_word, 2},
+       {AssemblyOperator.dec_dword, 4}, {AssemblyOperator.dec_qword, 8},
+
+       {AssemblyOperator.neg_byte, 1}, {AssemblyOperator.neg_word, 2},
+       {AssemblyOperator.neg_dword, 4}, {AssemblyOperator.neg_qword, 8},
+       {AssemblyOperator.not_byte, 1}, {AssemblyOperator.not_word, 2},
+       {AssemblyOperator.not_dword, 4}, {AssemblyOperator.not_qword, 8},
+
+       {AssemblyOperator.and_byte, 1}, {AssemblyOperator.and_word, 2},
+       {AssemblyOperator.and_dword, 4}, {AssemblyOperator.and_qword, 8},
+       {AssemblyOperator.or_byte, 1}, {AssemblyOperator.or_word, 2},
+       {AssemblyOperator.or_dword, 4}, {AssemblyOperator.or_qword, 8},
+       {AssemblyOperator.xor_byte, 1}, {AssemblyOperator.xor_word, 2},
+       {AssemblyOperator.xor_dword, 4}, {AssemblyOperator.xor_qword, 8},
+
+       {AssemblyOperator.shl_byte, 1}, {AssemblyOperator.shl_word, 2},
+       {AssemblyOperator.shl_dword, 4}, {AssemblyOperator.shl_qword, 8},
+       {AssemblyOperator.shr_byte, 1}, {AssemblyOperator.shr_word, 2},
+       {AssemblyOperator.shr_dword, 4}, {AssemblyOperator.shr_qword, 8},
+       
+       {AssemblyOperator.fld_dword, 4}, {AssemblyOperator.fld_qword, 8},
+       {AssemblyOperator.fst_dword, 4}, {AssemblyOperator.fst_qword, 8},
+       {AssemblyOperator.fstp_dword, 4}, {AssemblyOperator.fstp_qword, 8},
+       
+                                         {AssemblyOperator.fild_word, 2},
+       {AssemblyOperator.fild_dword, 4}, {AssemblyOperator.fild_qword, 8},
+                                         {AssemblyOperator.fist_word, 2},
+       {AssemblyOperator.fist_dword, 4}, {AssemblyOperator.fist_qword, 8},
+                                          {AssemblyOperator.fistp_word, 2},
+       {AssemblyOperator.fistp_dword, 4}, {AssemblyOperator.fistp_qword, 8}
+      };
+
+    public static int SizeOfOperator(AssemblyOperator objectOp) {
+      return m_operatorSizeMap[objectOp];
+    }*/
+
     public static int SizeOfOperator(AssemblyOperator objectOp) {
       string name = Enum.GetName(typeof(AssemblyOperator), objectOp);
 
