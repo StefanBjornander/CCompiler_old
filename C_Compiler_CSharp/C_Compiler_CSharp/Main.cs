@@ -101,8 +101,8 @@ namespace CCompiler {
           if (!noLink && doLink) {
             FileInfo targetFile;
 
-            AssemblyCodeGenerator.PathText = "C:\\D\\" + argList[0] + ".com";
-            targetFile = new FileInfo(AssemblyCodeGenerator.PathText);
+            string pathText = "C:\\D\\" + argList[0] + ".com";
+            targetFile = new FileInfo(pathText);
             Linker linker = new Linker();
 
             CCompiler_Main.Scanner.Path = null;

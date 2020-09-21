@@ -520,19 +520,20 @@ namespace CCompiler {
 
     public static int SizeOfOperator(AssemblyOperator objectOp) {
       string name = Enum.GetName(typeof(AssemblyOperator), objectOp);
+      string suffix = name.Substring(name.IndexOf("_") + 1);
 
-      if (name.Contains("_byte")) {
-        return 1;
-      }
-      else if (name.Contains("_word")) {
-        return 2;
-      }
-      else if (name.Contains("_dword")) {
-        return 4;
-      }
-      else { 
-        Assert.ErrorXXX(name.Contains("_qword"));
-        return 8;
+      switch (suffix) {
+        case "byte":
+          return 1;
+
+        case "word":
+          return 2;
+
+        case "dword":
+          return 4;
+
+        default: // "qword":
+          return 8;
       }
     }
   

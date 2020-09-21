@@ -15,16 +15,14 @@ namespace CCompiler {
       }
 
       ISet<Graph<Track>> split = totalTrackGraph.Split();
-      int index = 0;
       foreach (Graph<Track> trackGraph in split) {
         List<Track> trackList = new List<Track>(trackGraph.VertexSet);
         Assert.Error(DeepFirstSearch(trackList, 0, trackGraph),
                      Message.Out_of_registers);
-        ++index;
-      }
 
-      foreach (Track track in totalTrackSet) {
-        track.Generate(assemblyCodeList);
+        foreach (Track track in trackGraph.VertexSet) {
+          track.Generate(assemblyCodeList);
+        }
       }
     }
 //The DeepFirstSearch method searches the graph in a deep-first manner. It takes the track list and the current index in that list as well as the track graph.
@@ -71,40 +69,25 @@ namespace CCompiler {
     }
 //The PointerRegisterSetWithEllipse set holds the possible pointer registers of an elliptic function while PointerRegisterSetWithoutEllipse holds the possible pointer registers of an non-elliptic function. The Byte1RegisterSet ste holds all registers of one byte while Byte2RegisterSet holds all registers of two bytes.
     public static ISet<Register>
-      PointerRegisterSetWithEllipse = new HashSet<Register>(),
-      PointerRegisterSetWithoutEllipse = new HashSet<Register>(),
-      Byte1RegisterSet = new HashSet<Register>(),
-      Byte2RegisterSet = new HashSet<Register>();
+      PointerRegisterSetWithEllipse = new HashSet<Register>() {
+        AssemblyCode.RegisterToSize(Register.bp, TypeSize.PointerSize),
+        AssemblyCode.RegisterToSize(Register.si, TypeSize.PointerSize),
+        AssemblyCode.RegisterToSize(Register.di, TypeSize.PointerSize),
+        AssemblyCode.RegisterToSize(Register.bx, TypeSize.PointerSize)
+      },
+      PointerRegisterSetWithoutEllipse = new HashSet<Register>(PointerRegisterSetWithEllipse),
+      Byte1RegisterSet = new HashSet<Register>() {
+        Register.al,Register.ah, Register.bl, Register.bh, 
+        Register.cl, Register.ch, Register.dl, Register.dh
+      },
+      Byte2RegisterSet = new HashSet<Register>() {
+        Register.ax, Register.bx, Register.cx, Register.dx
+      };
 
     static RegisterAllocator() {
-      PointerRegisterSetWithEllipse.
-        Add(AssemblyCode.RegisterToSize(Register.bp, TypeSize.PointerSize));
-      PointerRegisterSetWithEllipse.
-        Add(AssemblyCode.RegisterToSize(Register.si, TypeSize.PointerSize));
-      PointerRegisterSetWithEllipse.
-        Add(AssemblyCode.RegisterToSize(Register.di, TypeSize.PointerSize));
-      PointerRegisterSetWithEllipse.
-        Add(AssemblyCode.RegisterToSize(Register.bx, TypeSize.PointerSize));
       PointerRegisterSetWithEllipse.Remove(AssemblyCode.FrameRegister);
-
-//The PointerRegisterSetWithoutEllipse holds the registers of PointerRegisterSetWithEllipse minus the EllipseRegister register since we need it to keep track of the ellipse frame pointer in elliptic functions.
-      PointerRegisterSetWithoutEllipse.
-        UnionWith(PointerRegisterSetWithEllipse);
+      PointerRegisterSetWithoutEllipse.Remove(AssemblyCode.FrameRegister);
       PointerRegisterSetWithoutEllipse.Remove(AssemblyCode.EllipseRegister);
-
-      Byte1RegisterSet.Add(Register.al);
-      Byte1RegisterSet.Add(Register.ah);
-      Byte1RegisterSet.Add(Register.bl);
-      Byte1RegisterSet.Add(Register.bh);
-      Byte1RegisterSet.Add(Register.cl);
-      Byte1RegisterSet.Add(Register.ch);
-      Byte1RegisterSet.Add(Register.dl);
-      Byte1RegisterSet.Add(Register.dh);
-
-      Byte2RegisterSet.Add(Register.ax);
-      Byte2RegisterSet.Add(Register.bx);
-      Byte2RegisterSet.Add(Register.cx);
-      Byte2RegisterSet.Add(Register.dx);
     }
 //The GetPossibleSet method returns the possible set a track, depending on whether the track holds a pointer, or the size of the track.
     private static ISet<Register> GetPossibleSet(Track track) {

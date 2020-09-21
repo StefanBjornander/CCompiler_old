@@ -5,7 +5,7 @@ using System.Collections.Generic;
 namespace CCompiler {
   public class AssemblyCodeGenerator {
     public IDictionary<Symbol,Track> m_trackMap =
-      new Dictionary<Symbol,Track>();
+      new Dictionary<Symbol, Track>(); 
     public List<AssemblyCode> m_assemblyCodeList;
 
     private int m_floatStackSize = 0;
@@ -17,18 +17,18 @@ namespace CCompiler {
     public static string InitializerName = Symbol.SeparatorId + "initializer";
     public static string ArgsName = Symbol.SeparatorId + "args";
     public static string PathName = Symbol.SeparatorId + "PathName";
-    public static string PathText = "";
+//    public static string PathText = "";
   
     public AssemblyCodeGenerator(List<AssemblyCode> assemblyCodeList) {
       m_assemblyCodeList = assemblyCodeList;
     }
 
     private void RegisterAllocation(ISet<Track> trackSet) {
-     new RegisterAllocator(trackSet, m_assemblyCodeList);
+      new RegisterAllocator(trackSet, m_assemblyCodeList);
     }
 
     public static void GenerateAssembly(List<MiddleCode> middleCodeList,
-                                   List<AssemblyCode> assemblyCodeList) {
+                                        List<AssemblyCode> assemblyCodeList) {
       AssemblyCodeGenerator objectCodeGenerator =
         new AssemblyCodeGenerator(assemblyCodeList);
       objectCodeGenerator.AssemblyCodeList(middleCodeList);
