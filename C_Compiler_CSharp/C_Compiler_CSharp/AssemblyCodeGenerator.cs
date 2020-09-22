@@ -1155,38 +1155,35 @@ namespace CCompiler {
     public void IntegralBinary(MiddleOperator middleOperator,
                                Symbol resultSymbol,  Symbol leftSymbol,
                                 Symbol rightSymbol) {
+      Assert.ErrorXXX((resultSymbol != null) || (middleOperator == MiddleOperator.Compare));
+
       Track leftTrack = null, rightTrack = null;
       m_trackMap.TryGetValue(leftSymbol, out leftTrack);
       m_trackMap.TryGetValue(rightSymbol, out rightTrack);
 
       if ((leftTrack == null) &&
-          (middleOperator != MiddleOperator.Assign) &&
-          (((resultSymbol != null) && (resultSymbol != leftSymbol)) ||
-            (leftSymbol.Type.IsArrayFunctionOrString() ||
-            (leftSymbol.Value is StaticAddress)))) {
+          (resultSymbol != null) && (resultSymbol != leftSymbol)) {
+        leftTrack = LoadValueToRegister(leftSymbol);
+      }
+
+      if ((leftTrack == null) &&
+          ((leftSymbol.Type.IsArrayFunctionOrString() &&
+           (leftSymbol.Offset != 0)) ||
+           ((leftSymbol.Value is StaticAddress) &&
+           (((StaticAddress) leftSymbol.Value).Offset != 0)))) {
         leftTrack = LoadValueToRegister(leftSymbol);
       }
 
       if ((rightTrack == null) &&
+          (middleOperator != MiddleOperator.Assign) &&
           (middleOperator != MiddleOperator.BinaryAdd) &&
           (middleOperator != MiddleOperator.BinarySubtract) &&
-          (middleOperator != MiddleOperator.Assign) &&
           ((rightSymbol.Type.IsArrayFunctionOrString() &&
            (rightSymbol.Offset != 0)) ||
            ((rightSymbol.Value is StaticAddress) &&
             (((StaticAddress) rightSymbol.Value).Offset != 0)))) {
         rightTrack = LoadValueToRegister(rightSymbol);
       }
-
-/*      if ((leftTrack == null) &&
-          (middleOperator != MiddleOperator.Assign) &&
-          (((resultSymbol != null) && (resultSymbol != leftSymbol)) ||
-            ((leftSymbol.Type.IsArrayFunctionOrString() &&
-              leftSymbol.Offset != 0) ||
-            ((leftSymbol.Value is StaticAddress) &&
-             (((StaticAddress) leftSymbol.Value).Offset != 0))))) {
-        leftTrack = LoadValueToRegister(leftSymbol);
-      }*/
 
       if ((rightTrack == null) && (rightSymbol.Value is BigInteger) &&
           ((middleOperator != MiddleOperator.Assign) ||
@@ -1627,7 +1624,6 @@ namespace CCompiler {
       List<AssemblyCode> assemblyCodeList = new List<AssemblyCode>();
       AddAssemblyCode(assemblyCodeList, AssemblyOperator.comment,
                       "Initializerialize Stack Pointer");
-
       AddAssemblyCode(assemblyCodeList, AssemblyOperator.mov,
                       AssemblyCode.FrameRegister, Linker.StackTopName);
 
