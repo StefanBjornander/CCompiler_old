@@ -1720,6 +1720,8 @@ namespace CCompiler {
                         Register.rbp, 0, BigInteger.Zero);
         AddAssemblyCode(assemblyCodeList, AssemblyOperator.add, Register.rbp,
                         (BigInteger) TypeSize.PointerSize);
+        AddAssemblyCode(assemblyCodeList, AssemblyOperator.mov,
+                        Register.rbp, 0, BigInteger.Zero);
         AddAssemblyCode(assemblyCodeList, AssemblyOperator.mov, Register.rbp,
                         SymbolTable.FunctionHeaderSize, Register.eax);
         AddAssemblyCode(assemblyCodeList, AssemblyOperator.mov, Register.rbp,
