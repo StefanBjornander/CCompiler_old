@@ -1866,6 +1866,7 @@ namespace CCompiler {
                                   accessMap, callMap, returnSet);
         SymbolTable.StaticSet.Add(staticSymbol);
       }
+    }
 
     /*
             AddAssemblyCode(assemblyCodeList, AssemblyOperator.mov,
