@@ -1690,13 +1690,26 @@ namespace CCompiler {
       List<AssemblyCode> assemblyCodeList = new List<AssemblyCode>();
 
       if (Start.Linux) {
+        /*  pop rbx
+            mov rax, rbx
+            mov rdx, rbp */
+
         AddAssemblyCode(assemblyCodeList, AssemblyOperator.comment,
-                        "Initializerialize Command Line Arguments");
+                        "Initialize Command Line Arguments");
         AddAssemblyCode(assemblyCodeList, AssemblyOperator.pop, Register.rbx);
         AddAssemblyCode(assemblyCodeList, AssemblyOperator.mov,
                         Register.rax, Register.rbx);
         AddAssemblyCode(assemblyCodeList, AssemblyOperator.mov,
                         Register.rdx, Register.rbp);
+
+        /* $args$loop:
+             cmp rbx, 0
+             je $args$exit
+             pop rsi
+             mov [rbp], rsi
+             add rbp, 8
+             dec rbx
+             jmp $args$loop */
 
         AddAssemblyCode(assemblyCodeList, AssemblyOperator.label,
                         "$args$loop");
@@ -1704,7 +1717,6 @@ namespace CCompiler {
                         Register.rbx, BigInteger.Zero);
         AddAssemblyCode(assemblyCodeList, AssemblyOperator.je,
                         null, null, "$args$exit");
-
         AddAssemblyCode(assemblyCodeList, AssemblyOperator.pop, Register.rsi);
         AddAssemblyCode(assemblyCodeList, AssemblyOperator.mov,
                         Register.rbp, 0, Register.rsi);
@@ -1721,12 +1733,16 @@ namespace CCompiler {
         AddAssemblyCode(assemblyCodeList, AssemblyOperator.add, Register.rbp,
                         (BigInteger) TypeSize.PointerSize);
         AddAssemblyCode(assemblyCodeList, AssemblyOperator.mov,
-                        Register.rbp, 0, BigInteger.Zero, TypeSize.PointerSize);
+                        Register.rbp,0, BigInteger.Zero,TypeSize.PointerSize);
         AddAssemblyCode(assemblyCodeList, AssemblyOperator.mov, Register.rbp,
                         SymbolTable.FunctionHeaderSize, Register.eax);
         AddAssemblyCode(assemblyCodeList, AssemblyOperator.mov, Register.rbp,
                         SymbolTable.FunctionHeaderSize +
                         TypeSize.SignedIntegerSize, Register.rdx);
+
+        /* $args$exit:
+             mov qword [rbp], 0
+             add rbp, 8 */
 
         List<string> textList = new List<string>();
         ISet<string> externSet = new HashSet<string>();
@@ -1738,13 +1754,13 @@ namespace CCompiler {
       }
       
       if (Start.Windows) {
-        /*  mov si, bp
-            mov word [bp], $Path
-            add bp, 2
-            mov ax, 1
-            mov bx, 129
-            cmp byte [bx], 13
-            je ListDone */
+        /*    mov si, bp
+              mov word [bp], $Path
+              add bp, 2
+              mov ax, 1
+              mov bx, 129
+              cmp byte [bx], 13
+              je ListDone */
 
         AddAssemblyCode(assemblyCodeList, AssemblyOperator.mov,
                         Register.si, Register.bp);
@@ -1762,10 +1778,10 @@ namespace CCompiler {
                         null, assemblyCodeList.Count + 17);
 
         /* SpaceLoop:
-           cmp byte [bx], 32
-           jne WordStart
-           inc bx
-           jmp SpaceLoop */
+             cmp byte [bx], 32
+             jne WordStart
+             inc bx
+             jmp SpaceLoop */
 
         AddAssemblyCode(assemblyCodeList, AssemblyOperator.cmp_byte,
                         Register.bx, 0, (BigInteger) 32);
@@ -1776,9 +1792,9 @@ namespace CCompiler {
                         null, assemblyCodeList.Count - 3);
 
         /* WordStart:
-           inc ax
-           mov word [bp], bx
-           add bp, 2 */
+             inc ax
+             mov word [bp], bx
+             add bp, 2 */
 
         AddAssemblyCode(assemblyCodeList, AssemblyOperator.inc, Register.ax);
         AddAssemblyCode(assemblyCodeList, AssemblyOperator.mov,
@@ -1787,12 +1803,12 @@ namespace CCompiler {
                         Register.bp, (BigInteger) 2);
 
         /* WordLoop:
-           cmp byte [bx], 32
-           je WordDone
-           cmp byte [bx], 13
-           je ListDone
-           inc bx
-           jmp WordLoop */
+             cmp byte [bx], 32
+             je WordDone
+             cmp byte [bx], 13
+             je ListDone
+             inc bx
+             jmp WordLoop */
 
         AddAssemblyCode(assemblyCodeList, AssemblyOperator.cmp_byte,
                         Register.bx, 0, (BigInteger) 32);
@@ -1807,9 +1823,9 @@ namespace CCompiler {
                         null, assemblyCodeList.Count - 5);
     
         /* WordDone:
-           mov byte [bx], 0; Space -> Zero
-           inc bx; Zero -> Next
-           jmp SpaceLoop */
+             mov byte [bx], 0; Space -> Zero
+             inc bx; Zero -> Next
+             jmp SpaceLoop */
 
         AddAssemblyCode(assemblyCodeList, AssemblyOperator.mov_byte,
                         Register.bx, 0, BigInteger.Zero);
@@ -1818,12 +1834,12 @@ namespace CCompiler {
                         null, assemblyCodeList.Count - 15);
 
         /* ListDone:
-           mov byte [bx], 0; Return -> Zero
-           mov word [bp], 0
-           add bp, 2
-           mov word [bp], 0
-           mov [bp + 6], ax
-           mov [bp + 8], si */
+             mov byte [bx], 0; Return -> Zero
+             mov word [bp], 0
+             add bp, 2
+             mov word [bp], 0
+             mov [bp + 6], ax
+             mov [bp + 8], si */
 
         AddAssemblyCode(assemblyCodeList, AssemblyOperator.mov_byte,
                         Register.bx, 0, BigInteger.Zero);
@@ -1850,7 +1866,6 @@ namespace CCompiler {
                                   accessMap, callMap, returnSet);
         SymbolTable.StaticSet.Add(staticSymbol);
       }
-    }
 
     /*
             AddAssemblyCode(assemblyCodeList, AssemblyOperator.mov,
