@@ -1738,6 +1738,14 @@ namespace CCompiler {
       }
       
       if (Start.Windows) {
+        /*  mov si, bp
+            mov word [bp], $Path
+            add bp, 2
+            mov ax, 1
+            mov bx, 129
+            cmp byte [bx], 13
+            je ListDone */
+
         AddAssemblyCode(assemblyCodeList, AssemblyOperator.mov,
                         Register.si, Register.bp);
         AddAssemblyCode(assemblyCodeList, AssemblyOperator.mov_word,
@@ -1748,23 +1756,33 @@ namespace CCompiler {
                         Register.ax, BigInteger.One);
         AddAssemblyCode(assemblyCodeList, AssemblyOperator.mov,
                         Register.bx, (BigInteger) 129);
+        AddAssemblyCode(assemblyCodeList, AssemblyOperator.cmp_byte,
+                        Register.bx, 0, (BigInteger) 13);
+        AddAssemblyCode(assemblyCodeList, AssemblyOperator.jmp,
+                        null, assemblyCodeList.Count - 5); // XXX
+
+        /* SpaceLoop:
+           cmp byte [bx], 32
+           jne WordStart
+           inc bx
+           jmp SpaceLoop */
 
         AddAssemblyCode(assemblyCodeList, AssemblyOperator.cmp_byte,
                         Register.bx, 0, (BigInteger) 32);
-        AddAssemblyCode(assemblyCodeList, AssemblyOperator.je,
-                        null, assemblyCodeList.Count + 5);
-        AddAssemblyCode(assemblyCodeList, AssemblyOperator.cmp_byte,
-                        Register.bx, 0, (BigInteger) 13);
-        AddAssemblyCode(assemblyCodeList, AssemblyOperator.je,
-                        null, assemblyCodeList.Count + 13);
+        AddAssemblyCode(assemblyCodeList, AssemblyOperator.jne,
+                        null, assemblyCodeList.Count + 5); // XXX
         AddAssemblyCode(assemblyCodeList, AssemblyOperator.inc, Register.bx);
         AddAssemblyCode(assemblyCodeList, AssemblyOperator.jmp,
-                        null, assemblyCodeList.Count - 5);
+                        null, assemblyCodeList.Count - 4);
 
-        AddAssemblyCode(assemblyCodeList, AssemblyOperator.cmp,
-                        Register.ax, BigInteger.One);
-        AddAssemblyCode(assemblyCodeList, AssemblyOperator.je,
-                        null, assemblyCodeList.Count + 2);
+        /* WordStart:
+           inc ax
+           mov word [bp], bx
+           add bp, 2 */
+
+        AddAssemblyCode(assemblyCodeList, AssemblyOperator.inc, Register.ax);
+        AddAssemblyCode(assemblyCodeList, AssemblyOperator.mov,
+                        Register.bp, 0, Register.bx);
         AddAssemblyCode(assemblyCodeList, AssemblyOperator.mov_byte,
                         Register.bx, 0, BigInteger.Zero);
 
@@ -1806,78 +1824,135 @@ namespace CCompiler {
         SymbolTable.StaticSet.Add(staticSymbol);
       }
     }
-        
-    // Jump Info
 
-    /*private void WindowsJumpInfo() {
-      IDictionary<int,int> middleToAssemblyMap = new Dictionary<int,int>();
+    /*
+            AddAssemblyCode(assemblyCodeList, AssemblyOperator.mov,
+                            Register.si, Register.bp);
+            AddAssemblyCode(assemblyCodeList, AssemblyOperator.mov_word,
+                            Register.bp, 0, AssemblyCodeGenerator.PathName);
+            AddAssemblyCode(assemblyCodeList, AssemblyOperator.add,
+                            Register.bp, (BigInteger) 2);
+            AddAssemblyCode(assemblyCodeList, AssemblyOperator.mov,
+                            Register.ax, BigInteger.One);
+            AddAssemblyCode(assemblyCodeList, AssemblyOperator.mov,
+                            Register.bx, (BigInteger) 129);
 
-      for (int assemblyIndex = 0;
-           assemblyIndex < m_assemblyCodeList.Count; ++assemblyIndex) {
-        AssemblyCode assemblyCode = m_assemblyCodeList[assemblyIndex];
+            AddAssemblyCode(assemblyCodeList, AssemblyOperator.cmp_byte,
+                            Register.bx, 0, (BigInteger) 32);
+            AddAssemblyCode(assemblyCodeList, AssemblyOperator.je,
+                            null, assemblyCodeList.Count + 5);
+            AddAssemblyCode(assemblyCodeList, AssemblyOperator.cmp_byte,
+                            Register.bx, 0, (BigInteger) 13);
+            AddAssemblyCode(assemblyCodeList, AssemblyOperator.je,
+                            null, assemblyCodeList.Count + 13);
+            AddAssemblyCode(assemblyCodeList, AssemblyOperator.inc, Register.bx);
+            AddAssemblyCode(assemblyCodeList, AssemblyOperator.jmp,
+                            null, assemblyCodeList.Count - 5);
 
-        if (assemblyCode.Operator == AssemblyOperator.new_middle_code) {
-          int middleIndex = (int) assemblyCode[0];
-          middleToAssemblyMap.Add(middleIndex, assemblyIndex);
-          assemblyCode.Operator = AssemblyOperator.empty;
-        }
-      }
+            AddAssemblyCode(assemblyCodeList, AssemblyOperator.cmp,
+                            Register.ax, BigInteger.One);
+            AddAssemblyCode(assemblyCodeList, AssemblyOperator.je,
+                            null, assemblyCodeList.Count + 2);
+            AddAssemblyCode(assemblyCodeList, AssemblyOperator.mov_byte,
+                            Register.bx, 0, BigInteger.Zero);
 
-      for (int line = 0; line < m_assemblyCodeList.Count; ++line) {
-        AssemblyCode assemblyCode = m_assemblyCodeList[line];
+            AddAssemblyCode(assemblyCodeList, AssemblyOperator.inc, Register.bx);
+            AddAssemblyCode(assemblyCodeList, AssemblyOperator.cmp_byte,
+                            Register.bx, 0, (BigInteger) 32);
+            AddAssemblyCode(assemblyCodeList, AssemblyOperator.je,
+                            null, assemblyCodeList.Count - 2);
+    
+            AddAssemblyCode(assemblyCodeList, AssemblyOperator.mov,
+                            Register.bp, 0, Register.bx);
+            AddAssemblyCode(assemblyCodeList, AssemblyOperator.add,
+                            Register.bp, (BigInteger) 2);
+            AddAssemblyCode(assemblyCodeList, AssemblyOperator.inc, Register.ax);
+            AddAssemblyCode(assemblyCodeList, AssemblyOperator.jmp,
+                            null, assemblyCodeList.Count - 15);
 
-        if (assemblyCode.IsRelationNotRegister() ||
-            assemblyCode.IsJumpNotRegister()) {
-          if (!(assemblyCode[1] is int)) {
-            int middleTarget = (int) assemblyCode[2];
-            assemblyCode[1] = middleToAssemblyMap[middleTarget];
+            AddAssemblyCode(assemblyCodeList, AssemblyOperator.mov_byte,
+                            Register.bx, 0, BigInteger.Zero);
+            AddAssemblyCode(assemblyCodeList, AssemblyOperator.mov_word,
+                            Register.bp, 0, BigInteger.Zero);
+            AddAssemblyCode(assemblyCodeList, AssemblyOperator.add,
+                            Register.bp, (BigInteger) 2);
+            AddAssemblyCode(assemblyCodeList, AssemblyOperator.mov,
+                            Register.bp, 6, Register.ax);
+            AddAssemblyCode(assemblyCodeList, AssemblyOperator.mov,
+                            Register.bp, 8, Register.si);
+*/
+
+// Jump Info
+
+        /*private void WindowsJumpInfo() {
+          IDictionary<int,int> middleToAssemblyMap = new Dictionary<int,int>();
+
+          for (int assemblyIndex = 0;
+               assemblyIndex < m_assemblyCodeList.Count; ++assemblyIndex) {
+            AssemblyCode assemblyCode = m_assemblyCodeList[assemblyIndex];
+
+            if (assemblyCode.Operator == AssemblyOperator.new_middle_code) {
+              int middleIndex = (int) assemblyCode[0];
+              middleToAssemblyMap.Add(middleIndex, assemblyIndex);
+              assemblyCode.Operator = AssemblyOperator.empty;
+            }
           }
-        }
-      }
 
-      IDictionary<int,int> assemblyToByteMap = new Dictionary<int,int>();
+          for (int line = 0; line < m_assemblyCodeList.Count; ++line) {
+            AssemblyCode assemblyCode = m_assemblyCodeList[line];
 
-      { int byteSize = 0, line = 0;
-        foreach (AssemblyCode assemblyCode in m_assemblyCodeList) {
-          assemblyToByteMap.Add(line++, byteSize);
+            if (assemblyCode.IsRelationNotRegister() ||
+                assemblyCode.IsJumpNotRegister()) {
+              if (!(assemblyCode[1] is int)) {
+                int middleTarget = (int) assemblyCode[2];
+                assemblyCode[1] = middleToAssemblyMap[middleTarget];
+              }
+            }
+          }
+
+          IDictionary<int,int> assemblyToByteMap = new Dictionary<int,int>();
+
+          { int byteSize = 0, line = 0;
+            foreach (AssemblyCode assemblyCode in m_assemblyCodeList) {
+              assemblyToByteMap.Add(line++, byteSize);
   
-          if (!(assemblyCode.IsRelationNotRegister() ||
-                assemblyCode.IsJumpNotRegister())) {
-            byteSize += assemblyCode.ByteList().Count;
+              if (!(assemblyCode.IsRelationNotRegister() ||
+                    assemblyCode.IsJumpNotRegister())) {
+                byteSize += assemblyCode.ByteList().Count;
+              }
+            }
+            assemblyToByteMap.Add(m_assemblyCodeList.Count, byteSize);
           }
-        }
-        assemblyToByteMap.Add(m_assemblyCodeList.Count, byteSize);
-      }
 
-      for (int line = 0; line < (m_assemblyCodeList.Count - 1); ++line) {
-        AssemblyCode thisCode = m_assemblyCodeList[line],
-                     nextCode = m_assemblyCodeList[line + 1];
+          for (int line = 0; line < (m_assemblyCodeList.Count - 1); ++line) {
+            AssemblyCode thisCode = m_assemblyCodeList[line],
+                         nextCode = m_assemblyCodeList[line + 1];
 
-        if (thisCode.IsRelationNotRegister() ||
-            thisCode.IsJumpNotRegister()) {
-          int assemblyTarget = (int) thisCode[1];
-          int byteSource = assemblyToByteMap[line + 1],
-              byteTarget = assemblyToByteMap[assemblyTarget];
-          int byteDistance = byteTarget - byteSource;
-          Assert.ErrorXXX(byteDistance != 0);
-          thisCode[0] = byteDistance;
-        }
-      }
+            if (thisCode.IsRelationNotRegister() ||
+                thisCode.IsJumpNotRegister()) {
+              int assemblyTarget = (int) thisCode[1];
+              int byteSource = assemblyToByteMap[line + 1],
+                  byteTarget = assemblyToByteMap[assemblyTarget];
+              int byteDistance = byteTarget - byteSource;
+              Assert.ErrorXXX(byteDistance != 0);
+              thisCode[0] = byteDistance;
+            }
+          }
 
-      for (int line = 0; line < (m_assemblyCodeList.Count - 1); ++line) {
-        AssemblyCode assemblyCode = m_assemblyCodeList[line];
+          for (int line = 0; line < (m_assemblyCodeList.Count - 1); ++line) {
+            AssemblyCode assemblyCode = m_assemblyCodeList[line];
 
-        if (assemblyCode.Operator == AssemblyOperator.address_return) {
-          int middleAddress = (int) ((BigInteger) assemblyCode[2]);
-          int assemblyAddress = middleToAssemblyMap[middleAddress];
-          int byteAddress = assemblyToByteMap[assemblyAddress];
-          int nextAddress = assemblyToByteMap[line + 1];
-          BigInteger byteReturn = byteAddress - nextAddress +
-                                  TypeSize.PointerSize;
-          assemblyCode[2] = byteReturn;
-        }
-      }
-    }*/
+            if (assemblyCode.Operator == AssemblyOperator.address_return) {
+              int middleAddress = (int) ((BigInteger) assemblyCode[2]);
+              int assemblyAddress = middleToAssemblyMap[middleAddress];
+              int byteAddress = assemblyToByteMap[assemblyAddress];
+              int nextAddress = assemblyToByteMap[line + 1];
+              BigInteger byteReturn = byteAddress - nextAddress +
+                                      TypeSize.PointerSize;
+              assemblyCode[2] = byteReturn;
+            }
+          }
+        }*/
 
     private void WindowsJumpInfo() {
       IDictionary<int,int> middleToAssemblyMap = new Dictionary<int,int>();
