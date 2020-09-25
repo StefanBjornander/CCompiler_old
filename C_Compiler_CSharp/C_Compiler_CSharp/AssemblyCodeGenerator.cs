@@ -1758,8 +1758,8 @@ namespace CCompiler {
                         Register.bx, (BigInteger) 129);
         AddAssemblyCode(assemblyCodeList, AssemblyOperator.cmp_byte,
                         Register.bx, 0, (BigInteger) 13);
-        AddAssemblyCode(assemblyCodeList, AssemblyOperator.jmp,
-                        null, assemblyCodeList.Count - 5); // XXX
+        AddAssemblyCode(assemblyCodeList, AssemblyOperator.je,
+                        null, assemblyCodeList.Count + 17);
 
         /* SpaceLoop:
            cmp byte [bx], 32
@@ -1770,10 +1770,10 @@ namespace CCompiler {
         AddAssemblyCode(assemblyCodeList, AssemblyOperator.cmp_byte,
                         Register.bx, 0, (BigInteger) 32);
         AddAssemblyCode(assemblyCodeList, AssemblyOperator.jne,
-                        null, assemblyCodeList.Count + 5); // XXX
+                        null, assemblyCodeList.Count + 3);
         AddAssemblyCode(assemblyCodeList, AssemblyOperator.inc, Register.bx);
         AddAssemblyCode(assemblyCodeList, AssemblyOperator.jmp,
-                        null, assemblyCodeList.Count - 4);
+                        null, assemblyCodeList.Count - 3);
 
         /* WordStart:
            inc ax
@@ -1783,22 +1783,47 @@ namespace CCompiler {
         AddAssemblyCode(assemblyCodeList, AssemblyOperator.inc, Register.ax);
         AddAssemblyCode(assemblyCodeList, AssemblyOperator.mov,
                         Register.bp, 0, Register.bx);
-        AddAssemblyCode(assemblyCodeList, AssemblyOperator.mov_byte,
-                        Register.bx, 0, BigInteger.Zero);
+        AddAssemblyCode(assemblyCodeList, AssemblyOperator.add,
+                        Register.bp, (BigInteger) 2);
 
-        AddAssemblyCode(assemblyCodeList, AssemblyOperator.inc, Register.bx);
+        /* WordLoop:
+           cmp byte [bx], 32
+           je WordDone
+           cmp byte [bx], 13
+           je ListDone
+           inc bx
+           jmp WordLoop */
+
         AddAssemblyCode(assemblyCodeList, AssemblyOperator.cmp_byte,
                         Register.bx, 0, (BigInteger) 32);
         AddAssemblyCode(assemblyCodeList, AssemblyOperator.je,
-                        null, assemblyCodeList.Count - 2);
+                        null, assemblyCodeList.Count + 5);
+        AddAssemblyCode(assemblyCodeList, AssemblyOperator.cmp_byte,
+                        Register.bx, 0, (BigInteger) 13);
+        AddAssemblyCode(assemblyCodeList, AssemblyOperator.je,
+                        null, assemblyCodeList.Count + 6);
+        AddAssemblyCode(assemblyCodeList, AssemblyOperator.inc, Register.bx);
+        AddAssemblyCode(assemblyCodeList, AssemblyOperator.jmp,
+                        null, assemblyCodeList.Count - 5);
     
-        AddAssemblyCode(assemblyCodeList, AssemblyOperator.mov,
-                        Register.bp, 0, Register.bx);
-        AddAssemblyCode(assemblyCodeList, AssemblyOperator.add,
-                        Register.bp, (BigInteger) 2);
-        AddAssemblyCode(assemblyCodeList, AssemblyOperator.inc, Register.ax);
+        /* WordDone:
+           mov byte [bx], 0; Space -> Zero
+           inc bx; Zero -> Next
+           jmp SpaceLoop */
+
+        AddAssemblyCode(assemblyCodeList, AssemblyOperator.mov_byte,
+                        Register.bx, 0, BigInteger.Zero);
+        AddAssemblyCode(assemblyCodeList, AssemblyOperator.inc, Register.bx);
         AddAssemblyCode(assemblyCodeList, AssemblyOperator.jmp,
                         null, assemblyCodeList.Count - 15);
+
+        /* ListDone:
+           mov byte [bx], 0; Return -> Zero
+           mov word [bp], 0
+           add bp, 2
+           mov word [bp], 0
+           mov [bp + 6], ax
+           mov [bp + 8], si */
 
         AddAssemblyCode(assemblyCodeList, AssemblyOperator.mov_byte,
                         Register.bx, 0, BigInteger.Zero);
@@ -1806,6 +1831,8 @@ namespace CCompiler {
                         Register.bp, 0, BigInteger.Zero);
         AddAssemblyCode(assemblyCodeList, AssemblyOperator.add,
                         Register.bp, (BigInteger) 2);
+        AddAssemblyCode(assemblyCodeList, AssemblyOperator.mov_word,
+                        Register.bp, 0, BigInteger.Zero);
         AddAssemblyCode(assemblyCodeList, AssemblyOperator.mov,
                         Register.bp, 6, Register.ax);
         AddAssemblyCode(assemblyCodeList, AssemblyOperator.mov,
