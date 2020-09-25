@@ -125,6 +125,7 @@
     <None Include="App.config" />
     <None Include="ExpressionParser.gppg" />
     <None Include="ExpressionScanner.gplex" />
+    <None Include="LOG" />
     <None Include="MainParser.gppg" />
     <None Include="MainScanner.gplex" />
     <None Include="Parser.bat" />
