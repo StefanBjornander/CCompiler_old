@@ -58,11 +58,11 @@ namespace CCompiler {
               }
 
               for (int index = 0; index < fromList.Count; ++index) {
-                Symbol subSymbol = new Symbol(toType.ArrayType, true);
-                subSymbol.Offset = toSymbol.Offset +
+                Symbol indexSymbol = new Symbol(toType.ArrayType);
+                indexSymbol.Offset = toSymbol.Offset +
                                    (index * toType.ArrayType.Size());
-                subSymbol.Name = toSymbol.Name + "[" + index + "]";
-                codeList.AddRange(GenerateAuto(subSymbol, fromList[index]));
+                indexSymbol.Name = toSymbol.Name + "[" + index + "]";
+                codeList.AddRange(GenerateAuto(indexSymbol, fromList[index]));
               }
             }
             break;
@@ -78,7 +78,7 @@ namespace CCompiler {
               foreach (object fromInitializor in fromList) {
                 enumerator.MoveNext();
                 Symbol memberSymbol = enumerator.Current;
-                Symbol subSymbol = new Symbol(memberSymbol.Type, true);
+                Symbol subSymbol = new Symbol(memberSymbol.Type); 
                 subSymbol.Name = toSymbol.Name + "." + memberSymbol.Name;
                 subSymbol.Offset = toSymbol.Offset + memberSymbol.Offset;
                 codeList.AddRange(GenerateAuto(subSymbol, fromInitializor));

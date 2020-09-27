@@ -1123,7 +1123,7 @@ namespace CCompiler {
         return (new Expression(rightExpression.Symbol, codeList, codeList));
       }
       else {
-        Assert.Error(leftExpression.Symbol.Assignable,
+        Assert.Error(leftExpression.Symbol.IsAssignable(),
                      leftExpression, Message.Not_assignable);
         List<MiddleCode> codeList = new List<MiddleCode>();
 
@@ -1923,14 +1923,8 @@ namespace CCompiler {
         return (new Expression(staticSymbol, null, null));
       }*/
 
-      bool assignable =
-        !expression.Symbol.Type.PointerOrArrayType.IsConstantRecursive() &&
-        !expression.Symbol.Type.PointerOrArrayType.IsArrayOrFunction(),
-           addressable =
-        !expression.Symbol.Type.PointerOrArrayType.IsBitfield();
       Symbol resultSymbol =
-        new Symbol(expression.Symbol.Type.PointerOrArrayType,
-                   assignable, addressable);
+        new Symbol(expression.Symbol.Type.PointerOrArrayType);
       return Dereference(expression, resultSymbol, 0);
     }
 
@@ -1944,13 +1938,7 @@ namespace CCompiler {
         expression.Symbol.Type.PointerType.MemberMap[memberName];
       Assert.Error(memberSymbol != null, memberName,
                    Message.Unknown_member_in_arrow_expression);
-
-      bool assignable = !expression.Symbol.Type.PointerOrArrayType.Constant
-                        && !memberSymbol.Type.IsConstantRecursive() &&
-                        !memberSymbol.Type.IsArrayOrFunction(),
-           addressable = !memberSymbol.Type.IsBitfield();
-      Symbol resultSymbol =
-        new Symbol(memberSymbol.Type, assignable, addressable);
+      Symbol resultSymbol = new Symbol(memberSymbol.Type); 
       return Dereference(expression, resultSymbol, memberSymbol.Offset);
     }
 
@@ -1987,14 +1975,8 @@ namespace CCompiler {
       shortList.AddRange(arrayExpression.ShortList);
       shortList.AddRange(indexExpression.ShortList);
 
-      bool assignable =
-       !arrayExpression.Symbol.Type.PointerOrArrayType.IsConstantRecursive()
-       && !arrayExpression.Symbol.Type.PointerOrArrayType.IsArrayOrFunction();
-      bool addressable =
-        !arrayExpression.Symbol.Type.PointerOrArrayType.IsBitfield();
       Symbol resultSymbol =
-        new Symbol(arrayExpression.Symbol.Type.PointerOrArrayType,
-                   assignable, addressable);
+        new Symbol(arrayExpression.Symbol.Type.PointerOrArrayType);
 
       if (indexExpression.Symbol.Value is BigInteger) {
         int indexValue = (int) ((BigInteger)indexExpression.Symbol.Value),
@@ -2074,14 +2056,8 @@ namespace CCompiler {
                                    !memberSymbol.Type.IsBitfield();*/
       }
       else {
-        bool assignable = !parentSymbol.Type.Constant &&
-                          !memberSymbol.Type.IsConstantRecursive() &&
-                          !memberSymbol.Type.IsArrayOrFunction(),
-             addressable = !parentSymbol.IsRegister() &&
-                           !memberSymbol.Type.IsBitfield();
-        resultSymbol = new Symbol(memberSymbol.Type, assignable, addressable);
-        resultSymbol.Name = parentSymbol.Name + Symbol.SeparatorDot + // Symbol.SeparatorId +
-                            memberName;
+        resultSymbol = new Symbol(memberSymbol.Type); 
+        resultSymbol.Name = parentSymbol.Name + Symbol.SeparatorDot + memberName;
         resultSymbol.UniqueName = parentSymbol.UniqueName;
         resultSymbol.Storage = parentSymbol.Storage;
         resultSymbol.Offset = parentSymbol.Offset + memberSymbol.Offset;
@@ -2123,7 +2099,7 @@ namespace CCompiler {
     public static Expression PrefixIncrementExpression(MiddleOperator middleOp,
                                                        Expression expression) {
       Symbol symbol = expression.Symbol;
-      Assert.Error(symbol.Assignable,  Message.Not_assignable);
+      Assert.Error(symbol.IsAssignable(),  Message.Not_assignable);
       Assert.Error(symbol.Type.IsArithmeticOrPointer(),
                    expression, Message.Invalid_type_in_increment_expression);
 
@@ -2166,7 +2142,7 @@ namespace CCompiler {
     public static Expression PostfixIncrementExpression
       (MiddleOperator middleOp, Expression expression) {
       Symbol symbol = expression.Symbol;
-      Assert.Error(symbol.Assignable, Message.Not_assignable);
+      Assert.Error(symbol.IsAssignable(), Message.Not_assignable);
       Assert.Error(symbol.Type.IsArithmeticOrPointer(),
                    expression, Message.Invalid_type_in_increment_expression);
     

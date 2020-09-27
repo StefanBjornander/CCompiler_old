@@ -30,12 +30,6 @@ namespace CCompiler {
       m_operandArray[2] = operand2;
       FromAdditionToIncrement();
       CheckSize(size);
-
-      /*if ((Operator == AssemblyOperator.define_value) &&
-          (((Sort) operand0) == Sort.Pointer) &&
-          (operand1 is BigInteger)) {
-        int i = 1;
-      }*/
     }
 
     public AssemblyOperator Operator {

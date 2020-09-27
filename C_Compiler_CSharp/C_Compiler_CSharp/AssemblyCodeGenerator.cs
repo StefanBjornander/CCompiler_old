@@ -87,12 +87,6 @@ namespace CCompiler {
 
         AddAssemblyCode(AssemblyOperator.comment, middleCode.ToString());
 
-        /*if ((SymbolTable.CurrentFunction != null) &&
-            SymbolTable.CurrentFunction.Name.Contains("printLongInt") &&
-            middleCode.ToString().Contains("return")) {
-          int i = 1;
-        }*/
-
         switch (middleCode.Operator) {
           case MiddleOperator.PreCall:
             FunctionPreCall(middleCode);
@@ -147,7 +141,7 @@ namespace CCompiler {
             break;
           
           case MiddleOperator.Assign: {
-              Symbol symbol = (Symbol)middleCode[0];
+              Symbol symbol = (Symbol) middleCode[0];
 
               if (symbol.Type.IsStructOrUnion()) {
                 StructUnionAssign(middleCode, middleIndex);
@@ -930,7 +924,7 @@ namespace CCompiler {
       m_trackMap.TryGetValue(assignSymbol, out assignTrack);
       int typeSize = assignSymbol.Type.SizeArray();
 
-      if (resultSymbol.Temporary) {
+      if (resultSymbol.IsTemporary()) {        
         Assert.ErrorXXX(resultSymbol.AddressSymbol == null);
 
         if (assignTrack != null) {
@@ -1042,7 +1036,7 @@ namespace CCompiler {
           AddAssemblyCode(objectOperator, unaryTrack);
         }
 
-        if (resultSymbol.Temporary) {
+        if (resultSymbol.IsTemporary()) {          
           Assert.ErrorXXX(resultSymbol.AddressSymbol == null);
           m_trackMap.Add(resultSymbol, unaryTrack);
         }
@@ -1101,7 +1095,7 @@ namespace CCompiler {
       Symbol resultSymbol = (Symbol) middleCode[0];
       Track resultTrack = new Track(resultSymbol, resultRegister);
 
-      if (resultSymbol.Temporary) {
+      if (resultSymbol.IsTemporary()) {        
         Assert.ErrorXXX(resultSymbol.AddressSymbol == null);
         m_trackMap.Add(resultSymbol, resultTrack);
         AddAssemblyCode(AssemblyOperator.empty, resultTrack);
@@ -1237,7 +1231,7 @@ namespace CCompiler {
         }
 
         if (resultSymbol != null) {
-          if (resultSymbol.Temporary) {
+          if (resultSymbol.IsTemporary()) {            
             Assert.ErrorXXX(resultSymbol.AddressSymbol == null);
             m_trackMap.Add(resultSymbol, leftTrack);
           }
@@ -1489,8 +1483,7 @@ namespace CCompiler {
         objectOperator = m_floatTopMap[symbol.Type.Sort];
       }
 
-      if (symbol.Temporary && (symbol.AddressSymbol == null) &&
-          (symbol.Offset == 0)) {
+      if (symbol.Type.IsIntegralArrayOrPointer() && symbol.IsTemporary()) {        
         string containerName = AddStaticContainer(symbol.Type);
         AddAssemblyCode(objectOperator, containerName, 0);
         Track track = new Track(symbol);

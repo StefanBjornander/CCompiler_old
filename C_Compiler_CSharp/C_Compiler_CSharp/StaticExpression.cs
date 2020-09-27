@@ -94,11 +94,6 @@ namespace CCompiler {
       }
 
       Symbol resultSymbol = new Symbol(symbol.Type, resultValue);
-      /*resultSymbol.Addressable = !symbol.IsRegister() &&
-                                 !symbol.Type.ArrayType.IsBitfield();*/
-      /*resultSymbol.Assignable =
-        !symbol.Type.ArrayType.IsConstantRecursive() &&
-        !symbol.Type.ArrayType.IsArrayFunctionOrString();*/
       return (new Expression(resultSymbol, null, null));
     }
 

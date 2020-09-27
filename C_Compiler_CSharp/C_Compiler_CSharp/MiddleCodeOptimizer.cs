@@ -421,7 +421,7 @@ namespace CCompiler {
           }
 
           if (newSymbol != null) {
-            if (resultSymbol.Temporary) {
+            if (resultSymbol.IsTemporary()) {              
               thisCode.Operator = MiddleOperator.Empty;
 
               int index2;
@@ -690,18 +690,18 @@ namespace CCompiler {
             break;
 
           default:
-            if ((symbol0 != null) && symbol0.Temporary &&
+            if ((symbol0 != null) && symbol0.IsTemporary() &&
                 (symbol0.AddressSymbol == null) &&
                 symbol0.Type.IsIntegralArrayOrPointer()) {
               integralSet.Add(symbol0);
             }
 
-            if ((symbol1 != null) && symbol1.Temporary &&
+            if ((symbol1 != null) && symbol1.IsTemporary() &&
                 symbol1.Type.IsIntegralArrayOrPointer()) {
               integralSet.Remove(symbol1);
             }
 
-            if ((symbol2 != null) && symbol2.Temporary &&
+            if ((symbol2 != null) && symbol2.IsTemporary() &&
                 symbol2.Type.IsIntegralArrayOrPointer()) {
               integralSet.Remove(symbol2);
             }

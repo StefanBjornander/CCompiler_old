@@ -6,9 +6,9 @@
 //
 //  GPLEX Version:  1.2.2
 //  Machine:  STEFAN1968
-//  DateTime: 2020-09-19 21:56:14
+//  DateTime: 2020-09-27 23:33:07
 //  UserName: Stefan
-//  GPLEX input file <MainScanner.gplex - 2020-09-19 21:35:33>
+//  GPLEX input file <MainScanner.gplex - 2020-09-27 23:33:03>
 //  GPLEX frame file <embedded resource>
 //
 //  Option settings: parser, minimize
@@ -2123,14 +2123,20 @@ return ((int) Tokens.LOGICAL_NOT);
         case 212:
         case 214:
         case 215:
-{ Symbol symbol = SymbolTable.CurrentTable.LookupSymbol(yytext);
+{ string name = yytext;
+
+    if (name.Equals("abs")) {
+      name = Symbol.FileMarker + "abs";
+    }
+
+    Symbol symbol = SymbolTable.CurrentTable.LookupSymbol(name);
 
     if ((symbol != null) && symbol.IsTypedef()) {
       yylval.type = symbol.Type;
       return ((int) Tokens.TYPEDEF_NAME);
     }
     else {
-      yylval.name = yytext;
+      yylval.name = name;
       return ((int) Tokens.NAME);
     }
   }

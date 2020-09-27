@@ -13,8 +13,9 @@ namespace CCompiler {
     public const string SeparatorDot = ".";
     public const string FileMarker = "@";
 
-    private bool m_parameter, m_externalLinkage;
+    private bool m_externalLinkage;
     private string m_name, m_uniqueName;
+    private bool m_parameter;
     private Storage m_storage;
     private Type m_type;
     private object m_value;
@@ -22,7 +23,6 @@ namespace CCompiler {
     private Symbol m_addressSymbol;
     private int m_addressOffset;
     private ISet<MiddleCode> m_trueSet, m_falseSet;
-
     private static int UniqueNameCount = 0, TemporaryNameCount = 0;
 
     public Symbol(string name, bool externalLinkage, Storage storage,
@@ -32,7 +32,7 @@ namespace CCompiler {
       m_storage = storage;
 
       if (m_externalLinkage) {
-        m_uniqueName = m_name.Equals("abs") ? "_abs" : m_name;
+        m_uniqueName = m_name;
       }
       else {
         m_uniqueName = Symbol.FileMarker + (UniqueNameCount++) +
@@ -41,12 +41,6 @@ namespace CCompiler {
 
       m_type = type;
       m_parameter = parameter;
-      //m_temporary = false;
-      /*m_assignable = m_type.IsComplete() &&
-                     !m_type.IsConstantRecursive() &&
-                     !m_type.IsArrayOrFunction();*/
-      //m_addressable = !IsRegister() && !m_type.IsBitfield();
-
       m_value = value;
       CheckValue(m_type, m_value);
     }
@@ -60,26 +54,12 @@ namespace CCompiler {
       }
     }
 
-    public Symbol(Type type, bool assignable, bool addressable = false) {
-      m_name = Symbol.TemporaryId + "field" + (TemporaryNameCount++);
-      m_externalLinkage = false;
-      m_storage = Storage.Auto;
-      m_type = type;
-      //m_temporary = false;
-      m_parameter = false;
-      //m_assignable = assignable;
-      //m_addressable = addressable;
-    }
-
     public Symbol(Type type) {
       m_name = Symbol.TemporaryId + "temporary" + (TemporaryNameCount++);
       m_externalLinkage = false;
       m_storage = Storage.Auto;
       m_type = type;
-      //m_temporary = true;
       m_parameter = false;
-      //m_assignable = false;
-      //m_addressable = false;
     }
 
     public Symbol(ISet<MiddleCode> trueSet, ISet<MiddleCode> falseSet) {
@@ -87,11 +67,9 @@ namespace CCompiler {
       m_storage = Storage.Auto;
       m_type = new Type(Sort.Logical);
       m_trueSet = (trueSet != null) ? trueSet : (new HashSet<MiddleCode>());
-      m_falseSet = (falseSet != null) ? falseSet : (new HashSet<MiddleCode>());
-      //m_temporary = false;
+      m_falseSet = (falseSet != null) ? falseSet
+                                      : (new HashSet<MiddleCode>());
       m_parameter = false;
-      //m_assignable = false;
-      //m_addressable = false;
     }
 
     public Symbol(Type type, object value) {
@@ -100,10 +78,7 @@ namespace CCompiler {
       m_storage = Storage.Static;
       m_type = type;
       m_value = value;
-      //m_temporary = false;
       m_parameter = false;
-      //m_assignable = false;
-      //m_addressable = false;
       CheckValue(m_type, m_value);
     }
 
@@ -135,7 +110,7 @@ namespace CCompiler {
                + Symbol.SeparatorId + staticAddress.Offset + Symbol.NumberId;
       }
       else if (type.IsArray()) {
-        return "Array_" + value.ToString() + Symbol.NumberId; // + ((value != null) ? value : "");
+        return "Array_" + value.ToString() + Symbol.NumberId;
       }
       else if (type.IsFloating()) {
         return "float" + type.Size().ToString() + Symbol.SeparatorId +
@@ -157,14 +132,7 @@ namespace CCompiler {
     }
 
     public string UniqueName {
-      get { 
-        if (m_value is StaticAddress) {
-          return ((StaticAddress) m_value).UniqueName;
-        }
-        else {
-          return m_uniqueName; 
-        }
-      }
+      get { return m_uniqueName; }
       set { m_uniqueName = value; }
     }
 
@@ -183,14 +151,7 @@ namespace CCompiler {
     }
 
     public int Offset {
-      get { 
-        if (m_value is StaticAddress) {
-          return ((StaticAddress) m_value).Offset;
-        }
-        else {
-          return m_offset;
-        }
-      }
+      get { return m_offset; }
       set { m_offset = value; }
     }
 
@@ -230,18 +191,11 @@ namespace CCompiler {
       get { return m_falseSet; }
     }
 
-    public bool Parameter {
+    public bool Parameter
+    {
       get { return m_parameter; }
     }
           
-    public bool Temporary {
-      get { return (m_name != null) && m_name.Contains(TemporaryId) &&
-                   (m_addressSymbol == null); }
-      /*get { return (m_storage == Storage.Auto) &&
-                   (m_addressSymbol == null) && (m_offset == 0); }*/
-      //get { return m_temporary; }
-    }
-
     public object Value {
       get { return m_value; }
       set { m_value = value; }
@@ -257,19 +211,19 @@ namespace CCompiler {
       set { m_addressOffset = value; }
     }
 
-    public bool Assignable {
-      get { return (!m_type.IsArrayFunctionOrString() && (m_value == null) &&
-                   // !Temporary &&
-                    !m_type.IsConstantRecursive()); }
-//      get { return m_assignable; }
-//      set { m_assignable = value; }
+    public bool IsValue() {
+      return (m_name != null) && m_name.Contains(NumberId);
     }
 
-    /*public bool AddressableX {
-      get { return (!IsRegister() && !m_type.IsBitfield()); }
-//      get { return m_addressable; }
-      //set { m_addressable = value; }
-    }*/
+    public bool IsTemporary() {
+      return (m_name != null) && m_name.Contains(TemporaryId) &&
+             (m_addressSymbol == null);             
+    }
+
+    public bool IsAssignable() {
+      return !IsValue() && !m_type.IsConstantRecursive() &&
+             !m_type.IsArrayFunctionOrString();
+    }
 
     public override string ToString() {
       if (m_name != null) {
@@ -294,7 +248,8 @@ namespace CCompiler {
 
     public static string SimpleName(string name) {
       int index = name.LastIndexOf(Symbol.SeparatorId);
-      return (index != -1) ? name.Substring(index + 1).Replace("#", "") : name;
+      return (index != -1) ? name.Substring(index + 1).Replace("#", "")
+                           : name;
     }
   }
 }

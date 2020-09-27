@@ -231,14 +231,20 @@ WHITE_SPACE [ \t\r\n\f]
 }
 
 {NAME} {
-  { Symbol symbol = SymbolTable.CurrentTable.LookupSymbol(yytext);
+  { string name = yytext;
+
+    if (name.Equals("abs")) {
+      name = Symbol.FileMarker + "abs";
+    }
+
+    Symbol symbol = SymbolTable.CurrentTable.LookupSymbol(name);
 
     if ((symbol != null) && symbol.IsTypedef()) {
       yylval.type = symbol.Type;
       return ((int) Tokens.TYPEDEF_NAME);
     }
     else {
-      yylval.name = yytext;
+      yylval.name = name;
       return ((int) Tokens.NAME);
     }
   }
