@@ -368,7 +368,7 @@ namespace CCompiler {
   
     public static Symbol EnumItem(string itemName, Symbol optInitializerSymbol) {
       Type itemType = new Type(Sort.Signed_Int, true);
-      itemType.IsConstant = true;
+      itemType.Constant = true;
       BigInteger value;
 
       if (optInitializerSymbol != null) {
@@ -557,7 +557,7 @@ namespace CCompiler {
     
       foreach (Type type in typeList) {
         Type pointerType = new Type((Type) null);
-        pointerType.IsConstant = type.IsConstant;
+        pointerType.Constant = type.Constant;
         pointerType.Volatile = type.Volatile;
         declarator.Add(pointerType);
       }
@@ -570,7 +570,7 @@ namespace CCompiler {
       foreach (Pair<bool,bool> pair in pointerList) {
         Type pointerType = new Type((Type) null);
         bool isConstant = pair.First, isVolatile = pair.Second;
-        pointerType.IsConstant = isConstant;
+        pointerType.Constant = isConstant;
         pointerType.Volatile = isVolatile;
         declarator.Add(pointerType);
       }
@@ -664,11 +664,11 @@ namespace CCompiler {
 
       if (type.IsArray()) {
         type = new Type(type.ArrayType);
-        type.IsConstant = true;
+        type.Constant = true;
       }
       else if (type.IsFunction()) {
         type = new Type(type);
-        type.IsConstant = true;
+        type.Constant = true;
       }
 
       Symbol symbol = new Symbol(name, false, storage.Value, type, true);
@@ -1878,8 +1878,9 @@ namespace CCompiler {
     }
 
     public static Expression AddressExpression(Expression expression) {
-      Assert.Error(expression.Symbol.Addressable, expression,
-                   Message.Not_addressable);
+      Symbol symbol = expression.Symbol;
+      Assert.Error(!symbol.IsRegister() && !symbol.Type.IsBitfield(),
+                   expression,  Message.Not_addressable);
       Assert.Error(!expression.Symbol.IsRegister(), expression,
                    Message.Invalid_address_of_register_storage);
 
@@ -1944,7 +1945,7 @@ namespace CCompiler {
       Assert.Error(memberSymbol != null, memberName,
                    Message.Unknown_member_in_arrow_expression);
 
-      bool assignable = !expression.Symbol.Type.PointerOrArrayType.IsConstant
+      bool assignable = !expression.Symbol.Type.PointerOrArrayType.Constant
                         && !memberSymbol.Type.IsConstantRecursive() &&
                         !memberSymbol.Type.IsArrayOrFunction(),
            addressable = !memberSymbol.Type.IsBitfield();
@@ -2057,29 +2058,29 @@ namespace CCompiler {
 
       Symbol resultSymbol;
       if (parentSymbol.AddressSymbol != null) {
-        string name = parentSymbol.Name + "." + memberSymbol.Name +
-                      Symbol.SeparatorId + memberSymbol.Offset;
+        string name = parentSymbol.Name + Symbol.SeparatorDot + memberSymbol.Name;
+                      //+ Symbol.SeparatorId + memberSymbol.Offset;
         resultSymbol = new Symbol(name, parentSymbol.ExternalLinkage,
                                   parentSymbol.Storage, memberSymbol.Type,
-                                  parentSymbol.IsParameter());
+                                  parentSymbol.Parameter);
         resultSymbol.UniqueName = parentSymbol.UniqueName;
         resultSymbol.AddressSymbol = parentSymbol.AddressSymbol;
         resultSymbol.AddressOffset = parentSymbol.AddressOffset;
         resultSymbol.Offset = parentSymbol.Offset + memberSymbol.Offset;
-        resultSymbol.Assignable = !parentSymbol.Type.IsConstant &&
+        /*resultSymbol.Assignable = !parentSymbol.Type.Constant &&
                                   !memberSymbol.Type.IsConstantRecursive() &&
-                                  !memberSymbol.Type.IsArrayOrFunction();
-        resultSymbol.Addressable = !parentSymbol.IsRegister() &&
-                                   !memberSymbol.Type.IsBitfield();
+                                  !memberSymbol.Type.IsArrayOrFunction();*/
+        /*resultSymbol.Addressable = !parentSymbol.IsRegister() &&
+                                   !memberSymbol.Type.IsBitfield();*/
       }
       else {
-        bool assignable = !parentSymbol.Type.IsConstant &&
+        bool assignable = !parentSymbol.Type.Constant &&
                           !memberSymbol.Type.IsConstantRecursive() &&
                           !memberSymbol.Type.IsArrayOrFunction(),
              addressable = !parentSymbol.IsRegister() &&
                            !memberSymbol.Type.IsBitfield();
         resultSymbol = new Symbol(memberSymbol.Type, assignable, addressable);
-        resultSymbol.Name = parentSymbol.Name + Symbol.SeparatorId +
+        resultSymbol.Name = parentSymbol.Name + Symbol.SeparatorDot + // Symbol.SeparatorId +
                             memberName;
         resultSymbol.UniqueName = parentSymbol.UniqueName;
         resultSymbol.Storage = parentSymbol.Storage;

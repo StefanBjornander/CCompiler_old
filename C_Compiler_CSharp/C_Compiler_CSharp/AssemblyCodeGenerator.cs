@@ -416,7 +416,8 @@ namespace CCompiler {
       Assert.ErrorXXX((symbol == null) || symbol.IsAutoOrRegister());
     
       if (SymbolTable.CurrentFunction.Type.IsEllipse() &&
-          (symbol != null) && !symbol.IsParameter()) {
+          (symbol != null) && !symbol.Parameter)
+      {
         return AssemblyCode.EllipseRegister;
       }
       else {
@@ -929,7 +930,7 @@ namespace CCompiler {
       m_trackMap.TryGetValue(assignSymbol, out assignTrack);
       int typeSize = assignSymbol.Type.SizeArray();
 
-      if (resultSymbol.IsTemporary()) {
+      if (resultSymbol.Temporary) {
         Assert.ErrorXXX(resultSymbol.AddressSymbol == null);
 
         if (assignTrack != null) {
@@ -1041,7 +1042,7 @@ namespace CCompiler {
           AddAssemblyCode(objectOperator, unaryTrack);
         }
 
-        if (resultSymbol.IsTemporary()) {
+        if (resultSymbol.Temporary) {
           Assert.ErrorXXX(resultSymbol.AddressSymbol == null);
           m_trackMap.Add(resultSymbol, unaryTrack);
         }
@@ -1100,7 +1101,7 @@ namespace CCompiler {
       Symbol resultSymbol = (Symbol) middleCode[0];
       Track resultTrack = new Track(resultSymbol, resultRegister);
 
-      if (resultSymbol.IsTemporary()) {
+      if (resultSymbol.Temporary) {
         Assert.ErrorXXX(resultSymbol.AddressSymbol == null);
         m_trackMap.Add(resultSymbol, resultTrack);
         AddAssemblyCode(AssemblyOperator.empty, resultTrack);
@@ -1236,7 +1237,7 @@ namespace CCompiler {
         }
 
         if (resultSymbol != null) {
-          if (resultSymbol.IsTemporary()) {
+          if (resultSymbol.Temporary) {
             Assert.ErrorXXX(resultSymbol.AddressSymbol == null);
             m_trackMap.Add(resultSymbol, leftTrack);
           }
@@ -1280,7 +1281,8 @@ namespace CCompiler {
         else if (rightSymbol.Type.IsArrayFunctionOrString() ||
                  (rightSymbol.Value is StaticAddress)) {
           AddAssemblyCode(objectOperator, Base(leftSymbol),
-                          Offset(leftSymbol), Base(rightSymbol), typeSize);
+                          Offset(leftSymbol), Base(rightSymbol),
+                          TypeSize.PointerSize);
 
           int rightOffset = Offset(rightSymbol);
           if (rightOffset != 0) {
@@ -1487,7 +1489,7 @@ namespace CCompiler {
         objectOperator = m_floatTopMap[symbol.Type.Sort];
       }
 
-      if (symbol.IsTemporary() && (symbol.AddressSymbol == null) &&
+      if (symbol.Temporary && (symbol.AddressSymbol == null) &&
           (symbol.Offset == 0)) {
         string containerName = AddStaticContainer(symbol.Type);
         AddAssemblyCode(objectOperator, containerName, 0);

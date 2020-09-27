@@ -13,7 +13,7 @@ namespace CCompiler {
     public const string SeparatorDot = ".";
     public const string FileMarker = "@";
 
-    private bool m_temporary, m_parameter, m_externalLinkage;
+    private bool /*m_temporary, */ m_parameter, m_externalLinkage;
     private string m_name, m_uniqueName;
     private Storage m_storage;
     private Type m_type;
@@ -21,7 +21,7 @@ namespace CCompiler {
     private int m_offset;
     private Symbol m_addressSymbol;
     private int m_addressOffset;
-    private bool m_assignable, m_addressable;
+    //private bool m_assignable;//, m_addressable;
     private ISet<MiddleCode> m_trueSet, m_falseSet;
 
     private static int UniqueNameCount = 0, TemporaryNameCount = 0;
@@ -31,6 +31,10 @@ namespace CCompiler {
       m_name = name;
       m_externalLinkage = externalLinkage;
       m_storage = storage;
+
+      if ((m_name != null) && m_name.Contains("$")) {
+        int i = 1;
+      }
 
       if (m_externalLinkage) {
         m_uniqueName = m_name.Equals("abs") ? "_abs" : m_name;
@@ -42,11 +46,11 @@ namespace CCompiler {
 
       m_type = type;
       m_parameter = parameter;
-      m_temporary = false;
-      m_assignable = m_type.IsComplete() &&
+      //m_temporary = false;
+      /*m_assignable = m_type.IsComplete() &&
                      !m_type.IsConstantRecursive() &&
-                     !m_type.IsArrayOrFunction();
-      m_addressable = !IsRegister() && !m_type.IsBitfield();
+                     !m_type.IsArrayOrFunction();*/
+      //m_addressable = !IsRegister() && !m_type.IsBitfield();
 
       m_value = value;
       CheckValue(m_type, m_value);
@@ -66,10 +70,10 @@ namespace CCompiler {
       m_externalLinkage = false;
       m_storage = Storage.Auto;
       m_type = type;
-      m_temporary = false;
+      //m_temporary = false;
       m_parameter = false;
-      m_assignable = assignable;
-      m_addressable = addressable;
+      //m_assignable = assignable;
+      //m_addressable = addressable;
     }
 
     public Symbol(Type type) {
@@ -77,10 +81,10 @@ namespace CCompiler {
       m_externalLinkage = false;
       m_storage = Storage.Auto;
       m_type = type;
-      m_temporary = true;
+      //m_temporary = true;
       m_parameter = false;
-      m_assignable = false;
-      m_addressable = false;
+      //m_assignable = false;
+      //m_addressable = false;
     }
 
     public Symbol(ISet<MiddleCode> trueSet, ISet<MiddleCode> falseSet) {
@@ -89,10 +93,10 @@ namespace CCompiler {
       m_type = new Type(Sort.Logical);
       m_trueSet = (trueSet != null) ? trueSet : (new HashSet<MiddleCode>());
       m_falseSet = (falseSet != null) ? falseSet : (new HashSet<MiddleCode>());
-      m_temporary = false;
+      //m_temporary = false;
       m_parameter = false;
-      m_assignable = false;
-      m_addressable = false;
+      //m_assignable = false;
+      //m_addressable = false;
     }
 
     public Symbol(Type type, object value) {
@@ -101,10 +105,10 @@ namespace CCompiler {
       m_storage = Storage.Static;
       m_type = type;
       m_value = value;
-      m_temporary = false;
+      //m_temporary = false;
       m_parameter = false;
-      m_assignable = false;
-      m_addressable = false;
+      //m_assignable = false;
+      //m_addressable = false;
       CheckValue(m_type, m_value);
     }
 
@@ -154,7 +158,11 @@ namespace CCompiler {
 
     public string Name {
       get { return m_name; }
-      set { m_name = value; }
+      set { m_name = value; 
+            if (m_name.Contains("$")) {
+              int i = 1;
+            }
+          }
     }
 
     public string UniqueName {
@@ -231,17 +239,16 @@ namespace CCompiler {
       get { return m_falseSet; }
     }
 
-    public bool IsParameter() {
-      return m_parameter;
+    public bool Parameter {
+      get { return m_parameter; }
     }
           
-    public bool IsTemporary() {
-      return m_temporary;
-    }
-
     public bool Temporary {
-      get { return m_temporary; }
-      set { m_temporary = value; }
+      get { return (m_name != null) && m_name.Contains(TemporaryId) &&
+                   (m_addressSymbol == null); }
+      /*get { return (m_storage == Storage.Auto) &&
+                   (m_addressSymbol == null) && (m_offset == 0); }*/
+      //get { return m_temporary; }
     }
 
     public object Value {
@@ -260,14 +267,18 @@ namespace CCompiler {
     }
 
     public bool Assignable {
-      get { return m_assignable; }
-      set { m_assignable = value; }
+      get { return (!m_type.IsArrayFunctionOrString() && (m_value == null) &&
+                   // !Temporary &&
+                    !m_type.IsConstantRecursive()); }
+//      get { return m_assignable; }
+//      set { m_assignable = value; }
     }
 
-    public bool Addressable {
-      get { return m_addressable; }
-      set { m_addressable = value; }
-    }
+    /*public bool AddressableX {
+      get { return (!IsRegister() && !m_type.IsBitfield()); }
+//      get { return m_addressable; }
+      //set { m_addressable = value; }
+    }*/
 
     public override string ToString() {
       if (m_name != null) {

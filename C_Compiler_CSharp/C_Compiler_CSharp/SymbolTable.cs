@@ -3,28 +3,22 @@ using System.Collections.Generic;
 
 namespace CCompiler {
   public class SymbolTable {
-    public static int ReturnAddressOffset;
-    public static int RegularFrameOffset;
-    public static int EllipseFrameOffset;
-    public static int FunctionHeaderSize;
-
     private Scope m_scope;
+
+    public static int ReturnAddressOffset = 0;
+    public static int RegularFrameOffset = TypeSize.PointerSize;
+    public static int EllipseFrameOffset = 2 * TypeSize.PointerSize;
+    public static int FunctionHeaderSize = 3 * TypeSize.PointerSize;
+
     private SymbolTable m_parentTable;
-    private int m_offset;
+    private int m_currentOffset;
 
     private IDictionary<string,Symbol> m_entryMap = new ListMap<string,Symbol>();
     private IDictionary<string,Type> m_tagMap = new Dictionary<string,Type>();
 
     public static SymbolTable CurrentTable = null;
-    public static ISet<StaticSymbol> StaticSet = new HashSet<StaticSymbol>();
     public static Symbol CurrentFunction = null;
-
-    static SymbolTable() {
-      ReturnAddressOffset = 0;
-      RegularFrameOffset = TypeSize.PointerSize;
-      EllipseFrameOffset = 2 * TypeSize.PointerSize;
-      FunctionHeaderSize = 3 * TypeSize.PointerSize;
-    }
+    public static ISet<StaticSymbol> StaticSet = new HashSet<StaticSymbol>();
 
     public SymbolTable(SymbolTable parentTable, Scope scope) {
       m_parentTable = parentTable;
@@ -36,15 +30,15 @@ namespace CCompiler {
 
         case Scope.Struct:
         case Scope.Union:
-          m_offset = 0;
+          m_currentOffset = 0;
           break;
 
         case Scope.Function:
-          m_offset = FunctionHeaderSize;
+          m_currentOffset = FunctionHeaderSize;
           break;
 
         case Scope.Block:
-          m_offset = m_parentTable.m_offset;
+          m_currentOffset = m_parentTable.m_currentOffset;
           break;
       }
     }
@@ -62,7 +56,7 @@ namespace CCompiler {
     }
 
     public int CurrentOffset {
-      get { return m_offset; }
+      get { return m_currentOffset; }
     }
 
     public void AddSymbol(Symbol newSymbol) {
@@ -86,15 +80,15 @@ namespace CCompiler {
           newSymbol.Offset = 0;
         }
         else if (!newSymbol.Type.EnumeratorItem) {
-          newSymbol.Offset = m_offset;
-          m_offset += newSymbol.Type.Size();
+          newSymbol.Offset = m_currentOffset;
+          m_currentOffset += newSymbol.Type.Size();
         }
       }
     }
 
     public void SetOffset(Symbol symbol) {
-      symbol.Offset = m_offset;
-      m_offset += symbol.Type.Size();
+      symbol.Offset = m_currentOffset;
+      m_currentOffset += symbol.Type.Size();
     }
 
     public Symbol LookupSymbol(string name) {

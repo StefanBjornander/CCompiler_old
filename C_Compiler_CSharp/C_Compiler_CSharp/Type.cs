@@ -257,7 +257,7 @@ namespace CCompiler {
     private bool m_constant;
     private bool m_volatile;
 
-    public bool IsConstant {
+    public bool Constant {
       get { return m_constant; }
       set { m_constant = value; }
     }

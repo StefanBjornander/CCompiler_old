@@ -182,18 +182,18 @@ namespace CCompiler {
 
         Type type = null;
         if ((compoundType != null) && (sort == null)) {
-          compoundType.IsConstant = (compoundType.IsConstant || isConstant);
+          compoundType.Constant = (compoundType.Constant || isConstant);
           compoundType.Volatile = (compoundType.Volatile || isVolatile);
           type = compoundType;
         }
         else if ((compoundType == null) && (sort != null)) {
           type = new Type(sort.Value);
-          type.IsConstant = isConstant;
+          type.Constant = isConstant;
           type.Volatile = isVolatile;
         }
         else if ((compoundType == null) && (sort == null)) {
           type = new Type(Sort.Signed_Int);
-          type.IsConstant = isConstant;
+          type.Constant = isConstant;
           type.Volatile = isVolatile;
         }
         else {
@@ -220,7 +220,7 @@ namespace CCompiler {
       }
 
       Type type = Type.VoidPointerType;
-      type.IsConstant = (totalMaskValue & ((int) Mask.Constant)) != 0;
+      type.Constant = (totalMaskValue & ((int) Mask.Constant)) != 0;
       type.IsVolatile = (totalMaskValue & ((int) Mask.Volatile)) != 0;
       return type;
     }

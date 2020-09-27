@@ -317,7 +317,7 @@ namespace CCompiler {
 
         if ((/*thisCode.IsUnary() ||*/ thisCode.IsBinary()) &&
             (nextCode.Operator == MiddleOperator.Assign) &&
-            //((Symbol) thisCode[0]).IsTemporary() &&
+            //((Symbol) thisCode[0]).Temporary &&
             (thisCode[0] == nextCode[1])) {
           thisCode[0] = nextCode[0];
           nextCode.Clear();
@@ -421,7 +421,7 @@ namespace CCompiler {
           }
 
           if (newSymbol != null) {
-            if (resultSymbol.IsTemporary()) {
+            if (resultSymbol.Temporary) {
               thisCode.Operator = MiddleOperator.Empty;
 
               int index2;
@@ -690,18 +690,18 @@ namespace CCompiler {
             break;
 
           default:
-            if ((symbol0 != null) && symbol0.IsTemporary() &&
+            if ((symbol0 != null) && symbol0.Temporary &&
                 (symbol0.AddressSymbol == null) &&
                 symbol0.Type.IsIntegralArrayOrPointer()) {
               integralSet.Add(symbol0);
             }
 
-            if ((symbol1 != null) && symbol1.IsTemporary() &&
+            if ((symbol1 != null) && symbol1.Temporary &&
                 symbol1.Type.IsIntegralArrayOrPointer()) {
               integralSet.Remove(symbol1);
             }
 
-            if ((symbol2 != null) && symbol2.IsTemporary() &&
+            if ((symbol2 != null) && symbol2.Temporary &&
                 symbol2.Type.IsIntegralArrayOrPointer()) {
               integralSet.Remove(symbol2);
             }
