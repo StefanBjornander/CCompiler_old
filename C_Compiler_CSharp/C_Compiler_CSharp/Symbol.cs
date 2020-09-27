@@ -13,7 +13,7 @@ namespace CCompiler {
     public const string SeparatorDot = ".";
     public const string FileMarker = "@";
 
-    private bool /*m_temporary, */ m_parameter, m_externalLinkage;
+    private bool m_parameter, m_externalLinkage;
     private string m_name, m_uniqueName;
     private Storage m_storage;
     private Type m_type;
@@ -21,7 +21,6 @@ namespace CCompiler {
     private int m_offset;
     private Symbol m_addressSymbol;
     private int m_addressOffset;
-    //private bool m_assignable;//, m_addressable;
     private ISet<MiddleCode> m_trueSet, m_falseSet;
 
     private static int UniqueNameCount = 0, TemporaryNameCount = 0;
@@ -31,10 +30,6 @@ namespace CCompiler {
       m_name = name;
       m_externalLinkage = externalLinkage;
       m_storage = storage;
-
-      if ((m_name != null) && m_name.Contains("$")) {
-        int i = 1;
-      }
 
       if (m_externalLinkage) {
         m_uniqueName = m_name.Equals("abs") ? "_abs" : m_name;
@@ -158,11 +153,7 @@ namespace CCompiler {
 
     public string Name {
       get { return m_name; }
-      set { m_name = value; 
-            if (m_name.Contains("$")) {
-              int i = 1;
-            }
-          }
+      set { m_name = value; }
     }
 
     public string UniqueName {
