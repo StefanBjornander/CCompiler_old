@@ -1151,7 +1151,7 @@ namespace CCompiler {
           AddMiddleCode(codeList, MiddleOperator.Assign,
                         leftExpression.Symbol, rightExpression.Symbol);
           BigInteger? bitFieldMask =
-                     leftExpression.Symbol.Type.BitfieldMask();
+                     leftExpression.Symbol.Type.GetBitfieldMask();
 
           if (bitFieldMask != null) {
             Symbol maskSymbol = new Symbol(leftExpression.Symbol.Type,
@@ -1177,9 +1177,8 @@ namespace CCompiler {
     }
 
     public static Expression ConditionalExpression(Expression testExpression,
-                                                 Expression trueExpression,
-                                                 Expression falseExpression) {
-
+                                                   Expression trueExpression,
+                                                   Expression falseExpression) {
       testExpression = TypeCast.ToLogical(testExpression);
       if (ConstantExpression.IsConstant(testExpression)) {
         return ConstantExpression.IsTrue(testExpression)
@@ -1574,8 +1573,8 @@ namespace CCompiler {
           new Symbol(new Type(leftType.PointerOrArrayType));
 
         int pointerSize = leftType.PointerOrArrayType.Size();
-        Symbol multSymbol = new Symbol(Type.PointerTypeX),
-               sizeSymbol = new Symbol(Type.PointerTypeX,
+        Symbol multSymbol = new Symbol(Type.IntegerPointerType),
+               sizeSymbol = new Symbol(Type.IntegerPointerType,
                                        (BigInteger) pointerSize);
         //AddStaticSymbol(sizeSymbol);
         //StaticSymbol sizeStaticSymbol = new StaticSymbol(sizeSymbol.UniqueName);
@@ -1602,8 +1601,8 @@ namespace CCompiler {
         Symbol resultSymbol = new Symbol(Type.VoidPointerType);
         
         int pointerSize = rightType.PointerOrArrayType.Size();
-        Symbol subtractSymbol = new Symbol(Type.PointerTypeX),
-               sizeSymbol = new Symbol(Type.PointerTypeX, (BigInteger) pointerSize);
+        Symbol subtractSymbol = new Symbol(Type.IntegerPointerType),
+               sizeSymbol = new Symbol(Type.IntegerPointerType, (BigInteger) pointerSize);
         //StaticSymbol sizeStaticSymbol = new StaticSymbol(sizeSymbol.UniqueName);
         //SymbolTable.StaticSet.Add(sizeStaticSymbol);
         AddMiddleCode(longList, MiddleOperator.BinarySubtract, subtractSymbol,
@@ -2108,7 +2107,7 @@ namespace CCompiler {
         AddMiddleCode(expression.ShortList, m_incrementMap[middleOp], symbol, symbol, oneSymbol);
         AddMiddleCode(expression.LongList, m_incrementMap[middleOp], symbol, symbol, oneSymbol);
 
-        BigInteger? bitFieldMask = symbol.Type.BitfieldMask();
+        BigInteger? bitFieldMask = symbol.Type.GetBitfieldMask();
         if (bitFieldMask != null) {
           Symbol maskSymbol = new Symbol(symbol.Type, bitFieldMask.Value);
           MiddleCode maskCode = new MiddleCode(MiddleOperator.BitwiseAnd, symbol, symbol, maskSymbol);
@@ -2154,7 +2153,7 @@ namespace CCompiler {
         AddMiddleCode(expression.ShortList, m_incrementMap[middleOp], symbol, symbol, oneSymbol);
         AddMiddleCode(expression.LongList, m_incrementMap[middleOp], symbol, symbol, oneSymbol);
 
-        BigInteger? bitFieldMask = symbol.Type.BitfieldMask();
+        BigInteger? bitFieldMask = symbol.Type.GetBitfieldMask();
         if (bitFieldMask != null) {
           Symbol maskSymbol = new Symbol(symbol.Type, bitFieldMask.Value);
           AddMiddleCode(expression.ShortList, MiddleOperator.BitwiseAnd,

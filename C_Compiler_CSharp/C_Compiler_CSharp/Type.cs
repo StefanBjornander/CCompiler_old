@@ -23,12 +23,12 @@ namespace CCompiler {
       return (m_bitfieldMask != null);
     }
 
-    public BigInteger? BitfieldMask() {
+    public BigInteger? GetBitfieldMask() {
       return m_bitfieldMask;
     }
 
     public void SetBitfieldMask(int bits) {
-      m_bitfieldMask = ((BigInteger) Math.Pow(2, bits) - ((BigInteger) 1));
+      m_bitfieldMask = (BigInteger) (Math.Pow(2, bits) - 1);
     }
 
     // ------------------------------------------------------------------------
@@ -142,9 +142,9 @@ namespace CCompiler {
   
     private IDictionary<string,Symbol> m_memberMap;
     
-    public Type(Sort sort, IDictionary<string,Symbol> symbolMap) {
+    public Type(Sort sort, IDictionary<string,Symbol> memberMap) {
       m_sort = sort;
-      m_memberMap = symbolMap;
+      m_memberMap = memberMap;
     }
 
     public IDictionary<string,Symbol> MemberMap {
@@ -182,18 +182,6 @@ namespace CCompiler {
              (sort == Sort.Signed_Int) || (sort == Sort.Signed_Long_Int);
     }
         
-    public int SizeArray() {
-      switch (m_sort) {
-        case Sort.Array:
-        case Sort.Function:
-        case Sort.String:
-          return TypeSize.PointerSize;
-
-        default:
-          return Size();
-      }
-    }
-
     public int Size() {
       switch (m_sort) {
         case Sort.Array:
@@ -227,17 +215,18 @@ namespace CCompiler {
       }
     }
 
-    public int ConvertedSize() {
+    public int SizeArray() {
       switch (m_sort) {
         case Sort.Array:
         case Sort.Function:
+        case Sort.String:
           return TypeSize.PointerSize;
 
         default:
           return Size();
       }
     }
-  
+
     public bool IsComplete() {
       switch (m_sort) {
         case Sort.Array:
@@ -253,20 +242,19 @@ namespace CCompiler {
     }
 
     // ------------------------------------------------------------------------
-  
-    private bool m_constant;
-    private bool m_volatile;
+
+    private bool m_constant, m_volatile;
 
     public bool Constant {
       get { return m_constant; }
       set { m_constant = value; }
     }
   
-    public bool IsVolatile {
+    public bool Volatile {
       get { return m_volatile; }
       set { m_volatile = value; }
     }
-  
+
     public bool IsConstantRecursive() {
       if (m_constant) {
         return true;
@@ -280,11 +268,6 @@ namespace CCompiler {
       }
     
       return false;
-    }
-
-    public bool Volatile {
-      get { return m_volatile; }
-      set { m_volatile = value; }
     }
 
     // ------------------------------------------------------------------------
@@ -321,7 +304,7 @@ namespace CCompiler {
                        m_typeList.SequenceEqual(type.m_typeList)));
 
             default:
-              return true;
+              return (m_sort == type.m_sort);
           }
         }
       }
@@ -528,8 +511,7 @@ namespace CCompiler {
     }
 
     public override string ToString() {
-      return Enum.GetName(typeof(Sort), m_sort).
-                  Replace("__", "-").Replace("_", " ").ToLower();
+      return Enum.GetName(typeof(Sort), m_sort).Replace("_", " ").ToLower();
     }
 
     public static Type SignedShortIntegerType =
@@ -547,8 +529,7 @@ namespace CCompiler {
     public static Type SignedCharType = new Type(Sort.Signed_Char);
     public static Type UnsignedCharType = new Type(Sort.Unsigned_Char);
     public static Type StringType = new Type(Sort.String);
-    public static Type VoidType = new Type(Sort.Void);
-    public static Type PointerTypeX = new Type(SignedIntegerType);
+    public static Type IntegerPointerType = new Type(SignedIntegerType);
     public static Type VoidPointerType = new Type(new Type(Sort.Void));
     public static Type LogicalType = new Type(Sort.Logical);
   }

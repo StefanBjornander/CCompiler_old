@@ -44,7 +44,7 @@ namespace CCompiler {
           (((fromType.IsFloating() && toType.IsFloating()) ||
             (fromType.IsIntegralPointerOrFunction() &&
              toType.IsIntegralPointerArrayOrFunction())) &&
-           (fromType.ConvertedSize() == toType.ConvertedSize()))) {
+           (fromType.SizeArray() == toType.SizeArray()))) {        
         return fromExpression;
       }
       else {
@@ -93,7 +93,7 @@ namespace CCompiler {
           List<MiddleCode> codeList = fromExpression.LongList;
           Symbol resultSymbol = new Symbol(toType);
 
-          Symbol oneSymbol = new Symbol(toType, ((BigInteger) 1));
+          Symbol oneSymbol = new Symbol(toType, BigInteger.One); 
           MiddleCode assignTrue =
             MiddleCodeGenerator.AddMiddleCode(codeList, MiddleOperator.Assign,
                                               resultSymbol, oneSymbol);

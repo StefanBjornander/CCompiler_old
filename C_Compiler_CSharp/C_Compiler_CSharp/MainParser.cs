@@ -4,9 +4,9 @@
 
 // GPPG version 1.5.2
 // Machine:  STEFAN1968
-// DateTime: 2020-09-27 23:33:06
+// DateTime: 2020-09-28 21:40:53
 // UserName: Stefan
-// Input file <MainParser.gppg - 2020-09-03 10:18:44>
+// Input file <MainParser.gppg - 2020-09-28 17:00:57>
 
 // options: lines gplex
 
@@ -88,13 +88,13 @@ public class ScanObj {
 [GeneratedCodeAttribute( "Gardens Point Parser Generator", "1.5.2")]
 public partial class Parser: ShiftReduceParser<ValueType, LexLocation>
 {
-  // Verbatim content from MainParser.gppg - 2020-09-03 10:18:44
+  // Verbatim content from MainParser.gppg - 2020-09-28 17:00:57
 #line 8 "MainParser.gppg"
   public static Stack<Specifier> SpecifierStack = new Stack<Specifier>();
   public static Stack<BigInteger> EnumValueStack = new Stack<BigInteger>();
   public static int CallDepth = 0;
 #line default
-  // End verbatim content from MainParser.gppg - 2020-09-03 10:18:44
+  // End verbatim content from MainParser.gppg - 2020-09-28 17:00:57
 
 #pragma warning disable 649
   private static Dictionary<int, string> aliases;
@@ -1015,7 +1015,7 @@ public partial class Parser: ShiftReduceParser<ValueType, LexLocation>
       case 47: // Anon@6 -> /* empty */
 #line 233 "MainParser.gppg"
                        {
-      EnumValueStack.Push((BigInteger) 0);
+      EnumValueStack.Push(BigInteger.Zero);
     }
 #line default
         break;

@@ -83,14 +83,13 @@ namespace CCompiler {
       { int totalStorageValue = totalMaskValue & ((int) Mask.StorageMask);
 
         if (totalStorageValue != 0) {
-          if (!Enum.IsDefined(typeof(Mask), totalStorageValue)) {
-            Assert.Error(MaskToString(totalStorageValue),
-                         Message.Invalid_specifier_sequence);
-          }
-
-          storage = (Storage) totalStorageValue;
+          Assert.Error(Enum.IsDefined(typeof(Mask), totalStorageValue),
+                       MaskToString(totalStorageValue),
+                       Message.Invalid_specifier_sequence);
+          storage = (Storage)totalStorageValue;
         }
       }
+
       bool externalLinkage = (SymbolTable.CurrentTable.Scope == Scope.Global)
                              && (CCompiler_Main.Parser.CallDepth == 0) &&
                              ((storage == null) ||
@@ -221,7 +220,7 @@ namespace CCompiler {
 
       Type type = Type.VoidPointerType;
       type.Constant = (totalMaskValue & ((int) Mask.Constant)) != 0;
-      type.IsVolatile = (totalMaskValue & ((int) Mask.Volatile)) != 0;
+      type.Volatile = (totalMaskValue & ((int) Mask.Volatile)) != 0; 
       return type;
     }
  

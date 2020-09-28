@@ -14,9 +14,9 @@ namespace CCompiler {
 
     public static IDictionary<Sort,int> m_sizeMap = new Dictionary<Sort,int>();
 
-    public static IDictionary<int,Type>
-      m_signedMap = new Dictionary<int,Type>(),
-      m_unsignedMap = new Dictionary<int,Type>();
+    public static IDictionary<int,Sort>
+      m_signedMap = new Dictionary<int,Sort>(),
+      m_unsignedMap = new Dictionary<int,Sort>();
 
     private static IDictionary<Sort,BigInteger>
       m_minValueMap = new Dictionary<Sort,BigInteger>(),
@@ -49,15 +49,15 @@ namespace CCompiler {
         m_sizeMap.Add(Sort.Double, 8);
         m_sizeMap.Add(Sort.Long_Double, 8);
 
-        m_signedMap.Add(1, Type.SignedCharType);
-        m_signedMap.Add(2, Type.SignedShortIntegerType);
-        m_signedMap.Add(4, Type.SignedIntegerType);
-        m_signedMap.Add(8, Type.SignedLongIntegerType);
+        m_signedMap.Add(1, Sort.Signed_Char);
+        m_signedMap.Add(2, Sort.Signed_Short_Int);
+        m_signedMap.Add(4, Sort.Signed_Int);
+        m_signedMap.Add(8, Sort.Signed_Long_Int);
 
-        m_unsignedMap.Add(1, Type.UnsignedCharType);
-        m_unsignedMap.Add(2, Type.UnsignedShortIntegerType);
-        m_unsignedMap.Add(4, Type.UnsignedIntegerType);
-        m_unsignedMap.Add(8, Type.UnsignedLongIntegerType);
+        m_unsignedMap.Add(1, Sort.Unsigned_Char);
+        m_unsignedMap.Add(2, Sort.Unsigned_Short_Int);
+        m_unsignedMap.Add(4, Sort.Unsigned_Int);
+        m_unsignedMap.Add(8, Sort.Unsigned_Long_Int);
 
         m_minValueMap.Add(Sort.Logical, 0);
         m_minValueMap.Add(Sort.Signed_Char, -128);
@@ -119,13 +119,13 @@ namespace CCompiler {
         m_sizeMap.Add(Sort.Double, 8);
         m_sizeMap.Add(Sort.Long_Double, 8);
 
-        m_signedMap.Add(1, Type.SignedCharType);
-        m_signedMap.Add(2, Type.SignedIntegerType);
-        m_signedMap.Add(4, Type.SignedLongIntegerType);
+        m_signedMap.Add(1, Sort.Signed_Char);
+        m_signedMap.Add(2, Sort.Signed_Int);
+        m_signedMap.Add(4, Sort.Signed_Long_Int);
 
-        m_unsignedMap.Add(1, Type.UnsignedCharType);
-        m_unsignedMap.Add(2, Type.UnsignedIntegerType);
-        m_unsignedMap.Add(4, Type.UnsignedLongIntegerType);
+        m_unsignedMap.Add(1, Sort.Unsigned_Char);
+        m_unsignedMap.Add(2, Sort.Unsigned_Int);
+        m_unsignedMap.Add(4, Sort.Unsigned_Long_Int);
 
         m_minValueMap.Add(Sort.Logical, 0);
         m_minValueMap.Add(Sort.Signed_Char, -128);
@@ -180,11 +180,11 @@ namespace CCompiler {
     }
 
     public static Type SizeToSignedType(int size) {
-      return m_signedMap[size];
+      return new Type(m_signedMap[size]);
     }
 
     public static Type SizeToUnsignedType(int size) {
-      return m_unsignedMap[size];
+      return new Type(m_unsignedMap[size]);
     }
 
     public static int Size(Sort sort) {

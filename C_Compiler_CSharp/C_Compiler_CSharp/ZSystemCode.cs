@@ -223,7 +223,7 @@ namespace CCompiler {
           m_parameterMap.Add("signal", signalParameterList);
         }
 
-        m_returnTypeMap.Add("signal", Type.VoidType);
+        m_returnTypeMap.Add("signal", Type.SignedIntegerType /* Void */);
       }
 
       { { List<AssemblyCode> raiseInitializerList = new List<AssemblyCode>();
@@ -246,7 +246,7 @@ namespace CCompiler {
           m_initializerMap.Add("abort", abortInitializerList);
         }
 
-        m_returnTypeMap.Add("abort", Type.VoidType);
+        m_returnTypeMap.Add("abort", Type.SignedIntegerType /* Void */);
       }
 
       { { List<AssemblyCode> exitInitializerList = new List<AssemblyCode>();
@@ -259,7 +259,7 @@ namespace CCompiler {
           m_parameterMap.Add("exit", exitParameterList);
         }
 
-        m_returnTypeMap.Add("exit", Type.VoidType);
+        m_returnTypeMap.Add("exit", Type.SignedIntegerType /* Void */);
       }
 
       { { List<AssemblyCode> dateInitializerList = new List<AssemblyCode>();
@@ -275,7 +275,7 @@ namespace CCompiler {
           m_parameterMap.Add("date", dateParameterList);
         }
 
-        m_returnTypeMap.Add("date", Type.VoidType);
+        m_returnTypeMap.Add("date", Type.SignedIntegerType /* Void */);
       }
 
       { { List<AssemblyCode> timeInitializerList = new List<AssemblyCode>();
@@ -291,7 +291,7 @@ namespace CCompiler {
           m_parameterMap.Add("time", timeParameterList);
         }
 
-        m_returnTypeMap.Add("time", Type.VoidType);
+        m_returnTypeMap.Add("time", Type.SignedIntegerType /* Void */);
       }
     }
 

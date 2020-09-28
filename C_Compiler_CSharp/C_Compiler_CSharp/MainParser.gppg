@@ -231,7 +231,7 @@ declaration_list:
 
 enum_specifier:
     ENUM optional_name {
-      EnumValueStack.Push((BigInteger) 0);
+      EnumValueStack.Push(BigInteger.Zero);
     }
     LEFT_BLOCK enum_list RIGHT_BLOCK {
       EnumValueStack.Pop();

@@ -1563,7 +1563,7 @@ namespace CCompiler {
 
     public void StructUnionParameter(MiddleCode middleCode, int index) {
       Symbol sourceSymbol = (Symbol) middleCode[1];
-      Symbol targetSymbol = new Symbol(Type.PointerTypeX);
+      Symbol targetSymbol = new Symbol(Type.IntegerPointerType);
 
       int paramOffset = (int) middleCode[2];
       targetSymbol.Offset = m_totalExtraSize + paramOffset;
