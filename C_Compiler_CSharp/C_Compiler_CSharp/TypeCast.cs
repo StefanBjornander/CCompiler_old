@@ -52,86 +52,96 @@ namespace CCompiler {
       }
     }
 
-    public static Expression ExplicitCast(Expression fromExpression,
-                                          Type toType) {
+    public static Expression ExplicitCast(Expression sourceExpression,
+                                          Type targetType) {
       Expression constantExpression =
-        ConstantExpression.ConstantCast(fromExpression, toType);
+        ConstantExpression.ConstantCast(sourceExpression, targetType);
       if (constantExpression != null) {
         return constantExpression;
       }
 
-      Symbol fromSymbol = fromExpression.Symbol;
-      Type fromType = fromSymbol.Type;
+      Symbol sourceSymbol = sourceExpression.Symbol, targetSymbol;
+      Type sourceType = sourceSymbol.Type;
 
-      if (toType.IsVoid()) {
-        return (new Expression(new Symbol(toType), null, null));
+      List<MiddleCode> shortList = sourceExpression.ShortList,
+                       longList = sourceExpression.LongList;
+
+      if (sourceType.IsFloating()) {
+        MiddleCode popCode = new MiddleCode(MiddleOperator.PopEmpty);
+        shortList.Add(popCode);
+        longList.Add(popCode);
       }
-      else if (fromType.IsStructOrUnion() && toType.IsStructOrUnion()) {
-        Assert.Error(fromType.Equals(toType), fromType + " to " + toType,
+
+      if (targetType.IsVoid()) {
+        targetSymbol = new Symbol(targetType);
+        return (new Expression(targetSymbol, null, null));
+      }
+      else if (sourceType.IsStructOrUnion() && targetType.IsStructOrUnion()) {
+        Assert.Error(sourceType.Equals(targetType), sourceType + " to " + targetType,
                      Message.Invalid_type_cast);
-        return (new Expression(new Symbol(toType), fromExpression.ShortList,
-                               fromExpression.LongList));
+        return (new Expression(new Symbol(targetType), sourceExpression.ShortList,
+                               sourceExpression.LongList));
       }
-      else if (fromType.IsLogical()) {
-        if (toType.IsFloating()) {
-          List<MiddleCode> codeList = fromExpression.LongList;
-          Symbol resultSymbol = new Symbol(toType);
+      else if (sourceType.IsLogical()) {
+        if (targetType.IsFloating()) {
+          List<MiddleCode> codeList = sourceExpression.LongList;
+          Symbol resultSymbol = new Symbol(targetType);
           MiddleCode oneCode = MiddleCodeGenerator.AddMiddleCode(codeList,
                                                    MiddleOperator.PushOne);
-          MiddleCodeGenerator.Backpatch(fromSymbol.TrueSet, oneCode);
+          MiddleCodeGenerator.Backpatch(sourceSymbol.TrueSet, oneCode);
           MiddleCode toCode = new MiddleCode(MiddleOperator.Empty);
           MiddleCodeGenerator.AddMiddleCode(codeList, MiddleOperator.Goto,
                                             toCode);
           MiddleCode zeroCode = MiddleCodeGenerator.AddMiddleCode(codeList,
                                                     MiddleOperator.PushZero);
-          MiddleCodeGenerator.Backpatch(fromSymbol.FalseSet, zeroCode);
+          MiddleCodeGenerator.Backpatch(sourceSymbol.FalseSet, zeroCode);
           codeList.Add(toCode);
-          return (new Expression(resultSymbol, fromExpression.ShortList,
+          return (new Expression(resultSymbol, sourceExpression.ShortList,
                                  codeList));
         }
-        else if (toType.IsIntegralArrayOrPointer()) {
-          List<MiddleCode> codeList = fromExpression.LongList;
-          Symbol resultSymbol = new Symbol(toType);
+        else if (targetType.IsIntegralArrayOrPointer()) {
+          List<MiddleCode> codeList = sourceExpression.LongList;
+          Symbol resultSymbol = new Symbol(targetType);
 
-          Symbol oneSymbol = new Symbol(toType, BigInteger.One); 
+          Symbol oneSymbol = new Symbol(targetType, BigInteger.One); 
           MiddleCode assignTrue =
             MiddleCodeGenerator.AddMiddleCode(codeList, MiddleOperator.Assign,
                                               resultSymbol, oneSymbol);
-          MiddleCodeGenerator.Backpatch(fromSymbol.TrueSet, assignTrue);
+          MiddleCodeGenerator.Backpatch(sourceSymbol.TrueSet, assignTrue);
       
           MiddleCode toCode = new MiddleCode(MiddleOperator.Empty);
           MiddleCodeGenerator.AddMiddleCode(codeList, MiddleOperator.Goto,
                                             toCode);
 
-          Symbol zeroSymbol = new Symbol(toType, ((BigInteger) 0));
+          Symbol zeroSymbol = new Symbol(targetType, ((BigInteger) 0));
           MiddleCode assignFalse =
             MiddleCodeGenerator.AddMiddleCode(codeList, MiddleOperator.Assign,
                                               resultSymbol, zeroSymbol);
-          MiddleCodeGenerator.Backpatch(fromSymbol.FalseSet, assignFalse);
+          MiddleCodeGenerator.Backpatch(sourceSymbol.FalseSet, assignFalse);
       
           codeList.Add(toCode);
-          return (new Expression(resultSymbol, fromExpression.ShortList,
+          return (new Expression(resultSymbol, sourceExpression.ShortList,
                                  codeList));
         }
 
-        Assert.Error(fromType + " to " + toType, Message.Invalid_type_cast);
+        Assert.Error(sourceType + " to " + targetType, Message.Invalid_type_cast);
       }
-      else if (fromType.IsFloating()) {
-        if (toType.IsFloating()) {
-          return (new Expression(new Symbol(toType), fromExpression.ShortList,
-                                 fromExpression.LongList));
+      else if (sourceType.IsFloating()) {
+        if (targetType.IsFloating()) {
+          return (new Expression(new Symbol(targetType), sourceExpression.ShortList,
+                                 sourceExpression.LongList));
         }
-        else if (toType.IsIntegralArrayOrPointer()) {
-          List<MiddleCode> codeList = fromExpression.LongList;
-          Symbol resultSymbol = new Symbol(toType);
+        else if (targetType.IsIntegralArrayOrPointer()) {
+          List<MiddleCode> codeList = sourceExpression.LongList;
+          Symbol resultSymbol = new Symbol(targetType);
 
-          if (toType.Size() == 1) {
-            Type tempType = fromType.IsSigned() ? Type.SignedIntegerType
+          if (targetType.Size() == 1) {
+            Type tempType = sourceType.IsSigned() ? Type.SignedIntegerType
                                                   : Type.UnsignedIntegerType;
             Symbol tempSymbol = new Symbol(tempType);
             MiddleCode tempCode =
               new MiddleCode(MiddleOperator.FloatingToIntegral, tempSymbol,
-                             fromSymbol);
+                             sourceSymbol);
             codeList.Add(tempCode);
             MiddleCode resultCode =
               new MiddleCode(MiddleOperator.IntegralToIntegral, resultSymbol,
@@ -141,21 +151,21 @@ namespace CCompiler {
           else {
             MiddleCode resultCode =
               new MiddleCode(MiddleOperator.FloatingToIntegral, resultSymbol,
-                             fromSymbol);
+                             sourceSymbol);
             codeList.Add(resultCode);
           }
 
-          return (new Expression(resultSymbol, fromExpression.ShortList,
+          return (new Expression(resultSymbol, sourceExpression.ShortList,
                                  codeList));
         }
-        else if (toType.IsLogical()) {
-          List<MiddleCode> codeList = fromExpression.LongList;
+        else if (targetType.IsLogical()) {
+          List<MiddleCode> codeList = sourceExpression.LongList;
 
           ISet<MiddleCode> trueSet = new HashSet<MiddleCode>();
-          Symbol zeroSymbol = new Symbol(toType, (decimal) 0);
+          Symbol zeroSymbol = new Symbol(targetType, (decimal) 0);
           MiddleCode testCode =
             new MiddleCode(MiddleOperator.NotEqual, null,
-                           fromExpression.Symbol, zeroSymbol);
+                           sourceExpression.Symbol, zeroSymbol);
           codeList.Add(testCode);
           trueSet.Add(testCode);
 
@@ -168,20 +178,20 @@ namespace CCompiler {
           return (new Expression(symbol, null, codeList));
         }
       
-        Assert.Error(fromType + " to " + toType, Message.Invalid_type_cast);
+        Assert.Error(sourceType + " to " + targetType, Message.Invalid_type_cast);
       }
-      else if (fromType.IsIntegralArrayOrPointer()) {
-        if (toType.IsFloating()) {
-          List<MiddleCode> codeList = fromExpression.LongList;
-          Symbol resultSymbol = new Symbol(toType);
+      else if (sourceType.IsIntegralArrayOrPointer()) {
+        if (targetType.IsFloating()) {
+          List<MiddleCode> codeList = sourceExpression.LongList;
+          Symbol resultSymbol = new Symbol(targetType);
 
-          if (fromType.Size() == 1) {
-            Type tempType = fromType.IsSigned() ? Type.SignedIntegerType
+          if (sourceType.Size() == 1) {
+            Type tempType = sourceType.IsSigned() ? Type.SignedIntegerType
                                                   : Type.UnsignedIntegerType;
             Symbol tempSymbol = new Symbol(tempType);
             MiddleCodeGenerator.
               AddMiddleCode(codeList, MiddleOperator.IntegralToIntegral,
-                            tempSymbol, fromSymbol);
+                            tempSymbol, sourceSymbol);
             MiddleCodeGenerator.
               AddMiddleCode(codeList, MiddleOperator.IntegralToFloating,
                             resultSymbol, tempSymbol);
@@ -189,29 +199,29 @@ namespace CCompiler {
           else {
             MiddleCodeGenerator.
               AddMiddleCode(codeList, MiddleOperator.IntegralToFloating,
-                            resultSymbol, fromSymbol);
+                            resultSymbol, sourceSymbol);
           }
 
-          return (new Expression(resultSymbol, fromExpression.ShortList,
+          return (new Expression(resultSymbol, sourceExpression.ShortList,
                                  codeList));
         }
-        else if (toType.IsIntegralArrayOrPointer()) {
-          List<MiddleCode> codeList = fromExpression.LongList;
-          Symbol resultSymbol = new Symbol(toType);
+        else if (targetType.IsIntegralArrayOrPointer()) {
+          List<MiddleCode> codeList = sourceExpression.LongList;
+          Symbol resultSymbol = new Symbol(targetType);
           MiddleCodeGenerator.
             AddMiddleCode(codeList, MiddleOperator.IntegralToIntegral,
-                          resultSymbol, fromSymbol);
-          return (new Expression(resultSymbol, fromExpression.ShortList,
+                          resultSymbol, sourceSymbol);
+          return (new Expression(resultSymbol, sourceExpression.ShortList,
                                  codeList));
         }
-        else if (toType.IsLogical()) {
-          List<MiddleCode> codeList = fromExpression.LongList;
+        else if (targetType.IsLogical()) {
+          List<MiddleCode> codeList = sourceExpression.LongList;
 
           ISet<MiddleCode> trueSet = new HashSet<MiddleCode>();
-          Symbol zeroSymbol = new Symbol(toType, BigInteger.Zero);
+          Symbol zeroSymbol = new Symbol(targetType, BigInteger.Zero);
           MiddleCode testCode =
             new MiddleCode(MiddleOperator.NotEqual, null,
-                           fromExpression.Symbol, zeroSymbol);
+                           sourceExpression.Symbol, zeroSymbol);
           codeList.Add(testCode);
           trueSet.Add(testCode);
 
@@ -224,10 +234,10 @@ namespace CCompiler {
           return (new Expression(symbol, null, codeList));
         }
 
-        Assert.Error(fromType + " to " + toType, Message.Invalid_type_cast);
+        Assert.Error(sourceType + " to " + targetType, Message.Invalid_type_cast);
       }
       else {
-        Assert.Error(fromType + " to " + toType, Message.Invalid_type_cast);
+        Assert.Error(sourceType + " to " + targetType, Message.Invalid_type_cast);
       }
 
       return null;
