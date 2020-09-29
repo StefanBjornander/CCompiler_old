@@ -31,7 +31,7 @@ namespace CCompiler {
     public static Expression ImplicitCast(Expression fromExpression,
                                           Type toType) {
       Expression constantExpression =
-        ConstantExpression.Cast(fromExpression, toType);
+        ConstantExpression.ConstantCast(fromExpression, toType);
       if (constantExpression != null) {
         return constantExpression;
       }
@@ -55,7 +55,7 @@ namespace CCompiler {
     public static Expression ExplicitCast(Expression fromExpression,
                                           Type toType) {
       Expression constantExpression =
-        ConstantExpression.Cast(fromExpression, toType);
+        ConstantExpression.ConstantCast(fromExpression, toType);
       if (constantExpression != null) {
         return constantExpression;
       }

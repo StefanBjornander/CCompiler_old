@@ -23,7 +23,7 @@ namespace CCompiler {
 
     private static Expression LogicalToIntegral(Expression expression) {
       if (expression.Symbol.Type.IsLogical()) {
-        return Cast(expression, Type.SignedIntegerType);
+        return ConstantCast(expression, Type.SignedIntegerType);
       }
 
       return expression;
@@ -31,7 +31,7 @@ namespace CCompiler {
 
     private static Expression LogicalToFloating(Expression expression) {
       if (expression.Symbol.Type.IsLogical()) {
-        return Cast(expression, Type.DoubleType);
+        return ConstantCast(expression, Type.DoubleType);
       }
 
       return expression;
@@ -39,7 +39,7 @@ namespace CCompiler {
 
     private static Expression ToLogical(Expression expression) {
       if (!expression.Symbol.Type.IsLogical()) {
-        return Cast(expression, Type.LogicalType);
+        return ConstantCast(expression, Type.LogicalType);
       }
 
       return expression;
@@ -433,7 +433,78 @@ namespace CCompiler {
       return (new Expression(resultSymbol, null, longList));
     }
 
-    public static Expression Cast(Expression sourceExpression,
+    public static Expression ConstantCast(Expression sourceExpression,
+                                          Type targetType) {
+      Symbol sourceSymbol = sourceExpression.Symbol, targetSymbol;
+      Type sourceType = sourceSymbol.Type;
+      
+      if (!IsConstant(sourceExpression) || sourceType.IsVoid()) {
+        return null;
+      }
+
+      object sourceValue = sourceSymbol.Value;
+      List<MiddleCode> shortList = new List<MiddleCode>(),
+                       longList = new List<MiddleCode>();
+
+      if (targetType.IsVoid()) {
+        targetSymbol = new Symbol(targetType);
+      }
+      else if (sourceType.IsIntegralPointerArrayStringOrFunction() &&
+               targetType.IsFloating()) {
+        decimal targetValue = ((decimal) ((BigInteger) sourceValue));
+        targetSymbol = new Symbol(targetType, targetValue);
+      }
+      else if (sourceType.IsFloating() &&
+               targetType.IsIntegralPointerArrayStringOrFunction()) {
+        BigInteger targetValue = ((BigInteger) ((decimal) sourceValue));
+        targetSymbol = new Symbol(targetType, targetValue);
+      }
+      else if (sourceType.IsLogical() &&
+               targetType.IsIntegralPointerArrayStringOrFunction()) {
+        bool isTrue = (sourceSymbol.TrueSet.Count > 0);
+        BigInteger targetValue = isTrue ? BigInteger.One : BigInteger.Zero;
+        targetSymbol = new Symbol(targetType, targetValue);
+
+      }
+      else if (sourceType.IsLogical() && targetType.IsFloating()) {
+        bool isTrue = (sourceSymbol.TrueSet.Count > 0);
+        decimal targetValue = isTrue ? decimal.One : decimal.Zero;
+        targetSymbol = new Symbol(targetType, targetValue);
+      }
+      else if (sourceType.IsArithmeticPointerArrayStringOrFunction() &&
+               targetType.IsLogical()) {
+        bool isTrue = !sourceValue.Equals(BigInteger.Zero) &&
+                      !sourceValue.Equals(decimal.Zero);
+
+        MiddleCode gotoCode = new MiddleCode(MiddleOperator.Goto);
+        shortList.Add(gotoCode);
+        longList.Add(gotoCode);
+
+        ISet<MiddleCode> trueSet = new HashSet<MiddleCode>(),
+                         falseSet = new HashSet<MiddleCode>();
+        if (isTrue) {
+          trueSet.Add(gotoCode);
+        }
+        else {
+          falseSet.Add(gotoCode);
+        }
+
+        targetSymbol = new Symbol(trueSet, falseSet);
+      }
+      else {
+        targetSymbol = new Symbol(targetType, sourceValue);
+      }
+
+      if (targetType.IsFloating()) {
+        MiddleCode pushCode = new MiddleCode(MiddleOperator.PushFloat, targetSymbol);
+        shortList.Add(pushCode);
+        longList.Add(pushCode);
+      }
+
+      return (new Expression(targetSymbol, shortList, longList));
+    }
+/*
+    public static Expression ConstantCast(Expression sourceExpression,
                                   Type targetType) {
       if (!IsConstant(sourceExpression)) {
         return null;
@@ -510,7 +581,7 @@ namespace CCompiler {
 
         return (new Expression(targetSymbol, null, longList));
       }
-    }
+    }*/
     
     public static StaticSymbol Value(Symbol symbol) {
       return Value(symbol.UniqueName, symbol.Type, symbol.Value);

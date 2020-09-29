@@ -1270,7 +1270,7 @@ namespace CCompiler {
     }
 
     public static Expression ConstantIntegralExpression(Expression expression) {
-      expression = ConstantExpression.Cast(expression, Type.SignedLongIntegerType);
+      expression = ConstantExpression.ConstantCast(expression, Type.SignedLongIntegerType);
       Assert.Error(expression != null, expression, Message.Non__constant_expression);
       Assert.Error(expression.Symbol.Type.IsIntegralOrPointer(), expression.Symbol, Message.Non__integral_expression);
       return expression;
@@ -2067,7 +2067,7 @@ namespace CCompiler {
     }
 
     public static Expression CastExpression(Type type, Expression expression) {
-      Expression constantExpression = ConstantExpression.Cast(expression, type);
+      Expression constantExpression = ConstantExpression.ConstantCast(expression, type);
       if (constantExpression != null) {
         return constantExpression;
       }
