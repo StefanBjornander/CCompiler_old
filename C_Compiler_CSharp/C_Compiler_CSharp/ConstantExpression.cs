@@ -443,8 +443,7 @@ namespace CCompiler {
       }
 
       object sourceValue = sourceSymbol.Value;
-      List<MiddleCode> shortList = new List<MiddleCode>(),
-                       longList = new List<MiddleCode>();
+      List<MiddleCode> longList = new List<MiddleCode>();
 
       if (targetType.IsVoid()) {
         targetSymbol = new Symbol(targetType);
@@ -477,7 +476,6 @@ namespace CCompiler {
                       !sourceValue.Equals(decimal.Zero);
 
         MiddleCode gotoCode = new MiddleCode(MiddleOperator.Goto);
-        shortList.Add(gotoCode);
         longList.Add(gotoCode);
 
         ISet<MiddleCode> trueSet = new HashSet<MiddleCode>(),
@@ -496,12 +494,10 @@ namespace CCompiler {
       }
 
       if (targetType.IsFloating()) {
-        MiddleCode pushCode = new MiddleCode(MiddleOperator.PushFloat, targetSymbol);
-        shortList.Add(pushCode);
-        longList.Add(pushCode);
+        longList.Add(new MiddleCode(MiddleOperator.PushFloat, targetSymbol));
       }
 
-      return (new Expression(targetSymbol, shortList, longList));
+      return (new Expression(targetSymbol, null, longList));
     }
 /*
     public static Expression ConstantCast(Expression sourceExpression,
