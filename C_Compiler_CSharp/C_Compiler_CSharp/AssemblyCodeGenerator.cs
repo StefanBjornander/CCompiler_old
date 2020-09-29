@@ -1377,89 +1377,13 @@ namespace CCompiler {
 
     // Floating Push and Pop
 
-/*    public static IDictionary<Sort, AssemblyOperator> m_floatPushMap =
-      new Dictionary<Sort, AssemblyOperator>();
-    public static IDictionary<Sort, AssemblyOperator> m_floatPopMap =
-      new Dictionary<Sort, AssemblyOperator>();
-    public static IDictionary<Sort, AssemblyOperator> m_floatTopMap =
-      new Dictionary<Sort, AssemblyOperator>();
-
-    static AssemblyCodeGenerator() {
-      if (Start.Linux) {
-        m_floatPushMap.Add(Sort.Signed_Short_Int, AssemblyOperator.fild_word);
-        m_floatPushMap.Add(Sort.Unsigned_Short_Int, AssemblyOperator.fild_word);
-        m_floatPushMap.Add(Sort.Signed_Int, AssemblyOperator.fild_dword);
-        m_floatPushMap.Add(Sort.Unsigned_Int, AssemblyOperator.fild_dword);
-        m_floatPushMap.Add(Sort.Pointer, AssemblyOperator.fild_qword);
-        m_floatPushMap.Add(Sort.Signed_Long_Int, AssemblyOperator.fild_qword);
-        m_floatPushMap.Add(Sort.Unsigned_Long_Int, AssemblyOperator.fild_qword);
-        m_floatPushMap.Add(Sort.Float, AssemblyOperator.fld_dword);
-        m_floatPushMap.Add(Sort.Double, AssemblyOperator.fld_qword);
-        m_floatPushMap.Add(Sort.Long_Double, AssemblyOperator.fld_qword);
-
-        m_floatPopMap.Add(Sort.Signed_Short_Int, AssemblyOperator.fistp_word);
-        m_floatPopMap.Add(Sort.Unsigned_Short_Int, AssemblyOperator.fistp_word);
-        m_floatPopMap.Add(Sort.Signed_Int, AssemblyOperator.fistp_dword);
-        m_floatPopMap.Add(Sort.Unsigned_Int, AssemblyOperator.fistp_dword);
-        m_floatPopMap.Add(Sort.Pointer, AssemblyOperator.fistp_qword);
-        m_floatPopMap.Add(Sort.Signed_Long_Int, AssemblyOperator.fistp_qword);
-        m_floatPopMap.Add(Sort.Unsigned_Long_Int, AssemblyOperator.fistp_qword);
-        m_floatPopMap.Add(Sort.Float, AssemblyOperator.fstp_dword);
-        m_floatPopMap.Add(Sort.Double, AssemblyOperator.fstp_qword);
-        m_floatPopMap.Add(Sort.Long_Double, AssemblyOperator.fstp_qword);
-
-        m_floatTopMap.Add(Sort.Signed_Short_Int, AssemblyOperator.fist_word);
-        m_floatTopMap.Add(Sort.Unsigned_Short_Int, AssemblyOperator.fist_word);
-        m_floatTopMap.Add(Sort.Signed_Int, AssemblyOperator.fist_dword);
-        m_floatTopMap.Add(Sort.Unsigned_Int, AssemblyOperator.fist_dword);
-        m_floatTopMap.Add(Sort.Pointer, AssemblyOperator.fist_qword);
-        m_floatTopMap.Add(Sort.Signed_Long_Int, AssemblyOperator.fist_qword);
-        m_floatTopMap.Add(Sort.Unsigned_Long_Int, AssemblyOperator.fist_qword);
-        m_floatTopMap.Add(Sort.Float, AssemblyOperator.fst_dword);
-        m_floatTopMap.Add(Sort.Double, AssemblyOperator.fst_qword);
-        m_floatTopMap.Add(Sort.Long_Double, AssemblyOperator.fst_qword);
-      }
-
-      if (Start.Windows) {
-        m_floatPushMap.Add(Sort.Signed_Int, AssemblyOperator.fild_word);
-        m_floatPushMap.Add(Sort.Unsigned_Int, AssemblyOperator.fild_word);
-        m_floatPushMap.Add(Sort.Signed_Long_Int, AssemblyOperator.fild_dword);
-        m_floatPushMap.Add(Sort.Unsigned_Long_Int, AssemblyOperator.fild_word);
-        m_floatPushMap.Add(Sort.Float, AssemblyOperator.fld_dword);
-        m_floatPushMap.Add(Sort.Double, AssemblyOperator.fld_qword);
-        m_floatPushMap.Add(Sort.Long_Double, AssemblyOperator.fld_qword);
-
-        m_floatPopMap.Add(Sort.Signed_Int, AssemblyOperator.fistp_word);
-        m_floatPopMap.Add(Sort.Unsigned_Int, AssemblyOperator.fistp_word);
-        m_floatPopMap.Add(Sort.Pointer, AssemblyOperator.fistp_word);
-        m_floatPopMap.Add(Sort.Signed_Long_Int, AssemblyOperator.fistp_dword);
-        m_floatPopMap.Add(Sort.Unsigned_Long_Int, AssemblyOperator.fistp_dword);
-        m_floatPopMap.Add(Sort.Float, AssemblyOperator.fstp_dword);
-        m_floatPopMap.Add(Sort.Double, AssemblyOperator.fstp_qword);
-        m_floatPopMap.Add(Sort.Long_Double, AssemblyOperator.fstp_qword);
-
-        m_floatTopMap.Add(Sort.Signed_Int, AssemblyOperator.fist_word);
-        m_floatTopMap.Add(Sort.Unsigned_Int, AssemblyOperator.fist_word);
-        m_floatTopMap.Add(Sort.Pointer, AssemblyOperator.fist_word);
-        m_floatTopMap.Add(Sort.Signed_Long_Int, AssemblyOperator.fist_dword);
-        m_floatTopMap.Add(Sort.Unsigned_Long_Int, AssemblyOperator.fist_dword);
-        m_floatTopMap.Add(Sort.Float, AssemblyOperator.fst_dword);
-        m_floatTopMap.Add(Sort.Double, AssemblyOperator.fst_qword);
-        m_floatTopMap.Add(Sort.Long_Double, AssemblyOperator.fst_qword);
-      }
-    }*/
-
-    public static IDictionary<int, AssemblyOperator> m_pushIntegralMap =
-      new Dictionary<int, AssemblyOperator>() {
-        {2, AssemblyOperator.fild_word},
-        {4, AssemblyOperator.fild_dword},
-        {8, AssemblyOperator.fild_qword}
-      };
-
-    public static IDictionary<int, AssemblyOperator> m_pushFloatingMap =
-      new Dictionary<int, AssemblyOperator>() {
-        {4, AssemblyOperator.fld_dword},
-        {8, AssemblyOperator.fld_qword}
+    public static IDictionary<Pair<bool, int>, AssemblyOperator>
+      m_floatPushMap = new Dictionary<Pair<bool, int>, AssemblyOperator>() {
+        {new Pair<bool,int>(false, 2), AssemblyOperator.fild_word},
+        {new Pair<bool,int>(false, 4), AssemblyOperator.fild_dword},
+        {new Pair<bool,int>(false, 8), AssemblyOperator.fild_qword},
+        {new Pair<bool,int>(true, 4), AssemblyOperator.fld_dword},
+        {new Pair<bool,int>(true, 8), AssemblyOperator.fld_qword}
       };
 
     public void PushSymbol(Symbol symbol) {
@@ -1478,14 +1402,9 @@ namespace CCompiler {
         AddAssemblyCode(AssemblyOperator.fld1);
       }
       else {
-        AssemblyOperator objectOperator;
-        
-        if (symbol.Type.IsFloating()) {
-          objectOperator = m_pushFloatingMap[symbol.Type.Size()];
-        }
-        else {
-          objectOperator = m_pushIntegralMap[symbol.Type.Size()];
-        }
+        Pair<bool,int> pair =
+          new Pair<bool, int>(symbol.Type.IsFloating(), symbol.Type.Size()); 
+        AssemblyOperator objectOperator = m_floatPushMap[pair];
 
         if ((symbol.Value is BigInteger) || (symbol.Value is decimal)) {
           SymbolTable.StaticSet.Add(ConstantExpression.Value(symbol));
@@ -1531,54 +1450,36 @@ namespace CCompiler {
       AddAssemblyCode(AssemblyOperator.fistp_word, containerName, 0);
     }
 
-    public static IDictionary<int, AssemblyOperator> m_popIntegralMap =
-      new Dictionary<int, AssemblyOperator>() {
-        {2, AssemblyOperator.fistp_word},
-        {4, AssemblyOperator.fistp_dword},
-        {8, AssemblyOperator.fistp_qword}
+    public static IDictionary<Pair<bool,int>,AssemblyOperator>
+      m_floatPopMap = new Dictionary<Pair<bool,int>, AssemblyOperator>() {
+        {new Pair<bool,int>(false, 2), AssemblyOperator.fistp_word},
+        {new Pair<bool,int>(false, 4), AssemblyOperator.fistp_dword},
+        {new Pair<bool,int>(false, 8), AssemblyOperator.fistp_qword},
+        {new Pair<bool,int>(true, 4), AssemblyOperator.fstp_dword},
+        {new Pair<bool,int>(true, 8), AssemblyOperator.fstp_qword}
       };
 
-    public static IDictionary<int, AssemblyOperator> m_popFloatingMap =
-      new Dictionary<int, AssemblyOperator>() {
-        {4, AssemblyOperator.fstp_dword},
-        {8, AssemblyOperator.fstp_qword}
+    public static IDictionary<Pair<bool,int>,AssemblyOperator>
+      m_floatTopMap = new Dictionary<Pair<bool,int>, AssemblyOperator>() {
+        {new Pair<bool,int>(false, 2), AssemblyOperator.fist_word},
+        {new Pair<bool,int>(false, 4), AssemblyOperator.fist_dword},
+        {new Pair<bool,int>(false, 8), AssemblyOperator.fist_qword},
+        {new Pair<bool,int>(true, 4), AssemblyOperator.fst_dword},
+        {new Pair<bool,int>(true, 8), AssemblyOperator.fst_qword}
       };
 
-    public static IDictionary<int, AssemblyOperator> m_topIntegralMap =
-      new Dictionary<int, AssemblyOperator>() {
-        {2, AssemblyOperator.fist_word},
-        {4, AssemblyOperator.fist_dword},
-        {8, AssemblyOperator.fist_qword}
-      };
-
-    public static IDictionary<int, AssemblyOperator> m_topFloatingMap =
-      new Dictionary<int, AssemblyOperator>() {
-        {4, AssemblyOperator.fst_dword},
-        {8, AssemblyOperator.fst_qword}
-      };
-
-    public void TopPopSymbol(Symbol symbol, TopOrPop topOrPop)
-    {
+    public void TopPopSymbol(Symbol symbol, TopOrPop topOrPop) {
       Assert.ErrorXXX(symbol != null);
+      Pair<bool,int> pair =
+        new Pair<bool,int>(symbol.Type.IsFloating(), symbol.Type.Size());
       AssemblyOperator objectOperator;
 
       if (topOrPop == TopOrPop.Pop) {
-        if (symbol.Type.IsFloating()) {
-          objectOperator = m_popFloatingMap[symbol.Type.Size()];
-        }
-        else {
-          objectOperator = m_popIntegralMap[symbol.Type.Size()];
-        }
-
+        objectOperator = m_floatPopMap[pair];
         Assert.ErrorXXX((--m_floatStackSize) >= 0);
       }
       else {
-        if (symbol.Type.IsFloating()) {
-          objectOperator = m_topFloatingMap[symbol.Type.Size()];
-        }
-        else {
-          objectOperator = m_topIntegralMap[symbol.Type.Size()];
-        }
+        objectOperator = m_floatTopMap[pair];
       }
 
       if (symbol.Type.IsIntegralArrayOrPointer() && symbol.IsTemporary()) {        
