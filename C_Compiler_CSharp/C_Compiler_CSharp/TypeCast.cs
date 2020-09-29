@@ -74,13 +74,11 @@ namespace CCompiler {
 
       if (targetType.IsVoid()) {
         targetSymbol = new Symbol(targetType);
-        return (new Expression(targetSymbol, null, null));
       }
       else if (sourceType.IsStructOrUnion() && targetType.IsStructOrUnion()) {
         Assert.Error(sourceType.Equals(targetType), sourceType + " to " + targetType,
                      Message.Invalid_type_cast);
-        return (new Expression(new Symbol(targetType), sourceExpression.ShortList,
-                               sourceExpression.LongList));
+        targetSymbol = new Symbol(targetType);
       }
       else if (sourceType.IsLogical()) {
         if (targetType.IsFloating()) {
@@ -240,7 +238,7 @@ namespace CCompiler {
         Assert.Error(sourceType + " to " + targetType, Message.Invalid_type_cast);
       }
 
-      return null;
+      return (new Expression(targetSymbol, shortList, longList));                                          
     }
 
     public static Type MaxType(Type leftType, Type rightType) {
