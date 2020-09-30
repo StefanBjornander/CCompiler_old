@@ -64,17 +64,12 @@ namespace CCompiler {
       Type sourceType = sourceSymbol.Type;
       List<MiddleCode> longList = sourceExpression.LongList;
 
-      /*if (sourceType.IsFloating()) {
-        MiddleCode popCode = new MiddleCode(MiddleOperator.PopEmpty);
-        longList.Add(popCode);
-      }*/
-
       if (targetType.IsVoid()) {
         targetSymbol = new Symbol(targetType);
       }
       else if (sourceType.IsStructOrUnion() && targetType.IsStructOrUnion()) {
-        Assert.Error(sourceType.Equals(targetType), sourceType + " to " + targetType,
-                     Message.Invalid_type_cast);
+        Assert.Error(sourceType.Equals(targetType), sourceType + " to " +
+                     targetType, Message.Invalid_type_cast);
         targetSymbol = new Symbol(targetType);
       }
       else if (sourceType.IsLogical() &&
@@ -84,9 +79,11 @@ namespace CCompiler {
 
         if (targetType.IsIntegralArrayOrPointer()) {
           Symbol oneSymbol = new Symbol(targetType, BigInteger.One);
-          trueCode = new MiddleCode(MiddleOperator.Assign, targetSymbol, oneSymbol);
+          trueCode =
+            new MiddleCode(MiddleOperator.Assign, targetSymbol, oneSymbol);
           Symbol zeroSymbol = new Symbol(targetType, BigInteger.Zero);
-          falseCode = new MiddleCode(MiddleOperator.Assign, targetSymbol, zeroSymbol);
+          falseCode =
+            new MiddleCode(MiddleOperator.Assign, targetSymbol, zeroSymbol);
         }
         else {
           trueCode = new MiddleCode(MiddleOperator.PushOne);
@@ -187,12 +184,6 @@ namespace CCompiler {
 
       Assert.Error(targetSymbol != null, sourceType + " to " +
                    targetType, Message.Invalid_type_cast);
-
-      /*if (sourceType.IsFloating()) {
-        MiddleCode popCode = new MiddleCode(MiddleOperator.PopEmpty);
-        longList.Add(popCode);
-      }*/
-
       return (new Expression(targetSymbol, null, longList));
     }
 
