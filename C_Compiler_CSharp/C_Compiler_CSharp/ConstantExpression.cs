@@ -463,7 +463,6 @@ namespace CCompiler {
         bool isTrue = (sourceSymbol.TrueSet.Count > 0);
         BigInteger targetValue = isTrue ? BigInteger.One : BigInteger.Zero;
         targetSymbol = new Symbol(targetType, targetValue);
-
       }
       else if (sourceType.IsLogical() && targetType.IsFloating()) {
         bool isTrue = (sourceSymbol.TrueSet.Count > 0);
