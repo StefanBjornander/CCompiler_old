@@ -184,7 +184,7 @@ namespace CCompiler {
         {MiddleOperator.LogicalAnd, "&&"},
         {MiddleOperator.Increment, "++"},
         {MiddleOperator.Decrement, "--"},
-        {MiddleOperator.EqualZero, "==0"},
+        //{MiddleOperator.EqualZero, "==0"},
         {MiddleOperator.Equal, "=="},
         {MiddleOperator.NotEqual, "!="},
         {MiddleOperator.SignedLessThan, "<"},

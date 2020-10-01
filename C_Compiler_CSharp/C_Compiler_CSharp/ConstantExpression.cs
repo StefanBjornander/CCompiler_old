@@ -454,12 +454,12 @@ namespace CCompiler {
         targetSymbol = new Symbol(targetType, targetValue);
       }
       else if (sourceType.IsFloating() &&
-               targetType.IsIntegralPointerArrayStringOrFunction()) {
+               targetType.IsIntegralPointerOrArray()) {
         BigInteger targetValue = ((BigInteger) ((decimal) sourceValue));
         targetSymbol = new Symbol(targetType, targetValue);
       }
       else if (sourceType.IsLogical() &&
-               targetType.IsIntegralPointerArrayStringOrFunction()) {
+               targetType.IsIntegralPointerOrArray()) {
         bool isTrue = (sourceSymbol.TrueSet.Count > 0);
         BigInteger targetValue = isTrue ? BigInteger.One : BigInteger.Zero;
         targetSymbol = new Symbol(targetType, targetValue);

@@ -692,17 +692,17 @@ namespace CCompiler {
           default:
             if ((symbol0 != null) && symbol0.IsTemporary() &&
                 (symbol0.AddressSymbol == null) &&
-                symbol0.Type.IsIntegralArrayOrPointer()) {
+                symbol0.Type.IsIntegralPointerOrArray()) {
               integralSet.Add(symbol0);
             }
 
             if ((symbol1 != null) && symbol1.IsTemporary() &&
-                symbol1.Type.IsIntegralArrayOrPointer()) {
+                symbol1.Type.IsIntegralPointerOrArray()) {
               integralSet.Remove(symbol1);
             }
 
             if ((symbol2 != null) && symbol2.IsTemporary() &&
-                symbol2.Type.IsIntegralArrayOrPointer()) {
+                symbol2.Type.IsIntegralPointerOrArray()) {
               integralSet.Remove(symbol2);
             }
 

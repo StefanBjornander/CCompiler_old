@@ -197,6 +197,7 @@ namespace CCompiler {
 
           case MiddleOperator.Equal:
           case MiddleOperator.NotEqual:
+          //case MiddleOperator.EqualZero:
           case MiddleOperator.SignedLessThan:
           case MiddleOperator.SignedLessThanEqual:
           case MiddleOperator.SignedGreaterThan:
@@ -1366,7 +1367,7 @@ namespace CCompiler {
 
     public void FloatingRelation(MiddleCode middleCode) {
       Assert.ErrorXXX((m_floatStackSize -= 2) >= 0);
-      int target = (int)middleCode[0];
+      int target = (int) middleCode[0];
       AddAssemblyCode(AssemblyOperator.fcompp);
       AddAssemblyCode(AssemblyOperator.fstsw, Register.ax);
       AddAssemblyCode(AssemblyOperator.sahf);
@@ -1482,7 +1483,7 @@ namespace CCompiler {
         objectOperator = m_floatTopMap[pair];
       }
 
-      if (symbol.Type.IsIntegralArrayOrPointer() && symbol.IsTemporary()) {        
+      if (symbol.Type.IsIntegralPointerOrArray() && symbol.IsTemporary()) {        
         string containerName = AddStaticContainer(symbol.Type);
         AddAssemblyCode(objectOperator, containerName, 0);
         Track track = new Track(symbol);

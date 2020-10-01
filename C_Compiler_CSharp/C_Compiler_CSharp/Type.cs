@@ -453,12 +453,12 @@ namespace CCompiler {
       return IsIntegral() || IsArray();
     }
 
-    public bool IsIntegralArrayOrPointer() {
+    public bool IsIntegralPointerOrArray() {
       return IsIntegral() || IsPointer() || IsArray();
     }
 
     public bool IsIntegralPointerArrayOrString() {
-      return IsIntegralArrayOrPointer() || IsString();
+      return IsIntegralPointerOrArray() || IsString();
     }
 
     public bool IsIntegralPointerArrayStringOrFunction() {
@@ -471,7 +471,7 @@ namespace CCompiler {
     }
 
     public bool IsIntegralPointerArrayOrFunction() {
-      return IsIntegralArrayOrPointer() || IsFunction();
+      return IsIntegralPointerOrArray() || IsFunction();
     }
 
     public bool IsArithmeticOrPointer() {

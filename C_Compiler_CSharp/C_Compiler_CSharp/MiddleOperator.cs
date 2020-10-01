@@ -7,7 +7,7 @@ namespace CCompiler {
                               PushZero, PushOne, PushFloat, PopFloat, TopFloat,
                               PopEmpty, Comma, Assign, LogicalOr, LogicalAnd,
                               BitwiseOr, BitwiseXOr, BitwiseAnd,
-                              Equal, EqualZero, NotEqual, SignedLessThan,
+                              Equal, /*EqualZero,*/ NotEqual, SignedLessThan,
                               SignedLessThanEqual, SignedGreaterThan,
                               SignedGreaterThanEqual, UnsignedLessThan,
                               UnsignedLessThanEqual, UnsignedGreaterThan,
