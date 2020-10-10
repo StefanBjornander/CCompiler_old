@@ -91,11 +91,10 @@ namespace CCompiler {
       }
 
       bool externalLinkage = (SymbolTable.CurrentTable.Scope == Scope.Global)
-                             && (CCompiler_Main.Parser.CallDepth == 0) &&
-                             ((storage == null) ||
-                              (storage == CCompiler.Storage.Extern));
+                             && ((storage == null) ||
+                                 (storage == CCompiler.Storage.Extern));
 
-      if (CCompiler_Main.Parser.CallDepth > 0) {
+      if (SymbolTable.CurrentTable.Scope == Scope.Parameter) {
         Assert.Error((storage == null) || (storage == Storage.Auto) || 
                      (storage == Storage.Register), storage, Message.
           Only_auto_or_register_storage_allowed_in_parameter_declaration);
@@ -199,6 +198,18 @@ namespace CCompiler {
           Assert.Error(MaskToString((int) sortMaskValue), Message.
                              Invalid_specifier_sequence_together_with_type);
         }
+
+        /*if (storage == null) {
+          if (type.IsFunction()) {
+            storage = Storage.Extern;
+          }
+          else if (SymbolTable.CurrentTable.Scope == Scope.Global) {
+            storage = Storage.Static;
+          }
+          else {
+            storage = Storage.Auto;
+          }
+        }*/
 
         return (new Specifier(externalLinkage, storage, type));
       }

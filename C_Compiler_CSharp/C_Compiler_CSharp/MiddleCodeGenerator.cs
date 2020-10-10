@@ -410,7 +410,7 @@ namespace CCompiler {
     // ---------------------------------------------------------------------------------------------------------------------
 
     public static void Declarator(Specifier specifier, Declarator declarator) {
-      Assert.ErrorXXX(CCompiler_Main.Parser.CallDepth == 0);
+      //Assert.ErrorXXX(CCompiler_Main.Parser.CallDepth == 0);
       Storage? storage = specifier.StorageX;
       declarator.Add(specifier.Type);
 
@@ -440,7 +440,7 @@ namespace CCompiler {
   
     public static List<MiddleCode> AssignmentDeclarator(Specifier specifier,
                                                      Declarator declarator, object initializer) {
-      Assert.ErrorXXX(CCompiler_Main.Parser.CallDepth == 0);
+      //Assert.ErrorXXX(CCompiler_Main.Parser.CallDepth == 0);
       Storage? storage = specifier.StorageX;
       Type specifierType = specifier.Type;
 

@@ -45,6 +45,7 @@ namespace CCompiler {
 
     public Scope Scope {
       get { return m_scope; }
+      set { m_scope = value; }
     }
 
     public SymbolTable ParentTable {

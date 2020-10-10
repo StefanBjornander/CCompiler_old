@@ -7,7 +7,7 @@
 %{
   public static Stack<Specifier> SpecifierStack = new Stack<Specifier>();
   public static Stack<BigInteger> EnumValueStack = new Stack<BigInteger>();
-  public static int CallDepth = 0;
+  public static Stack<Scope> ScopeStack = new Stack<Scope>();
 %}
 
 %token AUTO REGISTER STATIC EXTERN TYPEDEF CONSTANT VOLATILE
@@ -368,17 +368,20 @@ parameter_ellipse_list:
     };
 
 parameter_list:
-    { ++CallDepth; }
+    { ScopeStack.Push(SymbolTable.CurrentTable.Scope);
+      SymbolTable.CurrentTable.Scope = Scope.Parameter;
+    }
     parameter_declaration {
-      --CallDepth;
+      SymbolTable.CurrentTable.Scope = ScopeStack.Pop();
       $$ = new List<Pair<string,Symbol>>();
       $$.Add($2);
     }
   | parameter_list COMMA {
-      ++CallDepth;
+      ScopeStack.Push(SymbolTable.CurrentTable.Scope);
+      SymbolTable.CurrentTable.Scope = Scope.Parameter;
     }
     parameter_declaration {
-      --CallDepth;
+      SymbolTable.CurrentTable.Scope = ScopeStack.Pop();
       $1.Add($4);
       $$ = $1;
     };

@@ -12,15 +12,6 @@ namespace CCompiler {
       m_operandArray[0] = operand0;
       m_operandArray[1] = operand1;
       m_operandArray[2] = operand2;
-
-      /*if ((operand0 != null) && operand0.ToString().Contains("temporary43")) {
-        int i = 1;
-      }
-
-      if ((middleOp == MiddleOperator.Initializer) &&
-          (((Sort) operand0) == Sort.Pointer)) {
-        int i = 1;
-      }*/
     }
 
     public MiddleOperator Operator {
