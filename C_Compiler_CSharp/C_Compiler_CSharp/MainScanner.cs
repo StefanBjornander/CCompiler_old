@@ -2496,7 +2496,7 @@ return ((int) Tokens.MULTIPLY_ASSIGN);
             break;
         case 242:
         case 243:
-{ CCompiler.Type type = new CCompiler.Type(Sort.Signed_Char);
+{ CCompiler.Type type = new CCompiler.Type(Sort.SignedChar);
     string text = SlashToChar(yytext);
     Assert.Error(text.Length == 3, yytext, Message.Invalid_char_sequence);
     yylval.symbol = new Symbol(type, (BigInteger) ((int) text[1]));

@@ -11,29 +11,29 @@ namespace CCompiler {
     private static IDictionary<int, Sort> m_maskToSortMap =
       new Dictionary<int, Sort>() {  
         {(int) Mask.Void, Sort.Void},
-        {(int) Mask.Char, Sort.Signed_Char},
-        {(int) Mask.SignedChar, Sort.Signed_Char},
-        {(int) Mask.UnsignedChar, Sort.Unsigned_Char},
-        {(int) Mask.Short, Sort.Signed_Short_Int},
-        {(int) Mask.ShortInt, Sort.Signed_Short_Int},
-        {(int) Mask.SignedShort, Sort.Signed_Short_Int},
-        {(int) Mask.SignedShortInt, Sort.Signed_Short_Int},
-        {(int) Mask.UnsignedShort, Sort.Unsigned_Short_Int},
-        {(int) Mask.UnsignedShortInt, Sort.Unsigned_Short_Int},
-        {(int) Mask.Int, Sort.Signed_Int},
-        {(int) Mask.Signed, Sort.Signed_Int},
-        {(int) Mask.SignedInt, Sort.Signed_Int},
+        {(int) Mask.Char, Sort.SignedChar},
+        {(int) Mask.SignedChar, Sort.SignedChar},
+        {(int) Mask.UnsignedChar, Sort.UnsignedChar},
+        {(int) Mask.Short, Sort.SignedShortInt},
+        {(int) Mask.ShortInt, Sort.SignedShortInt},
+        {(int) Mask.SignedShort, Sort.SignedShortInt},
+        {(int) Mask.SignedShortInt, Sort.SignedShortInt},
+        {(int) Mask.UnsignedShort, Sort.UnsignedShortInt},
+        {(int) Mask.UnsignedShortInt, Sort.UnsignedShortInt},
+        {(int) Mask.Int, Sort.SignedInt},
+        {(int) Mask.Signed, Sort.SignedInt},
+        {(int) Mask.SignedInt, Sort.SignedInt},
         {(int) Mask.Unsigned, Sort.Unsigned_Int},
         {(int) Mask.UnsignedInt, Sort.Unsigned_Int},
         {(int) Mask.Long, Sort.Signed_Long_Int},
         {(int) Mask.LongInt, Sort.Signed_Long_Int},
         {(int) Mask.SignedLong, Sort.Signed_Long_Int},
         {(int) Mask.SignedLongInt, Sort.Signed_Long_Int},
-        {(int) Mask.UnsignedLong, Sort.Unsigned_Long_Int},
-        {(int) Mask.UnsignedLongInt, Sort.Unsigned_Long_Int},
+        {(int) Mask.UnsignedLong, Sort.UnsignedLongInt},
+        {(int) Mask.UnsignedLongInt, Sort.UnsignedLongInt},
         {(int) Mask.Float, Sort.Float},
         {(int) Mask.Double, Sort.Double},
-        {(int) Mask.LongDouble, Sort.Long_Double}
+        {(int) Mask.LongDouble, Sort.LongDouble}
       };
 
     public Specifier(bool externalLinkage, Storage? storage, Type type) {
@@ -179,7 +179,7 @@ namespace CCompiler {
           type.Volatile = isVolatile;
         }
         else if ((compoundType == null) && (sort == null)) {
-          type = new Type(Sort.Signed_Int);
+          type = new Type(Sort.SignedInt);
           type.Constant = isConstant;
           type.Volatile = isVolatile;
         }

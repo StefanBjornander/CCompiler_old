@@ -363,11 +363,11 @@ namespace CCompiler {
 
     // ---------------------------------------------------------------------------------------------------------------------
   
-    public static Symbol EnumItem(string itemName, Symbol optInitializerSymbol) {
-      Type itemType = new Type(Sort.Signed_Int, true);
+    public static Symbol EnumItem(string itemName, Symbol optInitializerSymbol)
+    { Type itemType = new Type(Sort.SignedInt);
       itemType.Constant = true;
-      BigInteger value;
 
+      BigInteger value;
       if (optInitializerSymbol != null) {
         Assert.Error(optInitializerSymbol.Type.IsIntegral(), itemName,
                      Message.Non__integral_enum_value);
@@ -389,7 +389,7 @@ namespace CCompiler {
   
     public static Type EnumSpecifier(string optionalName,
                                      ISet<Pair<Symbol,bool>> enumSet) {
-      Type enumType = new Type(Sort.Signed_Int, enumSet);
+      Type enumType = new Type(Sort.SignedInt, enumSet);
 
       if (optionalName != null) {
         SymbolTable.CurrentTable.AddTag(optionalName, enumType);
@@ -399,24 +399,25 @@ namespace CCompiler {
     }
 
     public static Type LookupEnum(string name) {
-      Type type = SymbolTable.CurrentTable.LookupTag(name, Sort.Signed_Int);
+      Type type = SymbolTable.CurrentTable.LookupTag(name, Sort.SignedInt);
       Assert.Error(type != null, name, Message.Tag_not_found); 
       return type;
     }
 
     // ---------------------------------------------------------------------------------------------------------------------
 
-    public static void Declarator(Specifier specifier, Declarator declarator) {
+    public static void Declarator(Specifier specifier, Declarator declarator){
       Storage? storage = specifier.StorageX;
       declarator.Add(specifier.Type);
 
       if (declarator.Type.IsFunction()) {
-        Assert.Error((storage == Storage.Static) || (storage == Storage.Extern) ||
-                     (storage == Storage.Typedef),  storage, Message.
-                     Only_static___extern_or_typedef_storage_allowed_for_functions);
+        Assert.Error((storage == Storage.Static) || (storage == Storage.Extern)
+                     || (storage == Storage.Typedef),  storage, Message.
+            Only_static___extern_or_typedef_storage_allowed_for_functions);
       }
 
-      Symbol symbol = new Symbol(declarator.Name, specifier.ExternalLinkage, storage.Value, declarator.Type);
+      Symbol symbol = new Symbol(declarator.Name, specifier.ExternalLinkage,
+                                 storage.Value, declarator.Type);
       SymbolTable.CurrentTable.AddSymbol(symbol);
 
       if (symbol.IsStatic() && !symbol.Type.IsFunction()) {
@@ -425,7 +426,7 @@ namespace CCompiler {
     }
   
     public static List<MiddleCode> AssignmentDeclarator(Specifier specifier,
-                                                     Declarator declarator, object initializer) {
+                                   Declarator declarator, object initializer){
       Storage? storage = specifier.StorageX;
       Type specifierType = specifier.Type;
 
@@ -433,38 +434,48 @@ namespace CCompiler {
       string name = declarator.Name;
       Type type = declarator.Type;
 
-      Assert.Error(!type.IsFunction(), null, Message.Functions_cannot_be_initialized);
-      Assert.Error(storage != Storage.Typedef, name, Message.Typedef_cannot_be_initialized);
-      Assert.Error(storage != Storage.Extern, name, Message.Extern_cannot_be_initialized);
+      Assert.Error(!type.IsFunction(), null,
+                   Message.Functions_cannot_be_initialized);
+      Assert.Error(storage != Storage.Typedef, name,
+                   Message.Typedef_cannot_be_initialized);
+      Assert.Error(storage != Storage.Extern, name,
+                   Message.Extern_cannot_be_initialized);
       Assert.Error((SymbolTable.CurrentTable.Scope != Scope.Struct) &&
                    (SymbolTable.CurrentTable.Scope != Scope.Union),
                    name, Message.Struct_or_union_field_cannot_be_initialized);
       Assert.Error((SymbolTable.CurrentTable.Scope != Scope.Global) ||
-                   ((storage != Storage.Auto) && (storage != Storage.Register)),
-                     null, Message.Auto_or_register_storage_in_global_scope);
+                   ((storage != Storage.Auto) &&
+                    (storage != Storage.Register)),
+                   null, Message.Auto_or_register_storage_in_global_scope);
 
-      if ((SymbolTable.CurrentTable.Scope == Scope.Global) || (storage == Storage.Static)) {
-        List<MiddleCode> middleCodeList = GenerateStaticInitializer.GenerateStatic(type, initializer);
+      if ((SymbolTable.CurrentTable.Scope == Scope.Global) ||
+          (storage == Storage.Static)) {
+        List<MiddleCode> middleCodeList =
+          GenerateStaticInitializer.GenerateStatic(type, initializer);
 
-        Symbol symbol = new Symbol(name, specifier.ExternalLinkage, storage.Value, type);
+        Symbol symbol = new Symbol(name, specifier.ExternalLinkage,
+                                   storage.Value, type);
         SymbolTable.CurrentTable.AddSymbol(symbol);
 
-        StaticSymbol staticSymbol = ConstantExpression.Value(symbol.UniqueName, type, middleCodeList);
+        StaticSymbol staticSymbol =
+          ConstantExpression.Value(symbol.UniqueName, type, middleCodeList);
         SymbolTable.StaticSet.Add(staticSymbol);
         
         return (new List<MiddleCode>());
       }
       else {
-        Symbol symbol = new Symbol(name, specifier.ExternalLinkage, storage.Value, type);
+        Symbol symbol =
+          new Symbol(name, specifier.ExternalLinkage, storage.Value, type);
         symbol.Offset = SymbolTable.CurrentTable.CurrentOffset;
-        List<MiddleCode> codeList = GenerateAutoInitializer.GenerateAuto(symbol, initializer);
+        List<MiddleCode> codeList =
+          GenerateAutoInitializer.GenerateAuto(symbol, initializer);
         SymbolTable.CurrentTable.AddSymbol(symbol);
         return codeList;
       }
     }
 
     public static void BitfieldDeclarator(Specifier specifier,
-                                       Declarator declarator, Symbol bitsSymbol) {
+                                   Declarator declarator, Symbol bitsSymbol) {
       Storage? storage = specifier.StorageX;
       Type specifierType = specifier.Type;
 
@@ -472,7 +483,8 @@ namespace CCompiler {
                    bitsSymbol, Message.Bitfields_only_allowed_on_structs);
 
       Assert.Error((storage == Storage.Auto) || (storage == Storage.Register),
-             null, Message.Only_auto_or_register_storage_allowed_in_struct_or_union);
+                   null, Message.
+                   Only_auto_or_register_storage_allowed_in_struct_or_union);
 
       object bitsValue = bitsSymbol.Value;
       int bits = int.Parse(bitsValue.ToString());
@@ -480,15 +492,17 @@ namespace CCompiler {
       if (declarator != null) {
         declarator.Add(specifierType);
         Type type = declarator.Type;
-        Assert.Error(type.IsIntegral(), type, Message.Non__integral_bits_expression);
-        Assert.Error((bits >= 1) && (bits <= (8 * type.Size())), bitsValue,
-                      Message.Bits_value_out_of_range);
+        Assert.Error(type.IsIntegral(), type,
+                     Message.Non__integral_bits_expression);
+        Assert.Error((bits >= 1) && (bits <= (8 * type.Size())),
+                      bitsValue, Message.Bits_value_out_of_range);
       
         if (bits < (8 * type.Size())) {
           type.SetBitfieldMask(bits);
         }
 
-        Symbol symbol = new Symbol(declarator.Name, specifier.ExternalLinkage, storage.Value, type);
+        Symbol symbol = new Symbol(declarator.Name, specifier.ExternalLinkage,
+                                   storage.Value, type);
         SymbolTable.CurrentTable.AddSymbol(symbol);
 
         if (symbol.IsStatic()) {
@@ -504,7 +518,7 @@ namespace CCompiler {
     // ---------------------------------------------------------------------------------------------------------------------
 
     public static Declarator PointerDeclarator(List<Type> typeList,
-                                                       Declarator declarator) {
+                                               Declarator declarator) {
       if (declarator == null) {
         declarator = new Declarator(null);
       }
@@ -519,7 +533,7 @@ namespace CCompiler {
       return declarator;
     }
 
-    public static Declarator PointerListDeclarator
+    /*public static Declarator PointerListDeclarator
                   (List<Pair<bool,bool>> pointerList, Declarator declarator) {
       foreach (Pair<bool,bool> pair in pointerList) {
         Type pointerType = new Type((Type) null);
@@ -530,12 +544,12 @@ namespace CCompiler {
       }
     
       return declarator;
-    }
+    }*/
 
     // ---------------------------------------------------------------------------------------------------------------------
   
     public static Declarator ArrayType(Declarator declarator,
-                                               Expression optSizeExpression) {
+                                       Expression optSizeExpression) {
       if (declarator == null) {
         declarator = new Declarator(null);
       }
@@ -543,7 +557,8 @@ namespace CCompiler {
       if (optSizeExpression != null) {
         Symbol optSizeSymbol = optSizeExpression.Symbol;
         int arraySize = (int) ((BigInteger) optSizeSymbol.Value);
-        Assert.Error(arraySize > 0, arraySize, Message.Non__positive_array_size);
+        Assert.Error(arraySize > 0, arraySize,
+                     Message.Non__positive_array_size);
         Type arrayType = new Type(arraySize, null);
         declarator.Add(arrayType);
       }
@@ -557,22 +572,25 @@ namespace CCompiler {
 
     // ---------------------------------------------------------------------------------------------------------------------
 
-    public static Declarator NewFunctionDeclaration(Declarator declarator, List<Pair<string,Symbol>> paramList,
+    public static Declarator NewFunctionDeclaration(Declarator declarator,
+                                        List<Pair<string,Symbol>> paramList,
                                                             bool ellipse) {
       if (paramList.Count == 0) {
         Assert.Error(!ellipse, "...",
-                      Message.An_elliptic_function_must_have_at_least_one_parameter);
+            Message.An_elliptic_function_must_have_at_least_one_parameter);
       }
       else if ((paramList.Count == 1) && paramList[0].Second.Type.IsVoid()) {
-        Assert.Error(paramList[0].Second.Name == null, paramList[0].Second.Name,
-                      Message.A_void_parameter_cannot_be_named);
-        Assert.Error(!ellipse, "...",
-                    Message.An_elliptic_function_cannot_have_a_void_parameter);
+        Assert.Error(paramList[0].Second.Name == null,
+                     paramList[0].Second.Name,
+                     Message.A_void_parameter_cannot_be_named);
+        Assert.Error(!ellipse, "...", Message.
+                     An_elliptic_function_cannot_have_a_void_parameter);
         paramList.Clear();
       }
       else {
         foreach (Pair<string,Symbol> pair in paramList) {
-          Assert.Error(!pair.Second.Type.IsVoid(), Message.Invalid_void_parameter);
+          Assert.Error(!pair.Second.Type.IsVoid(),
+                       Message.Invalid_void_parameter);
         }
       }
 
@@ -581,7 +599,7 @@ namespace CCompiler {
     }
 
     public static Declarator OldFunctionDeclaration(Declarator declarator,
-                                                            List<string> nameList) {
+                                                    List<string> nameList) {
       ISet<string> nameSet = new HashSet<string>();
 
       foreach (string name in nameList) {
@@ -590,9 +608,10 @@ namespace CCompiler {
 
       declarator.Add(new Type(null, nameList));
       return declarator;
-    }
-  
-    public static Pair<string,Symbol> Parameter(Specifier specifier, Declarator declarator) {
+    }  
+
+    public static Pair<string,Symbol> Parameter(Specifier specifier,
+                                                Declarator declarator) {
       Storage? storage = specifier.StorageX;
       Type specifierType = specifier.Type;
 
@@ -627,20 +646,6 @@ namespace CCompiler {
 
     // ---------------------------------------------------------------------------------------------------------------------
  
-    public static Type TypeName(Specifier specifier, Declarator declarator) {
-      Type specifierType = specifier.Type;
-
-      if (declarator != null) {
-        declarator.Add(specifierType);
-        return declarator.Type;
-      }
-      else {
-        return specifierType;
-      }
-    }
-
-    // ---------------------------------------------------------------------------------------------------------------------
-
     public static Statement IfStatement(Expression expression,
                                         Statement innerStatement) {
       expression = TypeCast.ToLogical(expression);
@@ -1744,7 +1749,24 @@ namespace CCompiler {
                     leftExpression.Symbol, rightExpression.Symbol);
       return (new Expression(resultSymbol, shortList, longList));
     }
-  
+
+    // ---------------------------------------------------------------------------------------------------------------------
+
+    public static Type TypeName(Specifier specifier, Declarator declarator)
+    {
+      Type specifierType = specifier.Type;
+
+      if (declarator != null) {
+        declarator.Add(specifierType);
+        return declarator.Type;
+      }
+      else {
+        return specifierType;
+      }
+    }
+
+    // ---------------------------------------------------------------------------------------------------------------------
+
     public static Expression UnaryExpression(MiddleOperator middleOp,
                                              Expression expression) {
       Type type = expression.Symbol.Type;
@@ -2274,7 +2296,7 @@ namespace CCompiler {
           return (new Type(symbol.Type));
 
         case Sort.String:
-          return (new Type(new Type(Sort.Signed_Char)));
+          return (new Type(new Type(Sort.SignedChar)));
 
         default:
           return symbol.Type;

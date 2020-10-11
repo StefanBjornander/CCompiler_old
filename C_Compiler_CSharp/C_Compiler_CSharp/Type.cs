@@ -178,8 +178,8 @@ namespace CCompiler {
     // ------------------------------------------------------------------------
 
     public static bool IsSigned(Sort sort) {
-      return (sort == Sort.Signed_Char) || (sort == Sort.Signed_Short_Int) ||
-             (sort == Sort.Signed_Int) || (sort == Sort.Signed_Long_Int);
+      return (sort == Sort.SignedChar) || (sort == Sort.SignedShortInt) ||
+             (sort == Sort.SignedInt) || (sort == Sort.Signed_Long_Int);
     }
         
     public int Size() {
@@ -319,16 +319,16 @@ namespace CCompiler {
     }
 
     public bool IsChar() {
-      return (m_sort == Sort.Signed_Char) || (m_sort == Sort.Unsigned_Char);
+      return (m_sort == Sort.SignedChar) || (m_sort == Sort.UnsignedChar);
     }
 
     public bool IsShort() {
-      return (m_sort == Sort.Signed_Short_Int) ||
-             (m_sort == Sort.Unsigned_Short_Int);
+      return (m_sort == Sort.SignedShortInt) ||
+             (m_sort == Sort.UnsignedShortInt);
     }
 
     public bool IsInteger() {
-      return (m_sort == Sort.Signed_Int) || (m_sort == Sort.Unsigned_Int);
+      return (m_sort == Sort.SignedInt) || (m_sort == Sort.Unsigned_Int);
     }
 
     public bool IsIntegral() {
@@ -337,9 +337,9 @@ namespace CCompiler {
 
     public bool IsSigned() {
       switch (m_sort) {
-        case Sort.Signed_Char:
-        case Sort.Signed_Short_Int:
-        case Sort.Signed_Int:
+        case Sort.SignedChar:
+        case Sort.SignedShortInt:
+        case Sort.SignedInt:
         case Sort.Signed_Long_Int:
           return true;
 
@@ -350,10 +350,10 @@ namespace CCompiler {
 
     public bool IsUnsigned() {
       switch (m_sort) {
-        case Sort.Unsigned_Char:
-        case Sort.Unsigned_Short_Int:
+        case Sort.UnsignedChar:
+        case Sort.UnsignedShortInt:
         case Sort.Unsigned_Int:
-        case Sort.Unsigned_Long_Int:
+        case Sort.UnsignedLongInt:
           return true;
 
         default:
@@ -369,7 +369,7 @@ namespace CCompiler {
       switch (m_sort) {
         case Sort.Float:
         case Sort.Double:
-        case Sort.Long_Double:
+        case Sort.LongDouble:
           return true;
 
         default:
@@ -515,19 +515,19 @@ namespace CCompiler {
     }
 
     public static Type SignedShortIntegerType =
-      new Type(Sort.Signed_Short_Int);
+      new Type(Sort.SignedShortInt);
     public static Type UnsignedShortIntegerType =
-      new Type(Sort.Unsigned_Short_Int);
-    public static Type SignedIntegerType = new Type(Sort.Signed_Int);
+      new Type(Sort.UnsignedShortInt);
+    public static Type SignedIntegerType = new Type(Sort.SignedInt);
     public static Type UnsignedIntegerType = new Type(Sort.Unsigned_Int);
     public static Type SignedLongIntegerType = new Type(Sort.Signed_Long_Int);
     public static Type UnsignedLongIntegerType =
-      new Type(Sort.Unsigned_Long_Int);
+      new Type(Sort.UnsignedLongInt);
     public static Type FloatType = new Type(Sort.Float);
     public static Type DoubleType = new Type(Sort.Double);
-    public static Type LongDoubleType = new Type(Sort.Long_Double);
-    public static Type SignedCharType = new Type(Sort.Signed_Char);
-    public static Type UnsignedCharType = new Type(Sort.Unsigned_Char);
+    public static Type LongDoubleType = new Type(Sort.LongDouble);
+    public static Type SignedCharType = new Type(Sort.SignedChar);
+    public static Type UnsignedCharType = new Type(Sort.UnsignedChar);
     public static Type StringType = new Type(Sort.String);
     public static Type IntegerPointerType = new Type(SignedIntegerType);
     public static Type VoidPointerType = new Type(new Type(Sort.Void));

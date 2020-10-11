@@ -691,7 +691,7 @@ namespace CCompiler {
           string text = operand1.ToString();
 
           if (((sort == Sort.Float) || (sort == Sort.Double) ||
-              (sort == Sort.Long_Double)) && !text.Contains(".")) {
+              (sort == Sort.LongDouble)) && !text.Contains(".")) {
             text += ".0";
           }
 
@@ -828,7 +828,7 @@ namespace CCompiler {
           float floatValue = (float) ((decimal) operand0);
           byteList =  new List<byte>(BitConverter.GetBytes(floatValue));
         }
-        else if ((sort == Sort.Double) || (sort == Sort.Long_Double)) {
+        else if ((sort == Sort.Double) || (sort == Sort.LongDouble)) {
           double doubleValue = (double) ((decimal) value);
           byteList = new List<byte>(BitConverter.GetBytes(doubleValue));
         }

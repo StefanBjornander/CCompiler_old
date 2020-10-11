@@ -1,3 +1,5 @@
+write "1 + 2 * 3 = ", 1 + 2 * 3;
+
 // The area and circumference of a circle
 read "Input the radius of a circle: ", radius;
 assign area = pi * radius * radius;
