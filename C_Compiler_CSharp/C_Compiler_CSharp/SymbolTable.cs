@@ -67,22 +67,32 @@ namespace CCompiler {
         Symbol oldSymbol;
 
         if (m_entryMap.TryGetValue(name, out oldSymbol)) {
-          Assert.Error(oldSymbol.IsExtern() || newSymbol.IsExtern(),
-                        name, Message.Name_already_defined);
+          if (oldSymbol.Type.IsFunction() && newSymbol.Type.IsFunction()) {
+            Assert.Error(!oldSymbol.FunctionDefinition ||
+                         !newSymbol.FunctionDefinition, name,
+                         Message.Name_already_defined);
+          }
+          else {
+            Assert.Error(oldSymbol.IsExtern() || newSymbol.IsExtern(),
+                         name, Message.Name_already_defined);
+          }
+
           Assert.Error(oldSymbol.Type.Equals(newSymbol.Type),
-                        name, Message.Different_types_in_redeclaration);
+                       name, Message.Different_types_in_redeclaration);
         }
 
         m_entryMap[name] = newSymbol;
       }
-    
-      if (newSymbol.IsAutoOrRegister()) {
-        if (m_scope == Scope.Union) {
-          newSymbol.Offset = 0;
-        }
-        else if (!newSymbol.Type.EnumeratorItem) {
-          newSymbol.Offset = m_currentOffset;
-          m_currentOffset += newSymbol.Type.Size();
+
+      if (!newSymbol.Type.IsFunction()) {    
+        if (newSymbol.IsAutoOrRegister()) {
+          if (m_scope == Scope.Union) {
+            newSymbol.Offset = 0;
+          }
+          else if (!newSymbol.Type.EnumeratorItem) {
+            newSymbol.Offset = m_currentOffset;
+            m_currentOffset += newSymbol.Type.Size();
+          }
         }
       }
     }

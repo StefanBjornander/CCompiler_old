@@ -12,6 +12,11 @@ namespace CCompiler {
       m_operandArray[0] = operand0;
       m_operandArray[1] = operand1;
       m_operandArray[2] = operand2;
+
+      /*if ((middleOp == MiddleOperator.InitializerZero) &&
+          operand0.ToString().Equals("0")) {
+        int i = 1;
+      }*/
     }
 
     public MiddleOperator Operator {

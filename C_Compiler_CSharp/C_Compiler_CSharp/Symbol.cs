@@ -13,7 +13,7 @@ namespace CCompiler {
     public const string SeparatorDot = ".";
     public const string FileMarker = "@";
 
-    private bool m_externalLinkage;
+    private bool m_externalLinkage, m_functionDefinition;
     private string m_name, m_uniqueName;
     private bool m_parameter;
     private Storage m_storage;
@@ -138,6 +138,11 @@ namespace CCompiler {
 
     public bool ExternalLinkage {
       get { return m_externalLinkage; }
+    }
+
+    public bool FunctionDefinition {
+      get { return m_functionDefinition; }
+      set { m_functionDefinition = value; }
     }
 
     public Storage Storage {

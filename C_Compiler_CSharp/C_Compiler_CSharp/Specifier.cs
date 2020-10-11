@@ -86,7 +86,7 @@ namespace CCompiler {
           Assert.Error(Enum.IsDefined(typeof(Mask), totalStorageValue),
                        MaskToString(totalStorageValue),
                        Message.Invalid_specifier_sequence);
-          storage = (Storage)totalStorageValue;
+          storage = (Storage) totalStorageValue;
         }
       }
 
@@ -94,66 +94,55 @@ namespace CCompiler {
                              && ((storage == null) ||
                                  (storage == CCompiler.Storage.Extern));
 
+      if (storage == null) {
+        if (SymbolTable.CurrentTable.Scope == Scope.Global) {
+          storage = Storage.Static;
+        }
+        else {
+          storage = Storage.Auto;
+        }
+      }
+
       if (SymbolTable.CurrentTable.Scope == Scope.Parameter) {
-        Assert.Error((storage == null) || (storage == Storage.Auto) || 
+        Assert.Error((storage == Storage.Auto) || 
                      (storage == Storage.Register), storage, Message.
-          Only_auto_or_register_storage_allowed_in_parameter_declaration);
+            Only_auto_or_register_storage_allowed_in_parameter_declaration);
       }
       else if ((SymbolTable.CurrentTable.Scope == Scope.Struct) ||
                (SymbolTable.CurrentTable.Scope == Scope.Union)) {
-          Assert.Error((storage == null) || (storage == Storage.Auto) ||
+          Assert.Error((storage == Storage.Auto) ||
                        (storage == Storage.Register), storage, Message.
             Only_auto_or_register_storage_allowed_for_struct_or_union_scope);  
       }
       else if (SymbolTable.CurrentTable.Scope == Scope.Global) {
-          Assert.Error((storage == null) || (storage == Storage.Extern) ||
+          Assert.Error((storage == Storage.Extern) ||
                        (storage == Storage.Static) ||
                       (storage == Storage.Typedef), storage, Message.
         Only_extern____static____or_typedef_storage_allowed_in_global_scope);
       }
 
-      if ((compoundType != null) && (compoundType.EnumerationItemSet != null)){
-        if (storage != null) {
-          foreach (Pair<Symbol,bool> pair in compoundType.EnumerationItemSet){
-            Symbol enumSymbol = pair.First;          
-          
-            switch (enumSymbol.Storage = storage.Value) {
-              case CCompiler.Storage.Static:
-                SymbolTable.StaticSet.Add(ConstantExpression.
-                                          Value(enumSymbol));
-                break;
+      if ((compoundType != null) && (compoundType.EnumItemSet != null)){
+        foreach (Pair<Symbol,bool> pair in compoundType.EnumItemSet){
+          Symbol enumSymbol = pair.First;          
 
-              case CCompiler.Storage.Extern: {
-                  bool enumInitializer = pair.Second;
-                  Assert.Error(!enumInitializer,
-                               enumSymbol + " = " + enumSymbol.Value,
-                    Message.Extern_enumeration_item_cannot_be_initialized);
-                }
-                break;
+          switch (enumSymbol.Storage = storage.Value) {
+            case CCompiler.Storage.Static:
+              SymbolTable.StaticSet.Add(ConstantExpression.
+                                        Value(enumSymbol));
+              break;
 
-              case CCompiler.Storage.Auto:
-              case CCompiler.Storage.Register:
-                SymbolTable.CurrentTable.SetOffset(enumSymbol);
-                break;
-            }
-          }
-        }
-        else {
-          foreach (Pair<Symbol,bool> pair in compoundType.EnumerationItemSet) {
-            Symbol enumSymbol = pair.First;          
-          
-            switch (SymbolTable.CurrentTable.Scope) {
-              case Scope.Global:
-                enumSymbol.Storage = CCompiler.Storage.Static;
-                SymbolTable.StaticSet.Add(ConstantExpression.
-                                          Value(enumSymbol));
-                break;
+            case CCompiler.Storage.Extern: {
+                bool enumInitializer = pair.Second;
+                Assert.Error(!enumInitializer,
+                              enumSymbol + " = " + enumSymbol.Value,
+                  Message.Extern_enumeration_item_cannot_be_initialized);
+              }
+              break;
 
-              default:
-                enumSymbol.Storage = CCompiler.Storage.Auto;
-                SymbolTable.CurrentTable.SetOffset(enumSymbol);
-                break;
-            }
+            case CCompiler.Storage.Auto:
+            case CCompiler.Storage.Register:
+              SymbolTable.CurrentTable.SetOffset(enumSymbol);
+              break;
           }
         }
       }
@@ -198,18 +187,6 @@ namespace CCompiler {
           Assert.Error(MaskToString((int) sortMaskValue), Message.
                              Invalid_specifier_sequence_together_with_type);
         }
-
-        /*if (storage == null) {
-          if (type.IsFunction()) {
-            storage = Storage.Extern;
-          }
-          else if (SymbolTable.CurrentTable.Scope == Scope.Global) {
-            storage = Storage.Static;
-          }
-          else {
-            storage = Storage.Auto;
-          }
-        }*/
 
         return (new Specifier(externalLinkage, storage, type));
       }

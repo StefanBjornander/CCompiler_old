@@ -122,16 +122,16 @@ translation_unit:
   | translation_unit external_declaration;
 
 external_declaration:
-    function_definitializerion
+    function_definition
  |  declaration;
 
-function_definitializerion:
+function_definition:
     declaration_specifier_list_x declarator {
       MiddleCodeGenerator.FunctionHeader
         (SpecifierStack.Pop(), $2);
     }
     optional_declaration_list {
-      MiddleCodeGenerator.CheckFunctionDefinitializerion();
+      MiddleCodeGenerator.CheckFunctionDefinition();
     }
     LEFT_BLOCK optional_statement_list RIGHT_BLOCK {
       MiddleCodeGenerator.BackpatchGoto();
@@ -141,7 +141,7 @@ function_definitializerion:
       MiddleCodeGenerator.FunctionHeader(null, $1);
     }
     optional_declaration_list {
-      MiddleCodeGenerator.CheckFunctionDefinitializerion();
+      MiddleCodeGenerator.CheckFunctionDefinition();
     }
     LEFT_BLOCK optional_statement_list RIGHT_BLOCK {
       MiddleCodeGenerator.BackpatchGoto();

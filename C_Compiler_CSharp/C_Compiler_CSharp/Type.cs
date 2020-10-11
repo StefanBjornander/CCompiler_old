@@ -171,7 +171,7 @@ namespace CCompiler {
       m_enumeratorItemSet = enumSet;
     }
 
-    public ISet<Pair<Symbol,bool>> EnumerationItemSet {
+    public ISet<Pair<Symbol,bool>> EnumItemSet {
       get { return m_enumeratorItemSet; }
     }
 
