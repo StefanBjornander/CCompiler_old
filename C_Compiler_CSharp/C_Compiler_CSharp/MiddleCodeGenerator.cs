@@ -364,7 +364,7 @@ namespace CCompiler {
     // ---------------------------------------------------------------------------------------------------------------------
   
     public static Symbol EnumItem(string itemName, Symbol optInitializerSymbol)
-    { Type itemType = new Type(Sort.SignedInt);
+    { Type itemType = new Type(Sort.SignedInt, true);      
       itemType.Constant = true;
 
       BigInteger value;
