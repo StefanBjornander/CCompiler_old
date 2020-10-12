@@ -351,7 +351,7 @@ WHITE_SPACE [ \t\r\n\f]
 }
 
 {CHAR_VALUE} {
-  { CCompiler.Type type = new CCompiler.Type(Sort.Signed_Char);
+  { CCompiler.Type type = new CCompiler.Type(Sort.SignedChar);
     string text = SlashToChar(yytext);
     Assert.Error(text.Length == 3, yytext, Message.Invalid_char_sequence);
     yylval.symbol = new Symbol(type, (BigInteger) ((int) text[1]));

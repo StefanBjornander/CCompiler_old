@@ -53,6 +53,7 @@
     <None Include="App.config" />
     <None Include="Parser.bat" />
     <None Include="Parser.gppg" />
+    <None Include="ParserX.gppg" />
     <None Include="Scanner.gplex" />
   </ItemGroup>
   <ItemGroup>

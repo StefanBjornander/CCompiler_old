@@ -127,6 +127,7 @@
     <None Include="ExpressionScanner.gplex" />
     <None Include="LOG" />
     <None Include="MainParser.gppg" />
+    <None Include="MainParserY.gppg" />
     <None Include="MainScanner.gplex" />
     <None Include="Parser.bat" />
     <None Include="PreParser.gppg" />

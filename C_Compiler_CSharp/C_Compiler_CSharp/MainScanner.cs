@@ -6,9 +6,9 @@
 //
 //  GPLEX Version:  1.2.2
 //  Machine:  STEFAN1968
-//  DateTime: 2020-10-11 10:28:55
+//  DateTime: 2020-10-12 17:08:18
 //  UserName: Stefan
-//  GPLEX input file <MainScanner.gplex - 2020-09-28 09:47:26>
+//  GPLEX input file <MainScanner.gplex - 2020-10-12 15:23:58>
 //  GPLEX frame file <embedded resource>
 //
 //  Option settings: parser, minimize
