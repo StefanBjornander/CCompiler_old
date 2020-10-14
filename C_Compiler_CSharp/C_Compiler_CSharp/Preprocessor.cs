@@ -12,7 +12,7 @@ namespace CCompiler {
     public static ISet<FileInfo> IncludeSet = null;
     public static Stack<Triple<bool, bool, bool>> IfStack =
                     new Stack<Triple<bool, bool, bool>>();
-    public static string IncludePath; 
+    public static string IncludePath;
     private StringBuilder m_outputBuffer = new StringBuilder();
 
     public string GetText() {

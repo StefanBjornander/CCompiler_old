@@ -5,30 +5,33 @@ using System.IO;
 using System.Text;
 using System.Globalization;
 using System.Collections.Generic;
-
 namespace CCompiler {
   public class Start {
-    public static bool Windows = true, Linux = false;
+    public static bool Linux = true, Windows;
+
     public static IDictionary<string,ISet<FileInfo>> DependencySetMap =
       new Dictionary<string,ISet<FileInfo>>();
 
     public static void Main(string[] args){
-      Assert.ErrorXXX((Windows && !Linux) || (!Windows && Linux));
+      Windows = !Linux;
+
+      if (Start.Windows) {
+        ObjectCodeTable.Initializer();
+      }
+
       System.Threading.Thread.CurrentThread.CurrentCulture =
         CultureInfo.InvariantCulture;
-      ObjectCodeTable.Initializer();
 
       if (args.Length == 0) {
         Assert.Error("usage: compiler <filename>");
       }
-    
+
       List<string> argList = new List<string>(args);
       bool rebuild = argList.Remove("-rebuild"),
            print = argList.Remove("-print");
-      bool doNotLink = argList.Remove("-nolink");
 
       Preprocessor.IncludePath =
-        Environment.GetEnvironmentVariable("include_path");
+        Environment.GetEnvironmentVariable("include_path"); 
       Assert.Error(Preprocessor.IncludePath != null,
                    Message.Missing_include_path);
 
@@ -38,7 +41,7 @@ namespace CCompiler {
         foreach (string arg in argList) {
           FileInfo file =
             new FileInfo(Path.Combine(Preprocessor.IncludePath, arg));
-       
+
           if (rebuild || !IsObjectFileUpToDate(file)) {
             if (print) {
               Console.Out.WriteLine("Compiling \"" + file.FullName + ".c\"."); 
@@ -51,7 +54,8 @@ namespace CCompiler {
 
         if (Start.Linux) {
           string linuxPath = Environment.GetEnvironmentVariable("linux_path");
-          StreamWriter makeStream = new StreamWriter(Path.Combine(linuxPath, "makefile"));
+          StreamWriter makeStream =
+            new StreamWriter(Path.Combine(linuxPath, "makefile"));
 
           makeStream.Write("main:");
           foreach (string arg in argList) {
@@ -90,31 +94,30 @@ namespace CCompiler {
           makeStream.Close();
         }
 
-        if (Start.Windows) {
-          if (!doNotLink && doLink) {
-            string windowsPath = Environment.GetEnvironmentVariable("windows_path");
-            FileInfo targetFile = new FileInfo(Path.Combine(windowsPath, argList[0] + ".com"));
-            Linker linker = new Linker();
+        if (Start.Windows && doLink) {
+          string windowsPath =
+            Environment.GetEnvironmentVariable("windows_path");
+          FileInfo targetFile =
+            new FileInfo(Path.Combine(windowsPath, argList[0] + ".com"));
+          Linker linker = new Linker();
 
-            CCompiler_Main.Scanner.Path = null;
-            foreach (string arg in argList) {
-              FileInfo file =
-                new FileInfo(Path.Combine(Preprocessor.IncludePath, arg));
+          CCompiler_Main.Scanner.Path = null;
+          foreach (string arg in argList) {
+            FileInfo file =
+              new FileInfo(Path.Combine(Preprocessor.IncludePath, arg));
 
-              if (print) {
-                Console.Out.WriteLine("Loading \"" + file.FullName +
-                                      ".obj\".");
-              }
-          
-              ReadObjectFile(file, linker);
+            if (print) {
+              Console.Out.WriteLine("Loading \"" + file.FullName + ".obj\".");
             }
+          
+            ReadObjectFile(file, linker);
+          }
 
-            linker.Generate(targetFile);
-          }
-          else if (print) {
-            Console.Out.WriteLine(Preprocessor.IncludePath + argList[0] +
-                                  ".com is up-to-date.");
-          }
+          linker.Generate(targetFile);
+        }
+        else if (print) {
+          Console.Out.WriteLine(Preprocessor.IncludePath + argList[0] +
+                                ".com is up-to-date.");
         }
       }
       catch (Exception exception) {
