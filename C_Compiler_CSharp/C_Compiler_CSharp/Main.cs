@@ -7,7 +7,7 @@ using System.Globalization;
 using System.Collections.Generic;
 namespace CCompiler {
   public class Start {
-    public static bool Linux = true, Windows;
+    public static bool Linux = false, Windows;
 
     public static IDictionary<string,ISet<FileInfo>> DependencySetMap =
       new Dictionary<string,ISet<FileInfo>>();
@@ -47,7 +47,7 @@ namespace CCompiler {
               Console.Out.WriteLine("Compiling \"" + file.FullName + ".c\"."); 
             }
 
-            ReadSourceFile(file);
+            CompileSourceFile(file);
             doLink = true;
           }
         }
@@ -71,15 +71,8 @@ namespace CCompiler {
           makeStream.WriteLine();
 
           foreach (string arg in argList) {
-            makeStream.Write(arg.ToLower() + ".o: " + arg.ToLower() + ".c " +
-                             arg.ToLower() + ".asm");
-            ISet<FileInfo> dependencySet = DependencySetMap[arg];
-
-            foreach (FileInfo dependency in dependencySet) {
-              makeStream.Write(" " + dependency.Name.ToLower());
-            }
-
-            makeStream.WriteLine();
+            makeStream.WriteLine(arg.ToLower() + ".o: " +
+                                 arg.ToLower() + ".asm");
             makeStream.WriteLine("\tnasm -f elf64 -o " + arg.ToLower() + ".o "
                                  + arg.ToLower() + ".asm");
             makeStream.WriteLine();
@@ -94,30 +87,33 @@ namespace CCompiler {
           makeStream.Close();
         }
 
-        if (Start.Windows && doLink) {
-          string windowsPath =
-            Environment.GetEnvironmentVariable("windows_path");
-          FileInfo targetFile =
-            new FileInfo(Path.Combine(windowsPath, argList[0] + ".com"));
-          Linker linker = new Linker();
+        if (Start.Windows) {
+          if (doLink) {
+            string windowsPath =
+              Environment.GetEnvironmentVariable("windows_path");
+            FileInfo targetFile =
+              new FileInfo(Path.Combine(windowsPath, argList[0] + ".com"));
+            Linker linker = new Linker();
 
-          CCompiler_Main.Scanner.Path = null;
-          foreach (string arg in argList) {
-            FileInfo file =
-              new FileInfo(Path.Combine(Preprocessor.IncludePath, arg));
+            CCompiler_Main.Scanner.Path = null;
+            foreach (string arg in argList) {
+              FileInfo file =
+                new FileInfo(Path.Combine(Preprocessor.IncludePath, arg));
 
-            if (print) {
-              Console.Out.WriteLine("Loading \"" + file.FullName + ".obj\".");
-            }
+              if (print) {
+                Console.Out.WriteLine("Loading \"" + file.FullName +
+                                      ".obj\".");  
+              }
           
-            ReadObjectFile(file, linker);
-          }
+              ReadObjectFile(file, linker);
+            }
 
-          linker.Generate(targetFile);
-        }
-        else if (print) {
-          Console.Out.WriteLine(Preprocessor.IncludePath + argList[0] +
-                                ".com is up-to-date.");
+            linker.Generate(targetFile);
+          }
+          else if (print) {
+            Console.Out.WriteLine(Path.Combine(Preprocessor.IncludePath,
+                                  argList[0]) + ".com is up-to-date.");
+          }
         }
       }
       catch (Exception exception) {
@@ -148,7 +144,7 @@ namespace CCompiler {
       }
     }
   
-    public static void ReadSourceFile(FileInfo file) {
+    public static void CompileSourceFile(FileInfo file) {
       FileInfo sourceFile = new FileInfo(file.FullName + ".c"),
                preproFile = new FileInfo(file.FullName + ".p"),
                middleFile = new FileInfo(file.FullName + ".mid");
@@ -294,28 +290,27 @@ namespace CCompiler {
         streamWriter.Close();
       }
 
-      if (Start.Windows) {
-        FileInfo depFile = new FileInfo(file.FullName + ".dep");
-        StreamWriter includeWriter =
-          new StreamWriter(File.Open(depFile.FullName, FileMode.Create));
-        bool first = true;
-        foreach (FileInfo includeFile in Preprocessor.IncludeSet) {
-          includeWriter.Write((first ? "" : " ") + includeFile.Name);
-          first = false;
-        }
-        includeWriter.Close();
+      FileInfo depFile = new FileInfo(file.FullName + ".dep");
+      StreamWriter includeWriter =
+        new StreamWriter(File.Open(depFile.FullName, FileMode.Create));
+      bool first = true;
 
-        FileInfo objectFile = new FileInfo(file.FullName + ".obj");
-        BinaryWriter binaryWriter =
-          new BinaryWriter(File.Open(objectFile.FullName, FileMode.Create));
-
-        binaryWriter.Write(SymbolTable.StaticSet.Count);    
-        foreach (StaticSymbol staticSymbol in SymbolTable.StaticSet) {
-          staticSymbol.Save(binaryWriter);
-        }
-
-        binaryWriter.Close();
+      foreach (FileInfo includeFile in Preprocessor.IncludeSet) {
+        includeWriter.Write((first ? "" : " ") + includeFile.Name);
+        first = false;
       }
+      includeWriter.Close();
+
+      FileInfo objectFile = new FileInfo(file.FullName + ".obj");
+      BinaryWriter binaryWriter =
+        new BinaryWriter(File.Open(objectFile.FullName, FileMode.Create));
+
+      binaryWriter.Write(SymbolTable.StaticSet.Count);    
+      foreach (StaticSymbol staticSymbol in SymbolTable.StaticSet) {
+        staticSymbol.Save(binaryWriter);
+      }
+
+      binaryWriter.Close();
     }
 
     public static bool IsObjectFileUpToDate(FileInfo file) {
