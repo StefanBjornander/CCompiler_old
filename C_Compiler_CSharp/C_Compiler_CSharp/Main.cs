@@ -1,54 +1,43 @@
+// -rebuild -print Main Malloc CType ErrNo Locale Math SetJmp Signal File Temp Scanf Printf StdLib Time String PrintTest CharacterTest FloatTest LimitsTest AssertTest StringTest LocaleTest SetJmpTest MathTest FileTest StdIOTest SignalTest StackTest MallocTest StdLibTest TimeTest
+
 using System;
 using System.IO;
 using System.Text;
-using System.Numerics;
 using System.Globalization;
 using System.Collections.Generic;
 
 namespace CCompiler {
   public class Start {
     public static bool Windows = true, Linux = false;
-    public static IDictionary<string,ISet<FileInfo>> DependencySetMap = new Dictionary<string,ISet<FileInfo>>();
+    public static IDictionary<string,ISet<FileInfo>> DependencySetMap =
+      new Dictionary<string,ISet<FileInfo>>();
 
     public static void Main(string[] args){
       Assert.ErrorXXX((Windows && !Linux) || (!Windows && Linux));
-      System.Threading.Thread.CurrentThread.CurrentCulture = CultureInfo.InvariantCulture;
+      System.Threading.Thread.CurrentThread.CurrentCulture =
+        CultureInfo.InvariantCulture;
       ObjectCodeTable.Initializer();
-      args = new string[]{"-r", "-p", /*"-w", "-c",*/ "Main", "Malloc", "CType", "ErrNo", "Locale", "Math", "SetJmp",      
-                          "Signal", "File", "Temp", "Scanf", "Printf", "StdLib", "Time",
-                          "String", "PrintTest", "CharacterTest", "FloatTest", "LimitsTest",
-                          "AssertTest", "StringTest", "LocaleTest",
-                          "SetJmpTest", "MathTest", "FileTest", "StdIOTest",
-                          "SignalTest", "StackTest", "MallocTest",
-                          "StdLibTest", "TimeTest"};
 
       if (args.Length == 0) {
-        Console.Error.WriteLine("usage: compiler <filename>");
-        Environment.Exit(-1);
+        Assert.Error("usage: compiler <filename>");
       }
     
-      List<string> argList = new List<string>();
-      foreach (string text in args) {
-        argList.Add(text);
-      }
+      List<string> argList = new List<string>(args);
+      bool rebuild = argList.Remove("-rebuild"),
+           print = argList.Remove("-print");
+      bool doNotLink = argList.Remove("-nolink");
 
-      bool rebuild = argList.Remove("-r"),
-           print = argList.Remove("-p");
-      bool noLink = argList.Remove("-nolink");
-
-      Preprocessor.IncludePath = Environment.GetEnvironmentVariable("include");
-      string pathName = @"C:\Users\Stefan\Documents\vagrant\homestead\code\code\";
-    
-      if (Preprocessor.IncludePath == null) {
-        Preprocessor.IncludePath = pathName;
-      }
+      Preprocessor.IncludePath =
+        Environment.GetEnvironmentVariable("include_path");
+      Assert.Error(Preprocessor.IncludePath != null,
+                   Message.Missing_include_path);
 
       try {
         bool doLink = false;
-        string pathName2 = pathName;
 
         foreach (string arg in argList) {
-          FileInfo file = new FileInfo(pathName + arg);
+          FileInfo file =
+            new FileInfo(Path.Combine(Preprocessor.IncludePath, arg));
        
           if (rebuild || !IsObjectFileUpToDate(file)) {
             if (print) {
@@ -61,7 +50,9 @@ namespace CCompiler {
         }
 
         if (Start.Linux) {
-          StreamWriter makeStream = new StreamWriter(@"C:\Users\Stefan\Documents\vagrant\homestead\code\code\makefile");
+          string linuxPath = Environment.GetEnvironmentVariable("linux_path");
+          StreamWriter makeStream = new StreamWriter(Path.Combine(linuxPath, "makefile"));
+
           makeStream.Write("main:");
           foreach (string arg in argList) {
             makeStream.Write(" " + arg.ToLower() + ".o");
@@ -76,7 +67,8 @@ namespace CCompiler {
           makeStream.WriteLine();
 
           foreach (string arg in argList) {
-            makeStream.Write(arg.ToLower() + ".o: " + arg.ToLower() + ".c " + arg.ToLower() + ".asm");
+            makeStream.Write(arg.ToLower() + ".o: " + arg.ToLower() + ".c " +
+                             arg.ToLower() + ".asm");
             ISet<FileInfo> dependencySet = DependencySetMap[arg];
 
             foreach (FileInfo dependency in dependencySet) {
@@ -84,7 +76,8 @@ namespace CCompiler {
             }
 
             makeStream.WriteLine();
-            makeStream.WriteLine("\tnasm -f elf64 -o " + arg.ToLower() + ".o " + arg.ToLower() + ".asm");
+            makeStream.WriteLine("\tnasm -f elf64 -o " + arg.ToLower() + ".o "
+                                 + arg.ToLower() + ".asm");
             makeStream.WriteLine();
           }
 
@@ -98,19 +91,19 @@ namespace CCompiler {
         }
 
         if (Start.Windows) {
-          if (!noLink && doLink) {
-            FileInfo targetFile;
-
-            string pathText = "C:\\D\\" + argList[0] + ".com";
-            targetFile = new FileInfo(pathText);
+          if (!doNotLink && doLink) {
+            string windowsPath = Environment.GetEnvironmentVariable("windows_path");
+            FileInfo targetFile = new FileInfo(Path.Combine(windowsPath, argList[0] + ".com"));
             Linker linker = new Linker();
 
             CCompiler_Main.Scanner.Path = null;
             foreach (string arg in argList) {
-              FileInfo file = new FileInfo(pathName + arg);
+              FileInfo file =
+                new FileInfo(Path.Combine(Preprocessor.IncludePath, arg));
 
               if (print) {
-                Console.Out.WriteLine("Loading \"" + file.FullName + ".obj\".");
+                Console.Out.WriteLine("Loading \"" + file.FullName +
+                                      ".obj\".");
               }
           
               ReadObjectFile(file, linker);
@@ -119,7 +112,8 @@ namespace CCompiler {
             linker.Generate(targetFile);
           }
           else if (print) {
-            Console.Out.WriteLine(pathName + argList[0] +".com is up-to-date.");
+            Console.Out.WriteLine(Preprocessor.IncludePath + argList[0] +
+                                  ".com is up-to-date.");
           }
         }
       }
@@ -133,7 +127,8 @@ namespace CCompiler {
       FileInfo objectFile = new FileInfo(file.FullName + ".obj");
 
       try {
-        BinaryReader dataInputStream = new BinaryReader(File.OpenRead(objectFile.FullName));
+        BinaryReader dataInputStream =
+          new BinaryReader(File.OpenRead(objectFile.FullName));
 
         int linkerSetSize = dataInputStream.ReadInt32();
         for (int count = 0; count < linkerSetSize; ++count) {
@@ -157,17 +152,20 @@ namespace CCompiler {
       Preprocessor.MacroMap = new Dictionary<string,Macro>();
 
       if (Start.Linux) {
-        Preprocessor.MacroMap.Add("__LINUX__", new Macro(0, new List<Token>()));
+        Preprocessor.MacroMap.Add("__LINUX__",
+                                  new Macro(0, new List<Token>()));
       }
 
       if (Start.Windows) {
-        Preprocessor.MacroMap.Add("__WINDOWS__", new Macro(0, new List<Token>()));
+        Preprocessor.MacroMap.Add("__WINDOWS__",
+                                  new Macro(0, new List<Token>()));
       }
 
       Preprocessor.IncludeSet = new HashSet<FileInfo>();
       Preprocessor preprocessor = new Preprocessor();
       preprocessor.DoProcess(sourceFile);
-      Assert.Error(Preprocessor.IfStack.Count == 0, Message.If___ifdef____or_ifndef_directive_without_matching_endif);
+      Assert.Error(Preprocessor.IfStack.Count == 0, Message.
+                   If___ifdef____or_ifndef_directive_without_matching_endif);
     
       StreamWriter preproStream = File.CreateText(preproFile.FullName);
       preproStream.Write(preprocessor.GetText());
@@ -176,14 +174,11 @@ namespace CCompiler {
 
       byte[] byteArray = Encoding.ASCII.GetBytes(preprocessor.GetText());
       MemoryStream memoryStream = new MemoryStream(byteArray);
-      CCompiler_Main.Scanner scanner = new CCompiler_Main.Scanner(memoryStream);
+      CCompiler_Main.Scanner scanner =
+        new CCompiler_Main.Scanner(memoryStream);
 
       try {
         SymbolTable.CurrentTable = new SymbolTable(null, Scope.Global);
-
-        //StaticSymbol integralStorageSymbol = ConstantExpression.Value(AssemblyCodeGenerator.IntegralStorageName, Type.UnsignedLongIntegerType, null);
-        //SymbolTable.StaticSet.Add(integralStorageSymbol);
-
         CCompiler_Main.Scanner.Path = sourceFile;
         CCompiler_Main.Scanner.Line = 1;
         CCompiler_Main.Parser parser = new CCompiler_Main.Parser(scanner);
@@ -200,21 +195,24 @@ namespace CCompiler {
                      totalDataList = new List<string>();
                      
         foreach (StaticSymbol staticSymbol in SymbolTable.StaticSet) {
-          StaticSymbolLinux staticSymbolLinux = (StaticSymbolLinux) staticSymbol;
+          StaticSymbolLinux staticSymbolLinux =
+            (StaticSymbolLinux) staticSymbol;
           totalExternSet.UnionWith(staticSymbolLinux.ExternSet);
         }
 
-        StaticSymbolLinux initSymbol = null, argsSymbol = null, mainSymbol = null;
+        StaticSymbolLinux initSymbol = null, argsSymbol = null,
+                          mainSymbol = null;
         foreach (StaticSymbol staticSymbol in SymbolTable.StaticSet) {
-          if (staticSymbol.UniqueName.Equals(AssemblyCodeGenerator.InitializerName)) {
+          if (staticSymbol.UniqueName.
+              Equals(AssemblyCodeGenerator.InitializerName)) {
             initSymbol = (StaticSymbolLinux) staticSymbol;
           }
 
-          if (staticSymbol.UniqueName.Equals(AssemblyCodeGenerator.MainName)) {
+          if (staticSymbol.UniqueName.Equals(AssemblyCodeGenerator.MainName)){
             mainSymbol = (StaticSymbolLinux) staticSymbol;
           }
 
-          if (staticSymbol.UniqueName.Equals(AssemblyCodeGenerator.ArgsName)) {
+          if (staticSymbol.UniqueName.Equals(AssemblyCodeGenerator.ArgsName)){
             argsSymbol = (StaticSymbolLinux) staticSymbol;
           }
         }
@@ -224,7 +222,6 @@ namespace CCompiler {
           totalTextList.Add("_start:");
           totalTextList.AddRange(initSymbol.TextList);
           SymbolTable.StaticSet.Remove(initSymbol);
-          //totalDataList.Add(Linker.StackTopName + ":\ttimes 65536 db 0");
           totalDataList.Add(Linker.StackTopName + ":\ttimes 1048576 db 0");
           totalGlobalSet.Add(Linker.StackTopName);
         }
@@ -245,35 +242,17 @@ namespace CCompiler {
         }
 
         foreach (StaticSymbol staticSymbol in SymbolTable.StaticSet) {
-          StaticSymbolLinux staticSymbolLinux = (StaticSymbolLinux) staticSymbol;
+          StaticSymbolLinux staticSymbolLinux =
+            (StaticSymbolLinux) staticSymbol;
           totalExternSet.Remove(staticSymbolLinux.UniqueName);
           
           if (!staticSymbolLinux.UniqueName.Contains(Symbol.SeparatorId)) {
             totalGlobalSet.Add(staticSymbolLinux.UniqueName);
           }
  
-          /*if (staticSymbolLinux.UniqueName.Equals(AssemblyCodeGenerator.MainName)) {
-            totalTextList.Add("_start:");
+          if (staticSymbolLinux.TextOrDataX ==
+              StaticSymbolLinux.TextOrData.Text) {
             totalTextList.AddRange(staticSymbolLinux.TextList);
-            totalDataList.Add("$StackTop:\ttimes 65536 db 0");
-          }
-          else {
-            totalTextList.AddRange(staticSymbolLinux.TextList);
-          }*/
-
-          if (staticSymbolLinux.TextOrDataX == StaticSymbolLinux.TextOrData.Text) {
-            /*if (staticSymbolLinux.UniqueName.Equals(AssemblyCodeGenerator.MainName)) {
-              if (staticSymbolLinux == mainSymbol) {
-                int i = 1;
-              }
-
-              totalTextList.Add("_start:");
-              totalTextList.AddRange(staticSymbolLinux.TextList);
-              totalDataList.Add("$StackTop:\ttimes 65536 db 0");
-            }
-            else*/ {
-              totalTextList.AddRange(staticSymbolLinux.TextList);
-            }
           }
           else {
             totalDataList.AddRange(staticSymbolLinux.TextList);
@@ -314,7 +293,8 @@ namespace CCompiler {
 
       if (Start.Windows) {
         FileInfo depFile = new FileInfo(file.FullName + ".dep");
-        StreamWriter includeWriter = new StreamWriter(File.Open(depFile.FullName, FileMode.Create));
+        StreamWriter includeWriter =
+          new StreamWriter(File.Open(depFile.FullName, FileMode.Create));
         bool first = true;
         foreach (FileInfo includeFile in Preprocessor.IncludeSet) {
           includeWriter.Write((first ? "" : " ") + includeFile.Name);
@@ -323,7 +303,8 @@ namespace CCompiler {
         includeWriter.Close();
 
         FileInfo objectFile = new FileInfo(file.FullName + ".obj");
-        BinaryWriter binaryWriter = new BinaryWriter(File.Open(objectFile.FullName, FileMode.Create));
+        BinaryWriter binaryWriter =
+          new BinaryWriter(File.Open(objectFile.FullName, FileMode.Create));
 
         binaryWriter.Write(SymbolTable.StaticSet.Count);    
         foreach (StaticSymbol staticSymbol in SymbolTable.StaticSet) {
@@ -338,14 +319,16 @@ namespace CCompiler {
       FileInfo sourceFile = new FileInfo(file.FullName + ".c"),
                objectFile = new FileInfo(file.FullName + ".obj");
 
-      if (!objectFile.Exists || (sourceFile.LastWriteTime > objectFile.LastWriteTime)) {
+      if (!objectFile.Exists ||
+          (sourceFile.LastWriteTime > objectFile.LastWriteTime)) {
         return false;
       }
       
       FileInfo depFile = new FileInfo(file.FullName + ".dep");
       if (depFile.Exists) {
         try {
-          StreamReader depReader = new StreamReader(File.OpenRead(depFile.FullName));
+          StreamReader depReader =
+            new StreamReader(File.OpenRead(depFile.FullName));
           string text = depReader.ReadToEnd();
           depReader.Close();
 
@@ -353,8 +336,11 @@ namespace CCompiler {
             string[] array = text.Split(' ');
 
             foreach (string name in array)  {
-              FileInfo nameFile = new FileInfo(file.Directory + "\\" + name);
-              if (!nameFile.Exists || (nameFile.LastWriteTime > objectFile.LastWriteTime)) {
+              FileInfo nameFile =
+                new FileInfo(Path.Combine(file.Directory.ToString(), name));
+
+              if (!nameFile.Exists ||
+                  (nameFile.LastWriteTime > objectFile.LastWriteTime)) {
                 return false;
               }
             }
@@ -372,7 +358,8 @@ namespace CCompiler {
 }
 
 namespace CCompiler_Main {
-  public partial class Parser : QUT.Gppg.ShiftReduceParser<ValueType, QUT.Gppg.LexLocation> {
+  public partial class Parser :
+         QUT.Gppg.ShiftReduceParser<ValueType, QUT.Gppg.LexLocation> {
     public Parser(Scanner scanner)
      :base(scanner) {
       // Empty.
@@ -381,7 +368,8 @@ namespace CCompiler_Main {
 }
 
 namespace CCompiler_Exp {
-  public partial class Parser : QUT.Gppg.ShiftReduceParser<ValueType, QUT.Gppg.LexLocation> {
+  public partial class Parser :
+         QUT.Gppg.ShiftReduceParser<ValueType, QUT.Gppg.LexLocation> {
     public Parser(Scanner scanner)
      :base(scanner) {
       // Empty.
@@ -390,7 +378,8 @@ namespace CCompiler_Exp {
 }
 
 namespace CCompiler_Pre {
-  public partial class Parser : QUT.Gppg.ShiftReduceParser<ValueType, QUT.Gppg.LexLocation> {
+  public partial class Parser :
+         QUT.Gppg.ShiftReduceParser<ValueType, QUT.Gppg.LexLocation> {
     public Parser(Scanner scanner)
      :base(scanner) {
       // Empty.

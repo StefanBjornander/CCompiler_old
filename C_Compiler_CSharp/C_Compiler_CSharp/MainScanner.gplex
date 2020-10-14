@@ -343,7 +343,7 @@ WHITE_SPACE [ \t\r\n\f]
       SymbolTable.StaticSet.Add(yylval.symbol.StaticSymbol);*/
     }
     catch (OverflowException) {
-      Assert.Error("Y " + type + ": " + text, Message.Value_overflow);
+      Assert.Error(type + ": " + text, Message.Value_overflow);
     }
 
     return ((int) Tokens.VALUE);

@@ -122,7 +122,7 @@ namespace CCompiler {
       }
     }
 
-    private void GenerateCall(int callerStartAddress,
+    private void GenerateCallX(int callerStartAddress,
                               IDictionary<int,string> callMap,
                               List<byte> byteList) {
       foreach (KeyValuePair<int,string> entry in callMap) {
@@ -151,13 +151,13 @@ namespace CCompiler {
     public static string SimpleName(string name) {
       int index = name.LastIndexOf(Symbol.SeparatorId);
       return (index != -1) ? name.Substring(0, index) : name;
-    }  
-  }
-}
+    }
 
-/*
-    private void GenerateCall(int startAddress, IDictionary<int,string> callMap,
+    private void GenerateCall(int startAddress, IDictionary<int, string> callMap,
                               List<byte> byteList) {
+      const byte NopOperator = -112 + 256;
+      const byte ShortJumpOperator = -21 + 256;
+
       foreach (KeyValuePair<int,string> entry in callMap) {
         int address = entry.Key;
         int callerAddress = startAddress + address + 2;
@@ -165,9 +165,9 @@ namespace CCompiler {
         int relativeAddress = calleeAddress - callerAddress;
 
         if (relativeAddress == -129) {
-          byteList[address - 1] = (byte) AssemblyCode.ShortJumpOperator;
+          byteList[address - 1] = (byte) ShortJumpOperator;
           byteList[address] = (byte) (-128 + 256); // (byte)((sbyte)-128);
-          byteList[address + 1] = (byte) AssemblyCode.NopOperator;
+          byteList[address + 1] = (byte) NopOperator;
         }
         else if ((relativeAddress >= -128) && // 12849
                ((((startAddress + address) <= 12849) && (relativeAddress <= 127)) || (relativeAddress <= 126))) {
@@ -184,8 +184,8 @@ namespace CCompiler {
                //((((startAddress + address) < 11638) && (relativeAddress <= 127)) || (relativeAddress <= 126))) {
                //((((startAddress + address) < 11540) && (relativeAddress <= 127)) || (relativeAddress <= 126))) {
                //((((startAddress + address) < 10812) && (relativeAddress <= 127)) || (relativeAddress <= 126))) {
-          byteList[address - 1] = AssemblyCode.NopOperator;
-          byteList[address] = AssemblyCode.ShortJumpOperator;
+          byteList[address - 1] = (byte) NopOperator;
+          byteList[address] = (byte) ShortJumpOperator;
           byteList[address + 1] = (byte) relativeAddress;
         }
         else {
@@ -194,4 +194,5 @@ namespace CCompiler {
         }
       }
     }
-*/
+  }
+}

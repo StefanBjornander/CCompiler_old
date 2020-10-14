@@ -9,12 +9,10 @@ namespace CCompiler {
     public static IDictionary<string, Macro> MacroMap;
     public static Stack<FileInfo> IncludeStack =
                     new Stack<FileInfo>();
-    public static ISet<FileInfo> IncludeSet =
-                    new HashSet<FileInfo>();
+    public static ISet<FileInfo> IncludeSet = null;
     public static Stack<Triple<bool, bool, bool>> IfStack =
                     new Stack<Triple<bool, bool, bool>>();
-    public static string IncludePath = null;
-
+    public static string IncludePath; 
     private StringBuilder m_outputBuffer = new StringBuilder();
 
     public string GetText() {
@@ -336,30 +334,25 @@ namespace CCompiler {
       FileInfo includeFile = null;
 
       if ((tokenList[2].Id == CCompiler_Pre.Tokens.STRING) &&
-          (tokenList[3].Id == CCompiler_Pre.Tokens.EOF))
-      {
+          (tokenList[3].Id == CCompiler_Pre.Tokens.EOF)) {
         string text = tokenList[2].ToString();
         string file = text.ToString().Substring(1, text.Length - 1);
-        includeFile = new FileInfo(IncludePath + file);
+        includeFile = new FileInfo(Path.Combine(IncludePath, file));
       }
-      else
-      {
+      else {
         StringBuilder buffer = new StringBuilder();
 
-        foreach (Token token in tokenList.GetRange(2, tokenList.Count - 2))
-        {
+        foreach (Token token in tokenList.GetRange(2, tokenList.Count - 2)) {
           buffer.Append(token.ToString());
         }
 
         string text = buffer.ToString();
 
-        if (text.StartsWith("<") && text.EndsWith(">"))
-        {
+        if (text.StartsWith("<") && text.EndsWith(">")) {
           string file = text.ToString().Substring(1, text.Length - 2);
-          includeFile = new FileInfo(IncludePath + file);
+          includeFile = new FileInfo(Path.Combine(IncludePath, file));
         }
-        else
-        {
+        else {
           Assert.Error(TokenListToString(tokenList),
                        Message.Invalid_preprocessor_directive);
         }
