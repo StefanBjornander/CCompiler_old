@@ -27,7 +27,7 @@ namespace CCompiler {
       m_maxValueFloatMap = new Dictionary<Sort,decimal>();*/
   
     static TypeSize() {
-      if (Start.Linux) {
+      if (Start.LinuxOrWindows == Start.LinuxOrWindowsState.Linux) {
         PointerSize = 8;
         SignedIntegerSize = 4;
 
@@ -97,7 +97,7 @@ namespace CCompiler {
         m_maxValueFloatMap.Add(Sort.Long_Double, decimal.
                                Parse("1.7E+308", NumberStyles.Float));*/
       }
-      if (Start.Windows) {
+      if (Start.LinuxOrWindows == Start.LinuxOrWindowsState.Windows) {
         PointerSize = 2;
         SignedIntegerSize = 2;
 

@@ -5,9 +5,11 @@ using System.IO;
 using System.Text;
 using System.Globalization;
 using System.Collections.Generic;
+
 namespace CCompiler {
   public class Start {
-    public static bool Linux = false, Windows;
+    public enum LinuxOrWindowsState {Linux, Windows};
+    public static LinuxOrWindowsState LinuxOrWindows;
     public static string SourcePath = @"C:\Users\Stefan\Documents\vagrant\homestead\code\code\",
                          TargetPath = @"C:\D\";
 
@@ -15,9 +17,9 @@ namespace CCompiler {
       new Dictionary<string,ISet<FileInfo>>();
 
     public static void Main(string[] args){
-      Windows = !Linux;
+      LinuxOrWindows = LinuxOrWindowsState.Windows;
 
-      if (Start.Windows) {
+      if (Start.LinuxOrWindows == Start.LinuxOrWindowsState.Windows) {
         ObjectCodeTable.Initializer();
       }
 
@@ -53,7 +55,7 @@ namespace CCompiler {
           }
         }
 
-        if (Start.Linux) {
+        if (Start.LinuxOrWindows == Start.LinuxOrWindowsState.Linux) {
           StreamWriter makeStream = new StreamWriter(SourcePath + "makefile");
 
           makeStream.Write("main:");
@@ -86,7 +88,7 @@ namespace CCompiler {
           makeStream.Close();
         }
 
-        if (Start.Windows) {
+        if (Start.LinuxOrWindows == Start.LinuxOrWindowsState.Windows) {
           if (doLink) {
             FileInfo targetFile =
               new FileInfo(TargetPath + argList[0] + ".com");
@@ -98,7 +100,7 @@ namespace CCompiler {
 
               if (print) {
                 Console.Out.WriteLine("Loading \"" + file.FullName +
-                                      ".o\".");  
+                                      ".obj\".");  
               }
           
               ReadObjectFile(file, linker);
@@ -146,12 +148,12 @@ namespace CCompiler {
                middleFile = new FileInfo(file.FullName + ".mid");
       Preprocessor.MacroMap = new Dictionary<string,Macro>();
 
-      if (Start.Linux) {
+      if (Start.LinuxOrWindows == Start.LinuxOrWindowsState.Linux) {
         Preprocessor.MacroMap.Add("__LINUX__",
                                   new Macro(0, new List<Token>()));
       }
 
-      if (Start.Windows) {
+      if (Start.LinuxOrWindows == Start.LinuxOrWindowsState.Windows) {
         Preprocessor.MacroMap.Add("__WINDOWS__",
                                   new Macro(0, new List<Token>()));
       }
@@ -183,7 +185,7 @@ namespace CCompiler {
         Assert.Error(false, ioException.StackTrace, Message.Syntax_error);
       }
 
-      if (Start.Linux) {
+      if (Start.LinuxOrWindows == Start.LinuxOrWindowsState.Linux) {
         ISet<string> totalGlobalSet = new HashSet<string>(),
                      totalExternSet = new HashSet<string>();
         List<string> totalTextList = new List<string>(),
