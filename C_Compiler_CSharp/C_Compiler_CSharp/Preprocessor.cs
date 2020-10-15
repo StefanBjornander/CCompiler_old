@@ -12,7 +12,7 @@ namespace CCompiler {
     public static ISet<FileInfo> IncludeSet = null;
     public static Stack<Triple<bool, bool, bool>> IfStack =
                     new Stack<Triple<bool, bool, bool>>();
-    public static string IncludePath;
+    //public static string IncludePath;
     private StringBuilder m_outputBuffer = new StringBuilder();
 
     public string GetText() {
@@ -337,7 +337,7 @@ namespace CCompiler {
           (tokenList[3].Id == CCompiler_Pre.Tokens.EOF)) {
         string text = tokenList[2].ToString();
         string file = text.ToString().Substring(1, text.Length - 1);
-        includeFile = new FileInfo(Path.Combine(IncludePath, file));
+        includeFile = new FileInfo(Start.SourcePath + file);
       }
       else {
         StringBuilder buffer = new StringBuilder();
@@ -350,7 +350,7 @@ namespace CCompiler {
 
         if (text.StartsWith("<") && text.EndsWith(">")) {
           string file = text.ToString().Substring(1, text.Length - 2);
-          includeFile = new FileInfo(Path.Combine(IncludePath, file));
+          includeFile = new FileInfo(Start.SourcePath + file);
         }
         else {
           Assert.Error(TokenListToString(tokenList),

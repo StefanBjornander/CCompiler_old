@@ -8,6 +8,8 @@ using System.Collections.Generic;
 namespace CCompiler {
   public class Start {
     public static bool Linux = false, Windows;
+    public static string SourcePath = @"C:\Users\Stefan\Documents\vagrant\homestead\code\code\",
+                         TargetPath = @"C:\D\";
 
     public static IDictionary<string,ISet<FileInfo>> DependencySetMap =
       new Dictionary<string,ISet<FileInfo>>();
@@ -30,17 +32,16 @@ namespace CCompiler {
       bool rebuild = argList.Remove("-rebuild"),
            print = argList.Remove("-print");
 
-      Preprocessor.IncludePath =
+      /*Preprocessor.IncludePath =
         Environment.GetEnvironmentVariable("include_path"); 
       Assert.Error(Preprocessor.IncludePath != null,
-                   Message.Missing_include_path);
+                   Message.Missing_include_path);*/
 
       try {
         bool doLink = false;
 
         foreach (string arg in argList) {
-          FileInfo file =
-            new FileInfo(Path.Combine(Preprocessor.IncludePath, arg));
+          FileInfo file = new FileInfo(SourcePath + arg);
 
           if (rebuild || !IsObjectFileUpToDate(file)) {
             if (print) {
@@ -53,9 +54,7 @@ namespace CCompiler {
         }
 
         if (Start.Linux) {
-          string linuxPath = Environment.GetEnvironmentVariable("linux_path");
-          StreamWriter makeStream =
-            new StreamWriter(Path.Combine(linuxPath, "makefile"));
+          StreamWriter makeStream = new StreamWriter(SourcePath + "makefile");
 
           makeStream.Write("main:");
           foreach (string arg in argList) {
@@ -89,20 +88,17 @@ namespace CCompiler {
 
         if (Start.Windows) {
           if (doLink) {
-            string windowsPath =
-              Environment.GetEnvironmentVariable("windows_path");
             FileInfo targetFile =
-              new FileInfo(Path.Combine(windowsPath, argList[0] + ".com"));
+              new FileInfo(TargetPath + argList[0] + ".com");
             Linker linker = new Linker();
 
             CCompiler_Main.Scanner.Path = null;
             foreach (string arg in argList) {
-              FileInfo file =
-                new FileInfo(Path.Combine(Preprocessor.IncludePath, arg));
+              FileInfo file = new FileInfo(SourcePath + arg);
 
               if (print) {
                 Console.Out.WriteLine("Loading \"" + file.FullName +
-                                      ".obj\".");  
+                                      ".o\".");  
               }
           
               ReadObjectFile(file, linker);
@@ -111,8 +107,8 @@ namespace CCompiler {
             linker.Generate(targetFile);
           }
           else if (print) {
-            Console.Out.WriteLine(Path.Combine(Preprocessor.IncludePath,
-                                  argList[0]) + ".com is up-to-date.");
+            Console.Out.WriteLine(SourcePath + argList[0] +
+                                  ".com is up-to-date.");
           }
         }
       }
@@ -321,24 +317,24 @@ namespace CCompiler {
           (sourceFile.LastWriteTime > objectFile.LastWriteTime)) {
         return false;
       }
-      
-      FileInfo depFile = new FileInfo(file.FullName + ".dep");
-      if (depFile.Exists) {
+
+      FileInfo dependencyFile = new FileInfo(file.FullName + ".dep");
+      if (dependencyFile.Exists) {
         try {
-          StreamReader depReader =
-            new StreamReader(File.OpenRead(depFile.FullName));
-          string text = depReader.ReadToEnd();
-          depReader.Close();
+          StreamReader dependencyReader=
+            new StreamReader(File.OpenRead(dependencyFile.FullName));
+          string fileText = dependencyReader.ReadToEnd();
+          dependencyReader.Close();
 
-          if (text.Length > 0) {
-            string[] array = text.Split(' ');
+          if (fileText.Length > 0) {
+            string[] includeNameArray = fileText.Split(' ');
 
-            foreach (string name in array)  {
-              FileInfo nameFile =
-                new FileInfo(Path.Combine(file.Directory.ToString(), name));
+            foreach (string includeName in includeNameArray)  {
+              FileInfo includeFile =
+                new FileInfo(Path.Combine(file.Directory.ToString(),
+                                          includeName));
 
-              if (!nameFile.Exists ||
-                  (nameFile.LastWriteTime > objectFile.LastWriteTime)) {
+              if (includeFile.LastWriteTime > objectFile.LastWriteTime) {
                 return false;
               }
             }
