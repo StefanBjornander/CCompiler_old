@@ -17,7 +17,7 @@ namespace CCompiler {
       new Dictionary<string,ISet<FileInfo>>();
 
     public static void Main(string[] args){
-      LinuxOrWindows = LinuxOrWindowsState.Linux;
+      LinuxOrWindows = LinuxOrWindowsState.Windows;
 
       if (Start.LinuxOrWindows == Start.LinuxOrWindowsState.Windows) {
         ObjectCodeTable.Initializer();
@@ -302,16 +302,18 @@ namespace CCompiler {
       }
       includeWriter.Close();
 
-      FileInfo objectFile = new FileInfo(file.FullName + ".obj");
-      BinaryWriter binaryWriter =
-        new BinaryWriter(File.Open(objectFile.FullName, FileMode.Create));
+      if (Start.LinuxOrWindows == Start.LinuxOrWindowsState.Windows) {
+        FileInfo objectFile = new FileInfo(file.FullName + ".obj");
+        BinaryWriter binaryWriter =
+          new BinaryWriter(File.Open(objectFile.FullName, FileMode.Create));
 
-      binaryWriter.Write(SymbolTable.StaticSet.Count);    
-      foreach (StaticSymbol staticSymbol in SymbolTable.StaticSet) {
-        staticSymbol.Save(binaryWriter);
+        binaryWriter.Write(SymbolTable.StaticSet.Count);    
+        foreach (StaticSymbol staticSymbol in SymbolTable.StaticSet) {
+          staticSymbol.Save(binaryWriter);
+        }
+
+        binaryWriter.Close();
       }
-
-      binaryWriter.Close();
     }
 
     public static bool IsObjectFileUpToDate(FileInfo file) {
@@ -328,16 +330,14 @@ namespace CCompiler {
         try {
           StreamReader includeSetReader =
             new StreamReader(File.OpenRead(includeSetFile.FullName));
-          string fileText = includeSetReader.ReadToEnd();
+          string includeSetText = includeSetReader.ReadToEnd();
           includeSetReader.Close();
 
-          if (fileText.Length > 0) {
-            string[] includeNameArray = fileText.Split(' ');
+          if (includeSetText.Length > 0) {
+            string[] includeNameArray = includeSetText.Split(' ');
 
             foreach (string includeName in includeNameArray)  {
-              FileInfo includeFile =
-                new FileInfo(Path.Combine(file.Directory.ToString(),
-                                          includeName));
+              FileInfo includeFile = new FileInfo(SourcePath + includeName);
 
               if (includeFile.LastWriteTime > objectFile.LastWriteTime) {
                 return false;
