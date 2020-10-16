@@ -13,11 +13,11 @@ namespace CCompiler {
     public static string SourcePath = @"C:\Users\Stefan\Documents\vagrant\homestead\code\code\",
                          TargetPath = @"C:\D\";
 
-    public static IDictionary<string,ISet<FileInfo>> DependencySetMap =
+    public static IDictionary<string,ISet<FileInfo>> IncludeSetMap =
       new Dictionary<string,ISet<FileInfo>>();
 
     public static void Main(string[] args){
-      LinuxOrWindows = LinuxOrWindowsState.Windows;
+      LinuxOrWindows = LinuxOrWindowsState.Linux;
 
       if (Start.LinuxOrWindows == Start.LinuxOrWindowsState.Windows) {
         ObjectCodeTable.Initializer();
@@ -56,36 +56,7 @@ namespace CCompiler {
         }
 
         if (Start.LinuxOrWindows == Start.LinuxOrWindowsState.Linux) {
-          StreamWriter makeStream = new StreamWriter(SourcePath + "makefile");
-
-          makeStream.Write("main:");
-          foreach (string arg in argList) {
-            makeStream.Write(" " + arg.ToLower() + ".o");
-          }
-          makeStream.WriteLine();
-
-          makeStream.Write("\tld -o main");
-          foreach (string arg in argList) {
-            makeStream.Write(" " + arg.ToLower() + ".o");
-          }
-          makeStream.WriteLine();
-          makeStream.WriteLine();
-
-          foreach (string arg in argList) {
-            makeStream.WriteLine(arg.ToLower() + ".o: " +
-                                 arg.ToLower() + ".asm");
-            makeStream.WriteLine("\tnasm -f elf64 -o " + arg.ToLower() + ".o "
-                                 + arg.ToLower() + ".asm");
-            makeStream.WriteLine();
-          }
-
-          makeStream.WriteLine("clear:");
-          foreach (string arg in argList) {
-            makeStream.WriteLine("\trm " + arg.ToLower() + ".o");
-          }
-
-          makeStream.WriteLine("\trm main");
-          makeStream.Close();
+          GenerateMakeFile(argList);
         }
 
         if (Start.LinuxOrWindows == Start.LinuxOrWindowsState.Windows) {
@@ -118,6 +89,38 @@ namespace CCompiler {
         Console.Out.WriteLine(exception.StackTrace);
         Assert.Error(exception.Message, Message.Parse_error);
       }
+    }
+
+    private static void GenerateMakeFile(List<string> argList) {
+      StreamWriter makeStream = new StreamWriter(SourcePath + "makefile");
+
+      makeStream.Write("main:");
+      foreach (string arg in argList) {
+        makeStream.Write(" " + arg.ToLower() + ".o");
+      }
+      makeStream.WriteLine();
+
+      makeStream.Write("\tld -o main");
+      foreach (string arg in argList) {
+        makeStream.Write(" " + arg.ToLower() + ".o");
+      }
+      makeStream.WriteLine();
+      makeStream.WriteLine();
+
+      foreach (string arg in argList) {
+        makeStream.WriteLine(arg.ToLower() + ".o: " + arg.ToLower() + ".asm");
+        makeStream.WriteLine("\tnasm -f elf64 -o " + arg.ToLower() + ".o "
+                           + arg.ToLower() + ".asm");
+        makeStream.WriteLine();
+      }
+
+      makeStream.WriteLine("clear:");
+      foreach (string arg in argList) {
+        makeStream.WriteLine("\trm " + arg.ToLower() + ".o");
+      }
+
+      makeStream.WriteLine("\trm main");
+      makeStream.Close();
     }
 
     public static void ReadObjectFile(FileInfo file, Linker linker) {
@@ -167,7 +170,7 @@ namespace CCompiler {
       StreamWriter preproStream = File.CreateText(preproFile.FullName);
       preproStream.Write(preprocessor.GetText());
       preproStream.Close();
-      DependencySetMap.Add(file.Name, Preprocessor.IncludeSet);
+      IncludeSetMap.Add(file.Name, Preprocessor.IncludeSet);
 
       byte[] byteArray = Encoding.ASCII.GetBytes(preprocessor.GetText());
       MemoryStream memoryStream = new MemoryStream(byteArray);
@@ -288,7 +291,7 @@ namespace CCompiler {
         streamWriter.Close();
       }
 
-      FileInfo depFile = new FileInfo(file.FullName + ".dep");
+      FileInfo depFile = new FileInfo(file.FullName + ".include");
       StreamWriter includeWriter =
         new StreamWriter(File.Open(depFile.FullName, FileMode.Create));
       bool first = true;
@@ -320,13 +323,13 @@ namespace CCompiler {
         return false;
       }
 
-      FileInfo dependencyFile = new FileInfo(file.FullName + ".dep");
-      if (dependencyFile.Exists) {
+      FileInfo includeSetFile = new FileInfo(file.FullName + ".include");
+      if (includeSetFile.Exists) {
         try {
-          StreamReader dependencyReader=
-            new StreamReader(File.OpenRead(dependencyFile.FullName));
-          string fileText = dependencyReader.ReadToEnd();
-          dependencyReader.Close();
+          StreamReader includeSetReader =
+            new StreamReader(File.OpenRead(includeSetFile.FullName));
+          string fileText = includeSetReader.ReadToEnd();
+          includeSetReader.Close();
 
           if (fileText.Length > 0) {
             string[] includeNameArray = fileText.Split(' ');
