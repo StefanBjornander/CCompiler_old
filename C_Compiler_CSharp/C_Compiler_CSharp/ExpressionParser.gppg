@@ -172,10 +172,10 @@ primary_expression:
       $$ = $1;
     }
   | DEFINED NAME {
-      $$ = Preprocessor.MacroMap.ContainsKey($2) ? 1 : 0;
+      $$ = m_macroMap.ContainsKey($2) ? 1 : 0;
     }
   | DEFINED LEFT_PARENTHESIS NAME RIGHT_PARENTHESIS {
-      $$ = Preprocessor.MacroMap.ContainsKey($3) ? 1 : 0;
+      $$ = m_macroMap.ContainsKey($3) ? 1 : 0;
     }
   | LEFT_PARENTHESIS expression RIGHT_PARENTHESIS {
       $$ = $2; 

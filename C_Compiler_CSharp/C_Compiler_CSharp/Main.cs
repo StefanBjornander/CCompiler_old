@@ -8,12 +8,9 @@ using System.Collections.Generic;
 
 namespace CCompiler {
   public class Start {
-    public static bool Linux = false, Windows;
+    public static bool Linux = true, Windows;
     public static string SourcePath = @"C:\Users\Stefan\Documents\vagrant\homestead\code\code\",
                          TargetPath = @"C:\D\";
-
-    private static IDictionary<string,ISet<FileInfo>> m_includeSetMap =
-      new Dictionary<string,ISet<FileInfo>>();
 
     public static void Main(string[] args){
       Windows = !Linux;
@@ -40,12 +37,14 @@ namespace CCompiler {
 
             if (rebuild || !IsGeneratedFileUpToDate(file, ".asm")) {
               if (print) {
-                Console.Out.WriteLine("Compiling \"" + file.FullName + ".c\"."); 
+                Console.Out.WriteLine("Compiling \"" +
+                                      file.FullName + ".c\".");  
               }
 
               CompileSourceFile(file);
             }
           }
+
           GenerateMakeFile(argList);
         }
 
@@ -153,7 +152,8 @@ namespace CCompiler {
     public static void CompileSourceFile(FileInfo file) {
       FileInfo sourceFile = new FileInfo(file.FullName + ".c");
       Preprocessor preprocessor = new Preprocessor(sourceFile);
-      m_includeSetMap.Add(file.Name, preprocessor.IncludeSet);
+      GenerateIncludeFile(file, preprocessor.IncludeSet);
+
       byte[] byteArray =
         Encoding.ASCII.GetBytes(preprocessor.PreprocessedCode);
       MemoryStream memoryStream = new MemoryStream(byteArray);
@@ -274,17 +274,6 @@ namespace CCompiler {
         streamWriter.Close();
       }
 
-      FileInfo depFile = new FileInfo(file.FullName + ".include");
-      StreamWriter includeWriter =
-        new StreamWriter(File.Open(depFile.FullName, FileMode.Create));
-      bool first = true;
-
-      foreach (FileInfo includeFile in preprocessor.IncludeSet) {
-        includeWriter.Write((first ? "" : " ") + includeFile.Name);
-        first = false;
-      }
-      includeWriter.Close();
-
       if (Start.Windows) {
         FileInfo objectFile = new FileInfo(file.FullName + ".obj");
         BinaryWriter binaryWriter =
@@ -299,30 +288,43 @@ namespace CCompiler {
       }
     }
 
-    public static bool IsGeneratedFileUpToDate(FileInfo file, string suffix) {
-      FileInfo sourceFile = new FileInfo(file.FullName + ".c"),
-               objectFile = new FileInfo(file.FullName + suffix);
+    private static void GenerateIncludeFile(FileInfo file,
+                                            ISet<FileInfo> includeSet) {
+      FileInfo dependencySetFile = new FileInfo(file.FullName + ".dependency");
+      StreamWriter dependencyWriter =
+        new StreamWriter(File.Open(SourcePath + dependencySetFile.Name, FileMode.Create));
 
-      if (!objectFile.Exists ||
-          (sourceFile.LastWriteTime > objectFile.LastWriteTime)) {
+      dependencyWriter.Write(file.Name + ".c");
+      foreach (FileInfo includeFile in includeSet) {
+        dependencyWriter.Write(" " + includeFile.Name);
+      }
+
+      dependencyWriter.Close();
+    }
+
+    public static bool IsGeneratedFileUpToDate(FileInfo file, string suffix) {
+      FileInfo generatedFile = new FileInfo(file.FullName + suffix), 
+               dependencySetFile = new FileInfo(file.FullName + ".dependency");
+
+      if (!generatedFile.Exists || !dependencySetFile.Exists) {
         return false;
       }
 
-      FileInfo includeSetFile = new FileInfo(file.FullName + ".include");
-      if (includeSetFile.Exists) {
+      if (dependencySetFile.Exists) {
         try {
-          StreamReader includeSetReader =
-            new StreamReader(File.OpenRead(includeSetFile.FullName));
-          string includeSetText = includeSetReader.ReadToEnd();
-          includeSetReader.Close();
+          StreamReader dependencySetReader =
+            new StreamReader(File.OpenRead(dependencySetFile.FullName));
+          string dependencySetText = dependencySetReader.ReadToEnd();
+          dependencySetReader.Close();
 
-          if (includeSetText.Length > 0) {
-            string[] includeNameArray = includeSetText.Split(' ');
+          if (dependencySetText.Length > 0) {
+            string[] dependencyNameArray = dependencySetText.Split(' ');
 
-            foreach (string includeName in includeNameArray)  {
-              FileInfo includeFile = new FileInfo(SourcePath + includeName);
+            foreach (string dependencyName in dependencyNameArray)  {
+              FileInfo dependencyFile =
+                new FileInfo(SourcePath + dependencyName);
 
-              if (includeFile.LastWriteTime > objectFile.LastWriteTime) {
+              if (dependencyFile.LastWriteTime > generatedFile.LastWriteTime) {
                 return false;
               }
             }
@@ -352,9 +354,12 @@ namespace CCompiler_Main {
 namespace CCompiler_Exp {
   public partial class Parser :
          QUT.Gppg.ShiftReduceParser<ValueType, QUT.Gppg.LexLocation> {
-    public Parser(Scanner scanner)
+    public static IDictionary<string,CCompiler.Macro> m_macroMap;
+
+    public Parser(Scanner scanner,
+                  IDictionary<string,CCompiler.Macro> macroMap)
      :base(scanner) {
-      // Empty.
+      m_macroMap = macroMap;
     }
   }
 }

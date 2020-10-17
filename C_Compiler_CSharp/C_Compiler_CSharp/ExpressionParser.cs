@@ -4,9 +4,9 @@
 
 // GPPG version 1.5.2
 // Machine:  STEFAN1968
-// DateTime: 2020-10-17 13:20:27
+// DateTime: 2020-10-17 17:41:45
 // UserName: Stefan
-// Input file <ExpressionParser.gppg - 2020-10-17 13:20:12>
+// Input file <ExpressionParser.gppg - 2020-10-17 17:41:40>
 
 // options: lines gplex
 
@@ -56,11 +56,11 @@ public class ScanObj {
 [GeneratedCodeAttribute( "Gardens Point Parser Generator", "1.5.2")]
 public partial class Parser: ShiftReduceParser<ValueType, LexLocation>
 {
-  // Verbatim content from ExpressionParser.gppg - 2020-10-17 13:20:12
+  // Verbatim content from ExpressionParser.gppg - 2020-10-17 17:41:40
 #line 7 "ExpressionParser.gppg"
   // Empty.
 #line default
-  // End verbatim content from ExpressionParser.gppg - 2020-10-17 13:20:12
+  // End verbatim content from ExpressionParser.gppg - 2020-10-17 17:41:40
 
 #pragma warning disable 649
   private static Dictionary<int, string> aliases;
@@ -475,14 +475,14 @@ public partial class Parser: ShiftReduceParser<ValueType, LexLocation>
       case 39: // primary_expression -> DEFINED, NAME
 #line 174 "ExpressionParser.gppg"
                  {
-      CurrentSemanticValue.integer_value = Preprocessor.MacroMap.ContainsKey(ValueStack[ValueStack.Depth-1].name) ? 1 : 0;
+      CurrentSemanticValue.integer_value = CCompiler_Exp.Parser.m_macroMap.ContainsKey(ValueStack[ValueStack.Depth-1].name) ? 1 : 0;
     }
 #line default
         break;
       case 40: // primary_expression -> DEFINED, LEFT_PARENTHESIS, NAME, RIGHT_PARENTHESIS
 #line 177 "ExpressionParser.gppg"
                                                     {
-      CurrentSemanticValue.integer_value = Preprocessor.MacroMap.ContainsKey(ValueStack[ValueStack.Depth-2].name) ? 1 : 0;
+      CurrentSemanticValue.integer_value = CCompiler_Exp.Parser.m_macroMap.ContainsKey(ValueStack[ValueStack.Depth-2].name) ? 1 : 0;
     }
 #line default
         break;

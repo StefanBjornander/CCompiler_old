@@ -6,7 +6,7 @@ using System.Collections.Generic;
 
 namespace CCompiler {
   public class Preprocessor {
-    private IDictionary<string, Macro> m_macroMap =
+    private IDictionary<string,Macro> m_macroMap =
               new Dictionary<string,Macro>();
     private Stack<FileInfo> m_includeStack = new Stack<FileInfo>();
     private ISet<FileInfo> m_includeSet = new HashSet<FileInfo>();
@@ -32,12 +32,12 @@ namespace CCompiler {
         m_macroMap.Add("__WINDOWS__", new Macro(0, new List<Token>()));
       }
 
-      DoProcessRecursive(file);
+      DoProcess(file);
       Assert.Error(m_ifStack.Count == 0, Message.
                    If___ifdef____or_ifndef_directive_without_matching_endif);
     }
 
-    private void DoProcessRecursive(FileInfo file) {
+    private void DoProcess(FileInfo file) {
       StreamReader streamReader = new StreamReader(file.FullName);
       StringBuilder inputBuffer =
         new StringBuilder(streamReader.ReadToEnd());
@@ -387,7 +387,7 @@ namespace CCompiler {
       m_outputBuffer.Append(Symbol.SeparatorId + CCompiler_Main.Scanner.Path +
                             "," + CCompiler_Main.Scanner.Line +
                             Symbol.SeparatorId + "\n");
-      DoProcessRecursive(includeFile);
+      DoProcess(includeFile);
       CCompiler_Main.Scanner.Line = oldLine;// + 1;
       CCompiler_Main.Scanner.Path = oldPath;
       m_outputBuffer.Append(Symbol.SeparatorId + CCompiler_Main.Scanner.Path +
@@ -493,7 +493,7 @@ namespace CCompiler {
           new CCompiler_Exp.Scanner(memoryStream);
         MacroMap = m_macroMap;
         CCompiler_Exp.Parser expressionParser =
-          new CCompiler_Exp.Parser(expressionScanner);
+          new CCompiler_Exp.Parser(expressionScanner, m_macroMap);
         Assert.Error(expressionParser.Parse(), Message.Preprocessor_parser);
         result = (int) PreProcessorResult;
         memoryStream.Close();

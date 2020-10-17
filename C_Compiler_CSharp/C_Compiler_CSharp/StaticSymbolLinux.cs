@@ -1,7 +1,5 @@
 ﻿using System;
 using System.IO;
-using System.Text;
-using System.Globalization;
 using System.Collections.Generic;
 
 namespace CCompiler {
@@ -60,7 +58,8 @@ namespace CCompiler {
 
     public override void Load(BinaryReader inStream) {
       base.Load(inStream);
-      m_textOrData = (TextOrData) Enum.Parse(typeof(TextOrData), inStream.ReadString());
+      m_textOrData =
+        (TextOrData)Enum.Parse(typeof(TextOrData), inStream.ReadString());
 
       { m_textList = new List<string>();
         int textListSize = inStream.ReadInt32();
