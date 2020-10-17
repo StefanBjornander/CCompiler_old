@@ -8,18 +8,17 @@ using System.Collections.Generic;
 
 namespace CCompiler {
   public class Start {
-    public enum LinuxOrWindowsState {Linux, Windows};
-    public static LinuxOrWindowsState LinuxOrWindows;
+    public static bool Linux = false, Windows;
     public static string SourcePath = @"C:\Users\Stefan\Documents\vagrant\homestead\code\code\",
                          TargetPath = @"C:\D\";
 
-    public static IDictionary<string,ISet<FileInfo>> IncludeSetMap =
+    private static IDictionary<string,ISet<FileInfo>> m_includeSetMap =
       new Dictionary<string,ISet<FileInfo>>();
 
     public static void Main(string[] args){
-      LinuxOrWindows = LinuxOrWindowsState.Windows;
+      Windows = !Linux;
 
-      if (Start.LinuxOrWindows == Start.LinuxOrWindowsState.Windows) {
+      if (Start.Windows) {
         ObjectCodeTable.Initializer();
       }
 
@@ -34,32 +33,38 @@ namespace CCompiler {
       bool rebuild = argList.Remove("-rebuild"),
            print = argList.Remove("-print");
 
-      /*Preprocessor.IncludePath =
-        Environment.GetEnvironmentVariable("include_path"); 
-      Assert.Error(Preprocessor.IncludePath != null,
-                   Message.Missing_include_path);*/
-
       try {
-        bool doLink = false;
+        if (Start.Linux) {
+          foreach (string arg in argList) {
+            FileInfo file = new FileInfo(SourcePath + arg);
 
-        foreach (string arg in argList) {
-          FileInfo file = new FileInfo(SourcePath + arg);
+            if (rebuild || !IsGeneratedFileUpToDate(file, ".asm")) {
+              if (print) {
+                Console.Out.WriteLine("Compiling \"" + file.FullName + ".c\"."); 
+              }
 
-          if (rebuild || !IsObjectFileUpToDate(file)) {
-            if (print) {
-              Console.Out.WriteLine("Compiling \"" + file.FullName + ".c\"."); 
+              CompileSourceFile(file);
             }
-
-            CompileSourceFile(file);
-            doLink = true;
           }
-        }
-
-        if (Start.LinuxOrWindows == Start.LinuxOrWindowsState.Linux) {
           GenerateMakeFile(argList);
         }
 
-        if (Start.LinuxOrWindows == Start.LinuxOrWindowsState.Windows) {
+        if (Start.Windows) {
+          bool doLink = false;
+
+          foreach (string arg in argList) {
+            FileInfo file = new FileInfo(SourcePath + arg);
+
+            if (rebuild || !IsGeneratedFileUpToDate(file, ".obj")) {
+              if (print) {
+                Console.Out.WriteLine("Compiling \"" + file.FullName + ".c\"."); 
+              }
+
+              CompileSourceFile(file);
+              doLink = true;
+            }
+          }
+
           if (doLink) {
             FileInfo targetFile =
               new FileInfo(TargetPath + argList[0] + ".com");
@@ -146,33 +151,11 @@ namespace CCompiler {
     }
   
     public static void CompileSourceFile(FileInfo file) {
-      FileInfo sourceFile = new FileInfo(file.FullName + ".c"),
-               preproFile = new FileInfo(file.FullName + ".p"),
-               middleFile = new FileInfo(file.FullName + ".mid");
-      Preprocessor.MacroMap = new Dictionary<string,Macro>();
-
-      if (Start.LinuxOrWindows == Start.LinuxOrWindowsState.Linux) {
-        Preprocessor.MacroMap.Add("__LINUX__",
-                                  new Macro(0, new List<Token>()));
-      }
-
-      if (Start.LinuxOrWindows == Start.LinuxOrWindowsState.Windows) {
-        Preprocessor.MacroMap.Add("__WINDOWS__",
-                                  new Macro(0, new List<Token>()));
-      }
-
-      Preprocessor.IncludeSet = new HashSet<FileInfo>();
-      Preprocessor preprocessor = new Preprocessor();
-      preprocessor.DoProcess(sourceFile);
-      Assert.Error(Preprocessor.IfStack.Count == 0, Message.
-                   If___ifdef____or_ifndef_directive_without_matching_endif);
-    
-      StreamWriter preproStream = File.CreateText(preproFile.FullName);
-      preproStream.Write(preprocessor.GetText());
-      preproStream.Close();
-      IncludeSetMap.Add(file.Name, Preprocessor.IncludeSet);
-
-      byte[] byteArray = Encoding.ASCII.GetBytes(preprocessor.GetText());
+      FileInfo sourceFile = new FileInfo(file.FullName + ".c");
+      Preprocessor preprocessor = new Preprocessor(sourceFile);
+      m_includeSetMap.Add(file.Name, preprocessor.IncludeSet);
+      byte[] byteArray =
+        Encoding.ASCII.GetBytes(preprocessor.PreprocessedCode);
       MemoryStream memoryStream = new MemoryStream(byteArray);
       CCompiler_Main.Scanner scanner =
         new CCompiler_Main.Scanner(memoryStream);
@@ -188,7 +171,7 @@ namespace CCompiler {
         Assert.Error(false, ioException.StackTrace, Message.Syntax_error);
       }
 
-      if (Start.LinuxOrWindows == Start.LinuxOrWindowsState.Linux) {
+      if (Start.Linux) {
         ISet<string> totalGlobalSet = new HashSet<string>(),
                      totalExternSet = new HashSet<string>();
         List<string> totalTextList = new List<string>(),
@@ -296,13 +279,13 @@ namespace CCompiler {
         new StreamWriter(File.Open(depFile.FullName, FileMode.Create));
       bool first = true;
 
-      foreach (FileInfo includeFile in Preprocessor.IncludeSet) {
+      foreach (FileInfo includeFile in preprocessor.IncludeSet) {
         includeWriter.Write((first ? "" : " ") + includeFile.Name);
         first = false;
       }
       includeWriter.Close();
 
-      if (Start.LinuxOrWindows == Start.LinuxOrWindowsState.Windows) {
+      if (Start.Windows) {
         FileInfo objectFile = new FileInfo(file.FullName + ".obj");
         BinaryWriter binaryWriter =
           new BinaryWriter(File.Open(objectFile.FullName, FileMode.Create));
@@ -316,9 +299,9 @@ namespace CCompiler {
       }
     }
 
-    public static bool IsObjectFileUpToDate(FileInfo file) {
+    public static bool IsGeneratedFileUpToDate(FileInfo file, string suffix) {
       FileInfo sourceFile = new FileInfo(file.FullName + ".c"),
-               objectFile = new FileInfo(file.FullName + ".obj");
+               objectFile = new FileInfo(file.FullName + suffix);
 
       if (!objectFile.Exists ||
           (sourceFile.LastWriteTime > objectFile.LastWriteTime)) {

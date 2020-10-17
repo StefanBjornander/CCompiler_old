@@ -6,9 +6,9 @@
 //
 //  GPLEX Version:  1.2.2
 //  Machine:  STEFAN1968
-//  DateTime: 2020-10-12 17:08:18
+//  DateTime: 2020-10-17 13:20:25
 //  UserName: Stefan
-//  GPLEX input file <MainScanner.gplex - 2020-10-12 15:23:58>
+//  GPLEX input file <MainScanner.gplex - 2020-10-13 11:46:11>
 //  GPLEX frame file <embedded resource>
 //
 //  Option settings: parser, minimize
@@ -2464,7 +2464,7 @@ return ((int) Tokens.LEFT_SHIFT_ASSIGN);
       SymbolTable.StaticSet.Add(yylval.symbol.StaticSymbol);*/
     }
     catch (OverflowException) {
-      Assert.Error("Y " + type + ": " + text, Message.Value_overflow);
+      Assert.Error(type + ": " + text, Message.Value_overflow);
     }
 
     return ((int) Tokens.VALUE);

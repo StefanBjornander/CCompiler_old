@@ -747,7 +747,7 @@ namespace CCompiler {
     public void Exit(MiddleCode middleCode) {
       Symbol exitSymbol = (Symbol) middleCode[1];
 
-      if (Start.LinuxOrWindows == Start.LinuxOrWindowsState.Linux) {
+      if (Start.Linux) {
         if (exitSymbol != null) {
           LoadValueToRegister(exitSymbol, Register.rdi);
         }
@@ -761,7 +761,7 @@ namespace CCompiler {
         AddAssemblyCode(AssemblyOperator.syscall);
       }
 
-      if (Start.LinuxOrWindows == Start.LinuxOrWindowsState.Windows) {        
+      if (Start.Windows) {        
         if (exitSymbol != null) {
           LoadValueToRegister(exitSymbol, Register.al);
         }
@@ -1622,7 +1622,7 @@ namespace CCompiler {
       AddAssemblyCode(assemblyCodeList, AssemblyOperator.mov,
                       AssemblyCode.FrameRegister, Linker.StackTopName);
 
-      if (Start.LinuxOrWindows == Start.LinuxOrWindowsState.Linux) {
+      if (Start.Linux) {
         AddAssemblyCode(assemblyCodeList, AssemblyOperator.comment,
                         "Initializerialize Heap Pointer");
         AddAssemblyCode(assemblyCodeList, AssemblyOperator.mov_dword,
@@ -1653,7 +1653,7 @@ namespace CCompiler {
            AssemblyCodeGenerator.InitializerName, textList, externSet));
       }
 
-      if (Start.LinuxOrWindows == Start.LinuxOrWindowsState.Windows) {
+      if (Start.Windows) {
         AddAssemblyCode(assemblyCodeList, AssemblyOperator.mov_word,
                         null, 65534, (BigInteger)65534);
         AddAssemblyCode(assemblyCodeList, AssemblyOperator.fstcw,
@@ -1684,7 +1684,7 @@ namespace CCompiler {
     public static void ArgumentCodeList() {
       List<AssemblyCode> assemblyCodeList = new List<AssemblyCode>();
 
-      if (Start.LinuxOrWindows == Start.LinuxOrWindowsState.Linux) {
+      if (Start.Linux) {
         /*  pop rbx
             mov rax, rbx
             mov rdx, rbp */
@@ -1748,7 +1748,7 @@ namespace CCompiler {
                     AssemblyCodeGenerator.ArgsName, textList, externSet));
       }
       
-      if (Start.LinuxOrWindows == Start.LinuxOrWindowsState.Windows) {
+      if (Start.Windows) {
         /*    mov si, bp
               mov word [bp], $Path
               add bp, 2

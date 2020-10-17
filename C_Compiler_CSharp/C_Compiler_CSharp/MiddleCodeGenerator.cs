@@ -190,7 +190,7 @@ namespace CCompiler {
       AssemblyCodeGenerator.GenerateAssembly(statement.CodeList,
                                              assemblyCodeList);
 
-      if (Start.LinuxOrWindows == Start.LinuxOrWindowsState.Linux) {
+      if (Start.Linux) {
         List<string> textList = new List<string>();
         ISet<string> externSet = new HashSet<string>();
         AssemblyCodeGenerator.LinuxTextList(assemblyCodeList, textList, externSet);
@@ -203,7 +203,7 @@ namespace CCompiler {
         SymbolTable.StaticSet.Add(staticSymbol);
       }
 
-      if (Start.LinuxOrWindows == Start.LinuxOrWindowsState.Windows) {
+      if (Start.Windows) {
         List<byte> byteList = new List<byte>();
         IDictionary<int,string> accessMap = new Dictionary<int,string>();
         IDictionary<int,string> callMap = new Dictionary<int,string>();

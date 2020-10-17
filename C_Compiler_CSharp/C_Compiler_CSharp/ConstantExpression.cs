@@ -606,7 +606,7 @@ namespace CCompiler {
       AssemblyCodeGenerator.GenerateAssembly(middleCodeList,
                                              assemblyCodeList);
 
-      if (Start.LinuxOrWindows == Start.LinuxOrWindowsState.Linux) {
+      if (Start.Linux) {
         List<string> textList = new List<string>();
         textList.Add("\n" + uniqueName + ":");
         ISet<string> externSet = new HashSet<string>();
@@ -616,7 +616,7 @@ namespace CCompiler {
                                       uniqueName, textList, externSet));
       }
 
-      if (Start.LinuxOrWindows == Start.LinuxOrWindowsState.Windows) {
+      if (Start.Windows) {
         List<byte> byteList = new List<byte>();
         IDictionary<int,string> accessMap = new Dictionary<int,string>();
         AssemblyCodeGenerator.
