@@ -192,7 +192,18 @@ namespace CCompiler {
 
       if (Start.Linux) {
         List<string> textList = new List<string>();
-        textList.Add("section .text");
+
+        if (SymbolTable.CurrentFunction.UniqueName.
+            Equals(AssemblyCodeGenerator.MainName)) {
+          textList.AddRange(SymbolTable.InitSymbol.TextList);
+          if (SymbolTable.ArgsSymbol != null) {
+            textList.AddRange(SymbolTable.ArgsSymbol.TextList);
+          }
+        }
+        else {
+          textList.Add("section .text");
+        }
+
         ISet<string> externSet = new HashSet<string>();
         AssemblyCodeGenerator.LinuxTextList(assemblyCodeList, textList,
                                             externSet);

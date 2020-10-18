@@ -6,9 +6,9 @@
 //
 //  GPLEX Version:  1.2.2
 //  Machine:  STEFAN1968
-//  DateTime: 2020-10-17 17:41:44
+//  DateTime: 2020-10-18 17:19:51
 //  UserName: Stefan
-//  GPLEX input file <MainScanner.gplex - 2020-10-13 11:46:11>
+//  GPLEX input file <MainScanner.gplex - 2020-10-18 16:46:53>
 //  GPLEX frame file <embedded resource>
 //
 //  Option settings: parser, minimize
@@ -2125,8 +2125,10 @@ return ((int) Tokens.LOGICAL_NOT);
         case 215:
 { string name = yytext;
 
-    if (name.Equals("abs")) {
-      name = Symbol.FileMarker + "abs";
+    if (Start.Linux && (name.Equals("abs") ||
+        name.Equals("_start") || name.Equals("section") ||
+        name.Equals("extern") || name.Equals("global"))) {
+      name = Symbol.FileMarker + name;
     }
 
     Symbol symbol = SymbolTable.CurrentTable.LookupSymbol(name);

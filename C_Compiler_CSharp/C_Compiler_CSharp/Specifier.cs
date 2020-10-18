@@ -128,7 +128,7 @@ namespace CCompiler {
           switch (enumSymbol.Storage = storage.Value) {
             case CCompiler.Storage.Static:
               SymbolTable.StaticSet.Add(ConstantExpression.
-                                        Value(enumSymbol));
+                                         Value(enumSymbol));
               break;
 
             case CCompiler.Storage.Extern: {

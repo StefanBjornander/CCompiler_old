@@ -8,7 +8,7 @@ using System.Collections.Generic;
 
 namespace CCompiler {
   public class Start {
-    public static bool Linux = true, Windows;
+    public static bool Linux = false, Windows;
     public static string SourcePath = @"C:\Users\Stefan\Documents\vagrant\homestead\code\code\",
                          TargetPath = @"C:\D\";
 
@@ -180,22 +180,7 @@ namespace CCompiler {
           externSet.UnionWith(staticSymbolLinux.ExternSet);
         }
 
-        StaticSymbolLinux initSymbol = null, argsSymbol = null,
-                          mainSymbol = null;
         foreach (StaticSymbol staticSymbol in SymbolTable.StaticSet) {
-          if (staticSymbol.UniqueName.
-              Equals(AssemblyCodeGenerator.InitializerName)) {
-            initSymbol = (StaticSymbolLinux) staticSymbol;
-          }
-
-          if (staticSymbol.UniqueName.Equals(AssemblyCodeGenerator.MainName)){
-            mainSymbol = (StaticSymbolLinux) staticSymbol;
-          }
-
-          if (staticSymbol.UniqueName.Equals(AssemblyCodeGenerator.ArgsName)){
-            argsSymbol = (StaticSymbolLinux) staticSymbol;
-          }
-
           externSet.Remove(staticSymbol.UniqueName);
         }
 
@@ -215,52 +200,26 @@ namespace CCompiler {
           streamWriter.WriteLine("\textern " + externName);
         }
 
-        if (initSymbol != null) {
-          streamWriter.WriteLine();
-          streamWriter.WriteLine("\tglobal " + Linker.StackTopName);
+        if (SymbolTable.InitSymbol != null) {
           streamWriter.WriteLine("\tglobal _start");
-          streamWriter.WriteLine();
-          streamWriter.WriteLine("section .text");
-          streamWriter.WriteLine("_start:");
-          
-          foreach (string line in initSymbol.TextList) {
-            streamWriter.WriteLine(line);
-          }
+          streamWriter.WriteLine("\tglobal " + Linker.StackTopName);
         }
         else {
           streamWriter.WriteLine("\textern " + Linker.StackTopName);
-          streamWriter.WriteLine();
-          streamWriter.WriteLine("section .text");
         }
         streamWriter.WriteLine();
 
-        if (argsSymbol != null) {
-          foreach (string line in argsSymbol.TextList) {
-            streamWriter.WriteLine(line);
-          }
-        }
-
-        if (mainSymbol != null) {
-          foreach (string line in mainSymbol.TextList) {
-            streamWriter.WriteLine(line);
-          }
-        }
-
         foreach (StaticSymbol staticSymbol in SymbolTable.StaticSet) {
-          if ((staticSymbol != initSymbol) &&
-              (staticSymbol != argsSymbol) &&
-              (staticSymbol != mainSymbol)) {
-            StaticSymbolLinux staticSymbolLinux =
-              (StaticSymbolLinux) staticSymbol;
+          StaticSymbolLinux staticSymbolLinux =
+            (StaticSymbolLinux) staticSymbol;
 
-            streamWriter.WriteLine();
-            foreach (string line in staticSymbolLinux.TextList) {
-              streamWriter.WriteLine(line);
-            }
+          streamWriter.WriteLine();
+          foreach (string line in staticSymbolLinux.TextList) {
+            streamWriter.WriteLine(line);
           }
         }
 
-        if (initSymbol != null) {
+        if (SymbolTable.InitSymbol != null) {
           streamWriter.WriteLine();
           streamWriter.WriteLine("section .data");
           streamWriter.WriteLine(Linker.StackTopName + ":\ttimes 1048576 db 0");

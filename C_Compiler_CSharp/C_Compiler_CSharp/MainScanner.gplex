@@ -233,10 +233,10 @@ WHITE_SPACE [ \t\r\n\f]
 {NAME} {
   { string name = yytext;
 
-    if (Start.Linux &&
-        (name.Equals("_start") || name.Equals("section") ||
-         name.Equals("extern") || name.Equals("global"))) {
-      name = Symbol.FileMarker + "_start";
+    if (Start.Linux && (name.Equals("abs") ||
+        name.Equals("_start") || name.Equals("section") ||
+        name.Equals("extern") || name.Equals("global"))) {
+      name = Symbol.FileMarker + name;
     }
 
     Symbol symbol = SymbolTable.CurrentTable.LookupSymbol(name);

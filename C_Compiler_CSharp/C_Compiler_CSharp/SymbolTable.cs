@@ -19,7 +19,7 @@ namespace CCompiler {
     public static SymbolTable CurrentTable = null;
     public static Symbol CurrentFunction = null;
     public static ISet<StaticSymbol> StaticSet;
-    public static bool InitCode = false;
+    public static StaticSymbolLinux InitSymbol, ArgsSymbol;
 
     public SymbolTable(SymbolTable parentTable, Scope scope) {
       m_parentTable = parentTable;
@@ -27,6 +27,7 @@ namespace CCompiler {
       switch (m_scope = scope) {
         case Scope.Global:
           StaticSet = new HashSet<StaticSymbol>();
+          InitSymbol = ArgsSymbol = null; 
           break;
 
         case Scope.Struct:

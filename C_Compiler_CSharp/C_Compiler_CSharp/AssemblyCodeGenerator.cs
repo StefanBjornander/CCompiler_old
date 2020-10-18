@@ -1617,7 +1617,7 @@ namespace CCompiler {
 
     public static void InitializationCodeList() {
       List<AssemblyCode> assemblyCodeList = new List<AssemblyCode>();
-      //AddAssemblyCode(assemblyCodeList, AssemblyOperator.label, "_start");
+      AddAssemblyCode(assemblyCodeList, AssemblyOperator.label, "_start");
       AddAssemblyCode(assemblyCodeList, AssemblyOperator.comment,
                       "Initializerialize Stack Pointer");
       AddAssemblyCode(assemblyCodeList, AssemblyOperator.mov,
@@ -1650,9 +1650,9 @@ namespace CCompiler {
         ISet<string> externSet = new HashSet<string>();
         AssemblyCodeGenerator.LinuxTextList(assemblyCodeList, textList,
                                             externSet);
-        SymbolTable.StaticSet.Add(new StaticSymbolLinux
-          (AssemblyCodeGenerator.InitializerName, textList, externSet));
-        SymbolTable.InitCode = true;
+        SymbolTable.InitSymbol =
+          new StaticSymbolLinux(AssemblyCodeGenerator.InitializerName,
+                                textList, externSet);
       }
 
       if (Start.Windows) {
@@ -1742,13 +1742,12 @@ namespace CCompiler {
              add rbp, 8 */
 
         List<string> textList = new List<string>();
-        textList.Add("section .text");
         ISet<string> externSet = new HashSet<string>();
         AssemblyCodeGenerator.LinuxTextList(assemblyCodeList, textList,
                                             externSet);
-        SymbolTable.StaticSet.
-          Add(new StaticSymbolLinux(AssemblyCodeGenerator.ArgsName,
-                                    textList, externSet));
+        SymbolTable.ArgsSymbol =
+          new StaticSymbolLinux(AssemblyCodeGenerator.ArgsName,
+                                textList, externSet);
       }
       
       if (Start.Windows) {
