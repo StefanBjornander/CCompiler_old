@@ -107,7 +107,7 @@ namespace CCompiler {
       }
 
       if (SymbolTable.CurrentFunction.UniqueName.Equals(AssemblyCodeGenerator.MainName)) {
-        AssemblyCodeGenerator.InitializerializationCodeList();
+        AssemblyCodeGenerator.InitializationCodeList();
         List<Type> typeList =
           SymbolTable.CurrentFunction.Type.TypeList;
 
@@ -192,13 +192,12 @@ namespace CCompiler {
 
       if (Start.Linux) {
         List<string> textList = new List<string>();
+        textList.Add("section .text");
         ISet<string> externSet = new HashSet<string>();
-        AssemblyCodeGenerator.LinuxTextList(assemblyCodeList, textList, externSet);
-        //GenerateStaticInitializerLinux.TextList(assemblyCodeList,
-        //                                      textList, externSet);
+        AssemblyCodeGenerator.LinuxTextList(assemblyCodeList, textList,
+                                            externSet);
         StaticSymbol staticSymbol =
-          new StaticSymbolLinux(StaticSymbolLinux.TextOrData.Text,
-                                SymbolTable.CurrentFunction.UniqueName,
+          new StaticSymbolLinux(SymbolTable.CurrentFunction.UniqueName,
                                 textList, externSet);
         SymbolTable.StaticSet.Add(staticSymbol);
       }
@@ -285,20 +284,20 @@ namespace CCompiler {
                      IsMainArgs(SymbolTable.CurrentFunction),
                      AssemblyCodeGenerator.MainName, Message.Invalid_parameter_list);
 
-        AssemblyCodeGenerator.InitializerializationCodeList();
-        //assemblyCodeList.AddRange(AssemblyCodeGenerator.InitializerializationCodeList());
+        AssemblyCodeGenerator.InitializationCodeList();
+        //assemblyCodeList.AddRange(AssemblyCodeGenerator.InitializationCodeList());
 
         if (IsMainArgs(SymbolTable.CurrentFunction)) {
           AssemblyCodeGenerator.ArgumentCodeList();
 //          assemblyCodeList.AddRange(AssemblyCodeGenerator.ArgumentCodeList());
 
           /*SymbolTable.CurrentStaticFunction.EntryPoint =
-            AssemblyCode.MainInitializerializationSize +
+            AssemblyCode.MainInitializationSize +
             AssemblyCode.MainArgumentSize;*
         }      
         else {
           /*SymbolTable.CurrentStaticFunction.EntryPoint =
-            AssemblyCode.MainInitializerializationSize;*
+            AssemblyCode.MainInitializationSize;*
         }
       }
 

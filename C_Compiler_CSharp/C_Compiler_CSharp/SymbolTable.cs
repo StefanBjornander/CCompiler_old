@@ -18,7 +18,8 @@ namespace CCompiler {
 
     public static SymbolTable CurrentTable = null;
     public static Symbol CurrentFunction = null;
-    public static ISet<StaticSymbol> StaticSet = new HashSet<StaticSymbol>();
+    public static ISet<StaticSymbol> StaticSet;
+    public static bool InitCode = false;
 
     public SymbolTable(SymbolTable parentTable, Scope scope) {
       m_parentTable = parentTable;
