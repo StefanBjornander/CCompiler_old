@@ -6,9 +6,9 @@
 //
 //  GPLEX Version:  1.2.2
 //  Machine:  STEFAN1968
-//  DateTime: 2020-10-18 17:19:51
+//  DateTime: 2020-10-20 22:06:19
 //  UserName: Stefan
-//  GPLEX input file <MainScanner.gplex - 2020-10-18 16:46:53>
+//  GPLEX input file <MainScanner.gplex - 2020-10-20 21:35:11>
 //  GPLEX frame file <embedded resource>
 //
 //  Option settings: parser, minimize
@@ -171,7 +171,7 @@ public static FileInfo Path = null;
           int octValue = 64 * CharToOctal(char1) +
                           8 * CharToOctal(char2) +
                               CharToOctal(char3);
-          Assert.Error(octValue < 256, Message.Invalid_octal_sequence);
+          Assert.Error(octValue <= 255, Message.Invalid_octal_sequence);
           buffer.Remove(index, 4);
           buffer.Insert(index, (char) octValue);
         }
