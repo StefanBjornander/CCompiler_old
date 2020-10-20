@@ -780,7 +780,7 @@ namespace CCompiler {
       Symbol symbol = (Symbol) middleCode[0];
       Track track = new Track(symbol);
       m_trackMap.Add(symbol, track);
-      AddAssemblyCode(AssemblyOperator.mov, track, Linker.StackTopName);
+      AddAssemblyCode(AssemblyOperator.mov, track, Linker.StackStart);
     }
 
     public void Goto(MiddleCode middleCode) {
@@ -1621,16 +1621,16 @@ namespace CCompiler {
       AddAssemblyCode(assemblyCodeList, AssemblyOperator.comment,
                       "Initializerialize Stack Pointer");
       AddAssemblyCode(assemblyCodeList, AssemblyOperator.mov,
-                      AssemblyCode.FrameRegister, Linker.StackTopName);
+                      AssemblyCode.FrameRegister, Linker.StackStart);
 
       if (Start.Linux) {
         AddAssemblyCode(assemblyCodeList, AssemblyOperator.comment,
                         "Initializerialize Heap Pointer");
         AddAssemblyCode(assemblyCodeList, AssemblyOperator.mov_dword,
-                        Linker.StackTopName, 65534,
-                        Linker.StackTopName);
+                        Linker.StackStart, 65534,
+                        Linker.StackStart);
         AddAssemblyCode(assemblyCodeList, AssemblyOperator.add_dword,
-                        Linker.StackTopName, 65534,
+                        Linker.StackStart, 65534,
                         (BigInteger) 65534);
         AddAssemblyCode(assemblyCodeList, AssemblyOperator.comment,
                         "Initializerialize FPU Control Word, truncate mode " +
@@ -1642,7 +1642,7 @@ namespace CCompiler {
         AddAssemblyCode(assemblyCodeList, AssemblyOperator.fldcw,
                         AssemblyCode.FrameRegister, 0);
         AddAssemblyCode(assemblyCodeList, AssemblyOperator.mov,
-                        Linker.StackTopName, 0, BigInteger.Zero,
+                        Linker.StackStart, 0, BigInteger.Zero,
                         TypeSize.PointerSize);
 
         List<string> textList = new List<string>();
@@ -1665,7 +1665,7 @@ namespace CCompiler {
         AddAssemblyCode(assemblyCodeList, AssemblyOperator.fldcw,
                         AssemblyCode.FrameRegister, 0);
         AddAssemblyCode(assemblyCodeList, AssemblyOperator.mov,
-                        Linker.StackTopName, 0, BigInteger.Zero,
+                        Linker.StackStart, 0, BigInteger.Zero,
                         TypeSize.PointerSize);
 
         List<byte> byteList = new List<byte>();

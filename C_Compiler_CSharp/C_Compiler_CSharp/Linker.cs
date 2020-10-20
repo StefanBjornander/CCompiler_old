@@ -4,7 +4,7 @@ using System.Collections.Generic;
 
 namespace CCompiler {
   public class Linker {    
-    public static string StackTopName = Symbol.SeparatorId + "StackTop";    
+    public static string StackStart = Symbol.SeparatorId + "StackTop";    
     private int m_totalSize = 256;
     private IDictionary<string,StaticSymbolWindows> m_globalMap =
       new Dictionary<string,StaticSymbolWindows>();
@@ -58,7 +58,7 @@ namespace CCompiler {
         m_totalSize += (int) pathNameSymbol.ByteList.Count;
       }
 
-      m_addressMap.Add(StackTopName, m_totalSize);
+      m_addressMap.Add(StackStart, m_totalSize);
     
       foreach (StaticSymbolWindows staticSymbol in m_globalList) {
         List<byte> byteList = staticSymbol.ByteList;

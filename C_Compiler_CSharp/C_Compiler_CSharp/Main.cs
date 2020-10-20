@@ -8,7 +8,7 @@ using System.Collections.Generic;
 
 namespace CCompiler {
   public class Start {
-    public static bool Linux = true, Windows;
+    public static bool Linux = false, Windows;
     public static string SourcePath = @"C:\Users\Stefan\Documents\vagrant\homestead\code\code\",
                          TargetPath = @"C:\D\";
 
@@ -172,16 +172,16 @@ namespace CCompiler {
       }
 
       if (Start.Linux) {
-        ISet<string> externSet = new HashSet<string>();
+        ISet<string> totalExternSet = new HashSet<string>();
                      
         foreach (StaticSymbol staticSymbol in SymbolTable.StaticSet) {
           StaticSymbolLinux staticSymbolLinux =
             (StaticSymbolLinux) staticSymbol;
-          externSet.UnionWith(staticSymbolLinux.ExternSet);
+          totalExternSet.UnionWith(staticSymbolLinux.ExternSet);
         }
 
         foreach (StaticSymbol staticSymbol in SymbolTable.StaticSet) {
-          externSet.Remove(staticSymbol.UniqueName);
+          totalExternSet.Remove(staticSymbol.UniqueName);
         }
 
         FileInfo assemblyFile = new FileInfo(file.FullName + ".asm");
@@ -196,16 +196,16 @@ namespace CCompiler {
         }
         streamWriter.WriteLine();
 
-        foreach (string externName in externSet) {
+        foreach (string externName in totalExternSet) {
           streamWriter.WriteLine("\textern " + externName);
         }
 
         if (SymbolTable.InitSymbol != null) {
           streamWriter.WriteLine("\tglobal _start");
-          streamWriter.WriteLine("\tglobal " + Linker.StackTopName);
+          streamWriter.WriteLine("\tglobal " + Linker.StackStart);
         }
         else {
-          streamWriter.WriteLine("\textern " + Linker.StackTopName);
+          streamWriter.WriteLine("\textern " + Linker.StackStart);
         }
         streamWriter.WriteLine();
 
@@ -222,7 +222,7 @@ namespace CCompiler {
         if (SymbolTable.InitSymbol != null) {
           streamWriter.WriteLine();
           streamWriter.WriteLine("section .data");
-          streamWriter.WriteLine(Linker.StackTopName + ":\ttimes 1048576 db 0");
+          streamWriter.WriteLine(Linker.StackStart + ":\ttimes 1048576 db 0");
         }
 
         streamWriter.Close();
