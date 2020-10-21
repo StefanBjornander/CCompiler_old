@@ -1,10 +1,10 @@
 
 // ==========================================================================
-//  GPPG error listing for yacc source file <MainParser.gppg - 2020-10-12 15:16:28>
+//  GPPG error listing for yacc source file <MainParser.gppg - 2020-10-21 16:18:10>
 // ==========================================================================
 //  Version:  1.5.2
 //  Machine:  STEFAN1968
-//  DateTime: 2020-10-12 15:16:30
+//  DateTime: 2020-10-21 16:18:12
 //  UserName: Stefan
 // ==========================================================================
 
@@ -70,7 +70,7 @@
 %token <type> TYPEDEF_NAME
 %token <symbol> VALUE
 
-%type <obj> declaration_specifier declaration_specifier_list_x // optional_declaration_specifier_list_x
+%type <obj> declaration_specifier declaration_specifier_list_x optional_declaration_specifier_list_x
 %type <object_list> declaration_specifier_list
 
 %type <name> optional_name
@@ -81,7 +81,7 @@
 %type <symbol_bool_pair_set> enum_list
 %type <symbol_bool_pair> enum
 %type <middle_code_list> declarator_list
-                         initializerialization_bitfield_simple_declarator declaration
+                         initialization_bitfield_simple_declarator declaration
 
 %type <declarator> optional_simple_declarator declarator pointer_declarator
 %type <type_list> optional_pointer_list pointer_list
@@ -101,47 +101,34 @@
 %type <type> type_name
 %type <declarator> abstract_declarator direct_abstract_declarator
 
-%type <middleOperator> assignment_operator /*equality_operator
+%type <middleOperator> assignment_operator equality_operator
                        relation_operator add_operator shift_operator 
                        multiply_operator prefix_add_operator
-                       increment_operator*/
+                       increment_operator
 
 %type <expression> optional_constant_integral_expression
                    constant_integral_expression optional_expression
                    expression assignment_expression
-                   condition_expression binary_expression
-
-                   /*logical_and_expression bitwise_or_expression
+                   condition_expression logical_or_expression
+                   logical_and_expression bitwise_or_expression
                    bitwise_xor_expression bitwise_and_expression
                    equality_expression relation_expression
                    shift_expression add_expression
                    multiply_expression type_cast_expression
                    prefix_expression postfix_expression
-                   primary_expression*/
+                   primary_expression
 
 %type <statement> optional_statement_list statement
                   closed_statement opened_statement
 
-/*%type <expression_list> optional_argument_expression_list
-                        argument_expression_list*/
-
-%left LOGICAL_OR
-%left LOGICAL_AND
-%left BITWISE_OR
-%left BITWISE_XOR
-%left AMPERSAND // bitwise and
-%left EQUAL NOT_EQUAL
-%left LESS_THAN LESS_THAN_EQUAL GREATER_THAN GREATER_THAN_EQUAL
-%left LEFT_SHIFT RIGHT_SHIFT
-%left PLUS MINUS
-%left DIVIDE MODULO ASTERRISK // multiplication
-
-%right PLUS MINUS AMPERSAND ASTERRISK INCREMENT DECREMENT DOT ARROW LEFT_SQUARE RIGHT_SQUARE LEFT_PARENTHESIS RIGHT_PARENTHESIS VALUE NAME REGISTER_NAME CARRY_FLAG STACK_TOP
-%right COMMA
+%type <expression_list> optional_argument_expression_list
+                        argument_expression_list
 
 %start translation_unit
 
 %%
+// Warning: NonTerminal symbol "optional_declaration_specifier_list_x" is unreachable
+// ----------------------------------------------------------------------------------
 
 translation_unit:
     external_declaration
@@ -188,9 +175,9 @@ declaration:
       $$ = $2;
     };
 
-/*optional_declaration_specifier_list_x:
-    /* empty *
-  | declaration_specifier_list_x;*/
+optional_declaration_specifier_list_x:
+    // empty
+  | declaration_specifier_list_x;
 
 declaration_specifier_list_x:
   declaration_specifier_list {
@@ -291,15 +278,15 @@ enum:
     };
 
 declarator_list:
-    initializerialization_bitfield_simple_declarator {
+    initialization_bitfield_simple_declarator {
       $$ = $1;
     }
-  | declarator_list COMMA initializerialization_bitfield_simple_declarator {
+  | declarator_list COMMA initialization_bitfield_simple_declarator {
       $1.AddRange($3);
       $$ = $1;
     };
     
-initializerialization_bitfield_simple_declarator:
+initialization_bitfield_simple_declarator:
     declarator {
       MiddleCodeGenerator.Declarator
         (SpecifierStack.Peek(), $1);
@@ -620,7 +607,7 @@ expression:
     };
 
 assignment_expression:
-    binary_expression {
+    condition_expression {
       $$ = $1;
     }
   | prefix_expression assignment_operator assignment_expression {
@@ -635,10 +622,18 @@ assignment_operator:
   | DIVIDE_ASSIGN      { $$ = MiddleOperator.SignedDivide;   }
   | MODULO_ASSIGN      { $$ = MiddleOperator.SignedModulo;   }
   | AND_ASSIGN         { $$ = MiddleOperator.BitwiseAnd;     }
-  | OR_ASSIGN          { $$ = MiddleOperator.BitwiseOr;     }
+  | OR_ASSIGN         { $$ = MiddleOperator.BitwiseOr;     }
   | XOR_ASSIGN         { $$ = MiddleOperator.BitwiseXOr;     }
   | LEFT_SHIFT_ASSIGN  { $$ = MiddleOperator.ShiftLeft;      }
   | RIGHT_SHIFT_ASSIGN { $$ = MiddleOperator.ShiftRight;     };
+
+condition_expression:
+    logical_or_expression {
+      $$ = $1;
+    }
+  | logical_or_expression QUESTION_MARK expression COLON condition_expression{
+      $$ = MiddleCodeGenerator.ConditionalExpression($1, $3, $5);
+    };
 
 optional_constant_integral_expression:
     /* Empty */                  { $$ = null; }
@@ -649,90 +644,148 @@ constant_integral_expression:
       $$ = MiddleCodeGenerator.ConstantIntegralExpression($1);
     };
 
-condition_expression:
-    binary_expression {
+logical_or_expression:
+    logical_and_expression {
       $$ = $1;
     }
-  | binary_expression QUESTION_MARK binary_expression COLON binary_expression{
-      $$ = MiddleCodeGenerator.ConditionalExpression($1, $3, $5);
+  | logical_or_expression LOGICAL_OR logical_and_expression {
+      $$ = MiddleCodeGenerator.LogicalOrExpression($1, $3);
     };
 
-binary_expression:
-    prefix_expression {
-      $$ = $1; 
+logical_and_expression:
+    bitwise_or_expression {
+      $$ = $1;
     }
-  | binary_expression LOGICAL_OR binary_expression {
-      $$ = MiddleCodeGenerator.LogicalOrExpression($1, $3);
-    }
-  | binary_expression LOGICAL_AND binary_expression {
+  | logical_and_expression LOGICAL_AND bitwise_or_expression {
       $$ = MiddleCodeGenerator.LogicalAndExpression($1, $3);
+    };
+
+bitwise_or_expression:
+    bitwise_xor_expression {
+      $$ = $1;
     }
-  | binary_expression BITWISE_OR binary_expression {
+  | bitwise_or_expression BITWISE_OR bitwise_xor_expression {
       $$ = MiddleCodeGenerator.BitwiseExpression
            (MiddleOperator.BitwiseOr, $1, $3);
+    };
+
+bitwise_xor_expression:
+    bitwise_and_expression {
+      $$ = $1;
     }
-  | binary_expression BITWISE_XOR binary_expression {
+  | bitwise_xor_expression BITWISE_XOR bitwise_and_expression {
       $$ = MiddleCodeGenerator.BitwiseExpression
            (MiddleOperator.BitwiseXOr, $1, $3);
+    };
+
+bitwise_and_expression:
+    equality_expression {
+      $$ = $1;
     }
-  | binary_expression AMPERSAND binary_expression {
+  | bitwise_and_expression AMPERSAND equality_expression {
       $$ = MiddleCodeGenerator.BitwiseExpression
            (MiddleOperator.BitwiseAnd, $1, $3);
+    };
+
+equality_expression:
+    relation_expression {
+      $$ = $1;
     }
-  | binary_expression EQUAL binary_expression {
+  | equality_expression equality_operator relation_expression {
       $$ = MiddleCodeGenerator.RelationalExpression($2, $1, $3);
+    };
+
+equality_operator:
+    EQUAL     { $$ = MiddleOperator.Equal;    }
+  | NOT_EQUAL { $$ = MiddleOperator.NotEqual; };
+
+relation_expression:
+    shift_expression {
+      $$ = $1;
     }
-  | binary_expression NOT_EQUAL binary_expression {
-      $$ = MiddleCodeGenerator.RelationalExpression($2, $1, $3);
-    }
-  | binary_expression LESS_THAN binary_expression {
+  | relation_expression relation_operator shift_expression {
       $$ = MiddleCodeGenerator.RelationalExpression ($2, $1, $3);
+    };
+
+relation_operator:
+    LESS_THAN          { $$ = MiddleOperator.SignedLessThan;         }
+  | LESS_THAN_EQUAL    { $$ = MiddleOperator.SignedLessThanEqual;    }
+  | GREATER_THAN       { $$ = MiddleOperator.SignedGreaterThan;      }
+  | GREATER_THAN_EQUAL { $$ = MiddleOperator.SignedGreaterThanEqual; };
+
+shift_expression:
+    add_expression {
+      $$ = $1;
     }
-  | binary_expression LESS_THAN_EQUAL binary_expression {
-      $$ = MiddleCodeGenerator.RelationalExpression ($2, $1, $3);
-    }
-  | binary_expression GREATER_THAN binary_expression {
-      $$ = MiddleCodeGenerator.RelationalExpression ($2, $1, $3);
-    }
-  | binary_expression GREATER_THAN_EQUAL binary_expression {
-      $$ = MiddleCodeGenerator.RelationalExpression ($2, $1, $3);
-    }
-  | binary_expression LEFT_SHIFT binary_expression {
+  | shift_expression shift_operator add_expression {
       $$ = MiddleCodeGenerator.ShiftExpression($2, $1, $3);
+    };
+
+shift_operator:
+    LEFT_SHIFT  { $$ = MiddleOperator.ShiftLeft;  }
+  | RIGHT_SHIFT { $$ = MiddleOperator.ShiftRight; };
+
+add_expression:
+    multiply_expression {
+      $$ = $1;
     }
-  | binary_expression RIGHT_SHIFT binary_expression {
-      $$ = MiddleCodeGenerator.ShiftExpression($2, $1, $3);
-    }
-  | binary_expression PLUS binary_expression {
+  | add_expression add_operator multiply_expression {
       $$ = MiddleCodeGenerator.AdditionExpression($2, $1, $3);
+    };
+
+add_operator:
+    PLUS  { $$ = MiddleOperator.BinaryAdd;      }
+  | MINUS { $$ = MiddleOperator.BinarySubtract; };
+
+multiply_expression:
+    type_cast_expression {
+      $$ = $1;
     }
-  | binary_expression MINUS binary_expression {
-      $$ = MiddleCodeGenerator.AdditionExpression($2, $1, $3);
-    }
-  | binary_expression ASTERRISK binary_expression {
+  | multiply_expression multiply_operator type_cast_expression {
       $$ = MiddleCodeGenerator.MultiplyExpression($2, $1, $3);
+    };
+
+multiply_operator:
+    ASTERRISK { $$ = MiddleOperator.SignedMultiply; }
+  | DIVIDE    { $$ = MiddleOperator.SignedDivide;   }
+  | MODULO    { $$ = MiddleOperator.SignedModulo;   };
+
+type_cast_expression:
+    prefix_expression {
+      $$ = $1;
     }
-  | binary_expression DIVIDE binary_expression {
-      $$ = MiddleCodeGenerator.MultiplyExpression($2, $1, $3);
+  | LEFT_PARENTHESIS type_name RIGHT_PARENTHESIS type_cast_expression {
+      $$ = MiddleCodeGenerator.CastExpression($2, $4);
+    };
+
+/*The type name is used in the sizeof operartor and in cast expression. It can be a declaration specifier list without a declarator opr a declaration specifier list with an abstract declarator. This means that a name shall not be given. For instance:
+  sizeof (unsigned long int);
+  sizeof (long int (*)(short int));*/
+
+type_name:
+    declaration_specifier_list {
+      $$ = MiddleCodeGenerator.
+           TypeName(Specifier.SpecifierList($1), null);
     }
-  | binary_expression MODULO binary_expression {
-      $$ = MiddleCodeGenerator.MultiplyExpression($2, $1, $3);
+  | declaration_specifier_list {
+      SpecifierStack.Push(Specifier.SpecifierList($1));
+    }
+    abstract_declarator {
+      $$ = MiddleCodeGenerator.
+           TypeName(SpecifierStack.Pop(), $3);
     };
 
 prefix_expression:
     postfix_expression {
       $$ = $1; 
     }
-  | PLUS prefix_expression {
+  | prefix_add_operator type_cast_expression {
       $$ = MiddleCodeGenerator.UnaryExpression($1, $2);
     }
-  | MINUS prefix_expression {
-      $$ = MiddleCodeGenerator.UnaryExpression($1, $2);
-    }
-  | LOGICAL_NOT prefix_expression {
+  | LOGICAL_NOT type_cast_expression {
       $$ = MiddleCodeGenerator.LogicalNotExpression($2);
     }
-  | BITWISE_NOT prefix_expression {
+  | BITWISE_NOT type_cast_expression {
       $$ = MiddleCodeGenerator.BitwiseNotExpression($2);
     }
   | SIZEOF prefix_expression {
@@ -741,35 +794,29 @@ prefix_expression:
   | SIZEOF LEFT_PARENTHESIS type_name RIGHT_PARENTHESIS {
       $$ = MiddleCodeGenerator.SizeOfType($3);
     }
-  | AMPERSAND prefix_expression {
+  | AMPERSAND type_cast_expression {
       $$ = MiddleCodeGenerator.AddressExpression($2);
     }
-  | ASTERRISK prefix_expression {
+  | ASTERRISK type_cast_expression {
       $$ = MiddleCodeGenerator.DereferenceExpression($2);
     }
-  | INCREMENT prefix_expression {
-      $$ = MiddleCodeGenerator.PrefixIncrementExpression($1, $2);
-    }
-  | DECREMENT prefix_expression {
+  | increment_operator prefix_expression {
       $$ = MiddleCodeGenerator.PrefixIncrementExpression($1, $2);
     };
 
-/*prefix_add_operator:
+prefix_add_operator:
     PLUS  { $$ = MiddleOperator.UnaryAdd;      }
   | MINUS { $$ = MiddleOperator.UnarySubtract; };
 
 increment_operator:
     INCREMENT { $$ = MiddleOperator.Increment; }
-  | DECREMENT { $$ = MiddleOperator.Decrement; };*/
+  | DECREMENT { $$ = MiddleOperator.Decrement; };
 
 postfix_expression:
     primary_expression {
       $$ = $1; 
     }
-  | postfix_expression INCREMENT {
-      $$ = MiddleCodeGenerator.PostfixIncrementExpression($2, $1);
-    }
-  | postfix_expression DECREMENT {
+  | postfix_expression increment_operator {
       $$ = MiddleCodeGenerator.PostfixIncrementExpression($2, $1);
     }
   | postfix_expression DOT NAME {
@@ -781,12 +828,26 @@ postfix_expression:
   | postfix_expression LEFT_SQUARE expression RIGHT_SQUARE {
       $$ = MiddleCodeGenerator.IndexExpression($1, $3);
     }
-  /*| postfix_expression {
+  | postfix_expression {
       MiddleCodeGenerator.CallHeader($1);
     }
     LEFT_PARENTHESIS optional_argument_expression_list RIGHT_PARENTHESIS {
       $$ = MiddleCodeGenerator.CallExpression($1, $4);
-    }*/;
+    };
+
+optional_argument_expression_list:
+    /* Empty */              { $$ = new List<Expression>(); }
+  | argument_expression_list { $$ = $1;                     };
+
+argument_expression_list:
+    assignment_expression {
+      $$ = new List<Expression>();
+      $$.Add(MiddleCodeGenerator.ArgumentExpression(0, $1));
+    }
+  | argument_expression_list COMMA assignment_expression {
+      $1.Add(MiddleCodeGenerator.ArgumentExpression($1.Count, $3));
+      $$ = $1;
+    };
 
 primary_expression:
     VALUE {
@@ -807,62 +868,5 @@ primary_expression:
   | LEFT_PARENTHESIS expression RIGHT_PARENTHESIS {
       $$ = $2; 
     };
-
-/*equality_operator:
-    EQUAL     { $$ = MiddleOperator.Equal;    }
-  | NOT_EQUAL { $$ = MiddleOperator.NotEqual; };
-
-relation_operator:
-    LESS_THAN          { $$ = MiddleOperator.SignedLessThan;         }
-  | LESS_THAN_EQUAL    { $$ = MiddleOperator.SignedLessThanEqual;    }
-  | GREATER_THAN       { $$ = MiddleOperator.SignedGreaterThan;      }
-  | GREATER_THAN_EQUAL { $$ = MiddleOperator.SignedGreaterThanEqual; };
-
-shift_operator:
-    LEFT_SHIFT  { $$ = MiddleOperator.ShiftLeft;  }
-  | RIGHT_SHIFT { $$ = MiddleOperator.ShiftRight; };
-
-add_operator:
-    PLUS  { $$ = MiddleOperator.BinaryAdd;      }
-  | MINUS { $$ = MiddleOperator.BinarySubtract; };
-
-multiply_operator:
-    ASTERRISK { $$ = MiddleOperator.SignedMultiply; }
-  | DIVIDE    { $$ = MiddleOperator.SignedDivide;   }
-  | MODULO    { $$ = MiddleOperator.SignedModulo;   };*/
-
-type_name:
-    declaration_specifier_list {
-      $$ = MiddleCodeGenerator.
-           TypeName(Specifier.SpecifierList($1), null);
-    }
-  | declaration_specifier_list {
-      SpecifierStack.Push(Specifier.SpecifierList($1));
-    }
-    abstract_declarator {
-      $$ = MiddleCodeGenerator.
-           TypeName(SpecifierStack.Pop(), $3);
-    };
-
-/*optional_argument_expression_list:
-    /* Empty */              { $$ = new List<Expression>(); }
-//--------------------------^^
-// Error: Syntax error, unexpected '{', expecting %%, or anchoredSymbol, or EOF
-// ----------------------------------------------------------------------------
-  | argument_expression_list { $$ = $1;                     };
-
-argument_expression_list:
-    assignment_expression {
-      $$ = new List<Expression>();
-      $$.Add(MiddleCodeGenerator.ArgumentExpression(0, $1));
-    }
-  | argument_expression_list COMMA assignment_expression {
-      $1.Add(MiddleCodeGenerator.ArgumentExpression($1.Count, $3));
-      $$ = $1;
-    };*/
-//---^^^
-// Error: This character is invalid in this context
-// Error: This character is invalid in this context
-// ------------------------------------------------
 %%// ==========================================================================
 

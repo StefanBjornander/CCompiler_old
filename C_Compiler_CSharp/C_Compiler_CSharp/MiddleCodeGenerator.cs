@@ -373,8 +373,9 @@ namespace CCompiler {
 
     // ---------------------------------------------------------------------------------------------------------------------
   
-    public static Symbol EnumItem(string itemName, Symbol optInitializerSymbol)
-    { Type itemType = new Type(Sort.SignedInt, true);      
+    public static Symbol EnumItem(string itemName,
+                                  Symbol optInitializerSymbol) {
+      Type itemType = new Type(Sort.SignedInt, true);      
       itemType.Constant = true;
 
       BigInteger value;
@@ -421,8 +422,9 @@ namespace CCompiler {
       declarator.Add(specifier.Type);
 
       if (declarator.Type.IsFunction()) {
-        Assert.Error((storage == Storage.Static) || (storage == Storage.Extern)
-                     || (storage == Storage.Typedef),  storage, Message.
+        Assert.Error((storage == Storage.Static) ||
+                     (storage == Storage.Extern) ||
+                     (storage == Storage.Typedef), storage, Message.
             Only_static___extern_or_typedef_storage_allowed_for_functions);
       }
 
