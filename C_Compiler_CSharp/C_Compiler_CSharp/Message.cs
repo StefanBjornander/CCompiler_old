@@ -18,7 +18,7 @@
     Double_sharps_at_beginning_of_line,
     Double_sharps_at_end_of_line,
     Two_consecutive_double_sharps,
-    Only_static___extern_or_typedef_storage_allowed_for_functions,
+    Only_extern_or_static_storage_allowed_for_functions,
     Only_auto_or_register_storage_allowed_for_struct_or_union_member,
     Function_missing,
     Not_a_function,

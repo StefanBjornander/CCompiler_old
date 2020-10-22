@@ -294,7 +294,7 @@ initialization_bitfield_simple_declarator:
       $$ = new List<MiddleCode>();
     }
   | declarator ASSIGN initializer {
-      $$ = MiddleCodeGenerator.AssignmentDeclarator
+      $$ = MiddleCodeGenerator.InitializedDeclarator
              (SpecifierStack.Peek(), $1, $3);
     }
   | optional_simple_declarator COLON constant_integral_expression {

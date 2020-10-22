@@ -40,7 +40,7 @@ namespace CCompiler {
       Type returnType;
 
       if (specifier != null) {
-        storage = specifier.StorageX;
+        storage = specifier.Storage;
         returnType = specifier.Type;
       }
       else {
@@ -418,18 +418,18 @@ namespace CCompiler {
     // ---------------------------------------------------------------------------------------------------------------------
 
     public static void Declarator(Specifier specifier, Declarator declarator){
-      Storage? storage = specifier.StorageX;
       declarator.Add(specifier.Type);
 
+      Storage storage = specifier.Storage;
       if (declarator.Type.IsFunction()) {
-        Assert.Error((storage == Storage.Static) ||
-                     (storage == Storage.Extern) ||
-                     (storage == Storage.Typedef), storage, Message.
-            Only_static___extern_or_typedef_storage_allowed_for_functions);
+        Assert.Error((specifier.Storage == Storage.Static) ||
+                     (specifier.Storage == Storage.Extern),
+                     specifier.Storage, Message.
+          Only_extern_or_static_storage_allowed_for_functions);
       }
 
       Symbol symbol = new Symbol(declarator.Name, specifier.ExternalLinkage,
-                                 storage.Value, declarator.Type);
+                                 storage, declarator.Type);
       SymbolTable.CurrentTable.AddSymbol(symbol);
 
       if (symbol.IsStatic() && !symbol.Type.IsFunction()) {
@@ -437,9 +437,9 @@ namespace CCompiler {
       }
     }
   
-    public static List<MiddleCode> AssignmentDeclarator(Specifier specifier,
+    public static List<MiddleCode> InitializedDeclarator(Specifier specifier,
                                    Declarator declarator, object initializer){
-      Storage? storage = specifier.StorageX;
+      Storage storage = specifier.Storage;
       Type specifierType = specifier.Type;
 
       declarator.Add(specifierType);
@@ -466,7 +466,7 @@ namespace CCompiler {
           GenerateStaticInitializer.GenerateStatic(type, initializer);
 
         Symbol symbol = new Symbol(name, specifier.ExternalLinkage,
-                                   storage.Value, type);
+                                   storage, type);
         SymbolTable.CurrentTable.AddSymbol(symbol);
 
         StaticSymbol staticSymbol =
@@ -477,7 +477,7 @@ namespace CCompiler {
       }
       else {
         Symbol symbol =
-          new Symbol(name, specifier.ExternalLinkage, storage.Value, type);
+          new Symbol(name, specifier.ExternalLinkage, storage, type);
         symbol.Offset = SymbolTable.CurrentTable.CurrentOffset;
         List<MiddleCode> codeList =
           GenerateAutoInitializer.GenerateAuto(symbol, initializer);
@@ -488,7 +488,7 @@ namespace CCompiler {
 
     public static void BitfieldDeclarator(Specifier specifier,
                                    Declarator declarator, Symbol bitsSymbol) {
-      Storage? storage = specifier.StorageX;
+      Storage storage = specifier.Storage;
       Type specifierType = specifier.Type;
 
       Assert.Error(SymbolTable.CurrentTable.Scope == Scope.Struct,
@@ -514,7 +514,7 @@ namespace CCompiler {
         }
 
         Symbol symbol = new Symbol(declarator.Name, specifier.ExternalLinkage,
-                                   storage.Value, type);
+                                   storage, type);
         SymbolTable.CurrentTable.AddSymbol(symbol);
 
         if (symbol.IsStatic()) {
@@ -624,7 +624,7 @@ namespace CCompiler {
 
     public static Pair<string,Symbol> Parameter(Specifier specifier,
                                                 Declarator declarator) {
-      Storage? storage = specifier.StorageX;
+      Storage storage = specifier.Storage;
       Type specifierType = specifier.Type;
 
       Assert.Error((storage == Storage.Auto) || (storage == Storage.Register),
@@ -652,7 +652,7 @@ namespace CCompiler {
         type.Constant = true;
       }
 
-      Symbol symbol = new Symbol(name, false, storage.Value, type, true);
+      Symbol symbol = new Symbol(name, false, storage, type, true);
       return (new Pair<string, Symbol>(name, symbol));
     }
 

@@ -46,8 +46,9 @@ namespace CCompiler {
       get { return m_externalLinkage; }
     }
  
-    public CCompiler.Storage? StorageX {
-      get { return m_storage; }
+    public Storage Storage {
+      get { Assert.ErrorXXX(m_storage != null);
+            return m_storage.Value; }
     }
  
     public Type Type {
