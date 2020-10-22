@@ -481,7 +481,7 @@ namespace CCompiler {
     public static void BitfieldDeclarator(Specifier specifier,
                                    Declarator declarator, Symbol bitsSymbol) {
       Storage storage = specifier.Storage;
-      Type specifierType = specifier.Type;
+      //Type specifierType = ;
 
       Assert.Error(SymbolTable.CurrentTable.Scope == Scope.Struct,
                    bitsSymbol, Message.Bitfields_only_allowed_on_structs);
@@ -494,7 +494,7 @@ namespace CCompiler {
       int bits = int.Parse(bitsValue.ToString());
 
       if (declarator != null) {
-        declarator.Add(specifierType);
+        declarator.Add(specifier.Type);
         Type type = declarator.Type;
         Assert.Error(type.IsIntegral(), type,
                      Message.Non__integral_bits_expression);
