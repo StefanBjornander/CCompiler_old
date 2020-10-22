@@ -118,7 +118,7 @@ namespace CCompiler {
       else if (SymbolTable.CurrentTable.Scope == Scope.Global) {
           Assert.Error((storage == Storage.Extern) ||
                        (storage == Storage.Static) ||
-                      (storage == Storage.Typedef), storage, Message.
+                       (storage == Storage.Typedef), storage, Message.
         Only_extern____static____or_typedef_storage_allowed_in_global_scope);
       }
 

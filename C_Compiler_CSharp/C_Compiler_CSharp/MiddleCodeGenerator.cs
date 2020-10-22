@@ -439,12 +439,10 @@ namespace CCompiler {
   
     public static List<MiddleCode> InitializedDeclarator(Specifier specifier,
                                    Declarator declarator, object initializer){
-      Storage storage = specifier.Storage;
-      Type specifierType = specifier.Type;
-
-      declarator.Add(specifierType);
-      string name = declarator.Name;
+      declarator.Add(specifier.Type);
       Type type = declarator.Type;
+      Storage storage = specifier.Storage;
+      string name = declarator.Name;
 
       Assert.Error(!type.IsFunction(), null,
                    Message.Functions_cannot_be_initialized);
@@ -455,16 +453,10 @@ namespace CCompiler {
       Assert.Error((SymbolTable.CurrentTable.Scope != Scope.Struct) &&
                    (SymbolTable.CurrentTable.Scope != Scope.Union),
                    name, Message.Struct_or_union_field_cannot_be_initialized);
-      Assert.Error((SymbolTable.CurrentTable.Scope != Scope.Global) ||
-                   ((storage != Storage.Auto) &&
-                    (storage != Storage.Register)),
-                   null, Message.Auto_or_register_storage_in_global_scope);
 
-      if ((SymbolTable.CurrentTable.Scope == Scope.Global) ||
-          (storage == Storage.Static)) {
+      if (storage == Storage.Static) {
         List<MiddleCode> middleCodeList =
           GenerateStaticInitializer.GenerateStatic(type, initializer);
-
         Symbol symbol = new Symbol(name, specifier.ExternalLinkage,
                                    storage, type);
         SymbolTable.CurrentTable.AddSymbol(symbol);
