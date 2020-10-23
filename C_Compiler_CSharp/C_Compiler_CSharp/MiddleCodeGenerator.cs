@@ -521,13 +521,16 @@ namespace CCompiler {
 
     // ---------------------------------------------------------------------------------------------------------------------
 
-    public static Declarator PointerDeclarator(List<Type> pointerTypeList,
+    public static Declarator PointerDeclarator(List<Type> typeList,
                                                Declarator declarator) {
       if (declarator == null) {
         declarator = new Declarator(null);
       }
     
-      foreach (Type pointerType in pointerTypeList) {
+      foreach (Type type in typeList) {
+        Type pointerType = new Type((Type) null);
+        pointerType.Constant = type.Constant;
+        pointerType.Volatile = type.Volatile;
         declarator.Add(pointerType);
       }
 
@@ -550,24 +553,24 @@ namespace CCompiler {
     // ---------------------------------------------------------------------------------------------------------------------
   
     public static Declarator ArrayType(Declarator declarator,
-                                       Expression optSizeExpression) {
+                                       Expression optionalSizeExpression) {
       if (declarator == null) {
         declarator = new Declarator(null);
       }
-    
-      if (optSizeExpression != null) {
-        Symbol optSizeSymbol = optSizeExpression.Symbol;
+
+      Type arrayType;
+      if (optionalSizeExpression != null) {
+        Symbol optSizeSymbol = optionalSizeExpression.Symbol;
         int arraySize = (int) ((BigInteger) optSizeSymbol.Value);
         Assert.Error(arraySize > 0, arraySize,
                      Message.Non__positive_array_size);
-        Type arrayType = new Type(arraySize, null);
-        declarator.Add(arrayType);
+        arrayType = new Type(arraySize, null);
       }
       else {
-        Type arrayType = new Type(0, null);
-        declarator.Add(arrayType);
+        arrayType = new Type(0, null);
       }
     
+      declarator.Add(arrayType);
       return declarator;
     }
 

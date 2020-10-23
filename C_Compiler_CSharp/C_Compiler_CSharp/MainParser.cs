@@ -4,9 +4,9 @@
 
 // GPPG version 1.5.2
 // Machine:  STEFAN1968
-// DateTime: 2020-10-22 20:13:34
+// DateTime: 2020-10-23 16:11:57
 // UserName: Stefan
-// Input file <MainParser.gppg - 2020-10-22 18:03:25>
+// Input file <MainParser.gppg - 2020-10-23 14:33:34>
 
 // options: lines gplex
 
@@ -89,13 +89,13 @@ public class ScanObj {
 [GeneratedCodeAttribute( "Gardens Point Parser Generator", "1.5.2")]
 public partial class Parser: ShiftReduceParser<ValueType, LexLocation>
 {
-  // Verbatim content from MainParser.gppg - 2020-10-22 18:03:25
+  // Verbatim content from MainParser.gppg - 2020-10-23 14:33:34
 #line 8 "MainParser.gppg"
   public static Stack<Specifier> SpecifierStack = new Stack<Specifier>();
   public static Stack<BigInteger> EnumValueStack = new Stack<BigInteger>();
   public static Stack<Scope> ScopeStack = new Stack<Scope>();
 #line default
-  // End verbatim content from MainParser.gppg - 2020-10-22 18:03:25
+  // End verbatim content from MainParser.gppg - 2020-10-23 14:33:34
 
 #pragma warning disable 649
   private static Dictionary<int, string> aliases;
@@ -107,7 +107,7 @@ public partial class Parser: ShiftReduceParser<ValueType, LexLocation>
       "optional_name", "struct_or_union_specifier", "struct_or_union", "enum_specifier", 
       "enum_list", "enum", "declarator_list", "initialization_bitfield_simple_declarator", 
       "declaration", "optional_simple_declarator", "declarator", "direct_declarator", 
-      "optional_pointer_list", "pointer_list", "pointer", "optional_qualifier_list", 
+      "optional_pointer_list", "pointer_list", "pointer_marker", "optional_qualifier_list", 
       "qualifier", "optional_parameter_ellipse_list", "parameter_ellipse_list", 
       "parameter_list", "parameter_declaration", "optional_name_list", "name_list", 
       "initializer_list", "initializer", "type_name", "abstract_declarator", 
@@ -1144,23 +1144,23 @@ public partial class Parser: ShiftReduceParser<ValueType, LexLocation>
     }
 #line default
         break;
-      case 64: // pointer_list -> pointer
+      case 64: // pointer_list -> pointer_marker
 #line 307 "MainParser.gppg"
-            {
+                   {
       CurrentSemanticValue.type_list = new List<CCompiler.Type>();
       CurrentSemanticValue.type_list.Add(ValueStack[ValueStack.Depth-1].type);
     }
 #line default
         break;
-      case 65: // pointer_list -> pointer_list, pointer
+      case 65: // pointer_list -> pointer_list, pointer_marker
 #line 311 "MainParser.gppg"
-                         {
+                                {
       ValueStack[ValueStack.Depth-2].type_list.Add(ValueStack[ValueStack.Depth-1].type);
       CurrentSemanticValue.type_list = ValueStack[ValueStack.Depth-2].type_list;
     }
 #line default
         break;
-      case 66: // pointer -> ASTERRISK, optional_qualifier_list
+      case 66: // pointer_marker -> ASTERRISK, optional_qualifier_list
 #line 317 "MainParser.gppg"
                                       {
       CurrentSemanticValue.type = Specifier.QualifierList(ValueStack[ValueStack.Depth-1].mask_list);

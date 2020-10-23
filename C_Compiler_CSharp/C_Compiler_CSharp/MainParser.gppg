@@ -309,7 +309,7 @@ pointer_list:
       $$.Add($1);
     }
   | pointer_list pointer_marker {
-      $1.Add(new Type($2));
+      $1.Add($2);
       $$ = $1;
     };
 

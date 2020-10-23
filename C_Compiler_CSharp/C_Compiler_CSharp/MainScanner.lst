@@ -4,12 +4,16 @@
 // ==========================================================================
 //  Version:  1.2.2
 //  Machine:  STEFAN1968
-//  DateTime: 2020-05-10 15:07:20
+//  DateTime: 2020-10-23 16:11:52
 //  UserName: Stefan
 // ==========================================================================
 
 
 %namespace CCompiler_Main
+// Error: Värde får inte vara null.
+   // Parameternamn: stream
+// Error: GPLEX: output file <MainScanner.cs> not opened
+// -----------------------------------------------------
 
 %using CCompiler;
 %using System.Numerics;
@@ -19,22 +23,21 @@
   public static int Line = 1;
 
   private static IDictionary<char,char> m_slashMap =
-    new Dictionary<char,char>();
-
-  static Scanner() {            // ASCII value
-    m_slashMap.Add('0', '\0');  //  0
-    m_slashMap.Add('a', '\a');  //  7
-    m_slashMap.Add('b', '\b');  //  8
-    m_slashMap.Add('f', '\f');  // 12
-    m_slashMap.Add('n', '\n');  // 10
-    m_slashMap.Add('r', '\r');  // 13
-    m_slashMap.Add('t', '\t');  //  9
-    m_slashMap.Add('v', '\v');  // 11
-    m_slashMap.Add('\'', '\''); // 39
-    m_slashMap.Add('\"', '\"'); // 34
-    m_slashMap.Add('?', '?');   // 63
-    m_slashMap.Add('\\', '\\'); // 92
-  }
+    new Dictionary<char,char>() {
+                    // ASCII value
+      {'0', '\0'},  //  0
+      {'a', '\a'},  //  7
+      {'b', '\b'},  //  8
+      {'f', '\f'},  // 12
+      {'n', '\n'},  // 10
+      {'r', '\r'},  // 13
+      {'t', '\t'},  //  9
+      {'v', '\v'},  // 11
+      {'\'', '\''}, // 39
+      {'\"', '\"'}, // 34
+      {'?', '?'},   // 63
+      {'\\', '\\'}  // 92
+    };
 
   public static string SlashToChar(string text) {
     StringBuilder buffer = new StringBuilder(text);
@@ -54,7 +57,7 @@
           int octValue = 64 * CharToOctal(char1) +
                           8 * CharToOctal(char2) +
                               CharToOctal(char3);
-          Assert.Error(octValue < 256, Message.Invalid_octal_sequence);
+          Assert.Error(octValue <= 255, Message.Invalid_octal_sequence);
           buffer.Remove(index, 4);
           buffer.Insert(index, (char) octValue);
         }
@@ -126,12 +129,9 @@ FLOATING_VALUE {DECIMAL_PART}{EXPONENT_PART}
 CHAR_VALUE \'(\\\'|[^'])*\'
 STRING_VALUE \"(\\\"|[^"])*\"
 
-XXX 
-REGISTER_NAME \$"register_"[a-zA-Z0-9_]*
-//------------^^^^^^^^^^^^^^^^^^^^^^^^^^
-// Error: Expected end-of-line here
-// --------------------------------
+REGISTER_NAME "register_"[a-z]+
 NAME [a-zA-Z_$][a-zA-Z0-9_]*
+
 PATH_LINE \$.*\$
 WHITE_SPACE [ \t\r\n\f]
 
@@ -162,6 +162,7 @@ WHITE_SPACE [ \t\r\n\f]
 "short"         { return ((int) Tokens.SHORT);           }
 "signed"        { return ((int) Tokens.SIGNED);          }
 "sizeof"        { return ((int) Tokens.SIZEOF);          }
+"stack_top"     { return ((int) Tokens.STACK_TOP);       }
 "static"        { return ((int) Tokens.STATIC);          }
 "struct"        { return ((int) Tokens.STRUCT);          }
 "switch"        { return ((int) Tokens.SWITCH);          }
@@ -181,8 +182,8 @@ WHITE_SPACE [ \t\r\n\f]
 "->" { return ((int) Tokens.ARROW); }
 "..." { return ((int) Tokens.ELLIPSE); }
 
-"(" { return ((int) Tokens.LEFT_PAREN); }
-")" { return ((int) Tokens.RIGHT_PAREN); }
+"(" { return ((int) Tokens.LEFT_PARENTHESIS); }
+")" { return ((int) Tokens.RIGHT_PARENTHESIS); }
 "{" { return ((int) Tokens.LEFT_BLOCK); }
 "}" { return ((int) Tokens.RIGHT_BLOCK); }
 "[" { return ((int) Tokens.LEFT_SQUARE); }
@@ -196,7 +197,7 @@ WHITE_SPACE [ \t\r\n\f]
 "!" { return ((int) Tokens.LOGICAL_NOT); }
 "&" { return ((int) Tokens.AMPERSAND); }
 "^" { return ((int) Tokens.BITWISE_XOR); }
-"|" { return ((int) Tokens.BITWISE_IOR); }
+"|" { return ((int) Tokens.BITWISE_OR); }
 "~" { return ((int) Tokens.BITWISE_NOT); }
 
 "==" { return ((int) Tokens.EQUAL); }
@@ -229,14 +230,11 @@ WHITE_SPACE [ \t\r\n\f]
 ">>=" { return ((int) Tokens.RIGHT_SHIFT_ASSIGN); }
 "&="  { return ((int) Tokens.AND_ASSIGN); }
 "^="  { return ((int) Tokens.XOR_ASSIGN); }
-"|="  { return ((int) Tokens.IOR_ASSIGN); }
+"|="  { return ((int) Tokens.OR_ASSIGN); }
 
 {REGISTER_NAME} {
-//^^^^^^^^^^^^
-// Error: Unknown lexical category <REGISTER_NAME> 
-// ------------------------------------------------
   { Register register;
-    string text = yytext.Substring(10);
+    string text = yytext.Substring(9);
 
     if (Enum.TryParse<Register>(text, out register)) {
       yylval.register = register;
@@ -248,14 +246,22 @@ WHITE_SPACE [ \t\r\n\f]
 }
 
 {NAME} {
-  { Symbol symbol = SymbolTable.CurrentTable.LookupSymbol(yytext);
+  { string name = yytext;
+
+    if (Start.Linux && (name.Equals("abs") ||
+        name.Equals("_start") || name.Equals("section") ||
+        name.Equals("extern") || name.Equals("global"))) {
+      name = Symbol.FileMarker + name;
+    }
+
+    Symbol symbol = SymbolTable.CurrentTable.LookupSymbol(name);
 
     if ((symbol != null) && symbol.IsTypedef()) {
       yylval.type = symbol.Type;
       return ((int) Tokens.TYPEDEF_NAME);
     }
     else {
-      yylval.name = yytext;
+      yylval.name = name;
       return ((int) Tokens.NAME);
     }
   }
@@ -310,6 +316,7 @@ WHITE_SPACE [ \t\r\n\f]
       type = CCompiler.Type.SignedIntegerType;
     }
     
+    //text = text.Replace("x", "").Replace("s", "").Replace("l", "").Replace("u", "");
   
     try {
       ulong unsignedValue = Convert.ToUInt64(text, fromBase);
@@ -320,12 +327,12 @@ WHITE_SPACE [ \t\r\n\f]
       }
 
       yylval.symbol = new Symbol(type, bigValue);
-      yylval.symbol.StaticSymbol =
+      /*yylval.symbol.StaticSymbol =
         ConstantExpression.Value(yylval.symbol.UniqueName, type, bigValue);
-      SymbolTable.StaticSet.Add(yylval.symbol.StaticSymbol);
+      SymbolTable.StaticSet.Add(yylval.symbol.StaticSymbol);*/
     }
     catch (OverflowException) {
-      Assert.Error("X " + type + ": " + text, Message.Value_overflow);
+      Assert.Error(type + ": " + text, Message.Value_overflow);
     }
 
     return ((int) Tokens.VALUE);
@@ -348,12 +355,12 @@ WHITE_SPACE [ \t\r\n\f]
     try {
       decimal value = decimal.Parse(text, NumberStyles.Float);
       yylval.symbol = new Symbol(type, value);
-      yylval.symbol.StaticSymbol =
+      /*yylval.symbol.StaticSymbol =
         ConstantExpression.Value(yylval.symbol.UniqueName, type, value);
-      SymbolTable.StaticSet.Add(yylval.symbol.StaticSymbol);
+      SymbolTable.StaticSet.Add(yylval.symbol.StaticSymbol);*/
     }
     catch (OverflowException) {
-      Assert.Error("Y " + type + ": " + text, Message.Value_overflow);
+      Assert.Error(type + ": " + text, Message.Value_overflow);
     }
 
     return ((int) Tokens.VALUE);
@@ -361,7 +368,7 @@ WHITE_SPACE [ \t\r\n\f]
 }
 
 {CHAR_VALUE} {
-  { CCompiler.Type type = new CCompiler.Type(Sort.Signed_Char);
+  { CCompiler.Type type = new CCompiler.Type(Sort.SignedChar);
     string text = SlashToChar(yytext);
     Assert.Error(text.Length == 3, yytext, Message.Invalid_char_sequence);
     yylval.symbol = new Symbol(type, (BigInteger) ((int) text[1]));
@@ -374,9 +381,7 @@ WHITE_SPACE [ \t\r\n\f]
     string text = SlashToChar(yytext);
     object value = text.Substring(1, text.Length - 2);
     yylval.symbol = new Symbol(type, value);
-    yylval.symbol.StaticSymbol =
-      ConstantExpression.Value(yylval.symbol.UniqueName, type, value);
-    SymbolTable.StaticSet.Add(yylval.symbol.StaticSymbol);
+    SymbolTable.StaticSet.Add(ConstantExpression.Value(yylval.symbol));
     return ((int) Tokens.VALUE);
   }
 }
@@ -385,7 +390,7 @@ WHITE_SPACE [ \t\r\n\f]
   { string text = yytext.Substring(1, yyleng - 2);
     int index = text.IndexOf(',');
     Path = new FileInfo(text.Substring(0, index).Replace("+", " "));
-    Line = int.Parse(text.Substring(index + 1));
+    Line = int.Parse(text.Substring(index + 1)) - 1;
   }
 }
 
