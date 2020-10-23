@@ -75,7 +75,7 @@
 
 %type <declarator> optional_simple_declarator declarator direct_declarator
 %type <type_list> optional_pointer_list pointer_list
-%type <type> pointer
+%type <type> pointer_marker
 %type <mask_list> optional_qualifier_list
 %type <mask> qualifier
 
@@ -304,16 +304,16 @@ optional_pointer_list:
     };
 
 pointer_list:
-    pointer {
+    pointer_marker {
       $$ = new List<CCompiler.Type>();
       $$.Add($1);
     }
-  | pointer_list pointer {
-      $1.Add($2);
+  | pointer_list pointer_marker {
+      $1.Add(new Type($2));
       $$ = $1;
     };
 
-pointer:
+pointer_marker:
     ASTERRISK optional_qualifier_list {
       $$ = Specifier.QualifierList($2);
     };

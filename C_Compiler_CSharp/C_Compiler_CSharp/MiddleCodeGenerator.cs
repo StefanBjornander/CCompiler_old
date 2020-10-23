@@ -521,16 +521,13 @@ namespace CCompiler {
 
     // ---------------------------------------------------------------------------------------------------------------------
 
-    public static Declarator PointerDeclarator(List<Type> typeList,
+    public static Declarator PointerDeclarator(List<Type> pointerTypeList,
                                                Declarator declarator) {
       if (declarator == null) {
         declarator = new Declarator(null);
       }
     
-      foreach (Type type in typeList) {
-        Type pointerType = new Type((Type) null);
-        pointerType.Constant = type.Constant;
-        pointerType.Volatile = type.Volatile;
+      foreach (Type pointerType in pointerTypeList) {
         declarator.Add(pointerType);
       }
 
