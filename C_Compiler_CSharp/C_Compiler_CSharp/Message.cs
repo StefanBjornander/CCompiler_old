@@ -148,7 +148,8 @@
     Only_auto_or_register_storage_allowed_in_parameter_declaration,
     Only_auto_or_register_storage_allowed_for_struct_or_union_scope,
     Only_extern____static____or_typedef_storage_allowed_in_global_scope,
-    Missing_include_path
+    Missing_include_path,
+    Only_integral_values_for_bitwise_not
   };
 }
 

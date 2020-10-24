@@ -833,7 +833,10 @@ argument_expression_list:
     };
 
 primary_expression:
-    VALUE {
+    LEFT_PARENTHESIS expression RIGHT_PARENTHESIS {
+      $$ = $2; 
+    }
+  | VALUE {
       $$ = MiddleCodeGenerator.ValueExpression($1);
     }
   | NAME {
@@ -847,8 +850,5 @@ primary_expression:
     }
   | STACK_TOP {
       $$ = MiddleCodeGenerator.StackTopExpression();
-    }
-  | LEFT_PARENTHESIS expression RIGHT_PARENTHESIS {
-      $$ = $2; 
     };
 %%

@@ -1074,39 +1074,39 @@ namespace CCompiler {
         Assert.Error(AssemblyCode.SizeOfRegister(register.Value) ==
                      rightExpression.Symbol.Type.Size(),
                      Message.Unmatched_register_size);
-        List<MiddleCode> codeList = new List<MiddleCode>();
-        codeList.AddRange(rightExpression.LongList);
-        AddMiddleCode(codeList, MiddleOperator.AssignRegister,
+        List<MiddleCode> longList = new List<MiddleCode>();
+        longList.AddRange(rightExpression.LongList);
+        AddMiddleCode(longList, MiddleOperator.AssignRegister,
                       register, rightExpression.Symbol);
-        return (new Expression(rightExpression.Symbol, codeList, codeList));
+        return (new Expression(rightExpression.Symbol, longList, longList));
       }
       else {
         Assert.Error(leftExpression.Symbol.IsAssignable(),
                      leftExpression, Message.Not_assignable);
-        List<MiddleCode> codeList = new List<MiddleCode>();
+        List<MiddleCode> longList = new List<MiddleCode>();
 
         if (simpleAssignment) {
-          codeList.AddRange(leftExpression.LongList);
+          longList.AddRange(leftExpression.LongList);
   
           if (leftExpression.Symbol.Type.IsFloating()) {
-            AddMiddleCode(codeList, MiddleOperator.PopFloat);
+            AddMiddleCode(longList, MiddleOperator.PopFloat);
           }
         }
 
         rightExpression = TypeCast.ImplicitCast(rightExpression,
                                                 leftExpression.Symbol.Type);
-        codeList.AddRange(rightExpression.LongList);
+        longList.AddRange(rightExpression.LongList);
 
         if (leftExpression.Symbol.Type.IsFloating()) {
-          AddMiddleCode(codeList, MiddleOperator.TopFloat,
+          AddMiddleCode(longList, MiddleOperator.TopFloat,
                         leftExpression.Symbol);
           List<MiddleCode> shortList = new List<MiddleCode>();
-          shortList.AddRange(codeList);
+          shortList.AddRange(longList);
           AddMiddleCode(shortList, MiddleOperator.PopFloat);
-          return (new Expression(leftExpression.Symbol, shortList, codeList));
+          return (new Expression(leftExpression.Symbol, shortList, longList));
         }
         else {
-          AddMiddleCode(codeList, MiddleOperator.Assign,
+          AddMiddleCode(longList, MiddleOperator.Assign,
                         leftExpression.Symbol, rightExpression.Symbol);
           BigInteger? bitFieldMask =
                      leftExpression.Symbol.Type.GetBitfieldMask();
@@ -1114,12 +1114,12 @@ namespace CCompiler {
           if (bitFieldMask != null) {
             Symbol maskSymbol = new Symbol(leftExpression.Symbol.Type,
                                            bitFieldMask);
-            AddMiddleCode(codeList, MiddleOperator.BitwiseAnd,
+            AddMiddleCode(longList, MiddleOperator.BitwiseAnd,
                           leftExpression.Symbol, leftExpression.Symbol,
                           maskSymbol);
           }
 
-          return (new Expression(leftExpression.Symbol, codeList, codeList));
+          return (new Expression(leftExpression.Symbol, longList, longList));
         }
       }
     }
@@ -1805,6 +1805,9 @@ namespace CCompiler {
     }
 
     public static Expression BitwiseNotExpression(Expression expression) {
+      expression = TypeCast.LogicalToIntegral(expression);      
+      Assert.Error(expression.Symbol.Type.IsIntegralPointerArrayOrFunction(),
+                   Message.Only_integral_values_for_bitwise_not);
       Expression constantExpression =
         ConstantExpression.Arithmetic(MiddleOperator.BitwiseNot, expression);
       if (constantExpression != null) {
