@@ -101,8 +101,8 @@ namespace CCompiler {
         Assert.Error(SymbolTable.CurrentTable.EntryMap.Count == 0,
           Message.New_and_old_style_mixed_function_definitializerion);
 
-        foreach (Pair<string,Symbol> pair in funcType.ParameterList){
-          SymbolTable.CurrentTable.AddSymbol(pair.Second);
+        foreach (Symbol symbol in funcType.ParameterList) {
+          SymbolTable.CurrentTable.AddSymbol(symbol);
         }
       }
 
@@ -577,28 +577,28 @@ namespace CCompiler {
     // ---------------------------------------------------------------------------------------------------------------------
 
     public static Declarator NewFunctionDeclaration(Declarator declarator,
-                                        List<Pair<string,Symbol>> paramList,
-                                                            bool ellipse) {
-      if (paramList.Count == 0) {
+                                                   List<Symbol> parameterList,
+                                                   bool ellipse) {
+      if (parameterList.Count == 0) {
         Assert.Error(!ellipse, "...",
             Message.An_elliptic_function_must_have_at_least_one_parameter);
       }
-      else if ((paramList.Count == 1) && paramList[0].Second.Type.IsVoid()) {
-        Assert.Error(paramList[0].Second.Name == null,
-                     paramList[0].Second.Name,
+      else if ((parameterList.Count == 1) && parameterList[0].Type.IsVoid()) {
+        Assert.Error(parameterList[0].Name == null,
+                     parameterList[0].Name,
                      Message.A_void_parameter_cannot_be_named);
         Assert.Error(!ellipse, "...", Message.
                      An_elliptic_function_cannot_have_a_void_parameter);
-        paramList.Clear();
+        parameterList.Clear();
       }
       else {
-        foreach (Pair<string,Symbol> pair in paramList) {
-          Assert.Error(!pair.Second.Type.IsVoid(),
+        foreach (Symbol symbol in parameterList) {
+          Assert.Error(!symbol.Type.IsVoid(),
                        Message.Invalid_void_parameter);
         }
       }
 
-      declarator.Add(new Type(null, paramList, ellipse));
+      declarator.Add(new Type(null, parameterList, ellipse));
       return declarator;
     }
 
@@ -614,13 +614,13 @@ namespace CCompiler {
       return declarator;
     }  
 
-    public static Pair<string,Symbol> Parameter(Specifier specifier,
-                                                Declarator declarator) {
+    public static Symbol Parameter(Specifier specifier,
+                                   Declarator declarator) {
       Storage storage = specifier.Storage;
       Type specifierType = specifier.Type;
 
-      Assert.Error((storage == Storage.Auto) || (storage == Storage.Register),
-                   Message.Parameters_must_have_auto_or_register_storage);
+      /*Assert.Error((storage == Storage.Auto) || (storage == Storage.Register),
+                   Message.Parameters_must_have_auto_or_register_storage);*/
 
       string name;
       Type type;
@@ -644,8 +644,7 @@ namespace CCompiler {
         type.Constant = true;
       }
 
-      Symbol symbol = new Symbol(name, false, storage, type, true);
-      return (new Pair<string, Symbol>(name, symbol));
+      return (new Symbol(name, false, storage, type, true));
     }
 
     // ---------------------------------------------------------------------------------------------------------------------

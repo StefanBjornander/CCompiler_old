@@ -77,7 +77,7 @@ namespace CCompiler {
 
     private Type m_returnType;
     private List<string> m_nameList;
-    private List<Pair<string,Symbol>> m_parameterList;
+    private List<Symbol> m_parameterList; 
     private List<Type> m_typeList;
     private bool m_ellipse;
 
@@ -93,7 +93,7 @@ namespace CCompiler {
                    null, Message.Duplicate_name_in_parameter_list);
     }
 
-    public Type(Type returnType, List<Pair<string,Symbol>> parameterList,
+    public Type(Type returnType, List< Symbol> parameterList,
                 bool ellipse) {
       Assert.ErrorXXX(parameterList != null);
       m_sort = Sort.Function;
@@ -103,12 +103,12 @@ namespace CCompiler {
       m_parameterList = parameterList;
       m_ellipse = ellipse;
       m_typeList = null;
-    
+
       if (parameterList != null) {
         m_typeList = new List<Type>();
 
-        foreach (Pair<string,Symbol> pair in parameterList) {
-          m_typeList.Add(pair.Second.Type);
+        foreach (Symbol symbol in parameterList) {
+          m_typeList.Add(symbol.Type);
         }
       }
     }
@@ -121,7 +121,7 @@ namespace CCompiler {
       get { return m_nameList; }
     }
 
-    public List<Pair<string,Symbol>> ParameterList {
+    public List<Symbol> ParameterList {
       get { return m_parameterList; }
     }
 

@@ -37,8 +37,7 @@
   public IDictionary<string,Symbol> symbol_map;
   public ISet<Pair<Symbol,bool>> symbol_bool_pair_set;
   public Pair<Symbol,bool> symbol_bool_pair;
-  public Pair<string,Symbol> string_symbol_pair;
-  public List<Pair<string,Symbol>> string_symbol_pair_list;
+  public List<Symbol> symbol_list;
   public List<string> string_list;
   public Declarator declarator;
   public List<Declarator> declarator_list;
@@ -47,7 +46,7 @@
   public Expression expression;
   public List<Expression> expression_list;
   public Statement statement;
-  public Pair<List<Pair<string,Symbol>>,Boolean> parameter_pair;
+  public Pair<List<Symbol>,Boolean> parameter_pair;
   public List<MiddleCode> middle_code_list;
   public object obj;
   public List<object> object_list;
@@ -81,8 +80,8 @@
 
 %type <parameter_pair> optional_parameter_ellipse_list
                        parameter_ellipse_list
-%type <string_symbol_pair_list> parameter_list
-%type <string_symbol_pair> parameter_declaration
+%type <symbol_list> parameter_list
+%type <symbol> parameter_declaration
 
 %type <string_list> optional_name_list name_list
 %type <object_list> initializer_list
@@ -358,10 +357,10 @@ optional_parameter_ellipse_list:
     
 parameter_ellipse_list:
     parameter_list {
-      $$ = new Pair<List<Pair<string,Symbol>>,Boolean>($1, false);
+      $$ = new Pair<List<Symbol>,Boolean>($1, false);
     }
   | parameter_list COMMA ELLIPSE {
-      $$ = new Pair<List<Pair<string,Symbol>>,Boolean>($1, true);
+      $$ = new Pair<List<Symbol>,Boolean>($1, true);
     };
 
 parameter_list:
@@ -370,7 +369,7 @@ parameter_list:
     }
     parameter_declaration {
       SymbolTable.CurrentTable.Scope = ScopeStack.Pop();
-      $$ = new List<Pair<string,Symbol>>();
+      $$ = new List<Symbol>();
       $$.Add($2);
     }
   | parameter_list COMMA {
