@@ -51,6 +51,7 @@
     <Compile Include="AssemblyCodeGenerator.cs">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="MiddleCode.cs" />
     <Compile Include="Preprocessor.cs" />
     <Compile Include="Track.cs" />
     <Compile Include="Triple.cs">
@@ -84,7 +85,6 @@
     <Compile Include="MainScanner.cs" />
     <Compile Include="Mask.cs" />
     <Compile Include="Message.cs" />
-    <Compile Include="MiddleCode.cs" />
     <Compile Include="MiddleCodeOptimizer.cs" />
     <Compile Include="MiddleOperator.cs" />
     <Compile Include="ModifyInitializer.cs" />

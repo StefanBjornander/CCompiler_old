@@ -231,22 +231,26 @@ namespace CCompiler {
     }
 
     public override string ToString() {
-      if (m_name != null) {
+      if (m_value is String) {
+        return "\"" + m_value.ToString().Replace("\n", "\\n") + "\"";
+      }
+      else if (m_value != null) {
+        return m_value.ToString();
+      }
+      else if (m_name != null) {
         if (m_addressSymbol != null) {
-          return ((m_name != null) ? m_name : "") + " -> " +
-                 m_addressSymbol.ToString();
+          return m_name + " -> " + m_addressSymbol.ToString();
         }
         else {
-          return ((m_name != null) ? m_name : "");
+          return m_name;
         }
       }
       else {
         if (m_addressSymbol != null) {
-          return ((m_uniqueName != null) ? m_uniqueName : "") + " -> " +
-                 m_addressSymbol.ToString();
+          return m_addressSymbol.ToString();
         }
         else {
-          return ((m_uniqueName != null) ? m_uniqueName : "");
+          return "";
         }
       }
     }

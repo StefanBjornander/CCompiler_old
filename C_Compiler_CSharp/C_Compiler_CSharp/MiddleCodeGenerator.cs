@@ -1722,7 +1722,8 @@ namespace CCompiler {
       Type maxType = TypeCast.MaxType(leftExpression.Symbol.Type,
                                       rightExpression.Symbol.Type);
 
-      if (MiddleCode.IsModulo(middleOp)) {
+      if ((middleOp == MiddleOperator.SignedModulo) ||
+          (middleOp == MiddleOperator.UnsignedModulo)) {
         Assert.Error(maxType.IsIntegralPointerArrayStringOrFunction(),
                       maxType, Message.Invalid_type_in_expression);
       }

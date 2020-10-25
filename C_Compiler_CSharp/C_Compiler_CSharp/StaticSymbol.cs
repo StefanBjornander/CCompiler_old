@@ -12,6 +12,10 @@ namespace CCompiler {
       m_uniqueName = uniqueName;
     }
 
+    public string UniqueName {
+      get { return m_uniqueName; }
+    }
+
     public override bool Equals(object obj) {
       if (obj is StaticSymbol) {
         return m_uniqueName.Equals(((StaticSymbol) obj).m_uniqueName);
@@ -22,10 +26,6 @@ namespace CCompiler {
 
     public override int GetHashCode() {
       return m_uniqueName.GetHashCode();
-    }
-
-    public string UniqueName {
-      get { return m_uniqueName; }
     }
 
     public virtual void Save(BinaryWriter outStream) {
