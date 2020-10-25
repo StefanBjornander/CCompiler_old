@@ -49,8 +49,8 @@ namespace CCompiler {
       get { return m_returnSet; }
     }
     
-    public override void Save(BinaryWriter outStream) {
-      base.Save(outStream);
+    public override void Write(BinaryWriter outStream) {
+      base.Write(outStream);
 
       if (m_byteList != null) {
         outStream.Write(m_byteList.Count);
@@ -96,8 +96,8 @@ namespace CCompiler {
 
     }
 
-    public override void Load(BinaryReader inStream) {
-      base.Load(inStream);
+    public override void Read(BinaryReader inStream) {
+      base.Read(inStream);
 
       { m_byteList = new List<byte>();
         int byteListSize = inStream.ReadInt32();

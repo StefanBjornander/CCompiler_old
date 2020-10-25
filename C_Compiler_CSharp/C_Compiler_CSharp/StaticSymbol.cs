@@ -28,11 +28,11 @@ namespace CCompiler {
       return m_uniqueName.GetHashCode();
     }
 
-    public virtual void Save(BinaryWriter outStream) {
+    public virtual void Write(BinaryWriter outStream) {
       outStream.Write(m_uniqueName);
     }
 
-    public virtual void Load(BinaryReader inStream) {
+    public virtual void Read(BinaryReader inStream) {
       m_uniqueName = inStream.ReadString();
     }
   }

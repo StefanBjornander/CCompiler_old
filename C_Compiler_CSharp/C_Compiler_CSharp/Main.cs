@@ -137,7 +137,7 @@ namespace CCompiler {
         int linkerSetSize = dataInputStream.ReadInt32();
         for (int count = 0; count < linkerSetSize; ++count) {
           StaticSymbolWindows staticSymbol = new StaticSymbolWindows();
-          staticSymbol.Load(dataInputStream);
+          staticSymbol.Read(dataInputStream);
           linker.Add(staticSymbol);
         }
 
@@ -235,7 +235,7 @@ namespace CCompiler {
 
         binaryWriter.Write(SymbolTable.StaticSet.Count);    
         foreach (StaticSymbol staticSymbol in SymbolTable.StaticSet) {
-          staticSymbol.Save(binaryWriter);
+          staticSymbol.Write(binaryWriter);
         }
 
         binaryWriter.Close();
