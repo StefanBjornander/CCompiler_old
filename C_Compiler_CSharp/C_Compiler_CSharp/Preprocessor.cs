@@ -10,8 +10,7 @@ namespace CCompiler {
               new Dictionary<string,Macro>();
     private Stack<FileInfo> m_includeStack = new Stack<FileInfo>();
     private ISet<FileInfo> m_includeSet = new HashSet<FileInfo>();
-    private Stack<Triple<bool,bool,bool>> m_ifStack =
-              new Stack<Triple<bool,bool,bool>>();
+    private Stack<IfElseChain> m_ifElseChainStack = new Stack<IfElseChain>();
     private StringBuilder m_outputBuffer = new StringBuilder();
     public static IDictionary<string,Macro> MacroMap;
 
@@ -33,7 +32,7 @@ namespace CCompiler {
       }
 
       DoProcess(file);
-      Assert.Error(m_ifStack.Count == 0, Message.
+      Assert.Error(m_ifElseChainStack.Count == 0, Message.
                    If___ifdef____or_ifndef_directive_without_matching_endif);
     }
 
@@ -51,13 +50,13 @@ namespace CCompiler {
         GenerateLineList(inputBuffer.ToString());
 
       CCompiler_Main.Scanner.Line = 1;
-      int stackSize = m_ifStack.Count;
+      int stackSize = m_ifElseChainStack.Count;
       /*if (CCompiler_Main.Scanner.Path.Name.Contains("AssertTest")) {
         Console.Out.WriteLine("5: " + CCompiler_Main.Scanner.Line);
       }*/
 
       TraverseLineList(lineList);
-      Assert.Error(m_ifStack.Count ==
+      Assert.Error(m_ifElseChainStack.Count ==
         stackSize, Message.Unbalanced_if_and_endif_directive_structure);
     }
 
@@ -312,16 +311,15 @@ namespace CCompiler {
     }
   
     private bool IsVisible() {
-      foreach (Triple<bool,bool,bool> triple in m_ifStack) {
-        bool currentStatus = triple.Second;
-      
-        if (!currentStatus) {
+      foreach (IfElseChain ifElseChain in m_ifElseChainStack) {
+        if (!ifElseChain.CurrentStatus) {          
           return false;
         }
       }
       
       return true;
     }
+
     private void DoLine(List<Token> tokenList) {
       int listSize = tokenList.Count;
     
@@ -477,8 +475,7 @@ namespace CCompiler {
     private void DoIf(List<Token> tokenList) {
       bool result = ParseExpression(TokenListToString
                          (tokenList.GetRange(2, tokenList.Count - 2)));
-      m_ifStack.Push(new Triple<bool,bool,bool>
-                                    (result, result, false));
+      m_ifElseChainStack.Push(new IfElseChain(result, result, false));
     }
 
     public static object PreProcessorResult;
@@ -505,15 +502,14 @@ namespace CCompiler {
 
       return (result != 0);
     }
-  
+
     private void DoIfDefined(List<Token> tokenList) {
       Assert.Error((tokenList[2].Id == CCompiler_Pre.Tokens.NAME) &&
                    (tokenList[3].Id == CCompiler_Pre.Tokens.EOF),
                    TokenListToString(tokenList),
                    Message.Invalid_preprocessor_directive);
       bool result = m_macroMap.ContainsKey((string)tokenList[2].Value);
-      m_ifStack.Push(new Triple<bool,bool,bool>
-                               (result, result, false));
+      m_ifElseChainStack.Push(new IfElseChain(result, result, false));
     }
 
     private void DoIfNotDefined(List<Token> tokenList) {
@@ -521,57 +517,52 @@ namespace CCompiler {
                    (tokenList[3].Id == CCompiler_Pre.Tokens.EOF),
                    TokenListToString(tokenList),
                    Message.Invalid_preprocessor_directive);
-      bool result = !m_macroMap.ContainsKey((string)tokenList[2].Value); 
-      m_ifStack.Push(new Triple<bool, bool, bool>
-                                    (result, result, false));
+      bool result = !m_macroMap.ContainsKey((string)tokenList[2].Value);
+      m_ifElseChainStack.Push(new IfElseChain(result, result, false));
     }
 
     private void DoElseIf(List<Token> tokenList) {
-      Assert.Error(m_ifStack.Count > 0, Message.
+      Assert.Error(m_ifElseChainStack.Count > 0, Message.
        Elif_directive_without_preceeding_if____ifdef____or_ifndef_directive);
-      Triple<bool,bool,bool> triple = m_ifStack.Pop();
+      IfElseChain ifElseChain = m_ifElseChainStack.Pop();
 
-      bool elseStatus = triple.Third;
-      Assert.Error(!elseStatus,
+      Assert.Error(!ifElseChain.ElseStatus,
                    Message.Elif_directive_following_else_directive);
 
-      bool totalStatus = triple.First;
-      if (totalStatus) {
-        m_ifStack.Push(new Triple<bool,bool,bool>
-                                 (true, false, false));
+      if (ifElseChain.FormerStatus) {
+        m_ifElseChainStack.Push(new IfElseChain(true, false, false));
       }
       else {
         bool result =
           ParseExpression(TokenListToString
                          (tokenList.GetRange(2, tokenList.Count - 2)));
-        m_ifStack.Push(new Triple<bool,bool,bool>
-                                      (result, result, false));
+        m_ifElseChainStack.Push(new IfElseChain(result, result, false));
       }
     }
 
     private void DoElse(List<Token> tokenList) {
-      Assert.Error(m_ifStack.Count > 0, Message.
+      Assert.Error(m_ifElseChainStack.Count > 0, Message.
        Else_directive_without_preceeding_if____ifdef____or_ifndef_directive);
       Assert.Error(tokenList[2].Id == CCompiler_Pre.Tokens.EOF,
                    TokenListToString(tokenList),
                    Message.Invalid_preprocessor_directive);
 
-      Triple<bool,bool,bool> triple = m_ifStack.Pop();
-      bool elseStatus = triple.Third;
-      Assert.Error(!elseStatus, Message.Else_directive_after_else_directive);
+      IfElseChain ifElseChain = m_ifElseChainStack.Pop();
+      Assert.Error(!ifElseChain.ElseStatus,
+                   Message.Else_directive_after_else_directive);
 
-      bool totalStatus = triple.First;
-      m_ifStack.Push(new Triple<bool, bool, bool>
-                                          (!totalStatus, !totalStatus, true));
+      bool formerStatus = ifElseChain.FormerStatus;
+      m_ifElseChainStack.Push(new IfElseChain(!formerStatus,
+                                              !formerStatus, true));
     }
 
     private void DoEndIf(List<Token> tokenList) {
-      Assert.Error(m_ifStack.Count > 0, Message.
+      Assert.Error(m_ifElseChainStack.Count > 0, Message.
       Endif_directive_without_preceeding_if____ifdef____or_ifndef_directive);
       Assert.Error(tokenList[2].Id == CCompiler_Pre.Tokens.EOF,
                    tokenList[2].ToString(),
                    Message.Invalid_preprocessor_directive);
-      m_ifStack.Pop();
+      m_ifElseChainStack.Pop();
     }
 
     // ------------------------------------------------------------------------

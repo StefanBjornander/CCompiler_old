@@ -51,10 +51,11 @@
     <Compile Include="AssemblyCodeGenerator.cs">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="IfElseChain.cs" />
     <Compile Include="MiddleCode.cs" />
     <Compile Include="Preprocessor.cs" />
     <Compile Include="Track.cs" />
-    <Compile Include="Triple.cs">
+    <Compile Include="ZZTriple.cs">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="UnorderedPair.cs" />
@@ -75,10 +76,10 @@
     <Compile Include="MiddleCodeGenerator.cs" />
     <Compile Include="Graph.cs" />
     <Compile Include="Linker.cs" />
-    <Compile Include="ListMap.cs" />
-    <Compile Include="ListMapEnumerator.cs" />
-    <Compile Include="ListSet.cs" />
-    <Compile Include="ListSetEnumerator.cs" />
+    <Compile Include="ZListMap.cs" />
+    <Compile Include="ZListMapEnumerator.cs" />
+    <Compile Include="ZListSet.cs" />
+    <Compile Include="ZListSetEnumerator.cs" />
     <Compile Include="Macro.cs" />
     <Compile Include="Main.cs" />
     <Compile Include="MainParser.cs" />

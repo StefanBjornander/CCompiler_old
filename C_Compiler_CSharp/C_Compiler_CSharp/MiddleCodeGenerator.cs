@@ -350,10 +350,12 @@ namespace CCompiler {
       if (optionalName != null) {
         Type type = SymbolTable.CurrentTable.LookupTag(optionalName, sort);
         type.MemberMap = SymbolTable.CurrentTable.EntryMap;
+        type.MemberList = SymbolTable.CurrentTable.EntryList;
         return type;
       }
       else {
-        return (new Type(sort, SymbolTable.CurrentTable.EntryMap));
+        return (new Type(sort, SymbolTable.CurrentTable.EntryMap,
+                         SymbolTable.CurrentTable.EntryList));
       }
     }
 
@@ -2326,7 +2328,7 @@ namespace CCompiler {
       return (new Expression(symbol, new List<MiddleCode>(), longList));
     }
 
-    public static Expression SymbolExpression(string name) {
+    public static Expression NameExpression(string name) {
       Symbol symbol = SymbolTable.CurrentTable.LookupSymbol(name);
 
       if (symbol == null) {

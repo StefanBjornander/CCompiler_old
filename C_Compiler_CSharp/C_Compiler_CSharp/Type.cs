@@ -141,15 +141,23 @@ namespace CCompiler {
     // ------------------------------------------------------------------------
   
     private IDictionary<string,Symbol> m_memberMap;
+    private List<Symbol> m_memberList;
     
-    public Type(Sort sort, IDictionary<string,Symbol> memberMap) {
+    public Type(Sort sort, IDictionary<string,Symbol> symbolMap,
+                List<Symbol> symbolList) {
       m_sort = sort;
-      m_memberMap = memberMap;
+      m_memberMap = symbolMap;
+      m_memberList = symbolList;
     }
 
     public IDictionary<string,Symbol> MemberMap {
       get { return m_memberMap; }
       set { m_memberMap = value; }
+    }
+
+    public List<Symbol> MemberList {
+      get { return m_memberList; }
+      set { m_memberList = value; }
     }
 
     // ------------------------------------------------------------------------

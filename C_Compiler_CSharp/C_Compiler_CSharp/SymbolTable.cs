@@ -13,8 +13,10 @@ namespace CCompiler {
     private SymbolTable m_parentTable;
     private int m_currentOffset;
 
-    private IDictionary<string,Symbol> m_entryMap = new ListMap<string,Symbol>();
-    private IDictionary<string,Type> m_tagMap = new Dictionary<string,Type>();
+    private IDictionary<string,Symbol> m_entryMap =
+      new Dictionary<string,Symbol>();
+    private List<Symbol> m_entryList = new List<Symbol>();
+    private IDictionary<string, Type> m_tagMap = new Dictionary<string, Type>();
 
     public static SymbolTable CurrentTable = null;
     public static Symbol CurrentFunction = null;
@@ -58,6 +60,10 @@ namespace CCompiler {
       get { return m_entryMap; }
     }
 
+    public List<Symbol> EntryList {
+      get { return m_entryList; }
+    }
+
     public int CurrentOffset {
       get { return m_currentOffset; }
     }
@@ -81,9 +87,11 @@ namespace CCompiler {
 
           Assert.Error(oldSymbol.Type.Equals(newSymbol.Type),
                        name, Message.Different_types_in_redeclaration);
+          m_entryList.Remove(oldSymbol);
         }
 
         m_entryMap[name] = newSymbol;
+        m_entryList.Add(newSymbol);
       }
 
       if (!newSymbol.Type.IsFunction()) {    
@@ -126,6 +134,7 @@ namespace CCompiler {
 
         if (oldType.MemberMap == null) {
           oldType.MemberMap = newType.MemberMap;
+          oldType.MemberList = newType.MemberList;
         }
         else {
           Assert.Error(newType.MemberMap == null, name,

@@ -153,7 +153,8 @@ namespace CCompiler {
 
         if ((isConstant || isVolatile) && (compoundType != null) &&
              compoundType.IsStructOrUnion() /*&& compoundType.HasTag()*/) {
-          compoundType = new Type(compoundType.Sort, compoundType.MemberMap);
+          compoundType = new Type(compoundType.Sort, compoundType.MemberMap,
+                                  compoundType.MemberList);
         }
 
         Sort? sort = null;

@@ -1,22 +1,31 @@
 using System.Collections.Generic;
 
 namespace CCompiler {
+  public class Edge<VertexType> {
+    private VertexType m_vertex1, m_vertex2;
+
+    public Edge(VertexType vertex1, VertexType vertex2) {
+      m_vertex1 = vertex1;
+      m_vertex2 = vertex2;
+    }
+  }
+
   public class Graph<VertexType> {
     private ISet<VertexType> m_vertexSet;
-    private ISet<UnorderedPair<VertexType,VertexType>> m_edgeSet;
+    private ISet<Pair<VertexType,VertexType>> m_edgeSet;
 
     public Graph() {
       m_vertexSet = new HashSet<VertexType>();
-      m_edgeSet = new HashSet<UnorderedPair<VertexType,VertexType>>();
+      m_edgeSet = new HashSet<Pair<VertexType,VertexType>>();
     }
   
     public Graph(ISet<VertexType> vertexSet) {
       m_vertexSet = vertexSet;
-      m_edgeSet = new HashSet<UnorderedPair<VertexType,VertexType>>();
+      m_edgeSet = new HashSet<Pair<VertexType,VertexType>>();
     }
 
     public Graph(ISet<VertexType> vertexSet,
-                 ISet<UnorderedPair<VertexType,VertexType>> edgeSet) {
+                 ISet<Pair<VertexType,VertexType>> edgeSet) {
       m_vertexSet = vertexSet;
       m_edgeSet = edgeSet;
     }
@@ -25,14 +34,14 @@ namespace CCompiler {
       get { return m_vertexSet; }
     }
   
-    public ISet<UnorderedPair<VertexType,VertexType>> EdgeSet {
+    public ISet<Pair<VertexType,VertexType>> EdgeSet {
       get { return m_edgeSet; }
     }
 
     public ISet<VertexType> GetNeighbourSet(VertexType vertex) {
       ISet<VertexType> neighbourSet = new HashSet<VertexType>();
     
-      foreach (UnorderedPair<VertexType,VertexType> edge in m_edgeSet) {
+      foreach (Pair<VertexType,VertexType> edge in m_edgeSet) {
         if (edge.First.Equals(vertex)) {
           neighbourSet.Add(edge.Second);
         }
@@ -50,10 +59,10 @@ namespace CCompiler {
     }
  
     public void EraseVertex(VertexType vertex) {
-      ISet<UnorderedPair<VertexType,VertexType>> edgeSetCopy =
-        new HashSet<UnorderedPair<VertexType,VertexType>>(m_edgeSet);
+      ISet<Pair<VertexType,VertexType>> edgeSetCopy =
+        new HashSet<Pair<VertexType,VertexType>>(m_edgeSet);
 
-      foreach (UnorderedPair<VertexType,VertexType> edge in edgeSetCopy) {
+      foreach (Pair<VertexType,VertexType> edge in edgeSetCopy) {
         if ((vertex.Equals(edge.First)) || (vertex.Equals(edge.Second))) {
           m_edgeSet.Remove(edge);
         }
@@ -63,14 +72,14 @@ namespace CCompiler {
     }
 
     public void AddEdge(VertexType vertex1, VertexType vertex2) {
-      UnorderedPair<VertexType,VertexType> edge =
-        new UnorderedPair<VertexType,VertexType>(vertex1, vertex2);
+      Pair<VertexType,VertexType> edge =
+        new Pair<VertexType,VertexType>(vertex1, vertex2);
       m_edgeSet.Add(edge);
     }
 
     public void EraseEdge(VertexType vertex1, VertexType vertex2) {
-      UnorderedPair<VertexType,VertexType> edge =
-        new UnorderedPair<VertexType,VertexType>(vertex1, vertex2);
+      Pair<VertexType,VertexType> edge =
+        new Pair<VertexType,VertexType>(vertex1, vertex2);
       m_edgeSet.Remove(edge);
     }
 
@@ -103,9 +112,9 @@ namespace CCompiler {
     }
 
     private Graph<VertexType> InducedSubGraph(ISet<VertexType> vertexSet) {
-      ISet<UnorderedPair<VertexType,VertexType>> resultEdgeSet = new HashSet<UnorderedPair<VertexType,VertexType>>();
+      ISet<Pair<VertexType,VertexType>> resultEdgeSet = new HashSet<Pair<VertexType,VertexType>>();
    
-      foreach (UnorderedPair<VertexType,VertexType> edge in m_edgeSet) {
+      foreach (Pair<VertexType,VertexType> edge in m_edgeSet) {
         if (vertexSet.Contains(edge.First) &&
             vertexSet.Contains(edge.Second)) {
           resultEdgeSet.Add(edge);

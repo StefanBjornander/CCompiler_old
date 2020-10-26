@@ -840,7 +840,7 @@ primary_expression:
       $$ = MiddleCodeGenerator.ValueExpression($1);
     }
   | NAME {
-      $$ = MiddleCodeGenerator.SymbolExpression($1);
+      $$ = MiddleCodeGenerator.NameExpression($1);
     }
   | REGISTER_NAME {
       $$ = MiddleCodeGenerator.RegisterExpression($1);

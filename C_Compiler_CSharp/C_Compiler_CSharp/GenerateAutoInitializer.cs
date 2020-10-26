@@ -69,12 +69,12 @@ namespace CCompiler {
 
           case Sort.Struct:
           case Sort.Union: {
-              IDictionary<string,Symbol> memberMap = toType.MemberMap;
-              Assert.Error((toType.IsStruct() && (fromList.Count <= memberMap.Count)) ||
+            List<Symbol> memberList = toType.MemberList; 
+              Assert.Error((toType.IsStruct() && (fromList.Count <= memberList.Count)) ||
                            (toType.IsUnion() && (fromList.Count == 1)),
                            toType, Message.Too_many_initializers);
 
-              IEnumerator<Symbol> enumerator = memberMap.Values.GetEnumerator();
+              IEnumerator<Symbol> enumerator = memberList.GetEnumerator();
               foreach (object fromInitializor in fromList) {
                 enumerator.MoveNext();
                 Symbol memberSymbol = enumerator.Current;
