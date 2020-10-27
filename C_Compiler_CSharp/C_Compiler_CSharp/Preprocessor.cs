@@ -60,7 +60,19 @@ namespace CCompiler {
         stackSize, Message.Unbalanced_if_and_endif_directive_structure);
     }
 
-    private static IDictionary<char,char> TriGraphMap =
+    private static IDictionary<string,string> m_triGraphMap =
+      new Dictionary<string,string>()
+        {{"??=", "#"}, {"??/", "\\"}, {"??\'", "^"},
+         {"??(", "["}, {"??)", "]"}, {"??!", "|"},
+         {"??<", "{"}, {"??>", "}"}, {"??-", "~"}};
+
+    public void GenerateTriGraphs(StringBuilder buffer) {
+      foreach (KeyValuePair<string,string> pair in m_triGraphMap) {
+        buffer.Replace(pair.Key, pair.Value);
+      }
+    }
+
+/* private static IDictionary<char,char> TriGraphMap =
       new Dictionary<char,char>() {{'=', '#'}, {'/', '\\'}, {'\'', '^'},
                                    {'(', '['}, {')', ']'}, {'!', '|'},
                                    {'<', '{'}, {'>', '}'}, {'-', '~'}};
@@ -74,7 +86,7 @@ namespace CCompiler {
           buffer.Remove(index + 1, 1);
         }
       }
-    }
+    }*/
 
     public void TraverseBuffer(StringBuilder buffer) {
       for (int index = 0; index < buffer.Length; ++index) {
