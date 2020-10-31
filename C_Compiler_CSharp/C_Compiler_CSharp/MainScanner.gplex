@@ -5,7 +5,7 @@
 
 %{
   public static FileInfo Path = null;
-  public static int Line = 1;
+  public static int Line = 1000;
 
   private static IDictionary<char,char> m_slashMap =
     new Dictionary<char,char>() {

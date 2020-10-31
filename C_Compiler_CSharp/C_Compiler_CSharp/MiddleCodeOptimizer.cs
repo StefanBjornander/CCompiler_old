@@ -20,7 +20,7 @@ namespace CCompiler {
         TraceGotoChains();
         ClearUnreachableCode();
         RemovePushPop();
-        MergePopPushToTop();
+        //MergePopPushToTop();
         MergeTopPopToPop();
         //AssignFloat(); // XXX
         MergeBinary(); // XXX
@@ -276,8 +276,8 @@ namespace CCompiler {
                    nextCode = m_middleCodeList[index + 1];
 
         if ((thisCode.Operator == MiddleOperator.TopFloat) &&
-            (nextCode.Operator == MiddleOperator.PopFloat)) {
-          Assert.ErrorXXX(nextCode[0] == null);
+            (nextCode.Operator == MiddleOperator.PopFloat) &&
+            (nextCode[0] == null)) {
           thisCode.Operator = MiddleOperator.PopFloat;
           nextCode.Clear();
           m_update = true;

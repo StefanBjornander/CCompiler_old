@@ -2330,12 +2330,13 @@ namespace CCompiler {
 
     public static Expression NameExpression(string name) {
       Symbol symbol = SymbolTable.CurrentTable.LookupSymbol(name);
+      Assert.Error(symbol != null, name, Message.Unknown_name);
 
-      if (symbol == null) {
+      /*if (symbol == null) {
         Type type = new Type(Type.SignedIntegerType, null, false);
         symbol = new Symbol(name, true, Storage.Extern, type);
         SymbolTable.CurrentTable.AddSymbol(symbol);
-      }
+      }*/
 
       //symbol.Used = true;
       List<MiddleCode> shortList = new List<MiddleCode>(),
