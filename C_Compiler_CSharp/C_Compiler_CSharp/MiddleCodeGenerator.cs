@@ -2179,6 +2179,7 @@ namespace CCompiler {
       Type functionType = type.IsFunction() ? type : type.PointerType;
       TypeListStack.Push(functionType.TypeList);
       ParameterOffsetStack.Push(0);
+
       AddMiddleCode(expression.ShortList, MiddleOperator.PreCall,
                     SymbolTable.CurrentTable.CurrentOffset);
       AddMiddleCode(expression.LongList, MiddleOperator.PreCall,

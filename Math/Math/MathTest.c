@@ -35,6 +35,8 @@ void atan_test(double x) {
 }
 
 void main_math(void) {
+  math_test_1(0.333333333);
+  math_test_1(0.75);
   math_test_1(1.000010);
   math_test_1(1.0);
   math_test_1(0.999999);

@@ -6,7 +6,7 @@
 //
 //  GPLEX Version:  1.2.2
 //  Machine:  STEFAN1968
-//  DateTime: 2020-10-31 19:05:30
+//  DateTime: 2020-11-01 09:16:25
 //  UserName: Stefan
 //  GPLEX input file <MainScanner.gplex - 2020-10-31 19:05:27>
 //  GPLEX frame file <embedded resource>
@@ -134,7 +134,7 @@ namespace CCompiler_Main
 
 #region user code
 public static FileInfo Path = null;
-  public static int Line;
+  public static int Line = 1000;
 
   private static IDictionary<char,char> m_slashMap =
     new Dictionary<char,char>() {

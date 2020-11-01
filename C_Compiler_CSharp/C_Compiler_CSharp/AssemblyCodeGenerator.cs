@@ -10,6 +10,7 @@ namespace CCompiler {
 
     private int m_floatStackSize = 0;
     public const int FloatingStackMaxSize = 7;
+    private Stack<int> m_topStack = new Stack<int>();
 
     //public static string IntegralStorageName =
       //Symbol.SeparatorId + "IntegralStorage" + Symbol.NumberId;
@@ -431,6 +432,13 @@ namespace CCompiler {
       Register baseRegister = BaseRegister(null);
       int recordSize = (int) middleCode[0], extraSize = 0;
 
+      int totalSize = 0;
+      int doubleTypeSize = Type.DoubleType.Size();
+      foreach (int size in m_topStack) {
+        totalSize += size;
+      }
+      extraSize += totalSize * doubleTypeSize;
+
       IDictionary<Track,int> registerMap = new Dictionary<Track,int>();
       foreach (KeyValuePair<Symbol, Track> pair in m_trackMap) {
         Track track = pair.Value;
@@ -441,10 +449,13 @@ namespace CCompiler {
         extraSize += symbol.Type.Size();
       }
 
-      for (int count = 0; count < m_floatStackSize; ++count) {
+      int topSize = m_floatStackSize - totalSize;
+      m_topStack.Push(topSize);
+
+      for (int count = 0; count < topSize; ++count) {
         AddAssemblyCode(AssemblyOperator.fstp_qword, baseRegister,
                         recordSize + extraSize);
-        extraSize += 8;
+        extraSize += doubleTypeSize;
       }
 
       m_recordSizeStack.Push(extraSize);
@@ -525,8 +536,12 @@ namespace CCompiler {
         AddAssemblyCode(AssemblyOperator.mov, track, baseRegister,offset);
       }
 
-      if (m_floatStackSize > 0) {
+      Assert.ErrorXXX(m_topStack.Count > 0);
+      int topSize = m_topStack.Pop();
+
+      if (topSize > 0) {
         int recordOffset = (int) middleCode[2];
+        int doubleTypeSize = Type.DoubleType.Size();
         int recordSize = m_recordSizeStack.Pop();
 
         if (m_returnFloating) {
@@ -535,8 +550,8 @@ namespace CCompiler {
         }
 
         int currentOffset = recordOffset + recordSize;
-        for (int count = 0; count < m_floatStackSize; ++count) {
-          currentOffset -= 8;
+        for (int count = 0; count < topSize; ++count) {
+          currentOffset -= doubleTypeSize;
           AddAssemblyCode(AssemblyOperator.fld_qword, baseRegister,
                           currentOffset);
         }
