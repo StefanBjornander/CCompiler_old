@@ -43,13 +43,13 @@ namespace CCompiler {
       streamReader.Close();
 
       CCompiler_Main.Scanner.Path = file;
-      CCompiler_Main.Scanner.Line = 2;
+      CCompiler_Main.Scanner.Line = 3000;
       GenerateTriGraphs(inputBuffer);
       TraverseBuffer(inputBuffer);    
       List<string> lineList =
         GenerateLineList(inputBuffer.ToString());
 
-      CCompiler_Main.Scanner.Line = 2;
+      CCompiler_Main.Scanner.Line = 1;
       int stackSize = m_ifElseChainStack.Count;
       /*if (CCompiler_Main.Scanner.Path.Name.Contains("AssertTest")) {
         Console.Out.WriteLine("5: " + CCompiler_Main.Scanner.Line);
@@ -395,10 +395,9 @@ namespace CCompiler {
       CCompiler_Main.Scanner.Path = includeFile;
       CCompiler_Main.Scanner.Line = 1;
       m_outputBuffer.Append(Symbol.SeparatorId + CCompiler_Main.Scanner.Path +
-                            "," + CCompiler_Main.Scanner.Line +
-                            Symbol.SeparatorId + "\n");
+                            ",0" + Symbol.SeparatorId + "\n");
       DoProcess(includeFile);
-      CCompiler_Main.Scanner.Line = oldLine;// + 1;
+      CCompiler_Main.Scanner.Line = oldLine;
       CCompiler_Main.Scanner.Path = oldPath;
       m_outputBuffer.Append(Symbol.SeparatorId + CCompiler_Main.Scanner.Path +
                             "," + (CCompiler_Main.Scanner.Line - 1) +

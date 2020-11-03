@@ -156,7 +156,7 @@ namespace CCompiler {
       AddMiddleCode(statement.CodeList, MiddleOperator.FunctionEnd,
                     SymbolTable.CurrentFunction);
 
-      if (SymbolTable.CurrentFunction.Name.Equals("generateTempName")) {
+      if (SymbolTable.CurrentFunction.Name.Equals("main")) {
         string name = @"C:\Users\Stefan\Documents\vagrant\homestead\code\code\" +
                       SymbolTable.CurrentFunction.Name + ".middlebefore";
         StreamWriter streamWriter = new StreamWriter(name);
@@ -173,7 +173,7 @@ namespace CCompiler {
         new MiddleCodeOptimizer(statement.CodeList);
       middleCodeOptimizer.Optimize();
 
-      if (SymbolTable.CurrentFunction.Name.Equals("generateTempName")) {
+      if (SymbolTable.CurrentFunction.Name.Equals("main")) {
         string name = @"C:\Users\Stefan\Documents\vagrant\homestead\code\code\" +
                       SymbolTable.CurrentFunction.Name + ".middleafter";
         StreamWriter streamWriter = new StreamWriter(name);
@@ -1370,6 +1370,13 @@ namespace CCompiler {
       Assert.Error(!rightExpression.Symbol.Type.IsStructOrUnion(),
                     rightExpression,
                     Message.Invalid_type_in_expression);
+
+      Expression constantExpression =
+        ConstantExpression.Relation(middleOp, leftExpression,
+                                    rightExpression);
+      if (constantExpression != null) {
+        return constantExpression;
+      }
 
       Type maxType = TypeCast.MaxType(leftExpression.Symbol.Type,
                                       rightExpression.Symbol.Type);

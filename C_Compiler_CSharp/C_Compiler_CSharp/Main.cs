@@ -8,7 +8,7 @@ using System.Collections.Generic;
 
 namespace CCompiler {
   public class Start {
-    public static bool Linux = false, Windows;
+    public static bool Linux = true, Windows;
     public static string SourcePath = @"C:\Users\Stefan\Documents\vagrant\homestead\code\code\",
                          TargetPath = @"C:\D\";
 
@@ -154,6 +154,11 @@ namespace CCompiler {
       Preprocessor preprocessor = new Preprocessor(sourceFile);
       GenerateIncludeFile(file, preprocessor.IncludeSet);
 
+      FileInfo pFile = new FileInfo(file.FullName + ".p");
+      StreamWriter pWriter = new StreamWriter(pFile.FullName);
+      pWriter.Write(preprocessor.PreprocessedCode);
+      pWriter.Close();
+
       byte[] byteArray =
         Encoding.ASCII.GetBytes(preprocessor.PreprocessedCode);
       MemoryStream memoryStream = new MemoryStream(byteArray);
@@ -163,7 +168,7 @@ namespace CCompiler {
       try {
         SymbolTable.CurrentTable = new SymbolTable(null, Scope.Global);
         //CCompiler_Main.Scanner.Path = sourceFile;
-        CCompiler_Main.Scanner.Line = 1000; 
+        CCompiler_Main.Scanner.Line = 2000; 
         CCompiler_Main.Parser parser = new CCompiler_Main.Parser(scanner);
         Assert.Error(parser.Parse(), Message.Syntax_error);
       }

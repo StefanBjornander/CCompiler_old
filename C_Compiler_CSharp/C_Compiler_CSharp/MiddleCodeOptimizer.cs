@@ -64,7 +64,7 @@ namespace CCompiler {
     // 2. ...
   
     private void ClearGotoNextStatements() {
-      for (int index = 1; index < (m_middleCodeList.Count - 1); ++index) {
+      for (int index = 0; index < (m_middleCodeList.Count - 1); ++index) {        
         MiddleCode middleCode = m_middleCodeList[index];
       
         if (middleCode.IsRelationCarryOrGoto()) {
@@ -790,7 +790,7 @@ namespace CCompiler {
     }
 
     public void RemoveClearedCode() {
-      for (int index = (m_middleCodeList.Count - 1); index > 0;--index){
+      for (int index = (m_middleCodeList.Count - 1); index >= 0;--index){        
         if (m_middleCodeList[index].Operator == MiddleOperator.Empty) {
           foreach (MiddleCode middleCode in m_middleCodeList) {
             if (middleCode.IsRelationCarryOrGoto()) {

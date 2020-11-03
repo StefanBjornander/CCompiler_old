@@ -64,9 +64,8 @@ namespace CCompiler {
     private static Expression RelationIntegral(MiddleOperator middleOp,
                                                Expression leftExpression,
                                                Expression rightExpression) {
-
-      leftExpression = LogicalToIntegral(leftExpression);
-      rightExpression = LogicalToIntegral(leftExpression);
+      leftExpression = TypeCast.LogicalToIntegral(leftExpression);
+      rightExpression = TypeCast.LogicalToIntegral(rightExpression);
 
       BigInteger leftValue = (BigInteger) leftExpression.Symbol.Value,
                  rightValue = (BigInteger) rightExpression.Symbol.Value;
@@ -307,7 +306,6 @@ namespace CCompiler {
         case MiddleOperator.ShiftRight:
           resultValue = leftValue >> ((int) rightValue);
           break;
-        
       }
 
       Type maxType = TypeCast.MaxType(leftSymbol.Type, rightSymbol.Type);
