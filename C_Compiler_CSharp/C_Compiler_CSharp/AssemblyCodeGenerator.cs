@@ -1032,11 +1032,16 @@ namespace CCompiler {
       int typeSize = unarySymbol.Type.SizeArray();
 
       Track unaryTrack = null;
-      m_trackMap.TryGetValue(unarySymbol, out unaryTrack);
-
       if (unarySymbol.Value is BigInteger) {
         SymbolTable.StaticSet.Add(ConstantExpression.Value(unarySymbol));
-        AddAssemblyCode(objectOperator, unarySymbol.UniqueName, 0, null, typeSize);
+        AddAssemblyCode(objectOperator, unarySymbol.UniqueName,
+                        0, null, typeSize);
+      }
+      else if (m_trackMap.TryGetValue(unarySymbol, out unaryTrack)) {
+        if (middleOperator != MiddleOperator.UnaryAdd) {
+          AddAssemblyCode(objectOperator, unaryTrack);
+        }
+        m_trackMap.Remove(unarySymbol);
       }
       else if (resultSymbol == unarySymbol) {
         Assert.ErrorXXX(unaryTrack == null);
@@ -1095,7 +1100,6 @@ namespace CCompiler {
 
       Symbol rightSymbol = (Symbol) middleCode[2];
       IntegralUnary(middleCode.Operator, rightSymbol, rightSymbol);
-
       Register resultRegister, discardRegister;
 
       if ((middleCode.Operator == MiddleOperator.SignedModulo) ||

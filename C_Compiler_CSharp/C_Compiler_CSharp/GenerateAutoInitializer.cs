@@ -15,7 +15,7 @@ namespace CCompiler {
 
         if (toType.IsArray() && toType.ArrayType.IsChar() &&
             fromExpression.Symbol.Type.IsString()) {
-          string text = ((string) fromExpression.Symbol.Value) + "0";
+          string text = ((string) fromExpression.Symbol.Value) + "\0";
           List<object> list = new List<object>();
 
           foreach (char c in text) {
