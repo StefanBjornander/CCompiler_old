@@ -22,11 +22,11 @@ namespace CCompiler {
       m_currentSize = m_maxSize = type.Size();
     }
 
-    public void Replace(List<AssemblyCode> assemblyCodeList, Track newTrack) {
+/*    public void Replace(List<AssemblyCode> assemblyCodeList, Track newTrack) {
       foreach (TrackEntry entry in m_entryList) {
         assemblyCodeList[entry.Line][entry.Position] = newTrack;
       }
-    }
+    }*/
 
     public int CurrentSize {
       get { return m_currentSize; }

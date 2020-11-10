@@ -156,7 +156,7 @@ namespace CCompiler {
       AddMiddleCode(statement.CodeList, MiddleOperator.FunctionEnd,
                     SymbolTable.CurrentFunction);
 
-      if (SymbolTable.CurrentFunction.Name.Equals("stdlib_test")) {
+      if (SymbolTable.CurrentFunction.Name.Equals("compare")) {
         string name = @"C:\Users\Stefan\Documents\vagrant\homestead\code\code\" +
                       SymbolTable.CurrentFunction.Name + ".middlebefore";
         StreamWriter streamWriter = new StreamWriter(name);
@@ -173,7 +173,7 @@ namespace CCompiler {
         new MiddleCodeOptimizer(statement.CodeList);
       middleCodeOptimizer.Optimize();
 
-      if (SymbolTable.CurrentFunction.Name.Equals("stdlib_test")) {
+      if (SymbolTable.CurrentFunction.Name.Equals("compare")) {
         string name = @"C:\Users\Stefan\Documents\vagrant\homestead\code\code\" +
                       SymbolTable.CurrentFunction.Name + ".middleafter";
         StreamWriter streamWriter = new StreamWriter(name);
@@ -1108,6 +1108,11 @@ namespace CCompiler {
           return (new Expression(leftExpression.Symbol, shortList, longList));
         }
         else {
+          if (rightExpression.Symbol.Type.IsStructOrUnion()) {
+            AddMiddleCode(longList, MiddleOperator.AssignInitSize,
+                          leftExpression.Symbol, rightExpression.Symbol);
+          }
+
           AddMiddleCode(longList, MiddleOperator.Assign,
                         leftExpression.Symbol, rightExpression.Symbol);
           BigInteger? bitFieldMask =
@@ -2233,6 +2238,12 @@ namespace CCompiler {
         else {
           type = ParameterType(argumentExpression.Symbol);
           extra += type.Size();
+        }
+
+        if (type.IsStructOrUnion()) {
+          AddMiddleCode(longList, MiddleOperator.ParameterInitSize, type,
+                        argumentExpression.Symbol, SymbolTable.CurrentTable.
+                        CurrentOffset + totalOffset + offset);
         }
 
         AddMiddleCode(longList, MiddleOperator.Parameter, type,

@@ -5,7 +5,9 @@ using System.Collections.Generic;
 namespace CCompiler {
   public class AssemblyCodeGenerator {
     public IDictionary<Symbol,Track> m_trackMap =
-      new Dictionary<Symbol, Track>(); 
+      new Dictionary<Symbol,Track>();
+    private IDictionary<Track, Track> m_moveMap =
+      new Dictionary<Track, Track>();
     public List<AssemblyCode> m_assemblyCodeList;
 
     private int m_floatStackSize = 0;
@@ -85,8 +87,8 @@ namespace CCompiler {
             AddAssemblyCode(AssemblyOperator.label, labelText);
           }
 
-          /*if (SymbolTable.CurrentFunction.Name.Equals("stdlib_test") &&
-              (middleIndex == 176)) {
+/*          if (SymbolTable.CurrentFunction.Name.Equals("stdlib_test") &&
+              (middleIndex == 198)) {
             int i = 1;
           }*/
         }
@@ -146,6 +148,10 @@ namespace CCompiler {
             InitializerZero(middleCode);
             break;
           
+          case MiddleOperator.AssignInitSize:
+            StructUnionAssignInit(middleCode);
+            break;
+
           case MiddleOperator.Assign: {
               Symbol symbol = (Symbol) middleCode[0];
 
@@ -306,6 +312,10 @@ namespace CCompiler {
             FloatingToIntegral(middleCode);
             break;
 
+          case MiddleOperator.ParameterInitSize:
+            StructUnionParameterInit(middleCode);
+            break;
+
           case MiddleOperator.Parameter: {
               Symbol paramSymbol = (Symbol) middleCode[1];
 
@@ -405,9 +415,16 @@ namespace CCompiler {
     private void CheckTrack(ISet<Track> trackSet, object operand,
                             int position, int index) {
       if (operand is Track) {
-        Track track = (Track) operand;
-        trackSet.Add(track);
-        track.AddEntry(position, index);
+        Track track = (Track) operand, moveTrack;
+
+        if (m_moveMap.TryGetValue(track, out moveTrack)) {
+          trackSet.Add(moveTrack);
+          moveTrack.AddEntry(position, index);
+        }
+        else {
+          trackSet.Add(track);
+          track.AddEntry(position, index);
+        }
       }
     }
 
@@ -695,6 +712,8 @@ namespace CCompiler {
 
     // Return, Exit, and Goto --------------------------------------------------------------------------
 
+    private static int m_labelCount = 0;
+
     public void Return(MiddleCode middleCode) {
       if (SymbolTable.CurrentFunction.UniqueName.Equals
                       (AssemblyCodeGenerator.MainName)) {
@@ -950,12 +969,16 @@ namespace CCompiler {
       m_trackMap.TryGetValue(assignSymbol, out assignTrack);
       int typeSize = assignSymbol.Type.SizeArray();
 
+/*      if (SymbolTable.CurrentFunction.Name.Equals("compare")) {
+        int i = 1;
+      }*/
+
       if (resultSymbol.IsTemporary()) {        
         Assert.ErrorXXX(resultSymbol.AddressSymbol == null);
 
         if (assignTrack != null) {
           if (resultTrack != null) {
-            resultTrack.Replace(m_assemblyCodeList, assignTrack);
+            m_moveMap.Add(resultTrack, assignTrack);
           }
 
           m_trackMap[resultSymbol] = assignTrack;
@@ -1202,7 +1225,7 @@ namespace CCompiler {
       if ((rightTrack == null) &&
           (middleOperator != MiddleOperator.Assign) &&
           (middleOperator != MiddleOperator.BinaryAdd) &&
-          (middleOperator != MiddleOperator.BinarySubtract) &&
+          // (middleOperator != MiddleOperator.BinarySubtract) && // XXX
           ((rightSymbol.Type.IsArrayFunctionOrString() &&
            (rightSymbol.Offset != 0)) ||
            ((rightSymbol.Value is StaticAddress) &&
@@ -1237,7 +1260,7 @@ namespace CCompiler {
         }
         else if (rightSymbol.Type.IsArrayFunctionOrString() ||
                  (rightSymbol.Value is StaticAddress)) {
-          AddAssemblyCode(objectOperator, leftTrack, Base(rightSymbol));
+          AddAssemblyCode(objectOperator, leftTrack, Base(rightSymbol)); // XXX
 
           int rightOffset = Offset(rightSymbol);
           if (rightOffset != 0) {
@@ -1579,29 +1602,26 @@ namespace CCompiler {
 
     // Struct and Union
 
-    public void StructUnionAssign(MiddleCode middleCode, int index) {
-      Symbol targetSymbol = (Symbol) middleCode[0],
-             sourceSymbol = (Symbol) middleCode[1];
-
-      Track targetAddressTrack = LoadAddressToRegister(targetSymbol),
-            sourceAddressTrack = LoadAddressToRegister(sourceSymbol);
-
-      MemoryCopy(targetAddressTrack, sourceAddressTrack,
-                 targetSymbol.Type.Size(), index);
+    public void StructUnionAssignInit(MiddleCode middleCode) {
+      Symbol targetSymbol = (Symbol)middleCode[0],
+             sourceSymbol = (Symbol)middleCode[1];
+      MemoryCopyInit(targetSymbol, sourceSymbol);
     }
 
-    public void StructUnionParameter(MiddleCode middleCode, int index) {
-      Symbol sourceSymbol = (Symbol) middleCode[1];
+    public void StructUnionAssign(MiddleCode middleCode, int middleIndex) {
+      MemoryCopyLoop(middleIndex);
+    }
+
+    public void StructUnionParameterInit(MiddleCode middleCode) {
+      Symbol sourceSymbol = (Symbol)middleCode[1];
       Symbol targetSymbol = new Symbol(Type.IntegerPointerType);
-
-      int paramOffset = (int) middleCode[2];
+      int paramOffset = (int)middleCode[2];
       targetSymbol.Offset = m_totalExtraSize + paramOffset;
+      MemoryCopyInit(targetSymbol, sourceSymbol);
+    }
 
-      Track sourceAddressTrack = LoadAddressToRegister(sourceSymbol);
-      Track targetAddressTrack = LoadAddressToRegister(targetSymbol);
-
-      MemoryCopy(targetAddressTrack, sourceAddressTrack,
-                 sourceSymbol.Type.Size(), index);    
+    public void StructUnionParameter(MiddleCode middleCode, int middleIndex) {
+      MemoryCopyLoop(middleIndex);
     }
 
     public void StructUnionGetReturnValue(MiddleCode middleCode) {
@@ -1618,28 +1638,30 @@ namespace CCompiler {
       LoadAddressToRegister(returnSymbol, AssemblyCode.ReturnPointerRegister);
     }
 
-    private static int m_labelCount = 0;
+    private Track m_targetAddressTrack = null, m_sourceAddressTrack = null;
+    private static Track m_countTrack = null;
 
-    private void MemoryCopy(Track targetAddressTrack,
-                            Track sourceAddressTrack, int size, int index) {
+    private void MemoryCopyInit(Symbol targetSymbol, Symbol sourceSymbol) {
+      m_sourceAddressTrack = LoadAddressToRegister(sourceSymbol);
+      m_targetAddressTrack = LoadAddressToRegister(targetSymbol);
+      int size = sourceSymbol.Type.Size();
       Type countType = (size < 256) ? Type.UnsignedCharType
                                     : Type.UnsignedIntegerType;
-      Track countTrack = new Track(countType),
-            valueTrack = new Track(Type.UnsignedCharType);
+      m_countTrack = new Track(countType);
+      AddAssemblyCode(AssemblyOperator.mov, m_countTrack, (BigInteger) size);
+    }
 
-      AddAssemblyCode(AssemblyOperator.mov, countTrack, (BigInteger) size);
-      int labelIndex = m_labelCount++;
-      string labelText = AssemblyCode.MakeLabel(labelIndex);
-      AddAssemblyCode(AssemblyOperator.label, labelText);
+    private void MemoryCopyLoop(int middleIndex) {
+      Track valueTrack = new Track(Type.UnsignedCharType);
       AddAssemblyCode(AssemblyOperator.mov, valueTrack,
-                      sourceAddressTrack, 0);
-      AddAssemblyCode(AssemblyOperator.mov, targetAddressTrack,
+                      m_sourceAddressTrack, 0);
+      AddAssemblyCode(AssemblyOperator.mov, m_targetAddressTrack,
                       0, valueTrack);
-      AddAssemblyCode(AssemblyOperator.inc, sourceAddressTrack);
-      AddAssemblyCode(AssemblyOperator.inc, targetAddressTrack);
-      AddAssemblyCode(AssemblyOperator.dec, countTrack);
-      AddAssemblyCode(AssemblyOperator.cmp, countTrack, BigInteger.Zero);
-      AddAssemblyCode(AssemblyOperator.jne, -12, labelIndex); // XXX
+      AddAssemblyCode(AssemblyOperator.inc, m_sourceAddressTrack);
+      AddAssemblyCode(AssemblyOperator.inc, m_targetAddressTrack);
+      AddAssemblyCode(AssemblyOperator.dec, m_countTrack);
+      AddAssemblyCode(AssemblyOperator.cmp, m_countTrack, BigInteger.Zero);
+      AddAssemblyCode(AssemblyOperator.jne, null, null, middleIndex);
     }
 
     // Initialization Code
@@ -2040,7 +2062,7 @@ namespace CCompiler {
       for (int line = 0; line < m_assemblyCodeList.Count; ++line) {
         AssemblyCode assemblyCode = m_assemblyCodeList[line];
 
-        if (/*(assemblyCode[0] == null) &&*/ !(assemblyCode[1] is int) &&
+        if (!(assemblyCode[1] is int) && !(assemblyCode[1] is int) &&
             (assemblyCode.IsRelationNotRegister() ||
              assemblyCode.IsJumpNotRegister())) {
           int middleTarget = (int) assemblyCode[2];

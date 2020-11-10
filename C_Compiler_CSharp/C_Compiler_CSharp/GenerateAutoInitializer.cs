@@ -34,6 +34,11 @@ namespace CCompiler {
             codeList.Add(new MiddleCode(MiddleOperator.PopFloat, toSymbol));
           }
           else {
+            if (fromExpression.Symbol.Type.IsStructOrUnion()) {
+              codeList.Add(new MiddleCode(MiddleOperator.AssignInitSize,
+                                          toSymbol, fromExpression.Symbol));
+            }
+
             codeList.Add(new MiddleCode(MiddleOperator.Assign, toSymbol,
                                         fromExpression.Symbol));
           }

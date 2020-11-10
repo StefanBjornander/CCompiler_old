@@ -12,7 +12,7 @@ namespace CCompiler {
     public static string SourcePath = @"C:\Users\Stefan\Documents\vagrant\homestead\code\code\",
                          TargetPath = @"C:\D\";
 
-    public static void Main(string[] args) {
+    public static void Main(string[] args){
       Windows = !Linux;
 
       if (Start.Windows) {
