@@ -32,7 +32,7 @@ namespace CCompiler {
         SignedIntegerSize = 4;
 
         m_sizeMap.Add(Sort.Void, 0);
-        m_sizeMap.Add(Sort.Function, 0);
+        m_sizeMap.Add(Sort.Function, PointerSize);
         m_sizeMap.Add(Sort.Logical, 1);
         m_sizeMap.Add(Sort.Pointer, 8);
         m_sizeMap.Add(Sort.Array, 8);
@@ -102,7 +102,7 @@ namespace CCompiler {
         SignedIntegerSize = 2;
 
         m_sizeMap.Add(Sort.Void, 0);
-        m_sizeMap.Add(Sort.Function, 0);
+        m_sizeMap.Add(Sort.Function, PointerSize);
         m_sizeMap.Add(Sort.Logical, 1);
         m_sizeMap.Add(Sort.Array, 2);
         m_sizeMap.Add(Sort.Pointer, 2);

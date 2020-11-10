@@ -1,14 +1,3 @@
-
-// ==========================================================================
-//  GPPG error listing for yacc source file <MainParser.gppg - 2020-11-10 09:24:47>
-// ==========================================================================
-//  Version:  1.5.2
-//  Machine:  STEFAN1968
-//  DateTime: 2020-11-10 09:24:52
-//  UserName: Stefan
-// ==========================================================================
-
-
 %namespace CCompiler_Main
 %partial
 
@@ -156,10 +145,7 @@ function_definition:
     }
     LEFT_BLOCK optional_declaration_list optional_statement_list RIGHT_BLOCK {
       MiddleCodeGenerator.BackpatchGoto();
-      MiddleCodeGenerator.FunctionEnd($9);
-//-----------------------------------^^^
-// Error: Semantic action index is out of bounds
-// ---------------------------------------------
+      MiddleCodeGenerator.FunctionEnd($7);
     };
 
 optional_declaration_list:
@@ -566,7 +552,7 @@ closed_statement:
     optional_declaration_list optional_statement_list RIGHT_BLOCK {
       SymbolTable.CurrentTable =
         SymbolTable.CurrentTable.ParentTable;
-      $$ = $3;
+      $$ = $4;
     }
   | GOTO NAME SEMICOLON {
       $$ = MiddleCodeGenerator.GotoStatement($2);
@@ -865,5 +851,4 @@ primary_expression:
   | STACK_TOP {
       $$ = MiddleCodeGenerator.StackTopExpression();
     };
-%%// ==========================================================================
-
+%%

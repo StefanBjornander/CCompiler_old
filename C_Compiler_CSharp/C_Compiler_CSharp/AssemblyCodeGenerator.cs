@@ -84,6 +84,11 @@ namespace CCompiler {
 
             AddAssemblyCode(AssemblyOperator.label, labelText);
           }
+
+          /*if (SymbolTable.CurrentFunction.Name.Equals("stdlib_test") &&
+              (middleIndex == 176)) {
+            int i = 1;
+          }*/
         }
 
         AddAssemblyCode(AssemblyOperator.comment, middleCode.ToString());
@@ -496,6 +501,12 @@ namespace CCompiler {
                         AssemblyCode.EllipseRegister);
       }
 
+
+      Track jumpTrack = null;
+      if (!calleeSymbol.Type.IsFunction()) {
+        jumpTrack = LoadValueToRegister(calleeSymbol);
+      }            
+      
       AddAssemblyCode(AssemblyOperator.add, frameRegister, // add di, 10
                       (BigInteger) recordSize);
 
@@ -518,7 +529,6 @@ namespace CCompiler {
         m_returnFloating = calleeSymbol.Type.ReturnType.IsFloating();
       }
       else {
-        Track jumpTrack = LoadValueToRegister(calleeSymbol);
         AddAssemblyCode(AssemblyOperator.jmp, jumpTrack);
         m_returnFloating =
           calleeSymbol.Type.PointerType.ReturnType.IsFloating();
@@ -1629,7 +1639,7 @@ namespace CCompiler {
       AddAssemblyCode(AssemblyOperator.inc, targetAddressTrack);
       AddAssemblyCode(AssemblyOperator.dec, countTrack);
       AddAssemblyCode(AssemblyOperator.cmp, countTrack, BigInteger.Zero);
-      AddAssemblyCode(AssemblyOperator.jne, null, labelIndex);
+      AddAssemblyCode(AssemblyOperator.jne, -12, labelIndex); // XXX
     }
 
     // Initialization Code
@@ -2030,12 +2040,11 @@ namespace CCompiler {
       for (int line = 0; line < m_assemblyCodeList.Count; ++line) {
         AssemblyCode assemblyCode = m_assemblyCodeList[line];
 
-        if (assemblyCode.IsRelationNotRegister() ||
-            assemblyCode.IsJumpNotRegister()) {
-          if (!(assemblyCode[1] is int)) {
-            int middleTarget = (int) assemblyCode[2];
-            assemblyCode[1] = middleToAssemblyMap[middleTarget];
-          }
+        if (/*(assemblyCode[0] == null) &&*/ !(assemblyCode[1] is int) &&
+            (assemblyCode.IsRelationNotRegister() ||
+             assemblyCode.IsJumpNotRegister())) {
+          int middleTarget = (int) assemblyCode[2];
+          assemblyCode[1] = middleToAssemblyMap[middleTarget];
         }
       }
 
@@ -2058,8 +2067,9 @@ namespace CCompiler {
           AssemblyCode thisCode = m_assemblyCodeList[line],
                        nextCode = m_assemblyCodeList[line + 1];
 
-          if (thisCode.IsRelationNotRegister() ||
-              thisCode.IsJumpNotRegister()) {
+          if (/*(thisCode[0] == null) && */
+              (thisCode.IsRelationNotRegister() ||
+               thisCode.IsJumpNotRegister())) {
             int assemblyTarget = (int) thisCode[1];
             int byteSource = assemblyToByteMap[line + 1],
                 byteTarget = assemblyToByteMap[assemblyTarget];
