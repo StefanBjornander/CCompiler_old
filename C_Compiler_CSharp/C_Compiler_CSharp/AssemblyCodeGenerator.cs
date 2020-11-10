@@ -415,16 +415,14 @@ namespace CCompiler {
     private void CheckTrack(ISet<Track> trackSet, object operand,
                             int position, int index) {
       if (operand is Track) {
-        Track track = (Track) operand, moveTrack;
+        Track track = (Track) operand;
 
-        if (m_moveMap.TryGetValue(track, out moveTrack)) {
-          trackSet.Add(moveTrack);
-          moveTrack.AddEntry(position, index);
+        while (m_moveMap.ContainsKey(track)) {
+          track = m_moveMap[track];
         }
-        else {
-          trackSet.Add(track);
-          track.AddEntry(position, index);
-        }
+
+        trackSet.Add(track);
+        track.AddEntry(position, index);
       }
     }
 
