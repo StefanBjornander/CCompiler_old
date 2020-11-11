@@ -2022,10 +2022,10 @@ namespace CCompiler {
       Assert.Error(parentSymbol.Type.IsStructOrUnion(), expression,
                    Message.Not_a_struct_or_union_in_dot_expression);
 
-      Symbol memberSymbol = parentSymbol.Type.MemberMap[memberName];
-      Assert.Error(memberSymbol != null, memberName,
+      Symbol memberSymbol;
+      Assert.Error(parentSymbol.Type.MemberMap.TryGetValue(memberName,
+                   out memberSymbol), memberName,
                    Message.Unknown_member_in_dot_expression);
-
 
       Symbol resultSymbol;
       if (parentSymbol.AddressSymbol != null) {
