@@ -87,10 +87,10 @@ namespace CCompiler {
             AddAssemblyCode(AssemblyOperator.label, labelText);
           }
 
-/*          if (SymbolTable.CurrentFunction.Name.Equals("stdlib_test") &&
-              (middleIndex == 198)) {
+          if (SymbolTable.CurrentFunction.Name.Equals("putc") &&
+              (middleIndex == 4)) {
             int i = 1;
-          }*/
+          }
         }
 
         AddAssemblyCode(AssemblyOperator.comment, middleCode.ToString());
@@ -384,45 +384,43 @@ namespace CCompiler {
       ISet<Track> trackSet = new HashSet<Track>();
 
       for (int index = 0; index < m_assemblyCodeList.Count; ++index) {
-        AssemblyCode assamblyCode = m_assemblyCodeList[index];
+        AssemblyCode assemblyCode = m_assemblyCodeList[index];
      
-        object operand0 = assamblyCode[0],
-               operand1 = assamblyCode[1],
-               operand2 = assamblyCode[2];
+        if (assemblyCode.Operator == AssemblyOperator.set_track_size) {
+          Track track = (Track)assemblyCode[0];
 
-        if (assamblyCode.Operator == AssemblyOperator.set_track_size) {
-          Track track = (Track) operand0;
-
-          if (operand1 is int) {
-            track.CurrentSize = (int) operand1;
+          if (assemblyCode[1] is int) {
+            track.MaxSize = (int) assemblyCode[1];
           }
           else {
-            track.CurrentSize = ((Track) operand1).CurrentSize;
+            track.MaxSize = ((Track) assemblyCode[1]).MaxSize;
           }
 
-          assamblyCode.Operator = AssemblyOperator.empty;
+          //assemblyCode.Operator = AssemblyOperator.empty;
         }
         else {
-          CheckTrack(trackSet, operand0, 0, index);
-          CheckTrack(trackSet, operand1, 1, index);
-          CheckTrack(trackSet, operand2, 2, index);
+          CheckTrack(trackSet, assemblyCode, 0, index);
+          CheckTrack(trackSet, assemblyCode, 1, index);
+          CheckTrack(trackSet, assemblyCode, 2, index);
         }
       }
 
       return trackSet;
     }
 
-    private void CheckTrack(ISet<Track> trackSet, object operand,
+    private void CheckTrack(ISet<Track> trackSet, AssemblyCode assemblyCode,
                             int position, int index) {
-      if (operand is Track) {
-        Track track = (Track) operand;
+      if (assemblyCode[position] is Track) {
+        Track track = (Track) assemblyCode[position];
 
         while (m_moveMap.ContainsKey(track)) {
           track = m_moveMap[track];
         }
 
         trackSet.Add(track);
-        track.AddEntry(position, index);
+        track.Index = index;
+        assemblyCode[position] = track;
+        //track.AddEntry(position, index);
       }
     }
 
@@ -737,6 +735,10 @@ namespace CCompiler {
     }
 
     private void SetReturnValue(MiddleCode middleCode) {
+      if (SymbolTable.CurrentFunction.Name.Equals("fileopen")) {
+        int i = 1;
+      }
+
       if (middleCode[1] != null) {
         Symbol returnSymbol = (Symbol) middleCode[1];
 
@@ -1554,9 +1556,8 @@ namespace CCompiler {
       Type toType = toSymbol.Type, fromType = fromSymbol.Type;
       int toSize = toType.SizeArray(), fromSize = fromType.SizeArray();
 
-      Track fromTrack = LoadValueToRegister(fromSymbol);
-
       //Assert.ErrorXXX(fromSize != toSize);
+      Track fromTrack = LoadValueToRegister(fromSymbol);
 
       if (fromSize != toSize) {
         AddAssemblyCode(AssemblyOperator.set_track_size, fromTrack, toSize);

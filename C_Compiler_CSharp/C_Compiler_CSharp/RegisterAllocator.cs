@@ -14,17 +14,51 @@ namespace CCompiler {
         }
       }
 
+/*      foreach (Track track in trackGraph.VertexSet) {
+        track.Generate(assemblyCodeList);
+      }*/
+
       ISet<Graph<Track>> split = totalTrackGraph.Split();
       foreach (Graph<Track> trackGraph in split) {
         List<Track> trackList = new List<Track>(trackGraph.VertexSet);
         Assert.Error(DeepFirstSearch(trackList, 0, trackGraph),
                      Message.Out_of_registers);
+      }
+    
+      SetRegistersInCodeList(assemblyCodeList);
+    }
 
-        foreach (Track track in trackGraph.VertexSet) {
-          track.Generate(assemblyCodeList);
+    private static void SetRegistersInCodeList(List<AssemblyCode> assemblyCodeList) {
+      foreach (AssemblyCode assemblyCode in assemblyCodeList) {
+        if (assemblyCode.Operator == AssemblyOperator.set_track_size) {
+          Track track = (Track) assemblyCode[0];
+          object operand1 = assemblyCode[1];
+
+          if (operand1 is int) {
+            track.CurrentSize = (int) operand1;
+          }
+          else {
+            track.CurrentSize = ((Track) operand1).CurrentSize;
+          }
+
+          assemblyCode.Operator = AssemblyOperator.empty;
+        }
+        else {
+          Check(assemblyCode, 0);
+          Check(assemblyCode, 1);
+          Check(assemblyCode, 2);
         }
       }
     }
+
+    private static void Check(AssemblyCode assemblyCode, int position) {
+      if (assemblyCode[position] is Track) {
+        Track track = (Track) assemblyCode[position];
+        Assert.ErrorXXX(track.Register != null);
+        assemblyCode[position] = AssemblyCode.RegisterToSize(track.Register.Value, track.CurrentSize);
+      }
+    }
+
 //The DeepFirstSearch method searches the graph in a deep-first manner. It takes the track list and the current index in that list as well as the track graph.
     private bool DeepFirstSearch(List<Track> trackList, int listIndex,
                                  Graph<Track> trackGraph) {

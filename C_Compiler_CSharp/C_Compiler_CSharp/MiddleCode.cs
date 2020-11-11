@@ -116,8 +116,18 @@ namespace CCompiler {
     }
 
     public override string ToString() {
-      return m_middleOperator + ToString(m_operandArray[0]) +
-             ToString(m_operandArray[1]) + ToString(m_operandArray[2]);
+      /*if (m_middleOperator == MiddleOperator.IntegralToIntegral) {
+        int toSize = ((Symbol) m_operandArray[0]).Type.Size(),
+            fromSize = ((Symbol) m_operandArray[1]).Type.Size();
+        return m_middleOperator + " " + fromSize + " -> " +
+               toSize + " " + ToString(m_operandArray[0]) +
+               ToString(m_operandArray[1]) + ToString(m_operandArray[2]);
+            
+      }
+      else*/ {
+        return m_middleOperator + ToString(m_operandArray[0]) +
+               ToString(m_operandArray[1]) + ToString(m_operandArray[2]);
+      }
     }
 
     public string ToString(object value) {

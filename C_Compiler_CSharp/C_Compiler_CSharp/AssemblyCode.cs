@@ -24,6 +24,17 @@ namespace CCompiler {
     public AssemblyCode(AssemblyOperator objectOp, object operand0,
                         object operand1, object operand2 = null,
                         int size = 0) {
+      /*if (objectOp == AssemblyOperator.set_track_size) {
+        Track track = (Track) operand0;
+
+        if (operand1 is int) {
+          track.CurrentSize = (int) operand1;
+        }
+        else {
+          track.CurrentSize = ((Track) operand1).CurrentSize;
+        }
+      }*/
+
       m_operator = objectOp;
       m_operandArray[0] = operand0;
       m_operandArray[1] = operand1;
@@ -624,8 +635,17 @@ namespace CCompiler {
       string operatorName = Enum.GetName(typeof(AssemblyOperator),
                                          Operator).Replace("_", " ");
 
+      /*if (Operator == AssemblyOperator.set_track_size) {
+        Track track = (Track) operand0;
+        if (operand1 is Track) {
+          return ";\tset_track_size " + track + " " + track.Register.Value + " " + ((Track) operand1).CurrentSize;
+        }
+        else {
+          return ";\tset_track_size " + track + " " + track.Register.Value + " " + operand1;
+        }
+      }
       // lahf; syscall
-      if (IsNullary()) {
+      else*/ if (IsNullary()) {
         Assert.ErrorXXX((operand0 == null) &&  (operand1 == null) && (operand2 == null));
         return "\t" + operatorName;
       }

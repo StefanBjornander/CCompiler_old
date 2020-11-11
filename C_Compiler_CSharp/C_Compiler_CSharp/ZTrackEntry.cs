@@ -1,8 +1,8 @@
 namespace CCompiler {
-  public class TrackEntry {
+  public class TrackEntryZ {
     private int m_line, m_position, m_size;
 
-    public TrackEntry(int position, int line, int size) {
+    public TrackEntryZ(int position, int line, int size) {
       m_line = line;
       m_position = position;
       m_size = size;

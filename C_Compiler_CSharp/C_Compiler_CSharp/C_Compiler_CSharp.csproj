@@ -115,7 +115,7 @@
     <Compile Include="SymbolTable.cs" />
     <Compile Include="ZSystemCode.cs" />
     <Compile Include="Token.cs" />
-    <Compile Include="TrackEntry.cs" />
+    <Compile Include="ZTrackEntry.cs" />
     <Compile Include="Type.cs" />
     <Compile Include="TypeCast.cs">
       <SubType>Code</SubType>

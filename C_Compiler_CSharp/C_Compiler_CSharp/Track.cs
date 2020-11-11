@@ -3,12 +3,19 @@ using System.Collections.Generic;
 
 namespace CCompiler {
   public class Track {
+    private static int m_count = 0;
+    private int m_id;
     private Register? m_register = null;
-    private List<TrackEntry> m_entryList = new List<TrackEntry>();
     private bool m_pointer;
-    private int m_currentSize, m_maxSize;
+    private int m_currentSize, m_maxSize, m_minIndex = -1, m_maxIndex = -1;
 
     public Track(Symbol symbol, Register? register = null) {
+      m_id = m_count++;
+
+      if (m_id == 1081) {
+        int i = 1;
+      }
+
       m_register = register;
       Assert.ErrorXXX(symbol != null);
       Assert.ErrorXXX(!symbol.Type.IsStructOrUnion());
@@ -16,35 +23,34 @@ namespace CCompiler {
     }
 
     public Track(Type type) {
+      m_id = m_count++;
+      if (m_id == 1081) {
+        int i = 1;
+      }
+
       Assert.ErrorXXX(type != null);
       Assert.ErrorXXX(!type.IsStructOrUnion());
       Assert.ErrorXXX(!type.IsArrayFunctionOrString());
       m_currentSize = m_maxSize = type.Size();
     }
 
-/*    public void Replace(List<AssemblyCode> assemblyCodeList, Track newTrack) {
-      foreach (TrackEntry entry in m_entryList) {
-        assemblyCodeList[entry.Line][entry.Position] = newTrack;
-      }
-    }*/
-
     public int CurrentSize {
       get { return m_currentSize; }
-
-      set {
-        m_currentSize = value;
-        m_maxSize = Math.Max(m_maxSize, m_currentSize);
-      }
-    }
-  
-    public void AddEntry(int position, int line) {
-      m_entryList.Add(new TrackEntry(position, line, m_currentSize));
+      set { m_currentSize = value; }
     }
 
     public int MaxSize {
-      get {return m_maxSize; }
+      get { return m_maxSize; }
+      set { m_maxSize = Math.Max(m_maxSize, value); }
     }
 
+    public int Index {
+      set {
+        m_minIndex = (m_minIndex != -1) ? Math.Min(m_minIndex, value) : value;
+        m_maxIndex = Math.Max(m_maxIndex, value);
+      }
+    }
+  
     public Register? Register {
       get { return m_register; }
       set {
@@ -60,26 +66,23 @@ namespace CCompiler {
     }
   
     public static bool Overlaps(Track track1, Track track2) {
-      if ((track1.m_entryList.Count == 0) || (track2.m_entryList.Count == 0)){
-        return false;
-      }
-
-      TrackEntry minEntry1 = track1.m_entryList[0],
-                 minEntry2 = track2.m_entryList[0],
-                 maxEntry1 = track1.m_entryList[track1.m_entryList.Count - 1],
-                 maxEntry2 = track2.m_entryList[track2.m_entryList.Count - 1];
-
-      return !(((maxEntry1.Line < minEntry2.Line) ||
-                (maxEntry2.Line < minEntry1.Line)));
+      Assert.ErrorXXX((track1.m_minIndex != -1) && (track1.m_maxIndex != -1));
+      Assert.ErrorXXX((track2.m_minIndex != -1) && (track2.m_maxIndex != -1));
+      return !(((track1.m_maxIndex < track2.m_minIndex) ||
+                (track2.m_maxIndex < track1.m_minIndex)));
     }
 
-    public void Generate(List<AssemblyCode> objectCodeList) {
+    public override string ToString() {
+      return m_id.ToString();
+    }
+
+/*    public void Generate(List<AssemblyCode> objectCodeList) {
       foreach (TrackEntry entry in m_entryList) {
         Register sizeRegister =
           AssemblyCode.RegisterToSize(m_register.Value, entry.Size);
         AssemblyCode objectCode = objectCodeList[entry.Line];
         objectCode[entry.Position] = sizeRegister;
       }
-    }
+    }*/
   }
 }
