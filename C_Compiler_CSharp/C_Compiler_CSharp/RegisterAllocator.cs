@@ -14,10 +14,6 @@ namespace CCompiler {
         }
       }
 
-/*      foreach (Track track in trackGraph.VertexSet) {
-        track.Generate(assemblyCodeList);
-      }*/
-
       ISet<Graph<Track>> split = totalTrackGraph.Split();
       foreach (Graph<Track> trackGraph in split) {
         List<Track> trackList = new List<Track>(trackGraph.VertexSet);
@@ -28,7 +24,8 @@ namespace CCompiler {
       SetRegistersInCodeList(assemblyCodeList);
     }
 
-    private static void SetRegistersInCodeList(List<AssemblyCode> assemblyCodeList) {
+    private static void SetRegistersInCodeList(List<AssemblyCode> 
+                                               assemblyCodeList) {
       foreach (AssemblyCode assemblyCode in assemblyCodeList) {
         if (assemblyCode.Operator == AssemblyOperator.set_track_size) {
           Track track = (Track) assemblyCode[0];
@@ -55,7 +52,8 @@ namespace CCompiler {
       if (assemblyCode[position] is Track) {
         Track track = (Track) assemblyCode[position];
         Assert.ErrorXXX(track.Register != null);
-        assemblyCode[position] = AssemblyCode.RegisterToSize(track.Register.Value, track.CurrentSize);
+        assemblyCode[position] =
+         AssemblyCode.RegisterToSize(track.Register.Value, track.CurrentSize);
       }
     }
 

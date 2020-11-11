@@ -87,10 +87,10 @@ namespace CCompiler {
             AddAssemblyCode(AssemblyOperator.label, labelText);
           }
 
-          if (SymbolTable.CurrentFunction.Name.Equals("putc") &&
+/*          if (SymbolTable.CurrentFunction.Name.Equals("putc") &&
               (middleIndex == 4)) {
             int i = 1;
-          }
+          }*/
         }
 
         AddAssemblyCode(AssemblyOperator.comment, middleCode.ToString());
@@ -395,8 +395,6 @@ namespace CCompiler {
           else {
             track.MaxSize = ((Track) assemblyCode[1]).MaxSize;
           }
-
-          //assemblyCode.Operator = AssemblyOperator.empty;
         }
         else {
           CheckTrack(trackSet, assemblyCode, 0, index);
@@ -420,7 +418,6 @@ namespace CCompiler {
         trackSet.Add(track);
         track.Index = index;
         assemblyCode[position] = track;
-        //track.AddEntry(position, index);
       }
     }
 
@@ -735,9 +732,9 @@ namespace CCompiler {
     }
 
     private void SetReturnValue(MiddleCode middleCode) {
-      if (SymbolTable.CurrentFunction.Name.Equals("fileopen")) {
+      /*if (SymbolTable.CurrentFunction.Name.Equals("fileopen")) {
         int i = 1;
-      }
+      }*/
 
       if (middleCode[1] != null) {
         Symbol returnSymbol = (Symbol) middleCode[1];
@@ -1558,10 +1555,9 @@ namespace CCompiler {
 
       //Assert.ErrorXXX(fromSize != toSize);
       Track fromTrack = LoadValueToRegister(fromSymbol);
+      AddAssemblyCode(AssemblyOperator.set_track_size, fromTrack, toSize);
 
       if (fromSize != toSize) {
-        AddAssemblyCode(AssemblyOperator.set_track_size, fromTrack, toSize);
-
         if (fromSize < toSize) {
           if (toSize == 8) {
             Track toTrack = new Track(toSymbol);
