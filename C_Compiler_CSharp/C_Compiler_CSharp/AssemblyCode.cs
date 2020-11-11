@@ -721,19 +721,24 @@ namespace CCompiler {
                target;
       }
       else if (IsRelationNotRegister() || IsJumpNotRegister()) {
-        if (operand2 is int) {
+        Assert.ErrorXXX(operand2 is int);
+        string label = SymbolTable.CurrentFunction.UniqueName +
+                        Symbol.SeparatorId + operand2;
+        return "\t" + operatorName + " " + label;
+
+        /*if (operand2 is int) {
           string label = SymbolTable.CurrentFunction.UniqueName +
                           Symbol.SeparatorId + operand2;
           return "\t" + operatorName + " " + label;
         }
-        else if (operand2 is string) {
+        /*else if (operand2 is string) {
           return "\t" + operatorName + " " + operand2;
         }
         else {
           int labelIndex = (int) operand1;
           string labelText = MakeLabel(labelIndex);
           return "\t" + operatorName + " " + labelText;
-        }
+        }*/
       }
       else if (Operator == AssemblyOperator.empty) { // XXX
         return null;

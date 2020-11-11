@@ -131,27 +131,14 @@ namespace CCompiler {
         AddMiddleCode(statement.CodeList, MiddleOperator.Empty);
       Backpatch(statement.NextSet, nextCode);
 
-      /*if (SymbolTable.CurrentFunction.Type.ReturnType.IsVoid()) {
-        if (SymbolTable.CurrentFunction.UniqueName.Equals(AssemblyCodeGenerator.MainName)) {
-          Type signedShortType = new Type(Sort.Signed_Short_Int);
-          Symbol zeroSymbol = new Symbol(signedShortType, ((BigInteger) 0));
-          AddMiddleCode(statement.CodeList, MiddleOperator.Exit,
-                        null, zeroSymbol);
-        }
-        else {
-          AddMiddleCode(statement.CodeList, MiddleOperator.Return);
-        }
-      }*/
-
       if (SymbolTable.CurrentFunction.Type.ReturnType.IsVoid()) {
         AddMiddleCode(statement.CodeList, MiddleOperator.Return);
-      }
 
-      /*if (SymbolTable.CurrentFunction.Type.ReturnType.IsVoid()) {
-        Symbol zeroSymbol = new Symbol(Type.SignedShortIntegerType, BigInteger.Zero);
-        AddMiddleCode(statement.CodeList, MiddleOperator.Return,
-                      null, zeroSymbol);
-      }*/
+        if (SymbolTable.CurrentFunction.UniqueName.Equals
+                        (AssemblyCodeGenerator.MainName)) {
+          AddMiddleCode(statement.CodeList, MiddleOperator.Exit);
+        }
+      }
 
       AddMiddleCode(statement.CodeList, MiddleOperator.FunctionEnd,
                     SymbolTable.CurrentFunction);
@@ -914,12 +901,22 @@ namespace CCompiler {
         codeList = expression.LongList;
         AddMiddleCode(codeList, MiddleOperator.Return,
                       null, expression.Symbol);
+
+        if (SymbolTable.CurrentFunction.UniqueName.Equals
+                        (AssemblyCodeGenerator.MainName)) {
+          AddMiddleCode(codeList, MiddleOperator.Exit);
+        }
       }
       else {
         Assert.Error(SymbolTable.CurrentFunction.Type.ReturnType.IsVoid(),
                      Message.Void_returned_from_non__void_function);
         codeList = new List<MiddleCode>();
         AddMiddleCode(codeList, MiddleOperator.Return);
+
+        if (SymbolTable.CurrentFunction.UniqueName.Equals
+                        (AssemblyCodeGenerator.MainName)) {
+          AddMiddleCode(codeList, MiddleOperator.Exit);
+        }
       }
 
       return (new Statement(codeList));

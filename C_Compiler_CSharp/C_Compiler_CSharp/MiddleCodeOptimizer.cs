@@ -208,6 +208,10 @@ namespace CCompiler {
           return;
         }
         else if (middleCode.Operator == MiddleOperator.Return) {
+          if (m_middleCodeList[index + 1].Operator == MiddleOperator.Exit) {
+            visitedSet.Add(m_middleCodeList[index + 1]);
+          }
+
           return;
         }
         else if (middleCode.Operator == MiddleOperator.FunctionEnd) {

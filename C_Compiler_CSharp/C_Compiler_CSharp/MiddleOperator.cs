@@ -18,7 +18,7 @@ namespace CCompiler {
                               UnaryAdd, UnarySubtract, Carry, NotCarry,
                               LogicalNot, BitwiseNot, Address, Dereference,
                               Call, PostCall, DecreaseStack, CheckTrackMapFloatStack,
-                              ParameterInitSize, Parameter, Empty, Return, Increment, Decrement, /*Exit,*/ PreCall,
+                              ParameterInitSize, Parameter, Empty, Return, Exit, Increment, Decrement, /*Exit,*/ PreCall,
                               FunctionEnd, //SystemInitializer, SystemParameter,
                               Conditional, /*SetReturnValue,*/ GetReturnValue,
                               IntegralToIntegral, IntegralToFloating, FloatingToIntegral,

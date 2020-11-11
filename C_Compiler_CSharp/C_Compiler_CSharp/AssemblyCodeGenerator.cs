@@ -109,12 +109,12 @@ namespace CCompiler {
             break;
 
           case MiddleOperator.Return:
-            Return(middleCode);
+            Return(middleCode, middleIndex);
             break;
 
-          /*case MiddleOperator.Exit:
+          case MiddleOperator.Exit:
             Exit(middleCode);
-            break;*/
+            break;
 
           case MiddleOperator.Goto:
             Goto(middleCode);
@@ -705,24 +705,17 @@ namespace CCompiler {
 
     // Return, Exit, and Goto --------------------------------------------------------------------------
 
-    private static int m_labelCount = 0;
-
-    public void Return(MiddleCode middleCode) {
+    public void Return(MiddleCode middleCode, int middleIndex) {
       if (SymbolTable.CurrentFunction.UniqueName.Equals
                       (AssemblyCodeGenerator.MainName)) {
         Assert.ErrorXXX(m_floatStackSize == 0);
         AddAssemblyCode(AssemblyOperator.cmp, AssemblyCode.FrameRegister,
                         SymbolTable.ReturnAddressOffset, BigInteger.Zero,
                         TypeSize.PointerSize);
-        int labelIndex = m_labelCount++;
-        string labelText = AssemblyCode.MakeLabel(labelIndex);
 
         AssemblyCode jumpCode =
-          AddAssemblyCode(AssemblyOperator.je, null, null, labelText);
+          AddAssemblyCode(AssemblyOperator.je, null, null, middleIndex + 1);
         Return();
-        jumpCode[1] = m_assemblyCodeList.Count;
-        AddAssemblyCode(AssemblyOperator.label, labelText);
-        Exit(middleCode);
       }
       else {
         SetReturnValue(middleCode);
@@ -732,10 +725,6 @@ namespace CCompiler {
     }
 
     private void SetReturnValue(MiddleCode middleCode) {
-      /*if (SymbolTable.CurrentFunction.Name.Equals("fileopen")) {
-        int i = 1;
-      }*/
-
       if (middleCode[1] != null) {
         Symbol returnSymbol = (Symbol) middleCode[1];
 
