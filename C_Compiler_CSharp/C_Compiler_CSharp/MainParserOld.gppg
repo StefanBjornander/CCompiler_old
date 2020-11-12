@@ -69,9 +69,8 @@
 %type <type> enum_specifier
 %type <symbol_bool_pair_set> enum_list
 %type <symbol_bool_pair> enum
-%type <middle_code_list> declarator_list declaration
-                         declaration_list optional_declaration_list
-                         initialization_bitfield_simple_declarator
+%type <middle_code_list> declarator_list
+                         initialization_bitfield_simple_declarator declaration
 
 %type <declarator> optional_simple_declarator declarator direct_declarator
 %type <type_list> optional_pointer_list pointer_list
@@ -134,10 +133,9 @@ function_definition:
     optional_declaration_list {
       MiddleCodeGenerator.CheckFunctionDefinition();
     }
-    LEFT_BLOCK optional_declaration_list optional_statement_list RIGHT_BLOCK {
-      $8.CodeList.InsertRange(0, $7);
+    LEFT_BLOCK optional_statement_list RIGHT_BLOCK {
       MiddleCodeGenerator.BackpatchGoto();
-      MiddleCodeGenerator.FunctionEnd($8);
+      MiddleCodeGenerator.FunctionEnd($7);
     }
   | declarator {
       MiddleCodeGenerator.FunctionHeader(null, $1);
@@ -145,15 +143,14 @@ function_definition:
     optional_declaration_list {
       MiddleCodeGenerator.CheckFunctionDefinition();
     }
-    LEFT_BLOCK optional_declaration_list optional_statement_list RIGHT_BLOCK {
-      $7.CodeList.InsertRange(0, $6);
+    LEFT_BLOCK optional_statement_list RIGHT_BLOCK {
       MiddleCodeGenerator.BackpatchGoto();
-      MiddleCodeGenerator.FunctionEnd($7);
+      MiddleCodeGenerator.FunctionEnd($6);
     };
 
 optional_declaration_list:
-    /* Empty */      { $$ = new List<MiddleCode>(); } 
-  | declaration_list { $$ = $1; };
+    /* Empty */
+  | declaration_list;
 
 declaration:
     declaration_specifier_list SEMICOLON {
@@ -225,13 +222,8 @@ optional_name:
   | NAME        { $$ = $1;   };
 
 declaration_list:
-    declaration {
-      $$ = $1;
-    }
-  | declaration_list declaration {
-      $1.AddRange($2);
-      $$ = $1;
-    };
+    declaration
+  | declaration_list declaration;
 
 enum_specifier:
     ENUM optional_name {
@@ -557,11 +549,10 @@ closed_statement:
       SymbolTable.CurrentTable =
         new SymbolTable(SymbolTable.CurrentTable, Scope.Block);
     }
-    optional_declaration_list optional_statement_list RIGHT_BLOCK {
+    optional_statement_list RIGHT_BLOCK {
       SymbolTable.CurrentTable =
         SymbolTable.CurrentTable.ParentTable;
-      $4.CodeList.InsertRange(0, $3);
-      $$ = $4;
+      $$ = $3;
     }
   | GOTO NAME SEMICOLON {
       $$ = MiddleCodeGenerator.GotoStatement($2);
@@ -572,9 +563,9 @@ closed_statement:
   | optional_expression SEMICOLON {
       $$ = MiddleCodeGenerator.ExpressionStatement($1);
     }
-/*  | declaration {
+  | declaration {
       $$ = new Statement($1, null);
-    }*/
+    }
   | JUMP_REGISTER LEFT_PARENTHESIS REGISTER_NAME RIGHT_PARENTHESIS SEMICOLON {
       $$ = MiddleCodeGenerator.JumpRegisterStatement($3);
     }
