@@ -6,8 +6,6 @@ namespace CCompiler {
   public class AssemblyCodeGenerator {
     public IDictionary<Symbol,Track> m_trackMap =
       new Dictionary<Symbol,Track>();
-    private IDictionary<Track, Track> m_moveMap =
-      new Dictionary<Track, Track>();
     public List<AssemblyCode> m_assemblyCodeList;
 
     private int m_floatStackSize = 0;
@@ -87,8 +85,8 @@ namespace CCompiler {
             AddAssemblyCode(AssemblyOperator.label, labelText);
           }
 
-/*          if (SymbolTable.CurrentFunction.Name.Equals("putc") &&
-              (middleIndex == 4)) {
+          /*if (SymbolTable.CurrentFunction.Name.Equals("string_test") &&
+              (middleIndex == 164)) {
             int i = 1;
           }*/
         }
@@ -410,14 +408,8 @@ namespace CCompiler {
                             int position, int index) {
       if (assemblyCode[position] is Track) {
         Track track = (Track) assemblyCode[position];
-
-        while (m_moveMap.ContainsKey(track)) {
-          track = m_moveMap[track];
-        }
-
         trackSet.Add(track);
         track.Index = index;
-        assemblyCode[position] = track;
       }
     }
 
@@ -955,11 +947,39 @@ namespace CCompiler {
       m_trackMap.TryGetValue(assignSymbol, out assignTrack);
       int typeSize = assignSymbol.Type.SizeArray();
 
-/*      if (SymbolTable.CurrentFunction.Name.Equals("compare")) {
+      /*if (SymbolTable.CurrentFunction.Name.Equals("compare")) {
         int i = 1;
       }*/
 
-      if (resultSymbol.IsTemporary()) {        
+      if (resultSymbol.IsTemporary()) {
+        Assert.ErrorXXX(assignTrack == null);
+
+        if (resultTrack == null) {
+          resultTrack = new Track(resultSymbol);
+          m_trackMap.Add(resultSymbol, resultTrack);
+        }
+
+        if (assignSymbol.Value is BigInteger) {
+          AddAssemblyCode(AssemblyOperator.mov, resultTrack,
+                          assignSymbol.Value);
+        }
+        else if (assignSymbol.Type.IsArrayFunctionOrString() ||
+                  (assignSymbol.Value is StaticAddress)) {
+          AddAssemblyCode(AssemblyOperator.mov, resultTrack,
+                          Base(assignSymbol));
+
+          int offset = Offset(assignSymbol);
+          if (offset != 0) {
+            AddAssemblyCode(AssemblyOperator.add, resultTrack,
+                            (BigInteger) offset);
+          }
+        }
+        else {
+          AddAssemblyCode(AssemblyOperator.mov, resultTrack,
+                          Base(assignSymbol), Offset(assignSymbol));
+        }
+      }
+/*      if (resultSymbol.IsTemporary()) {        
         Assert.ErrorXXX(resultSymbol.AddressSymbol == null);
 
         if (assignTrack != null) {
@@ -996,7 +1016,7 @@ namespace CCompiler {
                             Base(assignSymbol), Offset(assignSymbol));
           }
         }
-      }
+      }*/
       else {
         IntegralBinary(MiddleOperator.Assign, resultSymbol,
                        resultSymbol, assignSymbol);

@@ -143,7 +143,7 @@ namespace CCompiler {
       AddMiddleCode(statement.CodeList, MiddleOperator.FunctionEnd,
                     SymbolTable.CurrentFunction);
 
-      if (SymbolTable.CurrentFunction.Name.Equals("compare")) {
+      if (SymbolTable.CurrentFunction.Name.Equals("string_test")) {
         string name = @"C:\Users\Stefan\Documents\vagrant\homestead\code\code\" +
                       SymbolTable.CurrentFunction.Name + ".middlebefore";
         StreamWriter streamWriter = new StreamWriter(name);
@@ -160,7 +160,7 @@ namespace CCompiler {
         new MiddleCodeOptimizer(statement.CodeList);
       middleCodeOptimizer.Optimize();
 
-      if (SymbolTable.CurrentFunction.Name.Equals("compare")) {
+      if (SymbolTable.CurrentFunction.Name.Equals("string_test")) {
         string name = @"C:\Users\Stefan\Documents\vagrant\homestead\code\code\" +
                       SymbolTable.CurrentFunction.Name + ".middleafter";
         StreamWriter streamWriter = new StreamWriter(name);
@@ -1185,14 +1185,27 @@ namespace CCompiler {
         trueExpression = TypeCast.ImplicitCast(trueExpression, maxType);
         Backpatch(testExpression.Symbol.TrueSet, trueExpression.LongList);
 
+        /*if (SymbolTable.CurrentFunction.Name.Equals("string_test")) {
+          int i = 1;
+        }*/
+
         Symbol symbol = new Symbol(maxType);
         if (maxType.IsFloating()) {
           AddMiddleCode(trueExpression.LongList,
                         MiddleOperator.DecreaseStack);
         }
         else {
-          AddMiddleCode(trueExpression.LongList, MiddleOperator.Assign,
-                        symbol, trueExpression.Symbol);
+          if (trueExpression.Symbol.IsTemporary()) {            
+            foreach (MiddleCode middleCode in trueExpression.LongList) {
+              if (middleCode[0] == trueExpression.Symbol) {
+                middleCode[0] = symbol;
+              }
+            }
+          }
+          else {
+            AddMiddleCode(trueExpression.LongList, MiddleOperator.Assign,
+                          symbol, trueExpression.Symbol);
+          }
         }
 
         MiddleCode targetCode = new MiddleCode(MiddleOperator.Empty);
@@ -1205,8 +1218,17 @@ namespace CCompiler {
         Backpatch(testExpression.Symbol.FalseSet, falseExpression.LongList);
         
         if (!maxType.IsFloating()) {
-          AddMiddleCode(falseExpression.LongList, MiddleOperator.Assign,
-                        symbol, falseExpression.Symbol);
+          if (falseExpression.Symbol.IsTemporary()) {
+            foreach (MiddleCode middleCode in falseExpression.LongList) {
+              if (middleCode[0] == falseExpression.Symbol) {
+                middleCode[0] = symbol;
+              }
+            }
+          }
+          else {
+            AddMiddleCode(falseExpression.LongList, MiddleOperator.Assign,
+                          symbol, falseExpression.Symbol);
+          }
         }
 
         List<MiddleCode> shortList = new List<MiddleCode>();
@@ -1230,6 +1252,23 @@ namespace CCompiler {
         return (new Expression(symbol, shortList, longList));
       }
     }
+
+    /*private static void Replace(List<MiddleCode> middleCodeList, 
+                                Symbol fromSymbol, Symbol toSymbol) {
+      foreach (MiddleCode middleCode in middleCodeList) {
+        if (middleCode[0] == fromSymbol) {
+          middleCode[0] = toSymbol;
+        }
+
+        if (middleCode[1] == fromSymbol) {
+          middleCode[1] = toSymbol;
+        }
+
+        if (middleCode[2] == fromSymbol) {
+          middleCode[2] = toSymbol;
+        }
+      }
+    }*/
 
     public static Expression ConstantIntegralExpression(Expression expression) {
       expression = ConstantExpression.ConstantCast(expression, Type.SignedLongIntegerType);
@@ -1475,8 +1514,8 @@ namespace CCompiler {
            rightType = rightExpression.Symbol.Type;
 
       Expression constantExpression =
-        ConstantExpression.Arithmetic(MiddleOperator.BinaryAdd,
-                                      leftExpression, rightExpression);
+        ConstantExpression.Arithmetic(middleOp, leftExpression,
+                                      rightExpression);
       if (constantExpression != null) {
         return constantExpression;
       }
