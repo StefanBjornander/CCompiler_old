@@ -3,11 +3,14 @@ using System.Collections.Generic;
 
 namespace CCompiler {
   public class Track {
+    private static int m_count = 0;
+    private int m_id;
     private Register? m_register = null;
     private bool m_pointer;
     private int m_currentSize, m_maxSize, m_minIndex = -1, m_maxIndex = -1;
 
     public Track(Symbol symbol, Register? register = null) {
+      m_id = m_count++;
       m_register = register;
       Assert.ErrorXXX(symbol != null);
       Assert.ErrorXXX(!symbol.Type.IsStructOrUnion());
@@ -15,6 +18,7 @@ namespace CCompiler {
     }
 
     public Track(Type type) {
+      m_id = m_count++;
       Assert.ErrorXXX(type != null);
       Assert.ErrorXXX(!type.IsStructOrUnion());
       Assert.ErrorXXX(!type.IsArrayFunctionOrString());
@@ -53,6 +57,10 @@ namespace CCompiler {
       Assert.ErrorXXX((track2.m_minIndex != -1) && (track2.m_maxIndex != -1));
       return !(((track1.m_maxIndex < track2.m_minIndex) ||
                 (track2.m_maxIndex < track1.m_minIndex)));
+    }
+
+    public override string ToString() {
+      return m_id.ToString();
     }
   }
 }
