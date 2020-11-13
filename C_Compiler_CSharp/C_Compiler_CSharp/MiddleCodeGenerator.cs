@@ -1405,10 +1405,6 @@ namespace CCompiler {
     public static Expression RelationalExpression(MiddleOperator middleOp,
                                                   Expression leftExpression,
                                                   Expression rightExpression){
-      if (SymbolTable.CurrentFunction.Name.Equals("leapSeconds")) {
-        int i = 1;
-      }
-      
       Assert.Error(!leftExpression.Symbol.Type.IsStructOrUnion(),
                     leftExpression,
                     Message.Invalid_type_in_expression);

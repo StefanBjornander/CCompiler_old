@@ -13,10 +13,6 @@ namespace CCompiler {
       m_operandArray[0] = operand0;
       m_operandArray[1] = operand1;
       m_operandArray[2] = operand2;
-
-      if ((operand1 != null) && operand1.ToString().Contains("2729")) {
-        int i = 1;
-      }
     }
 
     public MiddleOperator Operator {

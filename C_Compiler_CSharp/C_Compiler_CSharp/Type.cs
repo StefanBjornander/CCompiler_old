@@ -309,10 +309,11 @@ namespace CCompiler {
               return m_returnType.Equals(type.m_returnType) &&
                      (((m_typeList == null) && (type.m_typeList == null)) ||
                       ((m_typeList != null) && (type.m_typeList != null) &&
-                       m_typeList.SequenceEqual(type.m_typeList)));
+                     m_typeList.SequenceEqual(type.m_typeList))) &&
+                     (m_ellipse == type.m_ellipse);
 
             default:
-              return (m_sort == type.m_sort);
+              return true;
           }
         }
       }
