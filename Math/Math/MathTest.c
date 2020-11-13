@@ -1,4 +1,5 @@
 #include <math.h>
+#include <time.h>
 #include <stdio.h>
 #include <ErrNo.h>
 #include <String.h>
@@ -117,5 +118,11 @@ void math_test_2(double x, double y) {
 }
 
 void main() {
-  main_math();
+  time_t t = time(NULL);
+  printf("%lu\n", (unsigned long) t);
+  struct tm s;
+  localtime_s(&s, &t);
+  printf("%02i-%02i-%02i %02i:%02i:%02i\n", s.tm_year + 1900, s.tm_mon, s.tm_mday,
+                                            s.tm_hour, s.tm_min, s.tm_sec);
+  //main_math();
 }

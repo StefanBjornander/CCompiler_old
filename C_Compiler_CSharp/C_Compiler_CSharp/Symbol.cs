@@ -56,6 +56,11 @@ namespace CCompiler {
 
     public Symbol(Type type) {
       m_name = Symbol.TemporaryId + "temporary" + (TemporaryNameCount++);
+      
+      if (m_name.Contains("2730")) {
+        int i = 1;
+      }
+
       m_externalLinkage = false;
       m_storage = Storage.Auto;
       m_type = type;

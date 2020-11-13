@@ -143,7 +143,7 @@ namespace CCompiler {
       AddMiddleCode(statement.CodeList, MiddleOperator.FunctionEnd,
                     SymbolTable.CurrentFunction);
 
-      if (SymbolTable.CurrentFunction.Name.Equals("string_test")) {
+      if (SymbolTable.CurrentFunction.Name.Equals("leapSeconds")) {
         string name = @"C:\Users\Stefan\Documents\vagrant\homestead\code\code\" +
                       SymbolTable.CurrentFunction.Name + ".middlebefore";
         StreamWriter streamWriter = new StreamWriter(name);
@@ -160,7 +160,7 @@ namespace CCompiler {
         new MiddleCodeOptimizer(statement.CodeList);
       middleCodeOptimizer.Optimize();
 
-      if (SymbolTable.CurrentFunction.Name.Equals("string_test")) {
+      if (SymbolTable.CurrentFunction.Name.Equals("leapSeconds")) {
         string name = @"C:\Users\Stefan\Documents\vagrant\homestead\code\code\" +
                       SymbolTable.CurrentFunction.Name + ".middleafter";
         StreamWriter streamWriter = new StreamWriter(name);
@@ -1405,6 +1405,10 @@ namespace CCompiler {
     public static Expression RelationalExpression(MiddleOperator middleOp,
                                                   Expression leftExpression,
                                                   Expression rightExpression){
+      if (SymbolTable.CurrentFunction.Name.Equals("leapSeconds")) {
+        int i = 1;
+      }
+      
       Assert.Error(!leftExpression.Symbol.Type.IsStructOrUnion(),
                     leftExpression,
                     Message.Invalid_type_in_expression);
