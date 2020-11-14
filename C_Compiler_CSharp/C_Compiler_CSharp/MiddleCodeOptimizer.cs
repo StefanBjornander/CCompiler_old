@@ -321,7 +321,7 @@ namespace CCompiler {
 
         if ((/*thisCode.IsUnary() ||*/ thisCode.IsBinary()) &&
             (nextCode.Operator == MiddleOperator.Assign) &&
-            //((Symbol) thisCode[0]).Temporary &&
+            ((Symbol) thisCode[0]).IsTemporary() &&
             (thisCode[0] == nextCode[1])) {
           thisCode[0] = nextCode[0];
           nextCode.Clear();
