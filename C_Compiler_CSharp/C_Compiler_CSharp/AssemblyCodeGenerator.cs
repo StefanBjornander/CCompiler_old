@@ -85,8 +85,8 @@ namespace CCompiler {
             AddAssemblyCode(AssemblyOperator.label, labelText);
           }
 
-          /*if (SymbolTable.CurrentFunction.Name.Equals("string_test") &&
-              (middleIndex == 164)) {
+          /*if (SymbolTable.CurrentFunction.Name.Equals("strftime") &&
+              (middleIndex == 351)) {
             int i = 1;
           }*/
         }
@@ -472,7 +472,9 @@ namespace CCompiler {
       m_trackMap = new Dictionary<Symbol, Track>();
     }
 
-    private bool m_returnFloating = false;
+    private Type m_returnType = null;
+    private Track m_returnTrack = null;
+    //private bool m_returnFloating = false;
 
     public void FunctionCall(MiddleCode middleCode, int index) {
       int recordSize = ((int) middleCode[1]) +
@@ -528,13 +530,15 @@ namespace CCompiler {
 
       if (calleeSymbol.Type.IsFunction()) {
         AddAssemblyCode(AssemblyOperator.call, calleeSymbol.UniqueName);
-        m_returnFloating = calleeSymbol.Type.ReturnType.IsFloating();
+        m_returnType = calleeSymbol.Type.ReturnType;
+        //m_returnFloating = calleeSymbol.Type.ReturnType.IsFloating();
       }
       else {
         AddAssemblyCode(AssemblyOperator.jmp, jumpTrack);
-        m_returnFloating =
-          calleeSymbol.Type.PointerType.ReturnType.IsFloating();
-      }            
+        m_returnType = calleeSymbol.Type.ReturnType;
+        //m_returnFloating =
+          //calleeSymbol.Type.PointerType.ReturnType.IsFloating();
+      }
     }
   
     public void FunctionPostCall(MiddleCode middleCode) {
@@ -544,6 +548,13 @@ namespace CCompiler {
 
       foreach (KeyValuePair<Track,int> pair in postMap) {
         Track track = pair.Key;
+
+        if (AssemblyCode.RegisterOverlap(track.Register, AssemblyCode.ReturnValueRegister)) {
+          m_returnTrack = new Track(m_returnType);
+          Register returnRegister = AssemblyCode.RegisterToSize(AssemblyCode.ReturnValueRegister, m_returnType.SizeArray());
+          AddAssemblyCode(AssemblyOperator.mov, m_returnTrack, returnRegister);
+        }
+
         int offset = pair.Value;
         AddAssemblyCode(AssemblyOperator.mov, track, baseRegister,offset);
       }
@@ -556,7 +567,7 @@ namespace CCompiler {
         int doubleTypeSize = Type.DoubleType.Size();
         int recordSize = m_recordSizeStack.Pop();
 
-        if (m_returnFloating) {
+        if (m_returnType.IsFloating()) {
           AddAssemblyCode(AssemblyOperator.fstp_qword, baseRegister,
                           recordOffset + recordSize);
         }
@@ -568,7 +579,7 @@ namespace CCompiler {
                           currentOffset);
         }
 
-        if (m_returnFloating) {
+        if (m_returnType.IsFloating()) {
           AddAssemblyCode(AssemblyOperator.fld_qword, baseRegister,
                           recordOffset + recordSize);
         }
@@ -747,14 +758,22 @@ namespace CCompiler {
     }
 
     public void IntegralGetReturnValue(MiddleCode middleCode) {
-      Symbol returnSymbol = (Symbol)middleCode[0];
-      Register returnRegister =
-        AssemblyCode.RegisterToSize(AssemblyCode.ReturnValueRegister,
-                                    returnSymbol.Type.Size());
-      CheckRegister(returnSymbol, returnRegister);
-      Track returnTrack = new Track(returnSymbol, returnRegister);
-      m_trackMap.Add(returnSymbol, returnTrack);
-      AddAssemblyCode(AssemblyOperator.empty, returnTrack);
+      Symbol returnSymbol = (Symbol) middleCode[0];
+
+      if (m_returnTrack != null) {
+        m_trackMap.Add(returnSymbol, m_returnTrack);
+        AddAssemblyCode(AssemblyOperator.empty, m_returnTrack);
+        m_returnTrack = null;
+      }
+      else {
+        Register returnRegister =
+          AssemblyCode.RegisterToSize(AssemblyCode.ReturnValueRegister,
+                                      returnSymbol.Type.Size());
+        CheckRegister(returnSymbol, returnRegister);
+        Track returnTrack = new Track(returnSymbol, returnRegister);
+        m_trackMap.Add(returnSymbol, returnTrack);
+        AddAssemblyCode(AssemblyOperator.empty, returnTrack);
+      }
     }
 
     public void IntegralSetReturnValue(MiddleCode middleCode) {
