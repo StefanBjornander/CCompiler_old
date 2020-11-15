@@ -48,9 +48,10 @@
     <Compile Include="AssemblyCode.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="AssemblyCodeGenerator.cs">
+    <Compile Include="AssemblyCodeGeneratorOld.cs">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="AssemblyCodeGenerator.cs" />
     <Compile Include="IfElseChain.cs" />
     <Compile Include="MiddleCode.cs" />
     <Compile Include="Preprocessor.cs" />

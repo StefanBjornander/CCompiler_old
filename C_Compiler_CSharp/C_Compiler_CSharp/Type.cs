@@ -195,28 +195,47 @@ namespace CCompiler {
         case Sort.Array:
           return m_arraySize * m_arrayType.Size();
 
-        case Sort.Struct: {
-            int size = 0;
+        case Sort.Struct:
+            if (m_memberMap != null) {
+              int size = 0;
 
-            foreach (Symbol symbol in m_memberMap.Values) {
-              size += symbol.Type.Size();
-            }
-        
-            return size;
-          }
+              foreach (Symbol symbol in m_memberMap.Values) {
+                size += symbol.Type.Size();
+              }
 
-        case Sort.Union: {
-            int size = 0;
-
-            foreach (Symbol symbol in m_memberMap.Values) {
-              size = Math.Max(size, symbol.Type.Size());
+              return size;
+            }        
+            else {
+              return 0;
             }
 
-            return size;
-          }
+        case Sort.Union:
+            if (m_memberMap == null) {
+              int size = 0;
+
+              foreach (Symbol symbol in m_memberMap.Values) {
+                size = Math.Max(size, symbol.Type.Size());
+              }
+
+              return size;
+            }
+            else {
+              return 0;
+            }
 
         case Sort.Logical:
             return TypeSize.SignedIntegerSize;
+
+        default:
+          return TypeSize.Size(m_sort);
+      }
+    }
+
+    public int ReturnSize() {
+      switch (m_sort) {
+        case Sort.Struct:
+        case Sort.Union:
+          return TypeSize.PointerSize;
 
         default:
           return TypeSize.Size(m_sort);

@@ -8,6 +8,12 @@ namespace CCompiler {
   public class MiddleCodeGenerator {
     public static MiddleCode AddMiddleCode(List<MiddleCode> codeList, MiddleOperator op, object operand0 = null,
                                     object operand1 = null, object operand2 = null) {
+        if (SymbolTable.CurrentFunction.Name.Equals("strftime") &&
+            (codeList.Count == 401))
+        {
+            int i = 1;
+            }
+
       MiddleCode middleCode = new MiddleCode(op, operand0, operand1, operand2);
       codeList.Add(middleCode);
       return middleCode;
@@ -143,7 +149,7 @@ namespace CCompiler {
       AddMiddleCode(statement.CodeList, MiddleOperator.FunctionEnd,
                     SymbolTable.CurrentFunction);
 
-      if (SymbolTable.CurrentFunction.Name.Equals("printFormat")) {
+      if (SymbolTable.CurrentFunction.Name.Equals("strftime")) {
         string name = @"C:\Users\Stefan\Documents\vagrant\homestead\code\code\" +
                       SymbolTable.CurrentFunction.Name + ".middlebefore";
         StreamWriter streamWriter = new StreamWriter(name);
@@ -160,7 +166,7 @@ namespace CCompiler {
         new MiddleCodeOptimizer(statement.CodeList);
       middleCodeOptimizer.Optimize();
 
-      if (SymbolTable.CurrentFunction.Name.Equals("printFormat")) {
+      if (SymbolTable.CurrentFunction.Name.Equals("strftime")) {
         string name = @"C:\Users\Stefan\Documents\vagrant\homestead\code\code\" +
                       SymbolTable.CurrentFunction.Name + ".middleafter";
         StreamWriter streamWriter = new StreamWriter(name);
@@ -642,7 +648,7 @@ namespace CCompiler {
                                         Statement innerStatement) {
       expression = TypeCast.ToLogical(expression);
       List<MiddleCode> codeList = expression.LongList;
-      AddMiddleCode(codeList, MiddleOperator.CheckTrackMapFloatStack);
+//      AddMiddleCode(codeList, MiddleOperator.CheckTrackMapFloatStack);
 
       Backpatch(expression.Symbol.TrueSet, innerStatement.CodeList);    
       codeList.AddRange(innerStatement.CodeList);
@@ -661,7 +667,7 @@ namespace CCompiler {
                                             Statement falseStatement) {
       expression = TypeCast.ToLogical(expression);
       List<MiddleCode> codeList = expression.LongList;
-      AddMiddleCode(codeList, MiddleOperator.CheckTrackMapFloatStack);
+      //AddMiddleCode(codeList, MiddleOperator.CheckTrackMapFloatStack);
 
       Backpatch(expression.Symbol.TrueSet, trueStatement.CodeList);
       Backpatch(expression.Symbol.FalseSet, falseStatement.CodeList);
@@ -780,7 +786,7 @@ namespace CCompiler {
                                            Statement statement) {
       expression = TypeCast.ToLogical(expression);
       List<MiddleCode> codeList = expression.LongList;
-      AddMiddleCode(codeList, MiddleOperator.CheckTrackMapFloatStack);
+      //AddMiddleCode(codeList, MiddleOperator.CheckTrackMapFloatStack);
 
       Backpatch(expression.Symbol.TrueSet, statement.CodeList);
       codeList.AddRange(statement.CodeList);
@@ -800,7 +806,7 @@ namespace CCompiler {
                                         Expression expression) {
       List<MiddleCode> codeList = innerStatement.CodeList;
       Backpatch(innerStatement.NextSet, codeList);
-      AddMiddleCode(codeList, MiddleOperator.CheckTrackMapFloatStack);
+      //AddMiddleCode(codeList, MiddleOperator.CheckTrackMapFloatStack);
       codeList.AddRange(expression.LongList);
 
       Backpatch(expression.Symbol.TrueSet, codeList);
@@ -827,7 +833,7 @@ namespace CCompiler {
       if (testExpression != null) {
         testExpression = TypeCast.ToLogical(testExpression);
         codeList.AddRange(testExpression.LongList);
-        AddMiddleCode(codeList, MiddleOperator.CheckTrackMapFloatStack);
+        //AddMiddleCode(codeList, MiddleOperator.CheckTrackMapFloatStack);
         Backpatch(testExpression.Symbol.TrueSet, innerStatement.CodeList);
         nextSet.UnionWith(testExpression.Symbol.FalseSet);
       }

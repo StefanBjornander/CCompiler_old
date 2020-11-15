@@ -1,3 +1,4 @@
+using System.IO;
 using System.Numerics;
 using System.Collections.Generic;
 
@@ -12,6 +13,19 @@ namespace CCompiler {
 
     public void Optimize() {
       ObjectToIntegerAddresses();
+
+      if (SymbolTable.CurrentFunction.Name.Equals("strftime")) {
+        string name = @"C:\Users\Stefan\Documents\vagrant\homestead\code\code\" +
+                      SymbolTable.CurrentFunction.Name + ".middlenumber";
+        StreamWriter streamWriter = new StreamWriter(name);
+
+        for (int index = 0; index < m_middleCodeList.Count; ++index) {
+          MiddleCode middleCode = m_middleCodeList[index];
+          streamWriter.WriteLine(index + ": " + middleCode.ToString());
+        }
+
+        streamWriter.Close();
+      }
 
       do {
         m_update = false;
@@ -113,6 +127,10 @@ namespace CCompiler {
         MiddleCode thisCode = m_middleCodeList[index],
                    nextCode = m_middleCodeList[index + 1];
 
+        if (SymbolTable.CurrentFunction.Name.Equals("strftime") &&
+            (index == 397)) {
+            int i = 1;
+            }
         if ((thisCode.IsRelation() || thisCode.IsCarry()) &&
             nextCode.IsGoto()) {
           int target1 = (int) thisCode[0],

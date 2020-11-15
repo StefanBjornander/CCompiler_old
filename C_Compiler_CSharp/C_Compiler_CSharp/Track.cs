@@ -13,21 +13,25 @@ namespace CCompiler {
       m_id = m_count++;
       m_register = register;
       Assert.ErrorXXX(symbol != null);
-      Assert.ErrorXXX(!symbol.Type.IsStructOrUnion());
-      m_currentSize = m_maxSize = symbol.Type.SizeArray();
+      //Assert.ErrorXXX(!symbol.Type.IsStructOrUnion());
+      m_currentSize = m_maxSize = symbol.Type.ReturnSize();
     }
 
     public Track(Type type) {
       m_id = m_count++;
       Assert.ErrorXXX(type != null);
-      Assert.ErrorXXX(!type.IsStructOrUnion());
+      //Assert.ErrorXXX(!type.IsStructOrUnion());
       Assert.ErrorXXX(!type.IsArrayFunctionOrString());
-      m_currentSize = m_maxSize = type.Size();
+      m_currentSize = m_maxSize = type.ReturnSize();
     }
 
     public int CurrentSize {
       get { return m_currentSize; }
-      set { m_currentSize = value; }
+      set { m_currentSize = value;
+            if (value == 16) {
+              int i = 1;
+            }
+          }
     }
 
     public int MaxSize {
