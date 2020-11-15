@@ -85,10 +85,10 @@ namespace CCompiler {
             AddAssemblyCode(AssemblyOperator.label, labelText);
           }
 
-          /*if (SymbolTable.CurrentFunction.Name.Equals("strftime") &&
-              (middleIndex == 351)) {
+          if (SymbolTable.CurrentFunction.Name.Equals("printFormat") &&
+              (middleIndex == 100)) {
             int i = 1;
-          }*/
+          }
         }
 
         AddAssemblyCode(AssemblyOperator.comment, middleCode.ToString());
