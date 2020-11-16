@@ -3,6 +3,23 @@ using System.Collections.Generic;
 
 namespace CCompiler {
   class GenerateAutoInitializer {
+    public static int Extra;
+
+
+    private static void UpdateExtra(List<MiddleCode> codeList) {
+      foreach (MiddleCode middleCode in codeList) {
+        switch (middleCode.Operator) {
+          case MiddleOperator.PreCall:
+          case MiddleOperator.ParameterInitSize:
+          case MiddleOperator.Parameter:
+          case MiddleOperator.Call:
+          case MiddleOperator.PostCall:
+            middleCode[0] = ((int)middleCode[0]) + Extra;
+            break;
+        }
+      }
+    }
+
     public static List<MiddleCode> GenerateAuto(Symbol toSymbol,
                                                 object fromInitializer) {
       Assert.ErrorXXX((fromInitializer is Expression) ||
@@ -28,7 +45,8 @@ namespace CCompiler {
         }
         else {
           fromExpression = TypeCast.ImplicitCast(fromExpression, toType);
-          codeList.AddRange(fromExpression.LongList);      
+          UpdateExtra(fromExpression.LongList);
+          codeList.AddRange(fromExpression.LongList);
       
           if (toSymbol.Type.IsFloating()) {
             codeList.Add(new MiddleCode(MiddleOperator.PopFloat, toSymbol));
@@ -42,6 +60,8 @@ namespace CCompiler {
             codeList.Add(new MiddleCode(MiddleOperator.Assign, toSymbol,
                                         fromExpression.Symbol));
           }
+
+          Extra += toType.Size();
         }
       }
       else {
@@ -49,6 +69,10 @@ namespace CCompiler {
                      toType, Message.
             Only_array_struct_or_union_can_be_initialized_by_a_list);
         List<object> fromList = (List<object>) fromInitializer;
+
+        if (SymbolTable.CurrentFunction.Name.Equals("gmtime")) {
+          int i = 1;
+        }
 
         switch (toType.Sort) {
           case Sort.Array: {
@@ -65,7 +89,7 @@ namespace CCompiler {
               for (int index = 0; index < fromList.Count; ++index) {
                 Symbol indexSymbol = new Symbol(toType.ArrayType);
                 indexSymbol.Offset = toSymbol.Offset +
-                                   (index * toType.ArrayType.Size());
+                                    (index * toType.ArrayType.Size());
                 indexSymbol.Name = toSymbol.Name + "[" + index + "]";
                 codeList.AddRange(GenerateAuto(indexSymbol, fromList[index]));
               }
@@ -80,6 +104,7 @@ namespace CCompiler {
                            toType, Message.Too_many_initializers);
 
               IEnumerator<Symbol> enumerator = memberList.GetEnumerator();
+
               foreach (object fromInitializor in fromList) {
                 enumerator.MoveNext();
                 Symbol memberSymbol = enumerator.Current;

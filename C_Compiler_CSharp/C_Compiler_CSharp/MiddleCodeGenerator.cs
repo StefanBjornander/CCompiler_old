@@ -149,7 +149,7 @@ namespace CCompiler {
       AddMiddleCode(statement.CodeList, MiddleOperator.FunctionEnd,
                     SymbolTable.CurrentFunction);
 
-      if (SymbolTable.CurrentFunction.Name.Equals("strftime")) {
+      if (SymbolTable.CurrentFunction.Name.Equals("gmtime")) {
         string name = @"C:\Users\Stefan\Documents\vagrant\homestead\code\code\" +
                       SymbolTable.CurrentFunction.Name + ".middlebefore";
         StreamWriter streamWriter = new StreamWriter(name);
@@ -166,7 +166,7 @@ namespace CCompiler {
         new MiddleCodeOptimizer(statement.CodeList);
       middleCodeOptimizer.Optimize();
 
-      if (SymbolTable.CurrentFunction.Name.Equals("strftime")) {
+      if (SymbolTable.CurrentFunction.Name.Equals("gmtime")) {
         string name = @"C:\Users\Stefan\Documents\vagrant\homestead\code\code\" +
                       SymbolTable.CurrentFunction.Name + ".middleafter";
         StreamWriter streamWriter = new StreamWriter(name);
@@ -466,6 +466,7 @@ namespace CCompiler {
         Symbol symbol =
           new Symbol(name, specifier.ExternalLinkage, storage, type);
         symbol.Offset = SymbolTable.CurrentTable.CurrentOffset;
+        GenerateAutoInitializer.Extra = 0;
         List<MiddleCode> codeList =
           GenerateAutoInitializer.GenerateAuto(symbol, initializer);
         SymbolTable.CurrentTable.AddSymbol(symbol);
@@ -2234,8 +2235,8 @@ namespace CCompiler {
       TypeListStack.Push(functionType.TypeList);
       ParameterOffsetStack.Push(0);
 
-      AddMiddleCode(expression.ShortList, MiddleOperator.PreCall,
-                    SymbolTable.CurrentTable.CurrentOffset);
+/*      AddMiddleCode(expression.ShortList, MiddleOperator.PreCall,
+                    SymbolTable.CurrentTable.CurrentOffset);*/
       AddMiddleCode(expression.LongList, MiddleOperator.PreCall,
                     SymbolTable.CurrentTable.CurrentOffset);
     }
@@ -2283,22 +2284,22 @@ namespace CCompiler {
         }
 
         if (type.IsStructOrUnion()) {
-          AddMiddleCode(longList, MiddleOperator.ParameterInitSize, type,
-                        argumentExpression.Symbol, SymbolTable.CurrentTable.
-                        CurrentOffset + totalOffset + offset);
+          AddMiddleCode(longList, MiddleOperator.ParameterInitSize,
+                        SymbolTable.CurrentTable.CurrentOffset + totalOffset +
+                        offset, type, argumentExpression.Symbol);
         }
 
-        AddMiddleCode(longList, MiddleOperator.Parameter, type,
-                      argumentExpression.Symbol, SymbolTable.CurrentTable.
-                      CurrentOffset + totalOffset + offset);
+        AddMiddleCode(longList, MiddleOperator.Parameter,
+                      SymbolTable.CurrentTable. CurrentOffset + totalOffset +
+                      offset, type, argumentExpression.Symbol);
         offset += type.Size();
       }
 
       Symbol functionSymbol = functionExpression.Symbol;
-      AddMiddleCode(longList, MiddleOperator.Call, functionSymbol,
+      AddMiddleCode(longList, MiddleOperator.Call,
                     SymbolTable.CurrentTable.CurrentOffset + totalOffset,
-                    extra);
-      AddMiddleCode(longList, MiddleOperator.PostCall, null, null,
+                    functionSymbol, extra);
+      AddMiddleCode(longList, MiddleOperator.PostCall,
                     SymbolTable.CurrentTable.CurrentOffset + totalOffset);
     
       Type returnType = functionType.ReturnType;

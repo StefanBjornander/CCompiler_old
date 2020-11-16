@@ -315,7 +315,7 @@ namespace CCompiler {
             break;
 
           case MiddleOperator.Parameter: {
-              Symbol paramSymbol = (Symbol) middleCode[1];
+              Symbol paramSymbol = (Symbol)middleCode[2];
 
               if (paramSymbol.Type.IsFloating()) {
                 FloatingParameter(middleCode);
@@ -481,9 +481,8 @@ namespace CCompiler {
     //private bool m_returnFloating = false;
 
     public void FunctionCall(MiddleCode middleCode, int index) {
-      int recordSize = ((int) middleCode[1]) +
-                       m_totalExtraSize;
-      Symbol calleeSymbol = (Symbol) middleCode[0];
+      int recordSize = ((int)middleCode[0]) + m_totalExtraSize; 
+      Symbol calleeSymbol = (Symbol)middleCode[1];
       int extraSize = (int) middleCode[2];
 
       Type calleeType = calleeSymbol.Type.IsFunction()
@@ -600,7 +599,7 @@ namespace CCompiler {
       int topSize = m_topStack.Pop();
 
       if (topSize > 0) {
-        int recordOffset = (int) middleCode[2];
+        int recordOffset = (int)middleCode[0]; 
         int doubleTypeSize = Type.DoubleType.Size();
         int recordSize = m_recordSizeStack.Pop();
 
@@ -991,10 +990,10 @@ namespace CCompiler {
     }
 
     public void IntegralParameter(MiddleCode middleCode) {
-      Type toType = (Type) middleCode[0];
+      Type toType = (Type) middleCode[1];
       Symbol toSymbol = new Symbol(null, false, Storage.Auto, toType);
-      Symbol fromSymbol = (Symbol) middleCode[1];
-      int parameterOffset = (int) middleCode[2];
+      Symbol fromSymbol = (Symbol) middleCode[2];
+      int parameterOffset = (int) middleCode[0];
       toSymbol.Offset = m_totalExtraSize + parameterOffset;
       IntegralAssign(toSymbol, fromSymbol);
     }
@@ -1472,9 +1471,9 @@ namespace CCompiler {
     }
 
     public void FloatingParameter(MiddleCode middleCode) {
-      Type paramType = (Type) middleCode[0];
+      Type paramType = (Type) middleCode[1];
       Symbol paramSymbol = new Symbol(paramType);
-      int paramOffset = (int) middleCode[2];
+      int paramOffset = (int) middleCode[0];
       paramSymbol.Offset = m_totalExtraSize + paramOffset;
       TopPopSymbol(paramSymbol, TopOrPop.Pop);
     }
@@ -1675,9 +1674,9 @@ namespace CCompiler {
     }
 
     public void StructUnionParameterInit(MiddleCode middleCode) {
-      Symbol sourceSymbol = (Symbol)middleCode[1];
+      int paramOffset = (int) middleCode[0];
+      Symbol sourceSymbol = (Symbol) middleCode[2];
       Symbol targetSymbol = new Symbol(Type.IntegerPointerType);
-      int paramOffset = (int)middleCode[2];
       targetSymbol.Offset = m_totalExtraSize + paramOffset;
       MemoryCopyInit(targetSymbol, sourceSymbol);
     }

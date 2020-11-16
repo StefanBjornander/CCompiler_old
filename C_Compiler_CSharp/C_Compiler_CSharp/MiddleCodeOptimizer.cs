@@ -815,11 +815,17 @@ namespace CCompiler {
           case MiddleOperator.BinarySubtract:
           case MiddleOperator.SignedMultiply:
           case MiddleOperator.SignedDivide:
-          case MiddleOperator.Parameter:
             if (symbol1.Type.IsFloating()) {
               --stackSize;
             }
             break;
+
+          case MiddleOperator.Parameter:
+            if (symbol2.Type.IsFloating()) {
+              --stackSize;
+            }
+            break;
+
         }
       }
     }

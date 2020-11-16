@@ -66,6 +66,7 @@ namespace CCompiler {
 
     public int CurrentOffset {
       get { return m_currentOffset; }
+      set { m_currentOffset = value; }
     }
 
     public void AddSymbol(Symbol newSymbol) {
