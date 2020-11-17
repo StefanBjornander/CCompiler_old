@@ -614,7 +614,7 @@ assignment_operator:
   | DIVIDE_ASSIGN      { $$ = MiddleOperator.SignedDivide;   }
   | MODULO_ASSIGN      { $$ = MiddleOperator.SignedModulo;   }
   | AND_ASSIGN         { $$ = MiddleOperator.BitwiseAnd;     }
-  | OR_ASSIGN         { $$ = MiddleOperator.BitwiseOr;     }
+  | OR_ASSIGN          { $$ = MiddleOperator.BitwiseOr;      }
   | XOR_ASSIGN         { $$ = MiddleOperator.BitwiseXOr;     }
   | LEFT_SHIFT_ASSIGN  { $$ = MiddleOperator.ShiftLeft;      }
   | RIGHT_SHIFT_ASSIGN { $$ = MiddleOperator.ShiftRight;     };

@@ -66,7 +66,13 @@ namespace CCompiler {
 
     public int CurrentOffset {
       get { return m_currentOffset; }
-      set { m_currentOffset = value; }
+      set { m_currentOffset = value;
+            if (SymbolTable.CurrentFunction != null) {
+              if (SymbolTable.CurrentFunction.Name.Contains("time_test")) {
+                Console.Out.WriteLine("Y: " + m_currentOffset);
+              }
+            }
+          }
     }
 
     public void AddSymbol(Symbol newSymbol) {
@@ -103,6 +109,12 @@ namespace CCompiler {
           else if (!newSymbol.Type.EnumeratorItem) {
             newSymbol.Offset = m_currentOffset;
             m_currentOffset += newSymbol.Type.Size();
+
+            if (SymbolTable.CurrentFunction != null) {
+              if (SymbolTable.CurrentFunction.Name.Contains("time_test")) {
+                Console.Out.WriteLine("X: " + m_currentOffset);
+              }
+            }
           }
         }
       }
@@ -111,6 +123,12 @@ namespace CCompiler {
     public void SetOffset(Symbol symbol) {
       symbol.Offset = m_currentOffset;
       m_currentOffset += symbol.Type.Size();
+
+            if (SymbolTable.CurrentFunction != null) {
+              if (SymbolTable.CurrentFunction.Name.Contains("time_test")) {
+                Console.Out.WriteLine("Z: " + m_currentOffset);
+              }
+            }
     }
 
     public Symbol LookupSymbol(string name) {

@@ -811,6 +811,11 @@ namespace CCompiler {
     }
 
     public List<byte> ByteList() {
+      if ((SymbolTable.CurrentFunction != null) &&
+          SymbolTable.CurrentFunction.Name.Equals("sprintf")) {
+        int i = 1;
+      }
+
       object operand0 = m_operandArray[0],
              operand1 = m_operandArray[1],
              operand2 = m_operandArray[2];
@@ -978,9 +983,19 @@ namespace CCompiler {
                (operand2 == null)) {
         Register register = (Register) operand0;
         BigInteger value = (BigInteger) operand1;
-        int size = ((Operator == AssemblyOperator.mov) ||
-                    (Operator == AssemblyOperator.and))
-                   ? SizeOfRegister(register) : SizeOfValue(value);
+        int size;
+
+        if ((Operator == AssemblyOperator.add) &&
+            (register == Register.eax) &&
+            (SizeOfValue(value) == 2)) {
+          size = 4; // CCompiler.Type.LongSize;
+        }
+        else {
+          size = ((Operator == AssemblyOperator.mov) ||
+                  (Operator == AssemblyOperator.and))
+                  ? SizeOfRegister(register) : SizeOfValue(value);
+        }
+
         List<byte> byteList = LookupByteArray(Operator, register, size);
         LoadByteList(byteList, byteList.Count - size, size, value);
         return byteList;
@@ -1105,7 +1120,19 @@ namespace CCompiler {
         BigInteger value = (BigInteger) operand2;
         int offsetSize = (operand0 is Register) ? SizeOfValue(offset)
                                                 : TypeSize.PointerSize,
-            valueSize = SizeOfValue(value, Operator);
+            valueSize;
+        
+        if ((Operator == AssemblyOperator.add_dword) &&
+            (operand0 is Register) &&
+            (operand1 is int) &&
+            (operand2 is BigInteger) &&
+            (SizeOfValue(value, Operator)) == 2) {
+          valueSize = 4; // CCompiler.Type.LongSize;
+        }
+        else {
+          valueSize = SizeOfValue(value, Operator);
+        }
+
         List<byte> byteList =
           LookupByteArray(Operator, operand0, offsetSize, valueSize);
         LoadByteList(byteList, byteList.Count - (offsetSize + valueSize),

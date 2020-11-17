@@ -14,10 +14,13 @@ namespace CCompiler {
       m_operandArray[1] = operand1;
       m_operandArray[2] = operand2;
 
-      string s = ToString();
-      if ((s != null) && s.Contains("smax")) {
-        int i = 1;
-      }
+          if ((SymbolTable.CurrentFunction != null) &&
+              SymbolTable.CurrentFunction.Name.Equals("time_test")) {
+            string s = ToString();
+            if ((s != null) && s.Contains("Call") && s.Contains("asctime")) {
+             int i = 1;
+            }
+          }
     }
 
     public MiddleOperator Operator {

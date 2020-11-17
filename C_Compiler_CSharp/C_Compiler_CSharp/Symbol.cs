@@ -39,19 +39,25 @@ namespace CCompiler {
                        Symbol.SeparatorId + m_name;
       }
 
-      m_type = type;
       m_parameter = parameter;
-      m_value = value;
-      CheckValue(m_type, m_value);
+      m_value = CheckValue(m_type = type, value);
     }
 
-    private static void CheckValue(Type type, object value) {
+    private static object CheckValue(Type type, object value) {
       if (value is BigInteger) {
         BigInteger bigValue = (BigInteger) value;
+
+        if (type.IsUnsigned() && (bigValue < 0)) {
+          bigValue += TypeSize.GetMaxValue(type.Sort) + 1;
+        }
+
         Assert.Error((bigValue >= TypeSize.GetMinValue(type.Sort)) &&
                      (bigValue <= TypeSize.GetMaxValue(type.Sort)),
                      type + ": " + value, Message.Value_overflow);
+        return bigValue;
       }
+
+      return value;
     }
 
     public Symbol(Type type) {
@@ -75,11 +81,14 @@ namespace CCompiler {
     public Symbol(Type type, object value) {
       Assert.ErrorXXX(!(value is bool));
       m_uniqueName = ValueName(type, value);
+
+      if (m_uniqueName.Contains("Array_2#")) {
+        int i = 1;
+      }
+
       m_storage = Storage.Static;
-      m_type = type;
-      m_value = value;
       m_parameter = false;
-      CheckValue(m_type, m_value);
+      m_value = CheckValue(m_type = type, value);
     }
 
     public static string ValueName(CCompiler.Type type, object value) {

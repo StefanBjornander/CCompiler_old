@@ -134,6 +134,49 @@ namespace CCompiler {
         }
       }
     }
+
+/*    public override int GetHashCode() {
+      return m_uniqueName.GetHashCode();
+    }
+
+    public override bool Equals(object obj) {
+      if (obj is StaticSymbolWindows) {
+         StaticSymbolWindows s = (StaticSymbolWindows) obj;
+         if ((m_accessMap.Count == 0) && (s.m_accessMap.Count == 0) &&
+             (m_callMap.Count == 0) && (s.m_callMap.Count == 0) &&
+             (m_returnSet.Count == 0) && (s.m_returnSet.Count == 0) &&
+             (m_byteList.Count == s.m_byteList.Count)) {
+          for (int index = 0; index < m_byteList.Count; ++index) {
+            if (m_byteList[index] != s.m_byteList[index]) {
+              return false;
+            }
+          }
+
+          return true;
+        }
+      }
+    }*/
+
+    /*public override bool Equals(object obj) {
+      if (obj is StaticSymbolWindows) {
+         StaticSymbolWindows s = (StaticSymbolWindows) obj;
+
+         if ((m_accessMap.Count == 0) && (s.m_accessMap.Count == 0) &&
+             (m_callMap.Count == 0) && (s.m_callMap.Count == 0) &&
+             (m_returnSet.Count == 0) && (s.m_returnSet.Count == 0) &&
+             (m_byteList.Count == s.m_byteList.Count)) {
+          for (int index = 0; index < m_byteList.Count; ++index) {
+            if (m_byteList[index] != s.m_byteList[index]) {
+              return false;
+            }
+          }
+
+          return true;
+        }
+      }
+
+      return false;
+    }*/
   }
 }
 

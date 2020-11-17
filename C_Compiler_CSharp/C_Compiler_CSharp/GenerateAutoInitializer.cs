@@ -5,7 +5,6 @@ namespace CCompiler {
   class GenerateAutoInitializer {
     public static int Extra;
 
-
     private static void UpdateExtra(List<MiddleCode> codeList) {
       foreach (MiddleCode middleCode in codeList) {
         switch (middleCode.Operator) {

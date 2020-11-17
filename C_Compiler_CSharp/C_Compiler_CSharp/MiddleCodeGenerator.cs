@@ -149,7 +149,8 @@ namespace CCompiler {
       AddMiddleCode(statement.CodeList, MiddleOperator.FunctionEnd,
                     SymbolTable.CurrentFunction);
 
-      if (SymbolTable.CurrentFunction.Name.Equals("gmtime")) {
+      if (SymbolTable.CurrentFunction.Name.Equals("printArgument"))
+      {
         string name = @"C:\Users\Stefan\Documents\vagrant\homestead\code\code\" +
                       SymbolTable.CurrentFunction.Name + ".middlebefore";
         StreamWriter streamWriter = new StreamWriter(name);
@@ -166,7 +167,7 @@ namespace CCompiler {
         new MiddleCodeOptimizer(statement.CodeList);
       middleCodeOptimizer.Optimize();
 
-      if (SymbolTable.CurrentFunction.Name.Equals("gmtime")) {
+      if (SymbolTable.CurrentFunction.Name.Equals("printArgument")) {
         string name = @"C:\Users\Stefan\Documents\vagrant\homestead\code\code\" +
                       SymbolTable.CurrentFunction.Name + ".middleafter";
         StreamWriter streamWriter = new StreamWriter(name);
@@ -1039,6 +1040,9 @@ namespace CCompiler {
                      leftExpression.Symbol.Name, Message.Not_assignable);
       }*/
 
+      rightExpression =
+        TypeCast.ImplicitCast(rightExpression, leftExpression.Symbol.Type);
+
       switch (middleOp) {
         case MiddleOperator.Assign:
           return Assignment(leftExpression, rightExpression, true);
@@ -1614,20 +1618,22 @@ namespace CCompiler {
         longList.AddRange(leftExpression.LongList);
         longList.AddRange(rightExpression.LongList);
         Symbol resultSymbol = new Symbol(Type.VoidPointerType);
-        
+
         int pointerSize = rightType.PointerOrArrayType.Size();
-        Symbol subtractSymbol = new Symbol(Type.IntegerPointerType),
-               sizeSymbol = new Symbol(Type.IntegerPointerType, (BigInteger) pointerSize);
+        Symbol additionSymbol = new Symbol(Type.IntegerPointerType),
+               sizeSymbol = new Symbol(Type.IntegerPointerType,
+                                       (BigInteger)pointerSize);
         //StaticSymbol sizeStaticSymbol = new StaticSymbol(sizeSymbol.UniqueName);
         //SymbolTable.StaticSet.Add(sizeStaticSymbol);
-        AddMiddleCode(longList, MiddleOperator.BinarySubtract, subtractSymbol,
+        AddMiddleCode(longList, middleOp, additionSymbol,
                       leftExpression.Symbol, rightExpression.Symbol);
         AddMiddleCode(longList, MiddleOperator.UnsignedDivide, resultSymbol,
-                      subtractSymbol, sizeSymbol);
+                      additionSymbol, sizeSymbol);
 
-        Expression resultExpression =
-          new Expression(resultSymbol, shortList, longList);
-        return TypeCast.ImplicitCast(resultExpression, Type.SignedIntegerType);
+        Expression resultExpression = new Expression(resultSymbol,
+                                                     shortList, longList);
+        return TypeCast.ImplicitCast(resultExpression,
+                                     Type.SignedIntegerType);
       }
     }
 
@@ -2029,7 +2035,7 @@ namespace CCompiler {
 
         Symbol arraySymbol = arrayExpression.Symbol,
                indexSymbol = indexExpression.Symbol;
-        Symbol sizeSymbol = new Symbol(arraySymbol.Type, (BigInteger)
+        Symbol sizeSymbol = new Symbol(indexSymbol.Type, (BigInteger)
                                arraySymbol.Type.PointerOrArrayType.Size()),
                multSymbol = new Symbol(arraySymbol.Type);
         //StaticSymbol sizeStaticSymbol = new StaticSymbol(sizeSymbol.UniqueName);
@@ -2245,6 +2251,14 @@ namespace CCompiler {
                                             List<Expression> argumentList){
       TypeListStack.Pop();
       ParameterOffsetStack.Pop();
+
+          if ((SymbolTable.CurrentFunction != null) &&
+              SymbolTable.CurrentFunction.Name.Equals("time_test")) {
+            string s = functionExpression.Symbol.Name;
+            if ((s != null) && s.Contains("asctime")) {
+              int i = 1;
+            }
+          }
 
       int totalOffset = 0;
       foreach (int currentOffset in ParameterOffsetStack) {

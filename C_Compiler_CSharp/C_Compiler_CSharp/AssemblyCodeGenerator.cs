@@ -85,8 +85,15 @@ namespace CCompiler {
             AddAssemblyCode(AssemblyOperator.label, labelText);
           }
 
+          if (SymbolTable.CurrentFunction.Name.Equals("time_test")) {
+            string s = middleCode.ToString();
+            if ((s != null) && s.Contains("Call") && s.Contains("asctime")) {
+             int i = 1;
+            }
+          }
+
           if (SymbolTable.CurrentFunction.Name.Equals("strftime") &&
-              (middleIndex == 347)) {
+              (middleIndex == 93)) {
             int i = 1;
           }
         }
@@ -508,12 +515,11 @@ namespace CCompiler {
                         AssemblyCode.EllipseRegister);
       }
 
-
       Track jumpTrack = null;
       if (!calleeSymbol.Type.IsFunction()) {
         jumpTrack = LoadValueToRegister(calleeSymbol);
       }            
-      
+
       AddAssemblyCode(AssemblyOperator.add, frameRegister, // add di, 10
                       (BigInteger) recordSize);
 
