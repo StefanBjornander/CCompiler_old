@@ -8,12 +8,6 @@ namespace CCompiler {
   public class MiddleCodeGenerator {
     public static MiddleCode AddMiddleCode(List<MiddleCode> codeList, MiddleOperator op, object operand0 = null,
                                     object operand1 = null, object operand2 = null) {
-        if (SymbolTable.CurrentFunction.Name.Equals("strftime") &&
-            (codeList.Count == 401))
-        {
-            int i = 1;
-            }
-
       MiddleCode middleCode = new MiddleCode(op, operand0, operand1, operand2);
       codeList.Add(middleCode);
       return middleCode;
@@ -2251,14 +2245,6 @@ namespace CCompiler {
                                             List<Expression> argumentList){
       TypeListStack.Pop();
       ParameterOffsetStack.Pop();
-
-          if ((SymbolTable.CurrentFunction != null) &&
-              SymbolTable.CurrentFunction.Name.Equals("time_test")) {
-            string s = functionExpression.Symbol.Name;
-            if ((s != null) && s.Contains("asctime")) {
-              int i = 1;
-            }
-          }
 
       int totalOffset = 0;
       foreach (int currentOffset in ParameterOffsetStack) {

@@ -81,11 +81,6 @@ namespace CCompiler {
     public Symbol(Type type, object value) {
       Assert.ErrorXXX(!(value is bool));
       m_uniqueName = ValueName(type, value);
-
-      if (m_uniqueName.Contains("Array_2#")) {
-        int i = 1;
-      }
-
       m_storage = Storage.Static;
       m_parameter = false;
       m_value = CheckValue(m_type = type, value);

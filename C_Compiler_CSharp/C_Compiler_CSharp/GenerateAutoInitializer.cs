@@ -69,10 +69,6 @@ namespace CCompiler {
             Only_array_struct_or_union_can_be_initialized_by_a_list);
         List<object> fromList = (List<object>) fromInitializer;
 
-        if (SymbolTable.CurrentFunction.Name.Equals("gmtime")) {
-          int i = 1;
-        }
-
         switch (toType.Sort) {
           case Sort.Array: {
               fromList = ModifyInitializer.ModifyArray(toType, fromList);

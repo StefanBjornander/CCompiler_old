@@ -811,11 +811,6 @@ namespace CCompiler {
     }
 
     public List<byte> ByteList() {
-      if ((SymbolTable.CurrentFunction != null) &&
-          SymbolTable.CurrentFunction.Name.Equals("sprintf")) {
-        int i = 1;
-      }
-
       object operand0 = m_operandArray[0],
              operand1 = m_operandArray[1],
              operand2 = m_operandArray[2];

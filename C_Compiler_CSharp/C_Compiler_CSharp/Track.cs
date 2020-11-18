@@ -27,11 +27,7 @@ namespace CCompiler {
 
     public int CurrentSize {
       get { return m_currentSize; }
-      set { m_currentSize = value;
-            if (value == 16) {
-              int i = 1;
-            }
-          }
+      set { m_currentSize = value; }
     }
 
     public int MaxSize {

@@ -73,35 +73,18 @@ namespace CCompiler {
         targetFile.Delete();
         BinaryWriter targetStream = new BinaryWriter(File.OpenWrite(targetFile.FullName));
 
-        StreamWriter s = new StreamWriter("c:\\d\\x");
         foreach (StaticSymbolWindows staticSymbol in m_globalList) {
-          s.WriteLine(staticSymbol.UniqueName);
-
-          if (staticSymbol.UniqueName.Contains("string_25s2025s2025i202502i3A2502i3A2502i2025i#")) {
-            int i = 1;
-          }
-
-          if ((staticSymbol.ByteList.Count == 2) &&
-              (staticSymbol.ByteList[0] == 2) &&
-              (staticSymbol.ByteList[1] == 0)) {
-            int i = 1;
-          }
-
           foreach (sbyte b in staticSymbol.ByteList) {
             targetStream.Write(b);
           }
         }
-        s.Close();
+
         targetStream.Close();
       }
     }
  
     private void GenerateTrace(StaticSymbolWindows staticSymbol) {
       if (!m_globalList.Contains(staticSymbol)) {
-        if (staticSymbol.UniqueName.Equals("int2$2#")) {
-          int i = 1;
-        }
-
         m_globalList.Add(staticSymbol);
         m_addressMap.Add(staticSymbol.UniqueName, m_totalSize);
         m_totalSize += (int) staticSymbol.ByteList.Count;

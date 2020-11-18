@@ -84,18 +84,6 @@ namespace CCompiler {
 
             AddAssemblyCode(AssemblyOperator.label, labelText);
           }
-
-          if (SymbolTable.CurrentFunction.Name.Equals("time_test")) {
-            string s = middleCode.ToString();
-            if ((s != null) && s.Contains("Call") && s.Contains("asctime")) {
-             int i = 1;
-            }
-          }
-
-          if (SymbolTable.CurrentFunction.Name.Equals("strftime") &&
-              (middleIndex == 93)) {
-            int i = 1;
-          }
         }
 
         AddAssemblyCode(AssemblyOperator.comment, middleCode.ToString());
@@ -455,10 +443,6 @@ namespace CCompiler {
 
       IDictionary<Track,int> registerMap = new Dictionary<Track,int>();
       foreach (KeyValuePair<Symbol, Track> pair in m_trackMap) {
-        if (SymbolTable.CurrentFunction.Name.Equals("strftime")) {
-          int i = 1;
-        }
-
         Track track = pair.Value;
         AddAssemblyCode(AssemblyOperator.mov, baseRegister,
                         recordSize + extraSize, track);
@@ -537,10 +521,6 @@ namespace CCompiler {
                         (BigInteger) extraSize);
       }
 
-      if (calleeSymbol.Name.Equals("strlen")) {
-        int i = 1;
-      }
-
       if (calleeSymbol.Type.IsFunction()) {
         AddAssemblyCode(AssemblyOperator.call, calleeSymbol.UniqueName);
         m_returnType = calleeSymbol.Type.ReturnType;
@@ -552,11 +532,6 @@ namespace CCompiler {
         //m_returnFloating =
           //calleeSymbol.Type.PointerType.ReturnType.IsFloating();
       }
-
-          if (calleeSymbol.Name.Equals("strlen") &&
-              SymbolTable.CurrentFunction.Name.Equals("strftime")) {
-            int i = 1;
-          }
     }
   
     public void FunctionPostCall(MiddleCode middleCode) {

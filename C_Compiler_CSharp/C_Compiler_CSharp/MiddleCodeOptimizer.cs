@@ -127,10 +127,6 @@ namespace CCompiler {
         MiddleCode thisCode = m_middleCodeList[index],
                    nextCode = m_middleCodeList[index + 1];
 
-        if (SymbolTable.CurrentFunction.Name.Equals("strftime") &&
-            (index == 397)) {
-            int i = 1;
-            }
         if ((thisCode.IsRelation() || thisCode.IsCarry()) &&
             nextCode.IsGoto()) {
           int target1 = (int) thisCode[0],
