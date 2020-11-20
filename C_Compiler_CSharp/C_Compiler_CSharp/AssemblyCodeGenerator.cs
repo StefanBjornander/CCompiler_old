@@ -84,6 +84,10 @@ namespace CCompiler {
 
             AddAssemblyCode(AssemblyOperator.label, labelText);
           }
+
+          if (SymbolTable.CurrentFunction.Name.Equals("generateTempName") && (middleIndex == 32)) {
+            int i = 1;
+          }
         }
 
         AddAssemblyCode(AssemblyOperator.comment, middleCode.ToString());
@@ -360,6 +364,7 @@ namespace CCompiler {
             break;
 
           case MiddleOperator.Dot:
+          case MiddleOperator.SetReturnValue:
           case MiddleOperator.FunctionEnd:
           case MiddleOperator.Empty:
             break;
@@ -1002,7 +1007,7 @@ namespace CCompiler {
                           assignSymbol.Value);
         }
         else if (assignSymbol.Type.IsArrayFunctionOrString() ||
-                  (assignSymbol.Value is StaticAddress)) {
+                 (assignSymbol.Value is StaticAddress)) {
           AddAssemblyCode(AssemblyOperator.mov, resultTrack,
                           Base(assignSymbol));
 
@@ -1054,10 +1059,62 @@ namespace CCompiler {
                             Base(assignSymbol), Offset(assignSymbol));
           }
         }
-      }*/
+      }
       else {
         IntegralBinary(MiddleOperator.Assign, resultSymbol,
                        resultSymbol, assignSymbol);
+      }*/
+      else {
+        if (assignTrack != null) {
+          AddAssemblyCode(AssemblyOperator.mov, Base(resultSymbol),
+                          Offset(resultSymbol), assignTrack);
+          m_trackMap.Remove(assignSymbol);
+        }
+        else if (assignSymbol.Value is BigInteger) {
+          AddAssemblyCode(AssemblyOperator.mov, Base(resultSymbol),
+                          Offset(resultSymbol), assignSymbol.Value, typeSize);
+        }
+        else if (assignSymbol.Type.IsArrayFunctionOrString() ||
+                 (assignSymbol.Value is StaticAddress)) {
+          if (assignSymbol.AddressSymbol != null) {
+            Track addressTrack = LoadValueToRegister(assignSymbol.AddressSymbol);
+            addressTrack.Pointer = true;
+            AddAssemblyCode(AssemblyOperator.mov, Base(resultSymbol),
+                            Offset(resultSymbol), addressTrack);
+
+            if (assignSymbol.AddressOffset != 0) {
+              AddAssemblyCode(AssemblyOperator.add, Base(resultSymbol),
+                              Offset(resultSymbol), (BigInteger) assignSymbol.AddressOffset,
+                              typeSize);
+            }
+          }
+          else {
+            AddAssemblyCode(AssemblyOperator.mov, Base(resultSymbol),
+                            Offset(resultSymbol), Base(assignSymbol),
+                            TypeSize.PointerSize);
+
+            int assignOffset = Offset(assignSymbol);
+            if (assignOffset != 0) {
+              AddAssemblyCode(AssemblyOperator.add, Base(resultSymbol),
+                              Offset(resultSymbol), (BigInteger) assignOffset,
+                              typeSize);
+            }
+          }
+        }
+        /*else if (assignSymbol.AddressSymbol != null) {
+          Track addressTrack = LoadValueToRegister(assignSymbol.AddressSymbol);
+          addressTrack.Pointer = true;
+          assignTrack = new Track(assignSymbol);
+          AddAssemblyCode(AssemblyOperator.mov, assignTrack,
+                          addressTrack, assignSymbol.AddressOffset);
+          AddAssemblyCode(AssemblyOperator.mov, Base(resultSymbol),
+                          Offset(resultSymbol), assignTrack);
+        }*/
+        else {
+          assignTrack = LoadValueToRegister(assignSymbol);
+          AddAssemblyCode(AssemblyOperator.mov, Base(resultSymbol),
+                          Offset(resultSymbol), assignTrack);
+        }
       }
     }
 

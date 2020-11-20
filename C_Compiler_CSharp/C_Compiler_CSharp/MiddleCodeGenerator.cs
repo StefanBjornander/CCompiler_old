@@ -143,8 +143,7 @@ namespace CCompiler {
       AddMiddleCode(statement.CodeList, MiddleOperator.FunctionEnd,
                     SymbolTable.CurrentFunction);
 
-      if (SymbolTable.CurrentFunction.Name.Equals("printArgument"))
-      {
+      if (SymbolTable.CurrentFunction.Name.Equals("fiprintArgument")) {
         string name = @"C:\Users\Stefan\Documents\vagrant\homestead\code\code\" +
                       SymbolTable.CurrentFunction.Name + ".middlebefore";
         StreamWriter streamWriter = new StreamWriter(name);
@@ -161,7 +160,8 @@ namespace CCompiler {
         new MiddleCodeOptimizer(statement.CodeList);
       middleCodeOptimizer.Optimize();
 
-      if (SymbolTable.CurrentFunction.Name.Equals("printArgument")) {
+      //if (SymbolTable.CurrentFunction.Name.Equals("printArgument"))
+       {
         string name = @"C:\Users\Stefan\Documents\vagrant\homestead\code\code\" +
                       SymbolTable.CurrentFunction.Name + ".middleafter";
         StreamWriter streamWriter = new StreamWriter(name);
@@ -901,6 +901,7 @@ namespace CCompiler {
         expression = TypeCast.ImplicitCast(expression,
                               SymbolTable.CurrentFunction.Type.ReturnType);
         codeList = expression.LongList;
+        AddMiddleCode(codeList, MiddleOperator.SetReturnValue);
         AddMiddleCode(codeList, MiddleOperator.Return,
                       null, expression.Symbol);
 
