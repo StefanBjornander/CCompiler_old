@@ -54,6 +54,11 @@ namespace CCompiler {
 
     public static Expression ExplicitCast(Expression sourceExpression,
                                           Type targetType) {
+      if ((SymbolTable.CurrentFunction != null) &&
+          SymbolTable.CurrentFunction.Name.Equals("rewind")) {
+        int i = 1;
+      }
+
       Expression constantExpression =
         ConstantExpression.ConstantCast(sourceExpression, targetType);
       if (constantExpression != null) {
@@ -62,7 +67,8 @@ namespace CCompiler {
 
       Symbol sourceSymbol = sourceExpression.Symbol, targetSymbol = null;
       Type sourceType = sourceSymbol.Type;
-      List<MiddleCode> longList = sourceExpression.LongList;
+      List<MiddleCode> shortList = sourceExpression.ShortList,
+                       longList = sourceExpression.LongList;
 
       if (targetType.IsVoid()) {
         targetSymbol = new Symbol(targetType);
@@ -187,7 +193,7 @@ namespace CCompiler {
 
       Assert.Error(targetSymbol != null, sourceType + " to " +
                    targetType, Message.Invalid_type_cast);
-      return (new Expression(targetSymbol, null, longList));
+      return (new Expression(targetSymbol, shortList, longList));    
     }
 
 /*    public static Expression ExplicitCast(Expression fromExpression,
