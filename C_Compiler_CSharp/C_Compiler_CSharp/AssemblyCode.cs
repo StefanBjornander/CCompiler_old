@@ -36,6 +36,11 @@ namespace CCompiler {
       m_operandArray[2] = operand2;
       FromAdditionToIncrement();
       CheckSize(size);
+
+      if ((operand2 != null) &&
+          operand2.ToString().Contains("9223372036854775808")) {
+        int i = 1;
+      }
     }
 
     public AssemblyOperator Operator {

@@ -1071,8 +1071,17 @@ namespace CCompiler {
           m_trackMap.Remove(assignSymbol);
         }
         else if (assignSymbol.Value is BigInteger) {
-          AddAssemblyCode(AssemblyOperator.mov, Base(resultSymbol),
-                          Offset(resultSymbol), assignSymbol.Value, typeSize);
+          BigInteger bigValue = (BigInteger) assignSymbol.Value;
+          if (!((-2147483648 <= bigValue) && (bigValue <= 2147483647))) {
+            assignTrack = new Track(assignSymbol);
+            AddAssemblyCode(AssemblyOperator.mov, assignTrack, assignSymbol.Value);
+            AddAssemblyCode(AssemblyOperator.mov, Base(resultSymbol),
+                            Offset(resultSymbol), assignTrack);
+          }
+          else {
+            AddAssemblyCode(AssemblyOperator.mov, Base(resultSymbol),
+                            Offset(resultSymbol), assignSymbol.Value, typeSize);
+          }
         }
         else if (assignSymbol.Type.IsArrayFunctionOrString() ||
                  (assignSymbol.Value is StaticAddress)) {

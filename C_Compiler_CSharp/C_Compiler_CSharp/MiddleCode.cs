@@ -13,6 +13,11 @@ namespace CCompiler {
       m_operandArray[0] = operand0;
       m_operandArray[1] = operand1;
       m_operandArray[2] = operand2;
+
+      string s = ToString();
+      if ((s != null) && s.Contains("Parameter 56 signed long int -9223372036854775808")) {
+        int i = 1;
+      }
     }
 
     public MiddleOperator Operator {
