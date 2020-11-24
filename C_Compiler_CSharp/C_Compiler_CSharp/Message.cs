@@ -98,6 +98,7 @@
     Unknown_member_in_arrow_expression,
     Invalid_type_in_increment_expression,
     Not_a_struct_or_union_in_dot_expression,
+    Member_access_of_uncomplete_struct_or_union,
     Unknown_member_in_dot_expression,
     Invalid_type_in_index_expression,
     Too_few_actual_parameters_in_function_call,

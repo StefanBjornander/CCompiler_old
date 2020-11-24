@@ -2067,6 +2067,8 @@ namespace CCompiler {
       Symbol parentSymbol = expression.Symbol;
       Assert.Error(parentSymbol.Type.IsStructOrUnion(), expression,
                    Message.Not_a_struct_or_union_in_dot_expression);
+      Assert.Error(parentSymbol.Type.MemberMap != null, expression,
+                   Message.Member_access_of_uncomplete_struct_or_union);
 
       Symbol memberSymbol;
       Assert.Error(parentSymbol.Type.MemberMap.TryGetValue(memberName,
