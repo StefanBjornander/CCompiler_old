@@ -85,7 +85,7 @@ namespace CCompiler {
             AddAssemblyCode(AssemblyOperator.label, labelText);
           }
 
-          if (SymbolTable.CurrentFunction.Name.Equals("divide") && (middleIndex == 10)) {
+          if (SymbolTable.CurrentFunction.Name.Equals("divide") && (middleIndex == 9)) {
             int i = 1;
           }
         }

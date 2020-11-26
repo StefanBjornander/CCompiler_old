@@ -15,7 +15,7 @@ namespace CCompiler {
       m_operandArray[2] = operand2;
 
       string s = ToString();
-      if ((s != null) && s.Contains("Parameter 56 signed long int -9223372036854775808")) {
+      if ((s != null) && s.Contains("IntegralToIntegral £temporary3731 \"Division by Zero.\"")) {
         int i = 1;
       }
     }

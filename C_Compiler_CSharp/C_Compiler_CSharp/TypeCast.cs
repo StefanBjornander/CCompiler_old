@@ -41,6 +41,8 @@ namespace CCompiler {
           (fromType.IsLogical() && toType.IsLogical()) ||
           (fromType.IsPointerArrayStringOrFunction() &&
            toType.IsPointerOrArray()) ||
+          (fromType.IsPointerArrayStringOrFunction() &&
+           toType.IsIntegral() && (fromType.Size() == toType.Size())) ||
           (((fromType.IsFloating() && toType.IsFloating()) ||
             (fromType.IsIntegralPointerOrFunction() &&
              toType.IsIntegralPointerArrayOrFunction())) &&
