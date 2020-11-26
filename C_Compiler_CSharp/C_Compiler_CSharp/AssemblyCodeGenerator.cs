@@ -85,7 +85,7 @@ namespace CCompiler {
             AddAssemblyCode(AssemblyOperator.label, labelText);
           }
 
-          if (SymbolTable.CurrentFunction.Name.Equals("generateTempName") && (middleIndex == 32)) {
+          if (SymbolTable.CurrentFunction.Name.Equals("divide") && (middleIndex == 10)) {
             int i = 1;
           }
         }
@@ -1072,7 +1072,8 @@ namespace CCompiler {
         }
         else if (assignSymbol.Value is BigInteger) {
           BigInteger bigValue = (BigInteger) assignSymbol.Value;
-          if (!((-2147483648 <= bigValue) && (bigValue <= 2147483647))) {
+          if (Start.Linux &&
+              !((-2147483648 <= bigValue) && (bigValue <= 2147483647))) {
             assignTrack = new Track(assignSymbol);
             AddAssemblyCode(AssemblyOperator.mov, assignTrack, assignSymbol.Value);
             AddAssemblyCode(AssemblyOperator.mov, Base(resultSymbol),
@@ -1347,7 +1348,8 @@ namespace CCompiler {
           ((middleOperator != MiddleOperator.Assign) ||
            (leftTrack == null))) {
         BigInteger bigValue = (BigInteger) rightSymbol.Value;
-        if (!((-2147483648 <= bigValue) && (bigValue <= 2147483647))) {
+        if (Start.Linux &&
+            !((-2147483648 <= bigValue) && (bigValue <= 2147483647))) {
           rightTrack = LoadValueToRegister(rightSymbol);
         }
       }

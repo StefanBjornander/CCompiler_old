@@ -820,6 +820,12 @@ namespace CCompiler {
              operand1 = m_operandArray[1],
              operand2 = m_operandArray[2];
 
+      if ((SymbolTable.CurrentFunction != null) &&
+          SymbolTable.CurrentFunction.Name.Equals("limits_test") &&
+          (Operator == AssemblyOperator.mov_dword)) {
+        int i = 1;
+      }
+
       if ((Operator == AssemblyOperator.empty) ||
           (Operator == AssemblyOperator.label) ||
           (Operator == AssemblyOperator.comment)) {

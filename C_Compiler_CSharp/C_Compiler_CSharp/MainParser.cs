@@ -4,9 +4,9 @@
 
 // GPPG version 1.5.2
 // Machine:  STEFAN1968
-// DateTime: 2020-11-16 16:56:51
+// DateTime: 2020-11-26 12:37:01
 // UserName: Stefan
-// Input file <MainParser.gppg - 2020-11-16 16:12:49>
+// Input file <MainParser.gppg - 2020-11-17 10:15:39>
 
 // options: lines gplex
 
@@ -88,13 +88,13 @@ public class ScanObj {
 [GeneratedCodeAttribute( "Gardens Point Parser Generator", "1.5.2")]
 public partial class Parser: ShiftReduceParser<ValueType, LexLocation>
 {
-  // Verbatim content from MainParser.gppg - 2020-11-16 16:12:49
+  // Verbatim content from MainParser.gppg - 2020-11-17 10:15:39
 #line 8 "MainParser.gppg"
   public static Stack<Specifier> SpecifierStack = new Stack<Specifier>();
   public static Stack<BigInteger> EnumValueStack = new Stack<BigInteger>();
   public static Stack<Scope> ScopeStack = new Stack<Scope>();
 #line default
-  // End verbatim content from MainParser.gppg - 2020-11-16 16:12:49
+  // End verbatim content from MainParser.gppg - 2020-11-17 10:15:39
 
 #pragma warning disable 649
   private static Dictionary<int, string> aliases;
@@ -1755,7 +1755,7 @@ public partial class Parser: ShiftReduceParser<ValueType, LexLocation>
         break;
       case 147: // assignment_operator -> OR_ASSIGN
 #line 617 "MainParser.gppg"
-                      { CurrentSemanticValue.middleOperator = MiddleOperator.BitwiseOr;     }
+                       { CurrentSemanticValue.middleOperator = MiddleOperator.BitwiseOr;      }
 #line default
         break;
       case 148: // assignment_operator -> XOR_ASSIGN

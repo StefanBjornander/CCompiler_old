@@ -4603,7 +4603,8 @@ namespace CCompiler {
       MainArrayMap.Add(new ObjectCodeInfo(AssemblyOperator.mov, Register.dl, Register.si, 0), new byte[]{138, 20});
       MainArrayMap.Add(new ObjectCodeInfo(AssemblyOperator.mov, Register.dl, Register.si, 1), new byte[]{138, 84, 1});
       MainArrayMap.Add(new ObjectCodeInfo(AssemblyOperator.mov, Register.dl, Register.si, 2), new byte[]{138, 148, 0, 1});
-      MainArrayMap.Add(new ObjectCodeInfo(AssemblyOperator.mov_dword, Register.bp, 0, 0), new byte[]{102, 199, 70, 0, 0, 0, 0, 0});
+      
+      MainArrayMap.Add(new ObjectCodeInfo(AssemblyOperator.mov_dword, Register.bp, 0, 0), new byte[]{102, 199, 70, 0, 0, 0, 0, 0});      
       MainArrayMap.Add(new ObjectCodeInfo(AssemblyOperator.mov_dword, Register.bp, 0, 1), new byte[]{102, 199, 70, 0, 1, 0, 0, 0});
       MainArrayMap.Add(new ObjectCodeInfo(AssemblyOperator.mov_dword, Register.bp, 0, 2), new byte[]{102, 199, 70, 0, 0, 1, 0, 0});
       MainArrayMap.Add(new ObjectCodeInfo(AssemblyOperator.mov_dword, Register.bp, 0, 4), new byte[]{102, 199, 70, 0, 0, 0, 1, 0});
@@ -4611,6 +4612,7 @@ namespace CCompiler {
       MainArrayMap.Add(new ObjectCodeInfo(AssemblyOperator.mov_dword, Register.bp, 1, 1), new byte[]{102, 199, 70, 1, 1, 0, 0, 0});
       MainArrayMap.Add(new ObjectCodeInfo(AssemblyOperator.mov_dword, Register.bp, 1, 2), new byte[]{102, 199, 70, 1, 0, 1, 0, 0});
       MainArrayMap.Add(new ObjectCodeInfo(AssemblyOperator.mov_dword, Register.bp, 1, 4), new byte[]{102, 199, 70, 1, 0, 0, 1, 0});
+
       MainArrayMap.Add(new ObjectCodeInfo(AssemblyOperator.mov_dword, Register.bp, 2, 0), new byte[]{102, 199, 134, 0, 1, 0, 0, 0, 0});
       MainArrayMap.Add(new ObjectCodeInfo(AssemblyOperator.mov_dword, Register.bp, 2, 1), new byte[]{102, 199, 134, 0, 1, 1, 0, 0, 0});
       MainArrayMap.Add(new ObjectCodeInfo(AssemblyOperator.mov_dword, Register.bp, 2, 2), new byte[]{102, 199, 134, 0, 1, 0, 1, 0, 0});
