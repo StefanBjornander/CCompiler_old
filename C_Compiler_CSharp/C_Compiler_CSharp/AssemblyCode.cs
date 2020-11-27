@@ -905,6 +905,11 @@ namespace CCompiler {
         int address = (int) operand0;
         Assert.ErrorXXX(address != 0);
         int size = SizeOfValue(address);
+
+        if (address == 127) { // XXX
+          size = 2;
+        }
+
         List<byte> byteList = LookupByteArray(Operator, size);
         LoadByteList(byteList, byteList.Count - size, size, address);
         return byteList;
