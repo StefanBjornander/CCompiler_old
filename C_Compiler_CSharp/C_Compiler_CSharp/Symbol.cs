@@ -80,7 +80,9 @@ namespace CCompiler {
 
     public Symbol(Type type, object value) {
       Assert.ErrorXXX(!(value is bool));
-      m_uniqueName = ValueName(type, value);
+      m_name = ValueName(type, value);
+      m_uniqueName = Symbol.FileMarker + (UniqueNameCount++) +
+                     Symbol.SeparatorId + m_name;
       m_storage = Storage.Static;
       m_parameter = false;
       m_value = CheckValue(m_type = type, value);
