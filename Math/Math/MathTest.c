@@ -118,6 +118,11 @@ void math_test_2(double x, double y) {
 }
 
 void main() {
+  { int *p = NULL, *q;
+    int i = 1;
+    q = i + p;
+  }
+
   time_t t = time(NULL);
   printf("%lu\n", (unsigned long) t);
   struct tm s;
