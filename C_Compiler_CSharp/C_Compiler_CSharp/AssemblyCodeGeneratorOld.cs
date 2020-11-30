@@ -84,11 +84,6 @@ namespace CCompiler {
 
             AddAssemblyCode(AssemblyOperator.label, labelText);
           }
-
-          /*if (SymbolTable.CurrentFunction.Name.Equals("strftime") &&
-              (middleIndex == 351)) {
-            int i = 1;
-          }*/
         }
 
         AddAssemblyCode(AssemblyOperator.comment, middleCode.ToString());
@@ -965,10 +960,6 @@ namespace CCompiler {
       m_trackMap.TryGetValue(resultSymbol, out resultTrack);
       m_trackMap.TryGetValue(assignSymbol, out assignTrack);
       int typeSize = assignSymbol.Type.SizeArray();
-
-      /*if (SymbolTable.CurrentFunction.Name.Equals("compare")) {
-        int i = 1;
-      }*/
 
       if (resultSymbol.IsTemporary()) {
         Assert.ErrorXXX(assignTrack == null);

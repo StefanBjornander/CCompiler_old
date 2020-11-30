@@ -55,6 +55,7 @@
     <Compile Include="IfElseChain.cs" />
     <Compile Include="MiddleCode.cs" />
     <Compile Include="Preprocessor.cs" />
+    <Compile Include="Slash.cs" />
     <Compile Include="Track.cs" />
     <Compile Include="ZZTriple.cs">
       <SubType>Code</SubType>

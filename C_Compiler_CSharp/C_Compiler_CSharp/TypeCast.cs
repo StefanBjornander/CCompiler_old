@@ -56,11 +56,6 @@ namespace CCompiler {
 
     public static Expression ExplicitCast(Expression sourceExpression,
                                           Type targetType) {
-      if ((SymbolTable.CurrentFunction != null) &&
-          SymbolTable.CurrentFunction.Name.Equals("rewind")) {
-        int i = 1;
-      }
-
       Expression constantExpression =
         ConstantExpression.ConstantCast(sourceExpression, targetType);
       if (constantExpression != null) {

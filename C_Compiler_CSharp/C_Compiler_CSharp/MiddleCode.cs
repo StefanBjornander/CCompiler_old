@@ -13,11 +13,6 @@ namespace CCompiler {
       m_operandArray[0] = operand0;
       m_operandArray[1] = operand1;
       m_operandArray[2] = operand2;
-
-      string s = ToString();
-      if ((s != null) && s.Contains("IntegralToIntegral £temporary3731 \"Division by Zero.\"")) {
-        int i = 1;
-      }
     }
 
     public MiddleOperator Operator {

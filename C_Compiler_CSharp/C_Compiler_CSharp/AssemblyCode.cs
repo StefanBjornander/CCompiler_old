@@ -24,23 +24,12 @@ namespace CCompiler {
     public AssemblyCode(AssemblyOperator objectOp, object operand0,
                         object operand1, object operand2 = null,
                         int size = 0) {
-
-/*      if ((objectOp == AssemblyOperator.mov) &&
-          (operand0 is string) && (operand1 is int) && (operand2 is BigInteger)) {
-        int i = 1;
-      }*/
-
       m_operator = objectOp;
       m_operandArray[0] = operand0;
       m_operandArray[1] = operand1;
       m_operandArray[2] = operand2;
       FromAdditionToIncrement();
       CheckSize(size);
-
-      if ((operand2 != null) &&
-          operand2.ToString().Contains("9223372036854775808")) {
-        int i = 1;
-      }
     }
 
     public AssemblyOperator Operator {
@@ -819,12 +808,6 @@ namespace CCompiler {
       object operand0 = m_operandArray[0],
              operand1 = m_operandArray[1],
              operand2 = m_operandArray[2];
-
-      if ((SymbolTable.CurrentFunction != null) &&
-          SymbolTable.CurrentFunction.Name.Equals("limits_test") &&
-          (Operator == AssemblyOperator.mov_dword)) {
-        int i = 1;
-      }
 
       if ((Operator == AssemblyOperator.empty) ||
           (Operator == AssemblyOperator.label) ||

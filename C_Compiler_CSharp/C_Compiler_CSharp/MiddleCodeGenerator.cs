@@ -1025,11 +1025,7 @@ namespace CCompiler {
     public static Expression AssignmentExpression(MiddleOperator middleOp,
                                                   Expression leftExpression,
                                                   Expression rightExpression){
-/*      if (leftExpression.Symbol.Temporary) {
-        int i = 1;
-      }
-
-      if (!leftExpression.Symbol.Temporary) {
+/*    if (!leftExpression.Symbol.Temporary) {
         Assert.Error(leftExpression.Symbol.Assignable,
                      leftExpression.Symbol.Name, Message.Not_assignable);
       }*/
@@ -1189,10 +1185,6 @@ namespace CCompiler {
                                         falseExpression.Symbol.Type);
         trueExpression = TypeCast.ImplicitCast(trueExpression, maxType);
         Backpatch(testExpression.Symbol.TrueSet, trueExpression.LongList);
-
-        /*if (SymbolTable.CurrentFunction.Name.Equals("string_test")) {
-          int i = 1;
-        }*/
 
         Symbol symbol = new Symbol(maxType);
         if (maxType.IsFloating()) {
