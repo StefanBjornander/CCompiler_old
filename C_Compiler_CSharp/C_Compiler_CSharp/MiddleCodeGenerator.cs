@@ -326,12 +326,12 @@ namespace CCompiler {
 
     // ---------------------------------------------------------------------------------------------------------------------
 
-    public static void StructUnionHeader(string optionalName, Sort sort) {
+    /*public static void StructUnionHeader(string optionalName, Sort sort) {
       if (optionalName != null) {
         Type type = new Type(sort);
         SymbolTable.CurrentTable.AddTag(optionalName, type);
       }
-    }
+    }*/
   
     public static Type StructUnionSpecifier(string optionalName, Sort sort) {
       if (optionalName != null) {

@@ -203,7 +203,11 @@ declaration_specifier:
 
 struct_or_union_specifier:
     struct_or_union optional_name {
-      MiddleCodeGenerator.StructUnionHeader($2, $1);
+      //MiddleCodeGenerator.StructUnionHeader($2, $1);
+      if ($2 != null) {
+        SymbolTable.CurrentTable.AddTag($2, new CCompiler.Type($1));
+      }
+
       SymbolTable.CurrentTable =
         new SymbolTable(SymbolTable.CurrentTable, (Scope) $1);
     }
