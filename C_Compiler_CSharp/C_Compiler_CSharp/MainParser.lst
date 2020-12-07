@@ -1,10 +1,10 @@
 
 // ==========================================================================
-//  GPPG error listing for yacc source file <MainParser.gppg - 2020-11-10 09:24:47>
+//  GPPG error listing for yacc source file <MainParser.gppg - 2020-12-06 21:09:46>
 // ==========================================================================
 //  Version:  1.5.2
 //  Machine:  STEFAN1968
-//  DateTime: 2020-11-10 09:24:52
+//  DateTime: 2020-12-06 21:09:48
 //  UserName: Stefan
 // ==========================================================================
 
@@ -80,8 +80,9 @@
 %type <type> enum_specifier
 %type <symbol_bool_pair_set> enum_list
 %type <symbol_bool_pair> enum
-%type <middle_code_list> declarator_list
-                         initialization_bitfield_simple_declarator declaration
+%type <middle_code_list> declarator_list declaration
+                         declaration_list optional_declaration_list
+                         initialization_bitfield_simple_declarator
 
 %type <declarator> optional_simple_declarator declarator direct_declarator
 %type <type_list> optional_pointer_list pointer_list
@@ -127,6 +128,8 @@
 %start translation_unit
 
 %%
+// Warning: NonTerminal symbol "switch_header" is unreachable
+// ----------------------------------------------------------
 
 translation_unit:
     external_declaration
@@ -145,6 +148,7 @@ function_definition:
       MiddleCodeGenerator.CheckFunctionDefinition();
     }
     LEFT_BLOCK optional_declaration_list optional_statement_list RIGHT_BLOCK {
+      $8.CodeList.InsertRange(0, $7);
       MiddleCodeGenerator.BackpatchGoto();
       MiddleCodeGenerator.FunctionEnd($8);
     }
@@ -155,16 +159,14 @@ function_definition:
       MiddleCodeGenerator.CheckFunctionDefinition();
     }
     LEFT_BLOCK optional_declaration_list optional_statement_list RIGHT_BLOCK {
+      $7.CodeList.InsertRange(0, $6);
       MiddleCodeGenerator.BackpatchGoto();
-      MiddleCodeGenerator.FunctionEnd($9);
-//-----------------------------------^^^
-// Error: Semantic action index is out of bounds
-// ---------------------------------------------
+      MiddleCodeGenerator.FunctionEnd($7);
     };
 
 optional_declaration_list:
-    /* Empty */
-  | declaration_list;
+    /* Empty */      { $$ = new List<MiddleCode>(); } 
+  | declaration_list { $$ = $1; };
 
 declaration:
     declaration_specifier_list SEMICOLON {
@@ -214,7 +216,11 @@ declaration_specifier:
 
 struct_or_union_specifier:
     struct_or_union optional_name {
-      MiddleCodeGenerator.StructUnionHeader($2, $1);
+      //MiddleCodeGenerator.StructUnionHeader($2, $1);
+      if ($2 != null) {
+        SymbolTable.CurrentTable.AddTag($2, new CCompiler.Type($1));
+      }
+
       SymbolTable.CurrentTable =
         new SymbolTable(SymbolTable.CurrentTable, (Scope) $1);
     }
@@ -236,8 +242,13 @@ optional_name:
   | NAME        { $$ = $1;   };
 
 declaration_list:
-    declaration
-  | declaration_list declaration;
+    declaration {
+      $$ = $1;
+    }
+  | declaration_list declaration {
+      $1.AddRange($2);
+      $$ = $1;
+    };
 
 enum_specifier:
     ENUM optional_name {
@@ -505,7 +516,7 @@ opened_statement:
     ELSE opened_statement {
       $$ = MiddleCodeGenerator.IfElseStatement($3, $5, $7);
     }
-  | SWITCH switch_header LEFT_PARENTHESIS expression RIGHT_PARENTHESIS
+  | SWITCH LEFT_PARENTHESIS {} expression RIGHT_PARENTHESIS
     opened_statement {
       $$ = MiddleCodeGenerator.SwitchStatement($4, $6);
     }
@@ -530,7 +541,7 @@ closed_statement:
     ELSE closed_statement {
       $$ = MiddleCodeGenerator.IfElseStatement($3, $5, $7);
     }
-  | SWITCH switch_header LEFT_PARENTHESIS expression RIGHT_PARENTHESIS
+  | SWITCH LEFT_PARENTHESIS {} expression RIGHT_PARENTHESIS
     closed_statement {
       $$ = MiddleCodeGenerator.SwitchStatement($4, $6);
     }
@@ -566,7 +577,8 @@ closed_statement:
     optional_declaration_list optional_statement_list RIGHT_BLOCK {
       SymbolTable.CurrentTable =
         SymbolTable.CurrentTable.ParentTable;
-      $$ = $3;
+      $4.CodeList.InsertRange(0, $3);
+      $$ = $4;
     }
   | GOTO NAME SEMICOLON {
       $$ = MiddleCodeGenerator.GotoStatement($2);
@@ -619,7 +631,7 @@ assignment_operator:
   | DIVIDE_ASSIGN      { $$ = MiddleOperator.SignedDivide;   }
   | MODULO_ASSIGN      { $$ = MiddleOperator.SignedModulo;   }
   | AND_ASSIGN         { $$ = MiddleOperator.BitwiseAnd;     }
-  | OR_ASSIGN         { $$ = MiddleOperator.BitwiseOr;     }
+  | OR_ASSIGN          { $$ = MiddleOperator.BitwiseOr;      }
   | XOR_ASSIGN         { $$ = MiddleOperator.BitwiseXOr;     }
   | LEFT_SHIFT_ASSIGN  { $$ = MiddleOperator.ShiftLeft;      }
   | RIGHT_SHIFT_ASSIGN { $$ = MiddleOperator.ShiftRight;     };

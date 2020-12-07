@@ -130,7 +130,7 @@ namespace CCompiler {
       }
     }
 
-    public string ToString(object value) {
+    private static string ToString(object value) {
       if (value != null) {
         return (" "  + value.ToString().Replace("\n", "\\n"));
       }
