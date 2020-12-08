@@ -109,7 +109,7 @@ namespace CCompiler {
             Exit(middleCode);
             break;
 
-          case MiddleOperator.Goto:
+          case MiddleOperator.Jump:
             Goto(middleCode);
             break;
 

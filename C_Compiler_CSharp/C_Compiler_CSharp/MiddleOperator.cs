@@ -17,7 +17,7 @@ namespace CCompiler {
     UnsignedLessThanEqual, UnsignedGreaterThan,
     UnsignedGreaterThanEqual,
 
-    Carry, NotCarry, Case, CaseEnd, Goto,
+    Carry, NotCarry, Case, CaseEnd, Jump,
 
     Index, Dot, Increment, Decrement,
     UnaryAdd, UnarySubtract, BinaryAdd, BinarySubtract,

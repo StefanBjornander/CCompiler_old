@@ -86,7 +86,7 @@ namespace CCompiler {
         longList.Add(trueCode);
 
         MiddleCode targetCode = new MiddleCode(MiddleOperator.Empty);
-        longList.Add(new MiddleCode(MiddleOperator.Goto, targetCode));
+        longList.Add(new MiddleCode(MiddleOperator.Jump, targetCode));
 
         Symbol zeroSymbol = new Symbol(targetType, BigInteger.Zero);
         MiddleCode falseCode =
@@ -104,7 +104,7 @@ namespace CCompiler {
         longList.Add(trueCode);
 
         MiddleCode targetCode = new MiddleCode(MiddleOperator.Empty);
-        longList.Add(new MiddleCode(MiddleOperator.Goto, targetCode));
+        longList.Add(new MiddleCode(MiddleOperator.Jump, targetCode));
 
         MiddleCode falseCode = new MiddleCode(MiddleOperator.PushZero);
         MiddleCodeGenerator.Backpatch(sourceSymbol.FalseSet, falseCode);
@@ -125,7 +125,7 @@ namespace CCompiler {
         trueSet.Add(testCode);
         longList.Add(testCode);
 
-        MiddleCode gotoCode = new MiddleCode(MiddleOperator.Goto);
+        MiddleCode gotoCode = new MiddleCode(MiddleOperator.Jump);
         ISet<MiddleCode> falseSet = new HashSet<MiddleCode>();
         falseSet.Add(gotoCode);
         longList.Add(gotoCode);

@@ -647,7 +647,7 @@ namespace CCompiler {
 
       Backpatch(expression.Symbol.TrueSet, innerStatement.CodeList);    
       codeList.AddRange(innerStatement.CodeList);
-      MiddleCode nextCode = AddMiddleCode(codeList, MiddleOperator.Goto); // XXX
+      MiddleCode nextCode = AddMiddleCode(codeList, MiddleOperator.Jump); // XXX
       
       ISet<MiddleCode> nextSet = new HashSet<MiddleCode>();
       nextSet.UnionWith(innerStatement.NextSet);
@@ -662,20 +662,22 @@ namespace CCompiler {
                                             Statement falseStatement) {
       expression = TypeCast.ToLogical(expression);
       List<MiddleCode> codeList = expression.LongList;
-      //AddMiddleCode(codeList, MiddleOperator.CheckTrackMapFloatStack);
+//      AddMiddleCode(codeList, MiddleOperator.CheckTrackMapFloatStack);
 
       Backpatch(expression.Symbol.TrueSet, trueStatement.CodeList);
       Backpatch(expression.Symbol.FalseSet, falseStatement.CodeList);
-
       codeList.AddRange(trueStatement.CodeList);
-      MiddleCode gotoCode = AddMiddleCode(codeList, MiddleOperator.Goto);
+
+      MiddleCode trueNextCode = AddMiddleCode(codeList, MiddleOperator.Jump);
       codeList.AddRange(falseStatement.CodeList);
+      MiddleCode falseGotoCode = AddMiddleCode(codeList, MiddleOperator.Jump);
 
       ISet<MiddleCode> nextSet = new HashSet<MiddleCode>();
       nextSet.UnionWith(trueStatement.NextSet);
       nextSet.UnionWith(falseStatement.NextSet);
-      nextSet.Add(gotoCode);
-    
+      nextSet.Add(trueNextCode);
+      nextSet.Add(falseGotoCode);
+
       return (new Statement(codeList, nextSet));
     }
 
@@ -712,10 +714,10 @@ namespace CCompiler {
       MiddleCode defaultCode = m_defaultStack.Pop();
 
       if (defaultCode != null) {
-        AddMiddleCode(codeList, MiddleOperator.Goto, defaultCode);
+        AddMiddleCode(codeList, MiddleOperator.Jump, defaultCode);
       }
       else {
-        nextSet.Add(AddMiddleCode(codeList, MiddleOperator.Goto));      
+        nextSet.Add(AddMiddleCode(codeList, MiddleOperator.Jump));      
       }
 
       codeList.AddRange(statement.CodeList);
@@ -756,7 +758,7 @@ namespace CCompiler {
     public static Statement BreakStatement() {
       Assert.Error(m_breakSetStack.Count > 0, Message.Break_without_switch____while____do____or____for);
       List<MiddleCode> codeList = new List<MiddleCode>();
-      MiddleCode breakCode = AddMiddleCode(codeList, MiddleOperator.Goto);
+      MiddleCode breakCode = AddMiddleCode(codeList, MiddleOperator.Jump);
       m_breakSetStack.Peek().Add(breakCode);
       return (new Statement(codeList));
     }
@@ -767,7 +769,7 @@ namespace CCompiler {
     public static Statement ContinueStatement() {
       Assert.Error(m_continueSetStack.Count > 0, Message.Continue_without_while____do____or____for);
       List<MiddleCode> codeList = new List<MiddleCode>();
-      MiddleCode continueCode = AddMiddleCode(codeList, MiddleOperator.Goto);
+      MiddleCode continueCode = AddMiddleCode(codeList, MiddleOperator.Jump);
       m_continueSetStack.Peek().Add(continueCode);
       return (new Statement(codeList));
     }
@@ -786,7 +788,7 @@ namespace CCompiler {
       Backpatch(expression.Symbol.TrueSet, statement.CodeList);
       codeList.AddRange(statement.CodeList);
 
-      MiddleCode nextCode = AddMiddleCode(codeList, MiddleOperator.Goto,
+      MiddleCode nextCode = AddMiddleCode(codeList, MiddleOperator.Jump,
                                           GetFirst(codeList));
     
       ISet<MiddleCode> nextSet = new HashSet<MiddleCode>();
@@ -801,16 +803,16 @@ namespace CCompiler {
                                         Expression expression) {
       List<MiddleCode> codeList = innerStatement.CodeList;
       Backpatch(innerStatement.NextSet, codeList);
+
       //AddMiddleCode(codeList, MiddleOperator.CheckTrackMapFloatStack);
       codeList.AddRange(expression.LongList);
 
       Backpatch(expression.Symbol.TrueSet, codeList);
       Backpatch(m_continueSetStack.Pop(), codeList);    
+
       ISet<MiddleCode> nextSet = new HashSet<MiddleCode>();
       nextSet.UnionWith(expression.Symbol.FalseSet);
       nextSet.UnionWith(m_breakSetStack.Pop());
-
-      AddMiddleCode(codeList, MiddleOperator.Goto, GetFirst(codeList));
       return (new Statement(codeList, nextSet));
     }
   
@@ -841,7 +843,7 @@ namespace CCompiler {
         codeList.AddRange(nextExpression.ShortList);
       }
 
-      AddMiddleCode(codeList, MiddleOperator.Goto, testTarget);
+      AddMiddleCode(codeList, MiddleOperator.Jump, testTarget);
       Backpatch(m_continueSetStack.Pop(), nextTarget);
       nextSet.UnionWith(m_breakSetStack.Pop());
     
@@ -863,7 +865,7 @@ namespace CCompiler {
 
     public static Statement GotoStatement(string labelName) {
       List<MiddleCode> gotoList = new List<MiddleCode>();
-      MiddleCode gotoCode = AddMiddleCode(gotoList, MiddleOperator.Goto);
+      MiddleCode gotoCode = AddMiddleCode(gotoList, MiddleOperator.Jump);
 
       if (m_gotoSetMap.ContainsKey(labelName)) {
         ISet<MiddleCode> gotoSet = m_gotoSetMap[labelName];
@@ -896,29 +898,23 @@ namespace CCompiler {
       if (expression != null) {
         Assert.Error(!SymbolTable.CurrentFunction.Type.ReturnType.IsVoid(),
                      Message.Non__void_return_from_void_function);
-
         expression = TypeCast.ImplicitCast(expression,
                               SymbolTable.CurrentFunction.Type.ReturnType);
         codeList = expression.LongList;
         AddMiddleCode(codeList, MiddleOperator.SetReturnValue);
         AddMiddleCode(codeList, MiddleOperator.Return,
                       null, expression.Symbol);
-
-        if (SymbolTable.CurrentFunction.UniqueName.Equals
-                        (AssemblyCodeGenerator.MainName)) {
-          AddMiddleCode(codeList, MiddleOperator.Exit);
-        }
       }
       else {
         Assert.Error(SymbolTable.CurrentFunction.Type.ReturnType.IsVoid(),
                      Message.Void_returned_from_non__void_function);
         codeList = new List<MiddleCode>();
         AddMiddleCode(codeList, MiddleOperator.Return);
+      }
 
-        if (SymbolTable.CurrentFunction.UniqueName.Equals
-                        (AssemblyCodeGenerator.MainName)) {
-          AddMiddleCode(codeList, MiddleOperator.Exit);
-        }
+      if (SymbolTable.CurrentFunction.UniqueName.Equals
+                      (AssemblyCodeGenerator.MainName)) {
+        AddMiddleCode(codeList, MiddleOperator.Exit);
       }
 
       return (new Statement(codeList));
@@ -1207,9 +1203,9 @@ namespace CCompiler {
 
         MiddleCode targetCode = new MiddleCode(MiddleOperator.Empty);
         AddMiddleCode(trueExpression.ShortList,
-                      MiddleOperator.Goto, targetCode);
+                      MiddleOperator.Jump, targetCode);
         AddMiddleCode(trueExpression.LongList,
-                      MiddleOperator.Goto, targetCode);
+                      MiddleOperator.Jump, targetCode);
 
         falseExpression = TypeCast.ImplicitCast(falseExpression, maxType);
         Backpatch(testExpression.Symbol.FalseSet, falseExpression.LongList);
@@ -1440,7 +1436,7 @@ namespace CCompiler {
                        falseSet = new HashSet<MiddleCode>();
       trueSet.Add(AddMiddleCode(longList, middleOp, null,
                                 leftExpression.Symbol, rightExpression.Symbol));
-      falseSet.Add(AddMiddleCode(longList, MiddleOperator.Goto));
+      falseSet.Add(AddMiddleCode(longList, MiddleOperator.Jump));
 
       Symbol symbol = new Symbol(trueSet, falseSet);
       return (new Expression(symbol, shortList, longList));
@@ -2440,7 +2436,7 @@ namespace CCompiler {
                        falseSet = new HashSet<MiddleCode>();
       List<MiddleCode> longList = new List<MiddleCode>();
       trueSet.Add(AddMiddleCode(longList, MiddleOperator.Carry));
-      falseSet.Add(AddMiddleCode(longList, MiddleOperator.Goto));
+      falseSet.Add(AddMiddleCode(longList, MiddleOperator.Jump));
       Symbol symbol = new Symbol(trueSet, falseSet);
       return (new Expression(symbol, new List<MiddleCode>(), longList));
     }

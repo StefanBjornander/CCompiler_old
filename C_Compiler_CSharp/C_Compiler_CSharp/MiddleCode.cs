@@ -33,7 +33,7 @@ namespace CCompiler {
     }
 
     public bool IsGoto() {
-      return (m_middleOperator == MiddleOperator.Goto);
+      return (m_middleOperator == MiddleOperator.Jump);
     }
 
     public bool IsCarry() {

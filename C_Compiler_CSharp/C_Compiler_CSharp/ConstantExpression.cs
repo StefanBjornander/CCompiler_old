@@ -71,7 +71,7 @@ namespace CCompiler {
                  rightValue = (BigInteger) rightExpression.Symbol.Value;
 
       List<MiddleCode> longList = new List<MiddleCode>();
-      MiddleCode jumpCode = new MiddleCode(MiddleOperator.Goto);
+      MiddleCode jumpCode = new MiddleCode(MiddleOperator.Jump);
       longList.Add(jumpCode);
       ISet<MiddleCode> jumpSet = new HashSet<MiddleCode>();
       jumpSet.Add(jumpCode);
@@ -135,7 +135,7 @@ namespace CCompiler {
       }
 
       List<MiddleCode> longList = new List<MiddleCode>();
-      MiddleCode jumpCode = new MiddleCode(MiddleOperator.Goto);
+      MiddleCode jumpCode = new MiddleCode(MiddleOperator.Jump);
       longList.Add(jumpCode);
       ISet<MiddleCode> jumpSet = new HashSet<MiddleCode>();
       jumpSet.Add(jumpCode);
@@ -186,7 +186,7 @@ namespace CCompiler {
            rightValue = rightLogicalExpression.Symbol.TrueSet.Count > 0;
 
       List<MiddleCode> longList = new List<MiddleCode>();
-      MiddleCode jumpCode = new MiddleCode(MiddleOperator.Goto);
+      MiddleCode jumpCode = new MiddleCode(MiddleOperator.Jump);
       longList.Add(jumpCode);
       ISet<MiddleCode> jumpSet = new HashSet<MiddleCode>();
       jumpSet.Add(jumpCode);
@@ -472,7 +472,7 @@ namespace CCompiler {
         bool isTrue = !sourceValue.Equals(BigInteger.Zero) &&
                       !sourceValue.Equals(decimal.Zero);
 
-        MiddleCode gotoCode = new MiddleCode(MiddleOperator.Goto);
+        MiddleCode gotoCode = new MiddleCode(MiddleOperator.Jump);
         longList.Add(gotoCode);
 
         ISet<MiddleCode> trueSet = new HashSet<MiddleCode>(),
