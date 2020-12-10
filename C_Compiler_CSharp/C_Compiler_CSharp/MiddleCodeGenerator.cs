@@ -1819,8 +1819,7 @@ namespace CCompiler {
     public static Expression UnaryExpression(MiddleOperator middleOp,
                                              Expression expression) {
       Type type = expression.Symbol.Type;
-      Assert.Error(type.IsLogical() ||
-                   type.IsArithmeticPointerArrayStringOrFunction(),
+      Assert.Error(type.IsLogical() || type.IsArithmetic(),
                    expression, Message.Non__arithmetic_expression);
 
       Expression constantExpression =
@@ -1852,7 +1851,7 @@ namespace CCompiler {
 
     public static Expression BitwiseNotExpression(Expression expression) {
       expression = TypeCast.LogicalToIntegral(expression);      
-      Assert.Error(expression.Symbol.Type.IsIntegralPointerArrayOrFunction(),
+      Assert.Error(expression.Symbol.Type.IsIntegral(),
                    Message.Only_integral_values_for_bitwise_not);
       Expression constantExpression =
         ConstantExpression.Arithmetic(MiddleOperator.BitwiseNot, expression);
