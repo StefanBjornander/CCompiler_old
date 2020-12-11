@@ -88,11 +88,17 @@ namespace CCompiler {
 
           Assert.Error(oldSymbol.Type.Equals(newSymbol.Type),
                        name, Message.Different_types_in_redeclaration);
-          m_entryList.Remove(oldSymbol);
-        }
 
-        m_entryMap[name] = newSymbol;
-        m_entryList.Add(newSymbol);
+          if (!newSymbol.IsExtern()) {
+            m_entryMap[name] = newSymbol;
+            m_entryList.Remove(oldSymbol);
+            m_entryList.Add(newSymbol);
+          }
+        }
+        else {
+          m_entryMap[name] = newSymbol;
+          m_entryList.Add(newSymbol);
+        }
       }
 
       if (!newSymbol.Type.IsFunction()) {    

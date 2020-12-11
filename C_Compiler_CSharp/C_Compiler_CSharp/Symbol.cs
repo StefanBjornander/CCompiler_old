@@ -122,10 +122,10 @@ namespace CCompiler {
         return "float" + type.Size().ToString() + Symbol.SeparatorId +
                value.ToString().Replace("-", "minus") + Symbol.NumberId;
       }
-      else if (type.IsLogical()) {
+      /*else if (type.IsLogical()) {
         return "int" + type.Size().ToString() + Symbol.SeparatorId +
                value.ToString().Replace("-", "minus") + Symbol.NumberId;
-      }
+      }*/
       else {
         return "int" + type.Size().ToString() + Symbol.SeparatorId +
                value.ToString().Replace("-", "minus") + Symbol.NumberId;
