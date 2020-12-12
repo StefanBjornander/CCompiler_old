@@ -11,6 +11,11 @@
 //  if (errno != NO_ERROR) { perror("Error message"); errno = 0; }}
 //  if (errno != NO_ERROR) { perror("Error message"); errno = 0; }}
 
+union u {
+  int a : 3;
+  int b : 4;
+};
+
 void math_test_1(double x);
 void math_test_2(double x, double y);
 void math_test_int(double x, int i);

@@ -473,9 +473,9 @@ namespace CCompiler {
       Storage storage = specifier.Storage;
       //Type specifierType = ;
 
-      Assert.Error(SymbolTable.CurrentTable.Scope == Scope.Struct,
-                   bitsSymbol, Message.Bitfields_only_allowed_on_structs);
-
+      Assert.Error((SymbolTable.CurrentTable.Scope == Scope.Struct) ||
+                   (SymbolTable.CurrentTable.Scope == Scope.Union), bitsSymbol,
+                   Message.Bitfields_only_allowed_in_structs_or_unions);
       Assert.Error((storage == Storage.Auto) || (storage == Storage.Register),
                    null, Message.
                    Only_auto_or_register_storage_allowed_in_struct_or_union);
@@ -2217,9 +2217,8 @@ namespace CCompiler {
 
     public static void CallHeader(Expression expression) {
       Type type = expression.Symbol.Type;
-      Assert.Error((type.IsPointer() && type.PointerType.IsFunction()) ||
-                   type.IsFunction(), expression.Symbol,
-                   Message.Not_a_function);
+      Assert.Error(type.IsFunction() || type.IsFunctionPointer(),
+                   expression.Symbol, Message.Not_a_function);
       Type functionType = type.IsFunction() ? type : type.PointerType;
       TypeListStack.Push(functionType.TypeList);
       ParameterOffsetStack.Push(0);

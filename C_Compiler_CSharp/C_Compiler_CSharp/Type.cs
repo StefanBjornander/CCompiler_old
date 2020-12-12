@@ -409,10 +409,6 @@ namespace CCompiler {
       return (m_sort == Sort.Logical);
     }
 
-    public bool IsLogicalOrIntegral() {
-      return IsLogical() || IsIntegral();
-    }
-
     public bool IsPointer() {
       return (m_sort == Sort.Pointer);
     }
@@ -429,12 +425,8 @@ namespace CCompiler {
       return (m_sort == Sort.Function);
     }
 
-    public bool IsArrayOrFunction() {
-      return IsArray() || IsFunction();
-    }
-
     public bool IsPointerArrayStringOrFunction() {
-      return IsPointer() || IsArrayOrFunction()  || IsString();
+      return IsPointer() || IsArrayFunctionOrString ();
     }
 
     public bool IsString() {
@@ -442,27 +434,11 @@ namespace CCompiler {
     }
 
     public bool IsArrayFunctionOrString() {
-      return IsArrayOrFunction() || IsString();
+      return IsArray() || IsFunction() || IsString();
     }
 
     public bool IsFunctionPointer() {
       return (m_sort == Sort.Pointer) && m_pointerType.IsFunction();
-    }
-
-    public bool IsFunctionOrArray() {
-      return IsFunction() || IsArray();
-    }
-
-    public bool IsArrayStringOrFunction() {
-      return IsFunctionOrArray() || IsString();
-    }
-
-    public bool IsArrayPointerStringOrFunction() {
-      return IsPointer() || IsFunctionOrArray();
-    }
-
-    public bool IsArrayFunctionStringStructOrUnionX() {
-      return IsFunctionOrArray() || IsString() || IsStructOrUnion();
     }
 
     public bool IsArithmetic() {
@@ -477,12 +453,8 @@ namespace CCompiler {
       return IsIntegral() || IsLogical() || IsPointer();
     }
 
-    public bool IsIntegralOrArray() {
-      return IsIntegral() || IsArray();
-    }
-
     public bool IsIntegralPointerOrArray() {
-      return IsIntegral() || IsPointer() || IsArray();
+      return IsIntegral() || IsPointerOrArray();
     }
 
     public bool IsIntegralPointerArrayOrString() {
@@ -490,10 +462,9 @@ namespace CCompiler {
     }
 
     public bool IsIntegralPointerArrayStringOrFunction() {
-      return IsIntegralPointerArrayOrString() || IsFunction();
+      return IsIntegralPointerArrayOrFunction() || IsString();
     }
 
-    
     public bool IsIntegralPointerOrFunction() {
       return IsIntegralOrPointer() || IsFunction();
     }
@@ -506,16 +477,8 @@ namespace CCompiler {
       return IsArithmetic() || IsPointer();
     }
 
-    public bool IsArithmeticPointerOrArray() {
-      return IsArithmeticOrPointer() || IsArray();
-    }
-
-    public bool IsArithmeticPointerArrayOrFunction() {
-      return IsArithmeticPointerOrArray() || IsFunction();
-    }
-
     public bool IsArithmeticPointerArrayStringOrFunction() {
-      return IsArithmeticPointerArrayOrFunction() || IsString();
+      return IsArithmeticOrPointer() || IsArray() || IsFunction() || IsString();
     }
 
     public bool IsStruct() {
@@ -528,10 +491,6 @@ namespace CCompiler {
   
     public bool IsStructOrUnion() {
       return IsStruct() || IsUnion();
-    }
-  
-    public bool IsArithmeticPointerStructOrUnion() {
-      return IsArithmeticOrPointer() || IsStructOrUnion();
     }
   
     public bool IsEnumerator() {

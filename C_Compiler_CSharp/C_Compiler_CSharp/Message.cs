@@ -57,7 +57,7 @@
     New_and_old_style_mixed_function_definitializerion,
     Non__integral_enum_value,
     Non__constant_enum_value,
-    Bitfields_only_allowed_on_structs,
+    Bitfields_only_allowed_in_structs_or_unions,
     Only_auto_or_register_storage_allowed_in_struct_or_union,
     Non__integral_bits_expression,
     Bits_value_out_of_range,
