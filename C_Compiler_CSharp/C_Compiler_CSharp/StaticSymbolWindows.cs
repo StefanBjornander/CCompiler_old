@@ -14,11 +14,11 @@ namespace CCompiler {
       // Empty.
     }
 
-    public StaticSymbolWindows(string uniqueName, List<byte> byteList = null, // Windows static object
+    public StaticSymbolWindows(string uniqueName, List<byte> byteList = null,
                         IDictionary<int,string> accessMap = null)
      :base(uniqueName) {
-      m_byteList = (byteList != null) ? byteList : (new List<byte>());
-      m_accessMap = (accessMap != null) ? accessMap : (new Dictionary<int,string>());
+      m_byteList = byteList;
+      m_accessMap = accessMap;
       m_callMap = new Dictionary<int,string>();
       m_returnSet = new HashSet<int>();
     }
@@ -52,48 +52,27 @@ namespace CCompiler {
     public override void Write(BinaryWriter outStream) {
       base.Write(outStream);
 
-      if (m_byteList != null) {
-        outStream.Write(m_byteList.Count);
-        foreach (sbyte b in m_byteList) {
-          outStream.Write(b);
-        }
-      }
-      else {
-        outStream.Write(0);
+      outStream.Write(m_byteList.Count);
+      foreach (sbyte b in m_byteList) {
+        outStream.Write(b);
       }
 
-      if (m_accessMap != null) {
-        outStream.Write(m_accessMap.Count);
-        foreach (KeyValuePair<int,string> entry in m_accessMap) {
-          outStream.Write(entry.Key);
-          outStream.Write(entry.Value);
-        }
-      }
-      else {
-        outStream.Write(0);
+      outStream.Write(m_accessMap.Count);
+      foreach (KeyValuePair<int,string> entry in m_accessMap) {
+        outStream.Write(entry.Key);
+        outStream.Write(entry.Value);
       }
     
-      if (m_callMap != null) {
-        outStream.Write(m_callMap.Count);
-        foreach (KeyValuePair<int,string> entry in m_callMap) {
-          outStream.Write(entry.Key);
-          outStream.Write(entry.Value);
-        }
-      }
-      else {
-        outStream.Write(0);
+      outStream.Write(m_callMap.Count);
+      foreach (KeyValuePair<int,string> entry in m_callMap) {
+        outStream.Write(entry.Key);
+        outStream.Write(entry.Value);
       }
 
-      if (m_returnSet != null) {
-        outStream.Write(m_returnSet.Count);
-        foreach (int address in m_returnSet) {
-          outStream.Write(address);
-        }
+      outStream.Write(m_returnSet.Count);
+      foreach (int address in m_returnSet) {
+        outStream.Write(address);
       }
-      else {
-        outStream.Write(0);
-      }
-
     }
 
     public override void Read(BinaryReader inStream) {
