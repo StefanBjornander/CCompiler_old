@@ -79,7 +79,7 @@ namespace CCompiler {
     private List<string> m_nameList;
     private List<Symbol> m_parameterList; 
     private List<Type> m_typeList;
-    private bool m_ellipse;
+    private bool m_variadic;
 
     public Type(Type returnType, List<string> nameList) {
       m_sort = Sort.Function;
@@ -87,21 +87,21 @@ namespace CCompiler {
       m_returnType = returnType;
       m_nameList = nameList;
       m_parameterList = null;
-      m_ellipse = false;
+      m_variadic = false;
 
       Assert.Error(nameList.Count == new HashSet<string>(nameList).Count,
                    null, Message.Duplicate_name_in_parameter_list);
     }
 
     public Type(Type returnType, List< Symbol> parameterList,
-                bool ellipse) {
+                bool variadic) {
       Assert.ErrorXXX(parameterList != null);
       m_sort = Sort.Function;
       m_functionStyle = FunctionStyle.New;
       m_returnType = returnType;
       m_nameList = null;
       m_parameterList = parameterList;
-      m_ellipse = ellipse;
+      m_variadic = variadic;
       m_typeList = null;
 
       if (parameterList != null) {
@@ -135,7 +135,7 @@ namespace CCompiler {
     }
 
     public bool IsEllipse() {
-      return m_ellipse;
+      return m_variadic;
     }
 
     // ------------------------------------------------------------------------
@@ -329,7 +329,7 @@ namespace CCompiler {
                      (((m_typeList == null) && (type.m_typeList == null)) ||
                       ((m_typeList != null) && (type.m_typeList != null) &&
                      m_typeList.SequenceEqual(type.m_typeList))) &&
-                     (m_ellipse == type.m_ellipse);
+                     (m_variadic == type.m_variadic);
 
             default:
               return true;

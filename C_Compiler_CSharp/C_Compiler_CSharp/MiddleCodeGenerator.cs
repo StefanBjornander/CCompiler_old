@@ -568,16 +568,16 @@ namespace CCompiler {
 
     public static Declarator NewFunctionDeclaration(Declarator declarator,
                                                    List<Symbol> parameterList,
-                                                   bool ellipse) {
+                                                   bool variadic) {
       if (parameterList.Count == 0) {
-        Assert.Error(!ellipse, "...",
+        Assert.Error(!variadic, "...",
             Message.An_elliptic_function_must_have_at_least_one_parameter);
       }
       else if ((parameterList.Count == 1) && parameterList[0].Type.IsVoid()) {
         Assert.Error(parameterList[0].Name == null,
                      parameterList[0].Name,
                      Message.A_void_parameter_cannot_be_named);
-        Assert.Error(!ellipse, "...", Message.
+        Assert.Error(!variadic, "...", Message.
                      An_elliptic_function_cannot_have_a_void_parameter);
         parameterList.Clear();
       }
@@ -588,7 +588,7 @@ namespace CCompiler {
         }
       }
 
-      declarator.Add(new Type(null, parameterList, ellipse));
+      declarator.Add(new Type(null, parameterList, variadic));
       return declarator;
     }
 
