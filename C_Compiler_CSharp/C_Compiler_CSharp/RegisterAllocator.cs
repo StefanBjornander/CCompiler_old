@@ -99,15 +99,15 @@ namespace CCompiler {
 
       return false;
     }
-//The PointerRegisterSetWithEllipse set holds the possible pointer registers of an elliptic function while PointerRegisterSetWithoutEllipse holds the possible pointer registers of an non-elliptic function. The Byte1RegisterSet ste holds all registers of one byte while Byte2RegisterSet holds all registers of two bytes.
+    //The VariadicFunctionPointerRegisterSet set holds the possible pointer registers of an variadic function while RegularFunctionPointerRegisterSet holds the possible pointer registers of an regular function. The Byte1RegisterSet set holds all registers of one byte while Byte2RegisterSet holds all registers of two bytes.
     public static ISet<Register>
-      PointerRegisterSetWithEllipse = new HashSet<Register>() {
+      VariadicFunctionPointerRegisterSet = new HashSet<Register>() {
         AssemblyCode.RegisterToSize(Register.bp, TypeSize.PointerSize),
         AssemblyCode.RegisterToSize(Register.si, TypeSize.PointerSize),
         AssemblyCode.RegisterToSize(Register.di, TypeSize.PointerSize),
         AssemblyCode.RegisterToSize(Register.bx, TypeSize.PointerSize)
       },
-      PointerRegisterSetWithoutEllipse = new HashSet<Register>(PointerRegisterSetWithEllipse),
+      RegularFunctionPointerRegisterSet = new HashSet<Register>(VariadicFunctionPointerRegisterSet),
       Byte1RegisterSet = new HashSet<Register>() {
         Register.al,Register.ah, Register.bl, Register.bh, 
         Register.cl, Register.ch, Register.dl, Register.dh
@@ -117,18 +117,21 @@ namespace CCompiler {
       };
 
     static RegisterAllocator() {
-      PointerRegisterSetWithEllipse.Remove(AssemblyCode.FrameRegister);
-      PointerRegisterSetWithoutEllipse.Remove(AssemblyCode.FrameRegister);
-      PointerRegisterSetWithoutEllipse.Remove(AssemblyCode.EllipseRegister);
+      VariadicFunctionPointerRegisterSet.
+        Remove(AssemblyCode.RegularFrameRegister);
+      RegularFunctionPointerRegisterSet.
+        Remove(AssemblyCode.RegularFrameRegister);
+      RegularFunctionPointerRegisterSet.
+        Remove(AssemblyCode.VariadicFrameRegister);
     }
 //The GetPossibleSet method returns the possible set a track, depending on whether the track holds a pointer, or the size of the track.
     private static ISet<Register> GetPossibleSet(Track track) {
       if (track.Pointer) {
-        if (SymbolTable.CurrentFunction.Type.IsEllipse()) {
-          return PointerRegisterSetWithoutEllipse;
+        if (SymbolTable.CurrentFunction.Type.IsVariadic()) {
+          return RegularFunctionPointerRegisterSet;
         }
         else {
-          return PointerRegisterSetWithEllipse;
+          return VariadicFunctionPointerRegisterSet;
         }
       }
 //If the track does not hold a pointer wee look into its size. If the size is one, we have a larger set to choose from. There are eight non-pointer registers of size one while there is four registers of the other sizes. 

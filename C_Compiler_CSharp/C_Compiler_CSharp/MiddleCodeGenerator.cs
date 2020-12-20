@@ -571,14 +571,14 @@ namespace CCompiler {
                                                    bool variadic) {
       if (parameterList.Count == 0) {
         Assert.Error(!variadic, "...",
-            Message.An_elliptic_function_must_have_at_least_one_parameter);
+            Message.An_variadic_function_must_have_at_least_one_parameter);
       }
       else if ((parameterList.Count == 1) && parameterList[0].Type.IsVoid()) {
         Assert.Error(parameterList[0].Name == null,
                      parameterList[0].Name,
                      Message.A_void_parameter_cannot_be_named);
         Assert.Error(!variadic, "...", Message.
-                     An_elliptic_function_cannot_have_a_void_parameter);
+                     An_variadic_function_cannot_have_a_void_parameter);
         parameterList.Clear();
       }
       else {
@@ -2250,7 +2250,7 @@ namespace CCompiler {
                    (argumentList.Count >= typeList.Count),
                    functionExpression,
                    Message.Too_few_actual_parameters_in_function_call);
-      Assert.Error(functionType.IsEllipse() || (typeList == null) ||
+      Assert.Error(functionType.IsVariadic() || (typeList == null) ||
                    (argumentList.Count == typeList.Count),
                    functionExpression,
                    Message.Too_many_parameters_in_function_call);

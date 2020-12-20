@@ -5,14 +5,14 @@ using System.Collections.Generic;
 
 namespace CCompiler {
   public class AssemblyCode {
-    public static Register FrameRegister, EllipseRegister, 
+    public static Register RegularFrameRegister, VariadicFrameRegister, 
                            ReturnValueRegister, ReturnPointerRegister;
                            //StorageRegister;
     public const Register ShiftRegister = Register.cl;
 
     static AssemblyCode() {
-      FrameRegister = RegisterToSize(Register.bp, TypeSize.PointerSize);
-      EllipseRegister = RegisterToSize(Register.di, TypeSize.PointerSize);
+      RegularFrameRegister = RegisterToSize(Register.bp, TypeSize.PointerSize);
+      VariadicFrameRegister = RegisterToSize(Register.di, TypeSize.PointerSize);
       ReturnValueRegister = RegisterToSize(Register.bx, TypeSize.PointerSize);
       ReturnPointerRegister = RegisterToSize(Register.bx, TypeSize.PointerSize);
       //StorageRegister = RegisterToSize(Register.si, TypeSize.PointerSize);

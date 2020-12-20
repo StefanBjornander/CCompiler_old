@@ -7,7 +7,7 @@ namespace CCompiler {
 
     public static int ReturnAddressOffset = 0;
     public static int RegularFrameOffset = TypeSize.PointerSize;
-    public static int EllipseFrameOffset = 2 * TypeSize.PointerSize;
+    public static int VariadicFrameOffset = 2 * TypeSize.PointerSize;
     public static int FunctionHeaderSize = 3 * TypeSize.PointerSize;
 
     private SymbolTable m_parentTable;

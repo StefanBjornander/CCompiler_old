@@ -413,13 +413,13 @@ namespace CCompiler {
     public Register BaseRegister(Symbol symbol) {
       Assert.ErrorXXX((symbol == null) || symbol.IsAutoOrRegister());
     
-      if (SymbolTable.CurrentFunction.Type.IsEllipse() &&
+      if (SymbolTable.CurrentFunction.Type.IsVariadic() &&
           (symbol != null) && !symbol.Parameter)
       {
-        return AssemblyCode.EllipseRegister;
+        return AssemblyCode.VariadicFrameRegister;
       }
       else {
-        return AssemblyCode.FrameRegister;
+        return AssemblyCode.RegularFrameRegister;
       }
     }
 
@@ -480,11 +480,11 @@ namespace CCompiler {
       Type calleeType = calleeSymbol.Type.IsFunction()
                       ? calleeSymbol.Type : calleeSymbol.Type.PointerType;
 
-      bool callerEllipse = SymbolTable.CurrentFunction.Type.IsEllipse(),
-           calleeEllipse = calleeType.IsEllipse();
+      bool callerEllipse = SymbolTable.CurrentFunction.Type.IsVariadic(),
+           calleeEllipse = calleeType.IsVariadic();
 
-      Register frameRegister = callerEllipse ? AssemblyCode.EllipseRegister
-                                             : AssemblyCode.FrameRegister;               
+      Register frameRegister = callerEllipse ? AssemblyCode.VariadicFrameRegister
+                                             : AssemblyCode.RegularFrameRegister;               
 
       AddAssemblyCode(AssemblyOperator.return_address, frameRegister,
                       recordSize + SymbolTable.ReturnAddressOffset,
@@ -492,12 +492,12 @@ namespace CCompiler {
 
       AddAssemblyCode(AssemblyOperator.mov, frameRegister,
                       recordSize + SymbolTable.RegularFrameOffset,
-                      AssemblyCode.FrameRegister);
+                      AssemblyCode.RegularFrameRegister);
 
       if (callerEllipse) {
         AddAssemblyCode(AssemblyOperator.mov, frameRegister,
-                        recordSize + SymbolTable.EllipseFrameOffset,
-                        AssemblyCode.EllipseRegister);
+                        recordSize + SymbolTable.VariadicFrameOffset,
+                        AssemblyCode.VariadicFrameRegister);
       }
 
 
@@ -510,16 +510,16 @@ namespace CCompiler {
                       (BigInteger) recordSize);
 
       if (callerEllipse) { // mov bp, di
-        AddAssemblyCode(AssemblyOperator.mov, AssemblyCode.FrameRegister,
-                        AssemblyCode.EllipseRegister);
+        AddAssemblyCode(AssemblyOperator.mov, AssemblyCode.RegularFrameRegister,
+                        AssemblyCode.VariadicFrameRegister);
       }
       else if (calleeEllipse) {
-        AddAssemblyCode(AssemblyOperator.mov, AssemblyCode.EllipseRegister,
-                        AssemblyCode.FrameRegister);
+        AddAssemblyCode(AssemblyOperator.mov, AssemblyCode.VariadicFrameRegister,
+                        AssemblyCode.RegularFrameRegister);
       }
 
       if (calleeEllipse && (extraSize > 0)) {
-        AddAssemblyCode(AssemblyOperator.add, AssemblyCode.EllipseRegister,
+        AddAssemblyCode(AssemblyOperator.add, AssemblyCode.VariadicFrameRegister,
                         (BigInteger) extraSize);
       }
 
@@ -684,7 +684,7 @@ namespace CCompiler {
         Symbol addressSymbol = new Symbol(new Type(symbol.Type));
         Track addressTrack = new Track(addressSymbol, register);
         Assert.ErrorXXX((addressTrack.Register == null) ||
-                        RegisterAllocator.PointerRegisterSetWithEllipse.
+                        RegisterAllocator.VariadicFunctionPointerRegisterSet.
                         Contains(addressTrack.Register.Value));
         addressTrack.Pointer = true;
         Assert.ErrorXXX(!(symbol.Value is BigInteger));
@@ -707,7 +707,7 @@ namespace CCompiler {
       if (SymbolTable.CurrentFunction.UniqueName.Equals
                       (AssemblyCodeGeneratorOld.MainName)) {
         Assert.ErrorXXX(m_floatStackSize == 0);
-        AddAssemblyCode(AssemblyOperator.cmp, AssemblyCode.FrameRegister,
+        AddAssemblyCode(AssemblyOperator.cmp, AssemblyCode.RegularFrameRegister,
                         SymbolTable.ReturnAddressOffset, BigInteger.Zero,
                         TypeSize.PointerSize);
 
@@ -741,13 +741,13 @@ namespace CCompiler {
     private void Return() {
       Track track = new Track(Type.VoidPointerType);
       AddAssemblyCode(AssemblyOperator.mov, track,
-                  AssemblyCode.FrameRegister,
+                  AssemblyCode.RegularFrameRegister,
                   SymbolTable.ReturnAddressOffset);
-      AddAssemblyCode(AssemblyOperator.mov, AssemblyCode.EllipseRegister,
-                      AssemblyCode.FrameRegister,
-                      SymbolTable.EllipseFrameOffset);
-      AddAssemblyCode(AssemblyOperator.mov, AssemblyCode.FrameRegister,
-                      AssemblyCode.FrameRegister,
+      AddAssemblyCode(AssemblyOperator.mov, AssemblyCode.VariadicFrameRegister,
+                      AssemblyCode.RegularFrameRegister,
+                      SymbolTable.VariadicFrameOffset);
+      AddAssemblyCode(AssemblyOperator.mov, AssemblyCode.RegularFrameRegister,
+                      AssemblyCode.RegularFrameRegister,
                       SymbolTable.RegularFrameOffset);
       AddAssemblyCode(AssemblyOperator.jmp, track);
     }
@@ -909,7 +909,7 @@ namespace CCompiler {
       else if (symbol.AddressSymbol != null) {
         Track addressTrack = LoadValueToRegister(symbol.AddressSymbol);
         Assert.ErrorXXX((addressTrack.Register == null) ||
-                        RegisterAllocator.PointerRegisterSetWithEllipse.
+                        RegisterAllocator.VariadicFunctionPointerRegisterSet.
                         Contains(addressTrack.Register.Value));
         addressTrack.Pointer = true;
         m_trackMap.Remove(symbol.AddressSymbol);
@@ -1686,7 +1686,7 @@ namespace CCompiler {
       AddAssemblyCode(assemblyCodeList, AssemblyOperator.comment,
                       "Initializerialize Stack Pointer");
       AddAssemblyCode(assemblyCodeList, AssemblyOperator.mov,
-                      AssemblyCode.FrameRegister, Linker.StackStart);
+                      AssemblyCode.RegularFrameRegister, Linker.StackStart);
 
       if (Start.Linux) {
         AddAssemblyCode(assemblyCodeList, AssemblyOperator.comment,
@@ -1701,11 +1701,11 @@ namespace CCompiler {
                         "Initializerialize FPU Control Word, truncate mode " +
                         "=> set bit 10 and 11.");
         AddAssemblyCode(assemblyCodeList, AssemblyOperator.fstcw,
-                        AssemblyCode.FrameRegister, 0);
+                        AssemblyCode.RegularFrameRegister, 0);
         AddAssemblyCode(assemblyCodeList, AssemblyOperator.or_word,
-                        AssemblyCode.FrameRegister, 0, (BigInteger) 0x0C00);
+                        AssemblyCode.RegularFrameRegister, 0, (BigInteger) 0x0C00);
         AddAssemblyCode(assemblyCodeList, AssemblyOperator.fldcw,
-                        AssemblyCode.FrameRegister, 0);
+                        AssemblyCode.RegularFrameRegister, 0);
         AddAssemblyCode(assemblyCodeList, AssemblyOperator.mov,
                         Linker.StackStart, 0, BigInteger.Zero,
                         TypeSize.PointerSize);
@@ -1724,11 +1724,11 @@ namespace CCompiler {
         AddAssemblyCode(assemblyCodeList, AssemblyOperator.mov_word,
                         null, 65534, (BigInteger)65534);
         AddAssemblyCode(assemblyCodeList, AssemblyOperator.fstcw,
-                        AssemblyCode.FrameRegister, 0);
+                        AssemblyCode.RegularFrameRegister, 0);
         AddAssemblyCode(assemblyCodeList, AssemblyOperator.or_word,
-                        AssemblyCode.FrameRegister, 0, (BigInteger) 0x0C00);
+                        AssemblyCode.RegularFrameRegister, 0, (BigInteger) 0x0C00);
         AddAssemblyCode(assemblyCodeList, AssemblyOperator.fldcw,
-                        AssemblyCode.FrameRegister, 0);
+                        AssemblyCode.RegularFrameRegister, 0);
         AddAssemblyCode(assemblyCodeList, AssemblyOperator.mov,
                         Linker.StackStart, 0, BigInteger.Zero,
                         TypeSize.PointerSize);

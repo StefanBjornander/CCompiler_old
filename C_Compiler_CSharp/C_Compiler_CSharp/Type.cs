@@ -134,7 +134,7 @@ namespace CCompiler {
       set { m_returnType = value; }
     }
 
-    public bool IsEllipse() {
+    public bool IsVariadic() {
       return m_variadic;
     }
 
