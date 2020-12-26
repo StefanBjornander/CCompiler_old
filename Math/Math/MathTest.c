@@ -122,7 +122,36 @@ void math_test_2(double x, double y) {
   printf("ldexp(%f, %i) = %f\n\n", x, (int) y, ldexp(x, (int) y));
 }
 
+#define X(m) { strftime(s, 1000, "%" #m, &u); printf(#m ": <%s>\n", s); }
 void main() {
+  { char s[1000];
+    time_t t = time(NULL);
+    struct tm u;
+    localtime_s(&u, &t);
+    X(a);
+    X(A);
+    X(b);
+    X(B);
+    X(c);
+    X(d);
+    X(H);
+    X(I);
+    X(j);
+    X(m);
+    X(M);
+    X(p);
+    X(S);
+    X(U);
+    X(w);
+    X(W);
+    X(x);
+    X(X);
+    X(y);
+    X(Y);
+    X(Z);
+    X(%);
+  }
+
   { int *p = NULL, *q;
     int i = 1;
     q = i + p;

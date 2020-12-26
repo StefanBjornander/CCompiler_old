@@ -1956,11 +1956,14 @@ namespace CCompiler {
                    expression.Symbol.Type.PointerType.IsStructOrUnion(),
                    expression,
              Message.Not_a_pointer_to_a_struct_or_union_in_arrow_expression);
-      Symbol memberSymbol =
-        expression.Symbol.Type.PointerType.MemberMap[memberName];
+      Symbol memberSymbol;
+      Assert.Error(expression.Symbol.Type.PointerType.MemberMap.
+                   TryGetValue(memberName, out memberSymbol),
+                   memberName, Message.Unknown_member_in_arrow_expression);
       Assert.Error(memberSymbol != null, memberName,
                    Message.Unknown_member_in_arrow_expression);
-      Symbol resultSymbol = new Symbol(memberSymbol.Type); 
+
+      Symbol resultSymbol = new Symbol(memberSymbol.Type);
       return Dereference(expression, resultSymbol, memberSymbol.Offset);
     }
 
@@ -2056,11 +2059,10 @@ namespace CCompiler {
                    Message.Not_a_struct_or_union_in_dot_expression);
       Assert.Error(parentSymbol.Type.MemberMap != null, expression,
                    Message.Member_access_of_uncomplete_struct_or_union);
-
       Symbol memberSymbol;
-      Assert.Error(parentSymbol.Type.MemberMap.TryGetValue(memberName,
-                   out memberSymbol), memberName,
-                   Message.Unknown_member_in_dot_expression);
+      Assert.Error(parentSymbol.Type.MemberMap.
+                   TryGetValue(memberName, out memberSymbol),
+                   memberName, Message.Unknown_member_in_dot_expression);
 
       Symbol resultSymbol;
       if (parentSymbol.AddressSymbol != null) {
