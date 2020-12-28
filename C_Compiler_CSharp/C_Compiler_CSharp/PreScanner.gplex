@@ -29,6 +29,11 @@ TOKEN [^a-zA-Z0-9()#,\"\' \t\r\n\f\0]+
   return ((int) Tokens.NAME);
 }
 
+{NAME_WITH_PARENTHESES} {
+  yylval.name = yytext.Substring(0, yytext.Length - 1);
+  return ((int) Tokens.NAME_WITH_PARENTHESES);
+}
+
 {OCTAL_VALUE} {
   yylval.name = yytext;
   return ((int) Tokens.TOKEN);

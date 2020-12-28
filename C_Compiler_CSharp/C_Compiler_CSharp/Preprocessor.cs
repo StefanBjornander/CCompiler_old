@@ -441,15 +441,20 @@ namespace CCompiler {
     // ------------------------------------------------------------------------
 
     public void DoDefine(List<Token> tokenList) {
-      Assert.Error(tokenList[2].Id == CCompiler_Pre.Tokens.NAME,
-                   TokenListToString(tokenList),
-                   Message.Invalid_define_directive);
-      string name = tokenList[2].ToString();
+      Assert.Error((tokenList[2].Id == CCompiler_Pre.Tokens.NAME) ||
+                   (tokenList[2].Id == CCompiler_Pre.Tokens.NAME_WITH_PARENTHESES),
+                   TokenListToString(tokenList), Message.Invalid_define_directive);
       Macro macro;
+      string name;
 
-      if ((tokenList[3].Id == CCompiler_Pre.Tokens.LEFT_PARENTHESIS) &&
-          !tokenList[3].HasWhitespace()) {
-        int tokenIndex = 4, paramIndex = 0;
+      if (tokenList[2].Id == CCompiler_Pre.Tokens.NAME) {
+        name = (string) tokenList[2].Value;
+        macro = new Macro(0, tokenList.GetRange(3, tokenList.Count - 3));
+      }
+      else {
+        name = (string) tokenList[2].Value;
+
+        int tokenIndex = 3, paramIndex = 0;
         IDictionary<string,int> paramMap = new Dictionary<string,int>();
 
         while (true) {
@@ -478,11 +483,18 @@ namespace CCompiler {
         List<Token> macroList =
           tokenList.GetRange(tokenIndex, tokenList.Count - tokenIndex);
 
-        foreach (Token macroToken in macroList) {
-          if (macroToken.Id == CCompiler_Pre.Tokens.NAME) {
+        for (int index = macroList.Count - 1; index >= 0; --index) {
+          Token macroToken = macroList[index];
+
+          if ((macroToken.Id == CCompiler_Pre.Tokens.NAME) ||
+              (macroToken.Id == CCompiler_Pre.Tokens.NAME_WITH_PARENTHESES)) {
             string macroName = (string) macroToken.Value;
 
             if (paramMap.ContainsKey(macroName)) {
+              if (macroToken.Id == CCompiler_Pre.Tokens.NAME_WITH_PARENTHESES) {
+                macroList.Insert(index + 1, new Token(CCompiler_Pre.Tokens.LEFT_PARENTHESIS, "("));
+              }
+
               macroToken.Id = CCompiler_Pre.Tokens.MARK;
               macroToken.Value = paramMap[macroName];
             }
@@ -490,9 +502,6 @@ namespace CCompiler {
         }
       
         macro = new Macro(paramMap.Count, macroList);
-      }
-      else {
-        macro = new Macro(0, tokenList.GetRange(3, tokenList.Count - 3));
       }
     
       if (!m_macroMap.ContainsKey(name)) {
@@ -622,140 +631,155 @@ namespace CCompiler {
           int beginNewlineCount = thisToken.GetNewlineCount();
 
           if (!nameStack.Contains(name) && m_macroMap.ContainsKey(name)) {            
-            Token nextToken = tokenList[index + 1];
+            Macro macro = m_macroMap[name];
+            Assert.Error(macro.Parameters() == 0, name, Message.
+                         Invalid_number_of_parameters_in_macro_call);
+            List<Token> cloneListX = CloneList(macro.TokenList());
+            nameStack.Push(name);
+            SearchForMacros(cloneListX, nameStack);
+            nameStack.Pop();
 
-            if ((nextToken.Id == CCompiler_Pre.Tokens.LEFT_PARENTHESIS) &&
-                !nextToken.HasWhitespace()) {
-              int countIndex = index + 2, level = 1, totalNewlineCount = 0;
-              List<Token> subList = new List<Token>();
-              List<List<Token>> mainList = new List<List<Token>>();
+            tokenList.RemoveAt(index);
+            tokenList.InsertRange(index, cloneListX);
+            tokenList[index].AddNewlineCount(beginNewlineCount);
+            index += cloneListX.Count - 1;
+          }
+          else {
+            switch (name) {
+              case "__STDC__":
+                tokenList[index] =
+                  new Token(CCompiler_Pre.Tokens.TOKEN, 1, beginNewlineCount);
+                break;
+
+              case "__FILE__": {
+                    string text = "\"" + CCompiler_Main.Scanner.Path
+                                .FullName.Replace("\\", "\\\\") + "\"";
+                    tokenList[index] =
+                  new Token(CCompiler_Pre.Tokens.TOKEN, text, beginNewlineCount);
+                }
+                break;
+          
+              case "__LINE__":
+                tokenList[index] =
+                  new Token(CCompiler_Pre.Tokens.TOKEN,
+                            CCompiler_Main.Scanner.Line, beginNewlineCount);
+                break;
+
+              case "__DATE__": {
+                  string text = "\"" + DateTime.Now.ToString("MMMM dd yyyy") + "\"";
+                  tokenList[index] =
+                    new Token(CCompiler_Pre.Tokens.TOKEN, text, beginNewlineCount);
+                }
+                break;
+
+              case "__TIME__": {
+                  string text = "\"" + DateTime.Now.ToString("HH:mm:ss") + "\"";
+                  tokenList[index] =
+                    new Token(CCompiler_Pre.Tokens.TOKEN, text, beginNewlineCount);
+                }
+                break;
+            }
+          }
+        }
+        else if (thisToken.Id == CCompiler_Pre.Tokens.NAME_WITH_PARENTHESES) {
+          string name = (string) thisToken.Value;
+          int beginNewlineCount = thisToken.GetNewlineCount();
+
+          if (name.Equals("PRINT")) {
+            int i = 1;
+          }
+
+          if (!nameStack.Contains(name) && m_macroMap.ContainsKey(name)) {
+            int countIndex = index + 1, level = 1, totalNewlineCount = 0;
+            List<Token> subList = new List<Token>();
+            List<List<Token>> mainList = new List<List<Token>>();
         
-              while (true) {
-                nextToken = tokenList[countIndex];
-                int newlineCount = nextToken.GetNewlineCount();
-                totalNewlineCount += newlineCount;
-                CCompiler_Main.Scanner.Line += newlineCount;
-                nextToken.ClearNewlineCount();
+            while (true) {
+              Token nextToken = tokenList[countIndex];
+              int newlineCount = nextToken.GetNewlineCount();
+              totalNewlineCount += newlineCount;
+              CCompiler_Main.Scanner.Line += newlineCount;
+              nextToken.ClearNewlineCount();
               
-                Token token = tokenList[countIndex];
-                Assert.Error(token.Id != CCompiler_Pre.Tokens.EOF,
-                             Message.Invalid_end_of_macro_call);
+              Token token = tokenList[countIndex];
+              Assert.Error(token.Id != CCompiler_Pre.Tokens.EOF,
+                            Message.Invalid_end_of_macro_call);
               
-                switch (token.Id) {
-                  case CCompiler_Pre.Tokens.LEFT_PARENTHESIS:
-                    ++level;
-                    subList.Add(token);
-                    break;
-                  
-                  case CCompiler_Pre.Tokens.RIGHT_PARENTHESIS:
-                    if ((--level) > 0) {
-                      subList.Add(token);
-                    }
-                    break;
-                  
-                  default:
-                    if ((level == 1) &&
-                        (token.Id == CCompiler_Pre.Tokens.COMMA)) {
-                      Assert.Error(subList.Count > 0, name,
-                                   Message.Empty_macro_parameter);
-                      SearchForMacros(subList, nameStack); // XXX
-                      mainList.Add(subList);
-                      subList = new List<Token>();
-                    }
-                    else {
-                      subList.Add(token);
-                    }
-                    break;
-                }
-              
-                if (level == 0) {
-                  Assert.Error(subList.Count > 0, name,
-                               Message.Empty_macro_parameter_list);
-                  mainList.Add(subList);
+              switch (token.Id) {
+                case CCompiler_Pre.Tokens.LEFT_PARENTHESIS:
+                  ++level;
+                  subList.Add(token);
                   break;
-                }
-              
-                ++countIndex;
-              }
-
-              Macro macro = m_macroMap[name];
-              Assert.Error(macro.Parameters() == mainList.Count, name,
-                         Message.Invalid_number_of_parameters_in_macro_call);
-            
-              List<Token> cloneListX = CloneList(macro.TokenList());
-            
-              for (int macroIndex = (cloneListX.Count - 1);
-                   macroIndex >= 0; --macroIndex) {
-                Token macroToken = cloneListX[macroIndex];
-
-                if (macroToken.Id == CCompiler_Pre.Tokens.MARK) {
-                  int markIndex = (int) macroToken.Value;
-                  cloneListX.RemoveAt(macroIndex);
-                  List<Token> replaceList = CloneList(mainList[markIndex]);
-
-                  if ((macroIndex > 0) && (cloneListX[macroIndex - 1].Id ==
-                                           CCompiler_Pre.Tokens.SHARP)) {
-                    string text = "\"" + TokenListToString(replaceList) + "\"";
-                    cloneListX.Insert(macroIndex,
-                                new Token(CCompiler_Pre.Tokens.STRING, text));
-                    cloneListX.RemoveAt(--macroIndex);
+                  
+                case CCompiler_Pre.Tokens.RIGHT_PARENTHESIS:
+                  if ((--level) > 0) {
+                    subList.Add(token);
+                  }
+                  break;
+                  
+                default:
+                  if ((level == 1) &&
+                      (token.Id == CCompiler_Pre.Tokens.COMMA)) {
+                    Assert.Error(subList.Count > 0, name,
+                                  Message.Empty_macro_parameter);
+                    SearchForMacros(subList, nameStack); // XXX
+                    mainList.Add(subList);
+                    subList = new List<Token>();
                   }
                   else {
-                    cloneListX.InsertRange(macroIndex, replaceList);
+                    subList.Add(token);
                   }
-                }              
+                  break;
               }
-
-              nameStack.Push(name);
-              SearchForMacros(cloneListX, nameStack);
-              nameStack.Pop();
-
-              tokenList.RemoveRange(index, countIndex - index + 1);
-              tokenList.InsertRange(index, cloneListX);
-              tokenList[index].AddNewlineCount(beginNewlineCount);
-              tokenList[index +
-                        cloneListX.Count].AddNewlineCount(totalNewlineCount);
-              index += cloneListX.Count - 1;
+              
+              if (level == 0) {
+                Assert.Error(subList.Count > 0, name,
+                              Message.Empty_macro_parameter_list);
+                mainList.Add(subList);
+                break;
+              }
+              
+              ++countIndex;
             }
-            else {
-              Macro macro = m_macroMap[name];
-              Assert.Error(macro.Parameters() == 0, name, Message.
-                           Invalid_number_of_parameters_in_macro_call);
-              List<Token> cloneListX = CloneList(macro.TokenList());
-              nameStack.Push(name);
-              SearchForMacros(cloneListX, nameStack);
-              nameStack.Pop();
 
-              tokenList.RemoveAt(index);
-              tokenList.InsertRange(index, cloneListX);
-              tokenList[index].AddNewlineCount(beginNewlineCount);
-              index += cloneListX.Count - 1;
+            Macro macro = m_macroMap[name];
+            Assert.Error(macro.Parameters() == mainList.Count, name,
+                         Message.Invalid_number_of_parameters_in_macro_call);
+            
+            List<Token> cloneListX = CloneList(macro.TokenList());
+            
+            for (int macroIndex = (cloneListX.Count - 1);
+                  macroIndex >= 0; --macroIndex) {
+              Token macroToken = cloneListX[macroIndex];
+
+              if (macroToken.Id == CCompiler_Pre.Tokens.MARK) {
+                int markIndex = (int) macroToken.Value;
+                cloneListX.RemoveAt(macroIndex);
+                List<Token> replaceList = CloneList(mainList[markIndex]);
+
+                if ((macroIndex > 0) && (cloneListX[macroIndex - 1].Id ==
+                                          CCompiler_Pre.Tokens.SHARP)) {
+                  string text = "\"" + TokenListToString(replaceList) + "\"";
+                  cloneListX.Insert(macroIndex,
+                              new Token(CCompiler_Pre.Tokens.STRING, text));
+                  cloneListX.RemoveAt(--macroIndex);
+                }
+                else {
+                  cloneListX.InsertRange(macroIndex, replaceList);
+                }
+              }              
             }
-          }
-          else if (name.Equals("__STDC__")) {
-            tokenList[index] =
-              new Token(CCompiler_Pre.Tokens.TOKEN, 1, beginNewlineCount);
-          }
-          else if (name.Equals("__FILE__")) {
-            string text = "\"" + CCompiler_Main.Scanner.Path
-                          .FullName.Replace("\\", "\\\\") + "\"";
-            tokenList[index] =
-              new Token(CCompiler_Pre.Tokens.TOKEN, text, beginNewlineCount);
-          }
-          else if (name.Equals("__LINE__")) {
-            tokenList[index] =
-              new Token(CCompiler_Pre.Tokens.TOKEN,
-                        CCompiler_Main.Scanner.Line, beginNewlineCount);
-          }
-          else if (name.Equals("__DATE__")) {
-            string text = "\"" + DateTime.Now.ToString("MMMM dd yyyy") + "\"";
-            tokenList[index] =
-              new Token(CCompiler_Pre.Tokens.TOKEN, text, beginNewlineCount);
-          }
-          else if (name.Equals("__TIME__")) {
-            string text = "\"" + DateTime.Now.ToString("HH:mm:ss") + "\"";
-            tokenList[index] =
-              new Token(CCompiler_Pre.Tokens.TOKEN, text, beginNewlineCount);
+
+            nameStack.Push(name);
+            SearchForMacros(cloneListX, nameStack);
+            nameStack.Pop();
+
+            tokenList.RemoveRange(index, countIndex - index + 1);
+            tokenList.InsertRange(index, cloneListX);
+            tokenList[index].AddNewlineCount(beginNewlineCount);
+            tokenList[index +
+                      cloneListX.Count].AddNewlineCount(totalNewlineCount);
+            index += cloneListX.Count - 1;
           }
         }
       }

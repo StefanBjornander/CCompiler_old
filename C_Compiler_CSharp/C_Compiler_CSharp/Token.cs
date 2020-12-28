@@ -86,6 +86,9 @@ namespace CCompiler {
   
     public override string ToString() {
       switch (m_id) {
+        case CCompiler_Pre.Tokens.NAME_WITH_PARENTHESES:
+          return m_value.ToString() + " (";
+
         case CCompiler_Pre.Tokens.EOF:
           return "";
 
