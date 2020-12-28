@@ -96,8 +96,8 @@ namespace CCompiler {
     }*/
 
     public void TraverseBuffer(StringBuilder buffer) {
-      buffer.Append("\0");      
-      
+      buffer.Append("\0");
+
       for (int index = 0; index < buffer.Length; ++index) {
         if ((buffer[index] == '/') && (buffer[index + 1] == '*')) {
           buffer[index++] = ' ';
@@ -190,48 +190,20 @@ namespace CCompiler {
         }
       }
 
+      /*for (int index = lineList.Count - 1; index >= 0; --index) {
+        string line = lineList[index];
+        int returnCount = line.Split('\r').Length - 1;
+        lineList[index] = line.Replace('\r', ' ').Trim();
+        for (int count = 1; count < returnCount; ++count) {
+          lineList.Insert(index + 1, "");
+        }
+      }*/
+
       return resultList;
     }
 
-    /*private List<string> GenerateLineListX(string text) {
-      List<string> trimList = new List<string>();
-      foreach (string line in text.Split('\n')) {
-        trimList.Add(line.Trim());
-      }
-
-      int index = 0;
-      List<string> resultList = new List<string>();
-
-      while (index < trimList.Count) {
-        if (trimList[index].StartsWith("#")) {
-          StringBuilder buffer = new StringBuilder();
-
-          for (; (index < trimList.Count) && trimList[index].EndsWith("\\");
-               ++index) {
-            buffer.Append(trimList[index].
-                          Substring(0, trimList[index].Length - 1) + "\n");
-          }
-
-          if (index < trimList.Count) {
-            buffer.Append(trimList[index++] + "\n");
-          }
-
-          resultList.Add(buffer.ToString());
-        }
-        else {
-          StringBuilder buffer = new StringBuilder();
-
-          for (; (index < trimList.Count) && !trimList[index].StartsWith("#");
-               ++index) {
-            buffer.Append(trimList[index] + "\n");
-          }
-
-          resultList.Add(buffer.ToString());
-        }
-      }
-
-      return resultList;
-    }*/
+    // #define MAX(x, y) ((x) < (y)) ? (x) : (y);
+    // int i = max(1, 2);
 
     private List<Token> Scan(string text) {
       byte[] byteArray = Encoding.ASCII.GetBytes(text);
@@ -319,8 +291,6 @@ namespace CCompiler {
               }
             }
           }
-
-          AddNewlinesToBuffer(tokenList);
         }
         else {
           if (IsVisible()) {
@@ -329,31 +299,30 @@ namespace CCompiler {
             MergeStrings(tokenList);
             AddTokenListToBuffer(tokenList);
           }
-          else {
-            AddNewlinesToBuffer(tokenList);
-          }
         }
+
+        m_outputBuffer.Append("\n");
+        ++CCompiler_Main.Scanner.Line;
       }
     }
 
     private void AddTokenListToBuffer(List<Token> tokenList) {
+      bool first = true;
+
       foreach (Token token in tokenList) {
-        m_outputBuffer.Append(token.ToNewlineString() + token.ToString());
+        m_outputBuffer.Append((first ? "" : " ") + token.ToString());
+        first = false;
       }
 
       m_outputBuffer.Append("\n");
-      ++CCompiler_Main.Scanner.Line;
     }
   
-    private void AddNewlinesToBuffer(List<Token> tokenList) {
+    /*private void AddNewlinesToBuffer(List<Token> tokenList) {
       foreach (Token token in tokenList) {
         m_outputBuffer.Append(token.ToNewlineString());
         CCompiler_Main.Scanner.Line += token.GetNewlineCount();
       }
-
-      m_outputBuffer.Append("\n");
-      ++CCompiler_Main.Scanner.Line;
-    }
+    }*/
   
     private bool IsVisible() {
       foreach (IfElseChain ifElseChain in m_ifElseChainStack) {

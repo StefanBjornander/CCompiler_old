@@ -42,6 +42,7 @@ namespace CCompiler {
 
     private static void Error(string message, string text) {
       Message("Error", message, text);    
+      
       Console.In.ReadLine();
       System.Environment.Exit(-1);
     }

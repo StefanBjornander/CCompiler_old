@@ -4,9 +4,9 @@
 
 // GPPG version 1.5.2
 // Machine:  STEFAN1968
-// DateTime: 2020-12-25 22:01:37
+// DateTime: 2020-12-28 10:25:27
 // UserName: Stefan
-// Input file <PreParser.gppg - 2020-05-11 12:33:08>
+// Input file <PreParser.gppg - 2020-12-27 19:35:26>
 
 // options: lines gplex
 
@@ -19,8 +19,9 @@ using QUT.Gppg;
 
 namespace CCompiler_Pre
 {
-public enum Tokens {error=2,EOF=3,NAME=4,STRING=5,LEFT_PARENTHESIS=6,
-    RIGHT_PARENTHESIS=7,COMMA=8,SHARP=9,DOUBLE_SHARP=10,TOKEN=11,MARK=12};
+public enum Tokens {error=2,EOF=3,NAME=4,NAME_WITH_PARENTHESES=5,STRING=6,
+    LEFT_PARENTHESIS=7,RIGHT_PARENTHESIS=8,COMMA=9,SHARP=10,DOUBLE_SHARP=11,TOKEN=12,
+    MARK=13};
 
 public partial struct ValueType
 #line 8 "PreParser.gppg"
@@ -50,11 +51,11 @@ public class ScanObj {
 [GeneratedCodeAttribute( "Gardens Point Parser Generator", "1.5.2")]
 public partial class Parser: ShiftReduceParser<ValueType, LexLocation>
 {
-  // Verbatim content from PreParser.gppg - 2020-05-11 12:33:08
+  // Verbatim content from PreParser.gppg - 2020-12-27 19:35:26
 #line 5 "PreParser.gppg"
   // Empty.
 #line default
-  // End verbatim content from PreParser.gppg - 2020-05-11 12:33:08
+  // End verbatim content from PreParser.gppg - 2020-12-27 19:35:26
 
 #pragma warning disable 649
   private static Dictionary<int, string> aliases;

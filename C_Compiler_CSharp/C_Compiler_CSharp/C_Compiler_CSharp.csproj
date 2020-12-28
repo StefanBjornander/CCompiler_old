@@ -54,7 +54,9 @@
     <Compile Include="AssemblyCodeGenerator.cs" />
     <Compile Include="IfElseChain.cs" />
     <Compile Include="MiddleCode.cs" />
-    <Compile Include="Preprocessor.cs" />
+    <Compile Include="Preprocessor.cs">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="Slash.cs" />
     <Compile Include="StaticBase.cs" />
     <Compile Include="Track.cs" />
