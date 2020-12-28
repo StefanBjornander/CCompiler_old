@@ -6,9 +6,9 @@
 //
 //  GPLEX Version:  1.2.2
 //  Machine:  STEFAN1968
-//  DateTime: 2020-12-28 12:13:06
+//  DateTime: 2020-12-28 17:52:02
 //  UserName: Stefan
-//  GPLEX input file <PreScanner.gplex - 2020-12-28 12:13:01>
+//  GPLEX input file <PreScanner.gplex - 2020-12-28 13:52:32>
 //  GPLEX frame file <embedded resource>
 //
 //  Option settings: parser, minimize
@@ -132,7 +132,6 @@ namespace CCompiler_Pre
 
 #region user code
 public static int NewlineCount = 0;
-  public static bool Whitespace = false;
 #endregion user code
 
         int state;
@@ -780,8 +779,6 @@ yylval.name = yytext;
 if (yytext.Equals("\n")) {
     ++CCompiler_Pre.Scanner.NewlineCount;
   }
-
-  CCompiler_Pre.Scanner.Whitespace = true;
             break;
         case 5:
 yylval.name = "#"; return ((int) Tokens.SHARP);

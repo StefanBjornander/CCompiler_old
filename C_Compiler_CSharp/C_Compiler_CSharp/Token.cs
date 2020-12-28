@@ -4,23 +4,19 @@ namespace CCompiler {
   public class Token {
     private CCompiler_Pre.Tokens m_id;
     private object m_value;
-    private bool m_whitespace;
     private int m_newlineCount;
   
     public Token(CCompiler_Pre.Tokens id, object value) {
       m_id = id;
       m_value = value;
       m_newlineCount = CCompiler_Pre.Scanner.NewlineCount;
-      m_whitespace = CCompiler_Pre.Scanner.Whitespace;
       CCompiler_Pre.Scanner.NewlineCount = 0;
-      CCompiler_Pre.Scanner.Whitespace = false;
     }
 
     public Token(CCompiler_Pre.Tokens id, object value, int newlineCount) {
       m_id = id;
       m_value = value;
       m_newlineCount = newlineCount;
-      m_whitespace = false;
     }
 
     public void AddNewlineCount(int newlineCount) {
@@ -66,10 +62,6 @@ namespace CCompiler {
       m_newlineCount = 0;
     }
   
-    public bool HasWhitespace() {
-      return m_whitespace;
-    }
-
     public override int GetHashCode() {
       return base.GetHashCode();
     }

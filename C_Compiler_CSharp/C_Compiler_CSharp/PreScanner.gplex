@@ -2,7 +2,6 @@
 
 %{
   public static int NewlineCount = 0;
-  public static bool Whitespace = false;
 %}
 
 OCTAL_VALUE (\+|\-)?[0][0-7]*([uU]|[sSlL]|[uU][sSlL]|[sSlL][uU])?
@@ -73,8 +72,6 @@ TOKEN [^a-zA-Z0-9()#,\"\' \t\r\n\f\0]+
   if (yytext.Equals("\n")) {
     ++CCompiler_Pre.Scanner.NewlineCount;
   }
-
-  CCompiler_Pre.Scanner.Whitespace = true;
 }
 
 . { CCompiler.Assert.Error("<" + yytext + ">",

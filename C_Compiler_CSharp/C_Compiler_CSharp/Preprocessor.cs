@@ -179,18 +179,40 @@ namespace CCompiler {
 
     private List<string> GenerateLineList(string text) {
       List<string> lineList = new List<string>(text.Split('\n'));
-      List<string> resultList = new List<string>();
+      List<string> mergeList = new List<string>();
 
       foreach (string line in lineList) {
         int returnCount = line.Split('\r').Length - 1;
-        resultList.Add(line.Replace('\r', ' ').Trim());
+        mergeList.Add(line.Replace('\r', ' ').Trim());
 
         for (int count = 1; count < returnCount; ++count) {
-          resultList.Add("");
+          mergeList.Add("");
         }
       }
 
-      return resultList;
+      { int index = 0;
+        List<string> resultList = new List<string>();
+
+        while (index < mergeList.Count) {
+          if (mergeList[index].StartsWith("#")) {
+            resultList.Add(mergeList[index++]);
+          }
+          else {
+            bool first = true;
+            StringBuilder buffer = new StringBuilder();
+
+            for (; (index < mergeList.Count) &&
+                   !mergeList[index].StartsWith("#"); ++index) {
+              buffer.Append((first ? "" : "\n") + mergeList[index]);
+              first = false;
+            }
+
+            resultList.Add(buffer.ToString());
+          }
+        }
+
+        return resultList;
+      }
     }
 
     /*private List<string> GenerateLineListX(string text) {
@@ -442,8 +464,10 @@ namespace CCompiler {
 
     public void DoDefine(List<Token> tokenList) {
       Assert.Error((tokenList[2].Id == CCompiler_Pre.Tokens.NAME) ||
-                   (tokenList[2].Id == CCompiler_Pre.Tokens.NAME_WITH_PARENTHESES),
-                   TokenListToString(tokenList), Message.Invalid_define_directive);
+                   (tokenList[2].Id ==
+                    CCompiler_Pre.Tokens.NAME_WITH_PARENTHESES),
+                   TokenListToString(tokenList),
+                   Message.Invalid_define_directive);
       Macro macro;
       string name;
 
@@ -491,8 +515,10 @@ namespace CCompiler {
             string macroName = (string) macroToken.Value;
 
             if (paramMap.ContainsKey(macroName)) {
-              if (macroToken.Id == CCompiler_Pre.Tokens.NAME_WITH_PARENTHESES) {
-                macroList.Insert(index + 1, new Token(CCompiler_Pre.Tokens.LEFT_PARENTHESIS, "("));
+              if (macroToken.Id == CCompiler_Pre.Tokens.NAME_WITH_PARENTHESES)
+              { Token newToken =
+                  new Token(CCompiler_Pre.Tokens.LEFT_PARENTHESIS, "("); 
+                  macroList.Insert(index + 1, newToken);
               }
 
               macroToken.Id = CCompiler_Pre.Tokens.MARK;
@@ -654,8 +680,8 @@ namespace CCompiler {
               case "__FILE__": {
                     string text = "\"" + CCompiler_Main.Scanner.Path
                                 .FullName.Replace("\\", "\\\\") + "\"";
-                    tokenList[index] =
-                  new Token(CCompiler_Pre.Tokens.TOKEN, text, beginNewlineCount);
+                    tokenList[index] = new Token(CCompiler_Pre.Tokens.TOKEN, 
+                                                 text, beginNewlineCount);
                 }
                 break;
           
@@ -666,16 +692,18 @@ namespace CCompiler {
                 break;
 
               case "__DATE__": {
-                  string text = "\"" + DateTime.Now.ToString("MMMM dd yyyy") + "\"";
-                  tokenList[index] =
-                    new Token(CCompiler_Pre.Tokens.TOKEN, text, beginNewlineCount);
+                  string text = "\"" + DateTime.Now.ToString("MMMM dd yyyy") +
+                                "\"";
+                  tokenList[index] = new Token(CCompiler_Pre.Tokens.TOKEN,
+                                               text, beginNewlineCount);
                 }
                 break;
 
               case "__TIME__": {
-                  string text = "\"" + DateTime.Now.ToString("HH:mm:ss") + "\"";
-                  tokenList[index] =
-                    new Token(CCompiler_Pre.Tokens.TOKEN, text, beginNewlineCount);
+                  string text = "\"" + DateTime.Now.ToString("HH:mm:ss") +
+                                "\"";
+                  tokenList[index] = new Token(CCompiler_Pre.Tokens.TOKEN,
+                                               text, beginNewlineCount);
                 }
                 break;
             }
@@ -684,10 +712,6 @@ namespace CCompiler {
         else if (thisToken.Id == CCompiler_Pre.Tokens.NAME_WITH_PARENTHESES) {
           string name = (string) thisToken.Value;
           int beginNewlineCount = thisToken.GetNewlineCount();
-
-          if (name.Equals("PRINT")) {
-            int i = 1;
-          }
 
           if (!nameStack.Contains(name) && m_macroMap.ContainsKey(name)) {
             int countIndex = index + 1, level = 1, totalNewlineCount = 0;
