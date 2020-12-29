@@ -412,8 +412,7 @@ namespace CCompiler {
 
     // ------------------------------------------------------------------------
 
-    private void DoInclude(List<Token> tokenList)
-    {
+    private void DoInclude(List<Token> tokenList) {
       FileInfo includeFile = null;
 
       if ((tokenList[2].Id == CCompiler_Pre.Tokens.STRING) &&
