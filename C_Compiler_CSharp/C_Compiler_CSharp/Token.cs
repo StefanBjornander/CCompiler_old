@@ -81,12 +81,6 @@ namespace CCompiler {
         case CCompiler_Pre.Tokens.NAME_WITH_PARENTHESES:
           return m_value.ToString() + " (";
 
-        case CCompiler_Pre.Tokens.EOF:
-          return "";
-
-        case CCompiler_Pre.Tokens.MARK:
-          return "<mark " + ((string) m_value) + ">";
-
         default:
           return m_value.ToString();
       }

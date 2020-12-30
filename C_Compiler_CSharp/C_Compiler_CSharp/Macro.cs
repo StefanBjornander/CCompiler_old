@@ -9,12 +9,6 @@ namespace CCompiler {
     public Macro(int parameters, List<Token> tokenList) {
       m_parameters = parameters;
       m_tokenList = new List<Token>(tokenList);
-    
-      for (int index = (m_tokenList.Count - 1); index >= 0; --index) {
-        if (m_tokenList[index].Id == CCompiler_Pre.Tokens.EOF) {
-          m_tokenList.RemoveAt(index);
-        }
-      }
     }
 
     public int Parameters() {
