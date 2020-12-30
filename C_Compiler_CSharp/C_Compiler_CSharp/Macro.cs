@@ -5,18 +5,24 @@ namespace CCompiler {
   public class Macro {
     private int m_parameters;
     private List<Token> m_tokenList;
+    private IDictionary<int,int> m_indexToParamMap;
   
-    public Macro(int parameters, List<Token> tokenList) {
+    public Macro(int parameters, List<Token> tokenList, IDictionary<int,int> indexToParamMap) {
       m_parameters = parameters;
       m_tokenList = new List<Token>(tokenList);
+      m_indexToParamMap = indexToParamMap;
     }
 
-    public int Parameters() {
-      return m_parameters;
+    public int Parameters {
+      get {return m_parameters;}
     }
   
-    public List<Token> TokenList() {
-      return m_tokenList;
+    public List<Token> TokenList {
+      get {return m_tokenList;}
+    }
+
+    public IDictionary<int,int> IndexToParamMap {
+      get {return m_indexToParamMap;}
     }
 
     public override int GetHashCode() {

@@ -24,11 +24,11 @@ namespace CCompiler {
 
     public Preprocessor(FileInfo file) {
       if (Start.Linux) {
-        m_macroMap.Add("__LINUX__", new Macro(0, new List<Token>(), null));
+        m_macroMap.Add("__LINUX__", new Macro(0, new List<Token>()));
       }
 
       if (Start.Windows) {
-        m_macroMap.Add("__WINDOWS__", new Macro(0, new List<Token>(), null));
+        m_macroMap.Add("__WINDOWS__", new Macro(0, new List<Token>()));
       }
 
       DoProcess(file);
@@ -472,7 +472,7 @@ namespace CCompiler {
       Macro macro;
 
       if (tokenList[2].Id == CCompiler_Pre.Tokens.NAME) {
-        macro = new Macro(0, tokenList.GetRange(3, tokenList.Count - 3), null);
+        macro = new Macro(0, tokenList.GetRange(3, tokenList.Count - 3));
       }
       else {
         int tokenIndex = 3, paramIndex = 0;
@@ -503,29 +503,28 @@ namespace CCompiler {
       
         List<Token> macroList =
           tokenList.GetRange(tokenIndex, tokenList.Count - tokenIndex);
-        for (int index = macroList.Count - 1; index >= 0; --index) {
-          if (macroList[index].Id == CCompiler_Pre.Tokens.NAME_WITH_PARENTHESES) {
-            macroList[index].Id = CCompiler_Pre.Tokens.NAME;
-            Token newToken =
-              new Token(CCompiler_Pre.Tokens.LEFT_PARENTHESIS, "(");
-            macroList.Insert(index + 1, newToken);
-          }
-        }
 
-        IDictionary<int,int> indexToParamMap = new Dictionary<int,int>();
-        for (int index = 0; index < tokenList.Count; ++index) {
+        for (int index = macroList.Count - 1; index >= 0; --index) {
           Token macroToken = macroList[index];
 
-          if (macroToken.Id == CCompiler_Pre.Tokens.NAME) {
+          if ((macroToken.Id == CCompiler_Pre.Tokens.NAME) ||
+              (macroToken.Id == CCompiler_Pre.Tokens.NAME_WITH_PARENTHESES)) {
             string macroName = (string) macroToken.Value;
 
             if (paramMap.ContainsKey(macroName)) {
-              indexToParamMap[index] = paramMap[macroName];
+              if (macroToken.Id == CCompiler_Pre.Tokens.NAME_WITH_PARENTHESES)
+              { Token newToken =
+                  new Token(CCompiler_Pre.Tokens.LEFT_PARENTHESIS, "(");
+                macroList.Insert(index + 1, newToken);
+              }
+
+              macroToken.Id = CCompiler_Pre.Tokens.MARK;
+              macroToken.Value = paramMap[macroName];
             }
           }
         }
-
-        macro = new Macro(paramMap.Count, macroList, indexToParamMap);
+      
+        macro = new Macro(paramMap.Count, macroList);
       }
     
       string name = (string) tokenList[2].Value;
@@ -657,9 +656,9 @@ namespace CCompiler {
 
           if (!nameStack.Contains(name) && m_macroMap.ContainsKey(name)) {            
             Macro macro = m_macroMap[name];
-            Assert.Error(macro.Parameters == 0, name, Message.
+            Assert.Error(macro.Parameters() == 0, name, Message.
                          Invalid_number_of_parameters_in_macro_call);
-            List<Token> cloneListX = CloneList(macro.TokenList);
+            List<Token> cloneListX = CloneList(macro.TokenList());
             nameStack.Push(name);
             SearchForMacros(cloneListX, nameStack);
             nameStack.Pop();
@@ -766,44 +765,43 @@ namespace CCompiler {
             }
 
             Macro macro = m_macroMap[name];
-            Assert.Error(macro.Parameters == mainList.Count, name,
+            Assert.Error(macro.Parameters() == mainList.Count, name,
                          Message.Invalid_number_of_parameters_in_macro_call);
             
-            List<Token> cloneList = CloneList(macro.TokenList);
-            IDictionary<int,int> indexToParamMap = macro.IndexToParamMap;
+            List<Token> cloneListX = CloneList(macro.TokenList());
             
-            for (int macroIndex = (cloneList.Count - 1);
+            for (int macroIndex = (cloneListX.Count - 1);
                   macroIndex >= 0; --macroIndex) {
-              Token macroToken = cloneList[macroIndex];
+              Token macroToken = cloneListX[macroIndex];
 
-              int paramIndex;
-              if (indexToParamMap.TryGetValue(macroIndex, out paramIndex)) {
-                cloneList.RemoveAt(macroIndex);
-                List<Token> replaceList = CloneList(mainList[paramIndex]);
+              if (macroToken.Id == CCompiler_Pre.Tokens.MARK) {
+                int markIndex = (int) macroToken.Value;
+                cloneListX.RemoveAt(macroIndex);
+                List<Token> replaceList = CloneList(mainList[markIndex]);
 
-                if ((macroIndex > 0) && (cloneList[macroIndex - 1].Id ==
+                if ((macroIndex > 0) && (cloneListX[macroIndex - 1].Id ==
                                           CCompiler_Pre.Tokens.SHARP)) {
                   string text = "\"" + TokenListToString(replaceList) + "\"";
-                  cloneList.Insert(macroIndex,
+                  cloneListX.Insert(macroIndex,
                               new Token(CCompiler_Pre.Tokens.STRING, text));
-                  cloneList.RemoveAt(--macroIndex);
+                  cloneListX.RemoveAt(--macroIndex);
                 }
                 else {
-                  cloneList.InsertRange(macroIndex, replaceList);
+                  cloneListX.InsertRange(macroIndex, replaceList);
                 }
               }              
             }
 
             nameStack.Push(name);
-            SearchForMacros(cloneList, nameStack);
+            SearchForMacros(cloneListX, nameStack);
             nameStack.Pop();
 
             tokenList.RemoveRange(index, countIndex - index + 1);
-            tokenList.InsertRange(index, cloneList);
+            tokenList.InsertRange(index, cloneListX);
             tokenList[index].AddNewlineCount(beginNewlineCount);
             tokenList[index +
-                      cloneList.Count].AddNewlineCount(totalNewlineCount);
-            index += cloneList.Count - 1;
+                      cloneListX.Count].AddNewlineCount(totalNewlineCount);
+            index += cloneListX.Count - 1;
           }
         }
       }
