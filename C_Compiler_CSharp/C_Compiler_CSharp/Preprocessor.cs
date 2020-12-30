@@ -513,7 +513,7 @@ namespace CCompiler {
         }
 
         IDictionary<int,int> indexToParamMap = new Dictionary<int,int>();
-        for (int index = 0; index < tokenList.Count; ++index) {
+        for (int index = 0; index < macroList.Count; ++index) {
           Token macroToken = macroList[index];
 
           if (macroToken.Id == CCompiler_Pre.Tokens.NAME) {
