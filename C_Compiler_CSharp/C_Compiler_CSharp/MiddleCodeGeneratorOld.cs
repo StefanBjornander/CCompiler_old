@@ -143,7 +143,7 @@ namespace CCompiler {
       AddMiddleCode(statement.CodeList, MiddleOperator.FunctionEnd,
                     SymbolTable.CurrentFunction);
 
-      if (SymbolTable.CurrentFunction.Name.Equals("printArgument")) {
+      if (SymbolTable.CurrentFunction.Name.Equals("atan")) {
         string name = @"C:\Users\Stefan\Documents\vagrant\homestead\code\code\" +
                       SymbolTable.CurrentFunction.Name + ".middlebefore";
         StreamWriter streamWriter = new StreamWriter(name);
@@ -160,7 +160,7 @@ namespace CCompiler {
         new MiddleCodeOptimizer(statement.CodeList);
       middleCodeOptimizer.Optimize();
 
-      if (SymbolTable.CurrentFunction.Name.Equals("printArgument")) {
+      if (SymbolTable.CurrentFunction.Name.Equals("atan")) {
         string name = @"C:\Users\Stefan\Documents\vagrant\homestead\code\code\" +
                       SymbolTable.CurrentFunction.Name + ".middleafter";
         StreamWriter streamWriter = new StreamWriter(name);
@@ -1506,31 +1506,6 @@ namespace CCompiler {
       Type leftType = leftExpression.Symbol.Type,
            rightType = rightExpression.Symbol.Type;
 
-      if (leftExpression.Symbol.Name.Contains("arg_list") &&
-          rightExpression.Symbol.Name.Contains("2")) {
-        int i = 1;
-      }
-         
-      if (leftType.IsPointerOrArray() && rightType.IsPointerOrArray()) {
-        Assert.Error(((middleOp == MiddleOperator.BinaryAdd) &&
-                      (leftType.PointerOrArrayType.Size() == 1) &&
-                      (rightType.PointerOrArrayType.Size() == 1)) ||
-                     ((middleOp == MiddleOperator.BinarySubtract) &&
-                      (leftType.PointerOrArrayType.Size() == rightType.PointerOrArrayType.Size())),
-                     leftExpression, Message.Non__arithmetic_expression);
-      }
-      else {
-        Assert.Error((leftType.IsArithmetic() && rightType.IsArithmetic()) ||
-                     (leftType.IsPointerOrArray() && rightType.IsIntegral()) ||
-                     (leftType.IsIntegral() && rightType.IsPointerOrArray()),
-                     leftExpression, Message.Non__arithmetic_expression);
-      }
-  
-/*      Assert.Error(leftExpression.Symbol.Type.IsArithmetic(),
-                   leftExpression, Message.Non__arithmetic_expression);
-      Assert.Error(rightExpression.Symbol.Type.IsArithmetic(),
-                   rightExpression, Message.Non__arithmetic_expression);*/
-
       Expression constantExpression =
         ConstantExpression.Arithmetic(middleOp, leftExpression,
                                       rightExpression);
@@ -1549,20 +1524,7 @@ namespace CCompiler {
       shortList.AddRange(leftExpression.ShortList);
       shortList.AddRange(rightExpression.ShortList);    
 
-      if (leftType.IsPointerOrArray() && rightType.IsIntegral()) {
-        int size = leftType.PointerOrArrayType.Size();
-        Symbol sizeSymbol = new Symbol(rightType, new BigInteger(size));
-        Expression sizeExpression = new Expression(sizeSymbol);
-        rightExpression = MultiplyExpression(MiddleOperator.UnsignedMultiply, rightExpression, sizeExpression);
-      }
-      else if (leftType.IsIntegral() && rightType.IsPointerOrArray()) {
-        int size = rightType.PointerOrArrayType.Size();
-        Symbol sizeSymbol = new Symbol(leftType, new BigInteger(size));
-        Expression sizeExpression = new Expression(sizeSymbol);
-        leftExpression = MultiplyExpression(MiddleOperator.UnsignedMultiply, leftExpression, sizeExpression);
-      }
-      
-      /*if (leftType.IsPointerOrArray()) {
+      if (leftType.IsPointerOrArray()) {
         return PointerArithmetic(middleOp, leftExpression, rightExpression);
       }
       else if (rightType.IsPointerOrArray()) {
@@ -1570,11 +1532,11 @@ namespace CCompiler {
                      Message.Invalid_types_in_subtraction_expression);
         return PointerArithmetic(middleOp, rightExpression, leftExpression);
       }
-      else {*/
-        /*Assert.Error(leftExpression.Symbol.Type.IsArithmetic(),
+      else {
+        Assert.Error(leftExpression.Symbol.Type.IsArithmetic(),
                      leftExpression, Message.Non__arithmetic_expression);
         Assert.Error(rightExpression.Symbol.Type.IsArithmetic(),
-                     rightExpression, Message.Non__arithmetic_expression);*/
+                     rightExpression, Message.Non__arithmetic_expression);
 
         Type maxType = TypeCast.MaxType(leftType, rightType);
         leftExpression = TypeCast.ImplicitCast(leftExpression, maxType);
@@ -1586,22 +1548,8 @@ namespace CCompiler {
         longList.AddRange(rightExpression.LongList);
         AddMiddleCode(longList, middleOp, resultSymbol,
                       leftExpression.Symbol, rightExpression.Symbol);
-        Expression resultExpression = new Expression(resultSymbol, shortList, longList);
-        //return (new Expression(resultSymbol, shortList, longList));
-      //}
-
-      if (leftType.IsPointerOrArray() && rightType.IsPointerOrArray()) {
-        if (leftType.PointerOrArrayType.Size() > 1) {
-          int size = leftType.PointerOrArrayType.Size();
-          Symbol sizeSymbol = new Symbol(leftType, new BigInteger(size));
-          Expression sizeExpression = new Expression(sizeSymbol);
-          resultExpression = MultiplyExpression(MiddleOperator.UnsignedDivide, resultExpression, sizeExpression);
-        }
-
-        resultExpression = CastExpression(Type.SignedIntegerType, resultExpression);
+        return (new Expression(resultSymbol, shortList, longList));
       }
-
-      return resultExpression;
     }
 
     private static Expression PointerArithmetic(MiddleOperator middleOp,

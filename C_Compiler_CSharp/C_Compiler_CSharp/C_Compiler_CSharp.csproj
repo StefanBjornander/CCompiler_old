@@ -54,6 +54,7 @@
     <Compile Include="AssemblyCodeGenerator.cs" />
     <Compile Include="IfElseChain.cs" />
     <Compile Include="MiddleCode.cs" />
+    <Compile Include="MiddleCodeGenerator.cs" />
     <Compile Include="Preprocessor.cs">
       <SubType>Code</SubType>
     </Compile>
@@ -78,7 +79,6 @@
     <Compile Include="ZGenerateStaticInitializerLinux.cs" />
     <Compile Include="ZGenerateStaticInitializerWindows.cs" />
     <Compile Include="ZLinkerLinux.cs" />
-    <Compile Include="MiddleCodeGenerator.cs" />
     <Compile Include="Graph.cs" />
     <Compile Include="Linker.cs" />
     <Compile Include="ZListMap.cs" />
