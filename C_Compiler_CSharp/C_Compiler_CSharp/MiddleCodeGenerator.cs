@@ -1506,11 +1506,6 @@ namespace CCompiler {
       Type leftType = leftExpression.Symbol.Type,
            rightType = rightExpression.Symbol.Type;
 
-      if (leftExpression.Symbol.Name.Contains("arg_list") &&
-          rightExpression.Symbol.Name.Contains("2")) {
-        int i = 1;
-      }
-         
       if (leftType.IsPointerOrArray() && rightType.IsPointerOrArray()) {
         Assert.Error(((middleOp == MiddleOperator.BinaryAdd) &&
                       (leftType.PointerOrArrayType.Size() == 1) &&
@@ -1525,7 +1520,19 @@ namespace CCompiler {
                      (leftType.IsIntegral() && rightType.IsPointerOrArray()),
                      leftExpression, Message.Non__arithmetic_expression);
       }
-  
+
+      if (leftType.IsPointerOrArray()) {
+        Assert.Error(!leftType.PointerOrArrayType.IsVoid() &&
+                     !leftType.PointerOrArrayType.IsFunction(), 
+                     leftExpression, Message.Non__arithmetic_expression);
+      }
+
+      if (rightType.IsPointerOrArray()) {
+        Assert.Error(!rightType.PointerOrArrayType.IsVoid() &&
+                     !rightType.PointerOrArrayType.IsFunction(), 
+                     rightExpression, Message.Non__arithmetic_expression);
+      }
+
 /*      Assert.Error(leftExpression.Symbol.Type.IsArithmetic(),
                    leftExpression, Message.Non__arithmetic_expression);
       Assert.Error(rightExpression.Symbol.Type.IsArithmetic(),
@@ -1590,7 +1597,8 @@ namespace CCompiler {
         //return (new Expression(resultSymbol, shortList, longList));
       //}
 
-      if (leftType.IsPointerOrArray() && rightType.IsPointerOrArray()) {
+      if ((middleOp == MiddleOperator.BinarySubtract) &&
+          leftType.IsPointerOrArray() && rightType.IsPointerOrArray()) {
         if (leftType.PointerOrArrayType.Size() > 1) {
           int size = leftType.PointerOrArrayType.Size();
           Symbol sizeSymbol = new Symbol(leftType, new BigInteger(size));
