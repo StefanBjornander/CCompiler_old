@@ -143,7 +143,7 @@ namespace CCompiler {
       AddMiddleCode(statement.CodeList, MiddleOperator.FunctionEnd,
                     SymbolTable.CurrentFunction);
 
-      if (SymbolTable.CurrentFunction.Name.Equals("time")) {
+      if (SymbolTable.CurrentFunction.Name.Equals("printArgument")) {
         string name = @"C:\Users\Stefan\Documents\vagrant\homestead\code\code\" +
                       SymbolTable.CurrentFunction.Name + ".middlebefore";
         StreamWriter streamWriter = new StreamWriter(name);
@@ -160,7 +160,7 @@ namespace CCompiler {
         new MiddleCodeOptimizer(statement.CodeList);
       middleCodeOptimizer.Optimize();
 
-      if (SymbolTable.CurrentFunction.Name.Equals("time")) {
+      if (SymbolTable.CurrentFunction.Name.Equals("printArgument")) {
         string name = @"C:\Users\Stefan\Documents\vagrant\homestead\code\code\" +
                       SymbolTable.CurrentFunction.Name + ".middleafter";
         StreamWriter streamWriter = new StreamWriter(name);
@@ -1026,24 +1026,18 @@ namespace CCompiler {
                      leftExpression.Symbol.Name, Message.Not_assignable);
       }*/
 
-      /*if (leftExpression.Symbol.Name.Contains("hour")) {
-        int i = 1;
-      }*/
-
-      //rightExpression =
-      //  TypeCast.ImplicitCast(rightExpression, leftExpression.Symbol.Type);
+      rightExpression =
+        TypeCast.ImplicitCast(rightExpression, leftExpression.Symbol.Type);
 
       switch (middleOp) {
         case MiddleOperator.Assign:
           return Assignment(leftExpression, rightExpression, true);
 
         case MiddleOperator.BinaryAdd:
-          return Assignment(leftExpression,
-                            AdditionExpression(leftExpression, rightExpression));
-
         case MiddleOperator.BinarySubtract:
           return Assignment(leftExpression,
-                            SubtractionExpression(leftExpression, rightExpression));
+                            AdditionExpression(middleOp, leftExpression,
+                                               rightExpression));
 
         case MiddleOperator.SignedMultiply:
         case MiddleOperator.SignedDivide:
@@ -1069,8 +1063,6 @@ namespace CCompiler {
     public static Expression Assignment(Expression leftExpression,
                                         Expression rightExpression,
                                         bool simpleAssignment = false) {
-      rightExpression = TypeCast.ImplicitCast(rightExpression,
-                                              leftExpression.Symbol.Type); // XXX
       Register? register = leftExpression.Register;
 
       if (register != null) {
@@ -1097,8 +1089,8 @@ namespace CCompiler {
           }
         }
 
-        //rightExpression = TypeCast.ImplicitCast(rightExpression,
-        //                                        leftExpression.Symbol.Type);
+        rightExpression = TypeCast.ImplicitCast(rightExpression,
+                                                leftExpression.Symbol.Type);
         longList.AddRange(rightExpression.LongList);
 
         if (leftExpression.Symbol.Type.IsFloating()) {
@@ -1508,160 +1500,13 @@ namespace CCompiler {
       return (new Expression(symbol, shortList, longList));
     }*/
 
-    public static Expression AdditionExpression(Expression leftExpression,
-                                                Expression rightExpression) {
-      Type leftType = leftExpression.Symbol.Type,
-           rightType = rightExpression.Symbol.Type;
-
-      Assert.Error((leftType.IsArithmetic() && rightType.IsArithmetic()) ||
-                   (leftType.IsPointerOrArray() && rightType.IsIntegral()) ||
-                   (leftType.IsIntegral() && rightType.IsPointerOrArray()),
-                   leftExpression, Message.Non__arithmetic_expression);
-
-      if (leftType.IsPointerOrArray()) {
-        Assert.Error(!leftType.PointerOrArrayType.IsVoid() &&
-                     !leftType.PointerOrArrayType.IsFunction(), 
-                     leftExpression, Message.Non__arithmetic_expression);
-      }
-
-      if (rightType.IsPointerOrArray()) {
-        Assert.Error(!rightType.PointerOrArrayType.IsVoid() &&
-                     !rightType.PointerOrArrayType.IsFunction(), 
-                     rightExpression, Message.Non__arithmetic_expression);
-      }
-
-      Expression constantExpression =
-        ConstantExpression.Arithmetic(MiddleOperator.BinaryAdd,
-                                      leftExpression, rightExpression);
-      if (constantExpression != null) {
-        return constantExpression;
-      }
-
-      Expression staticExpression =
-        StaticExpression.Binary(MiddleOperator.BinarySubtract,
-                                leftExpression, rightExpression);
-      if (staticExpression != null) {
-        return staticExpression;
-      }
-
-      List<MiddleCode> shortList = new List<MiddleCode>();
-      shortList.AddRange(leftExpression.ShortList);
-      shortList.AddRange(rightExpression.ShortList);    
-
-      if (leftType.IsPointerOrArray() && rightType.IsIntegral()) {
-        int size = leftType.PointerOrArrayType.Size();
-        Symbol sizeSymbol = new Symbol(rightType, new BigInteger(size));
-        Expression sizeExpression = new Expression(sizeSymbol);
-        rightExpression = MultiplyExpression(MiddleOperator.UnsignedMultiply, rightExpression, sizeExpression);
-      }
-      else if (leftType.IsIntegral() && rightType.IsPointerOrArray()) {
-        int size = rightType.PointerOrArrayType.Size();
-        Symbol sizeSymbol = new Symbol(leftType, new BigInteger(size));
-        Expression sizeExpression = new Expression(sizeSymbol);
-        leftExpression = MultiplyExpression(MiddleOperator.UnsignedMultiply, leftExpression, sizeExpression);
-      }
-      
-      Type maxType = TypeCast.MaxType(leftType, rightType);
-      leftExpression = TypeCast.ImplicitCast(leftExpression, maxType);
-      rightExpression = TypeCast.ImplicitCast(rightExpression, maxType);
-      Symbol resultSymbol = new Symbol(maxType);
-
-      List<MiddleCode> longList = new List<MiddleCode>();
-      longList.AddRange(leftExpression.LongList);
-      longList.AddRange(rightExpression.LongList);
-      AddMiddleCode(longList, MiddleOperator.BinaryAdd, resultSymbol,
-                    leftExpression.Symbol, rightExpression.Symbol);
-      return (new Expression(resultSymbol, shortList, longList));
-    }
-
-    public static Expression SubtractionExpression(Expression leftExpression,
-                                                   Expression rightExpression) {
-      Type leftType = leftExpression.Symbol.Type,
-           rightType = rightExpression.Symbol.Type;
-
-      Assert.Error((leftType.IsArithmetic() && rightType.IsArithmetic()) ||
-                   (leftType.IsPointerOrArray() && rightType.IsIntegral()) ||
-                   (leftType.IsPointerOrArray() && rightType.IsPointerOrArray() &&
-                    (leftType.PointerOrArrayType.Size() == rightType.PointerOrArrayType.Size())),
-                   leftExpression, Message.Non__arithmetic_expression);
-
-      if (leftType.IsPointerOrArray()) {
-        Assert.Error(!leftType.PointerOrArrayType.IsVoid() &&
-                     !leftType.PointerOrArrayType.IsFunction(), 
-                     leftExpression, Message.Non__arithmetic_expression);
-      }
-
-      if (rightType.IsPointerOrArray()) {
-        Assert.Error(!rightType.PointerOrArrayType.IsVoid() &&
-                     !rightType.PointerOrArrayType.IsFunction(), 
-                     rightExpression, Message.Non__arithmetic_expression);
-      }
-
-      Expression constantExpression =
-        ConstantExpression.Arithmetic(MiddleOperator.BinarySubtract,
-                                      leftExpression, rightExpression);
-      if (constantExpression != null) {
-        return constantExpression;
-      }
-
-      Expression staticExpression =
-        StaticExpression.Binary(MiddleOperator.BinarySubtract,
-                                leftExpression, rightExpression);
-      if (staticExpression != null) {
-        return staticExpression;
-      }
-
-      List<MiddleCode> shortList = new List<MiddleCode>();
-      shortList.AddRange(leftExpression.ShortList);
-      shortList.AddRange(rightExpression.ShortList);    
-
-      Type maxType = TypeCast.MaxType(leftType, rightType);
-      leftExpression = TypeCast.ImplicitCast(leftExpression, maxType);
-      rightExpression = TypeCast.ImplicitCast(rightExpression, maxType);
-      Symbol resultSymbol = new Symbol(maxType);
-
-      List<MiddleCode> longList = new List<MiddleCode>();
-      longList.AddRange(leftExpression.LongList);
-      longList.AddRange(rightExpression.LongList);
-      AddMiddleCode(longList, MiddleOperator.BinarySubtract, resultSymbol,
-                    leftExpression.Symbol, rightExpression.Symbol);
-      Expression resultExpression = new Expression(resultSymbol, shortList, longList);
-
-      if (leftType.IsPointerOrArray() && rightType.IsPointerOrArray()) {
-        if (leftType.PointerOrArrayType.Size() > 1) {
-          int size = leftType.PointerOrArrayType.Size();
-          Symbol sizeSymbol = new Symbol(leftType, new BigInteger(size));
-          Expression sizeExpression = new Expression(sizeSymbol);
-          resultExpression = MultiplyExpression(MiddleOperator.UnsignedDivide, resultExpression, sizeExpression);
-        }
-
-        resultExpression = TypeCast.ImplicitCast(resultExpression, Type.SignedIntegerType);
-      }
-
-      return resultExpression;
-    }
-
-    public static Expression AdditionExpressionX(MiddleOperator middleOp,
+    public static Expression AdditionExpression(MiddleOperator middleOp,
                                                 Expression leftExpression,
                                                 Expression rightExpression) {
       Type leftType = leftExpression.Symbol.Type,
            rightType = rightExpression.Symbol.Type;
 
-      if (middleOp == MiddleOperator.BinaryAdd) {
-        Assert.Error((leftType.IsArithmetic() && rightType.IsArithmetic()) ||
-                     (leftType.IsPointerOrArray() && rightType.IsIntegral()) ||
-                     (leftType.IsIntegral() && rightType.IsPointerOrArray()),
-                     leftExpression, Message.Non__arithmetic_expression);
-      }
-      else {
-        Assert.Error((leftType.IsArithmetic() && rightType.IsArithmetic()) ||
-                     (leftType.IsPointerOrArray() && rightType.IsIntegral()) ||
-                     (leftType.IsPointerOrArray() && rightType.IsPointerOrArray() &&
-                      (leftType.PointerOrArrayType.Size() == rightType.PointerOrArrayType.Size())),
-                     leftExpression, Message.Non__arithmetic_expression);
-      }
-
-      /*if (leftType.IsPointerOrArray() && rightType.IsPointerOrArray()) {
+      if (leftType.IsPointerOrArray() && rightType.IsPointerOrArray()) {
         Assert.Error(((middleOp == MiddleOperator.BinaryAdd) &&
                       (leftType.PointerOrArrayType.Size() == 1) &&
                       (rightType.PointerOrArrayType.Size() == 1)) ||
@@ -1674,7 +1519,7 @@ namespace CCompiler {
                      (leftType.IsPointerOrArray() && rightType.IsIntegral()) ||
                      (leftType.IsIntegral() && rightType.IsPointerOrArray()),
                      leftExpression, Message.Non__arithmetic_expression);
-      }*/
+      }
 
       if (leftType.IsPointerOrArray()) {
         Assert.Error(!leftType.PointerOrArrayType.IsVoid() &&
@@ -1761,7 +1606,7 @@ namespace CCompiler {
           resultExpression = MultiplyExpression(MiddleOperator.UnsignedDivide, resultExpression, sizeExpression);
         }
 
-        resultExpression = TypeCast.ImplicitCast(resultExpression, Type.SignedIntegerType);
+        resultExpression = CastExpression(Type.SignedIntegerType, resultExpression);
       }
 
       return resultExpression;
