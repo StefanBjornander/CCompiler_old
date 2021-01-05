@@ -1639,16 +1639,17 @@ namespace CCompiler {
         new Expression(resultSymbol, shortList, longList);
 
       if (leftType.IsPointerOrArray() && rightType.IsPointerOrArray()) {
+        resultExpression =
+          TypeCast.ImplicitCast(resultExpression, Type.SignedIntegerType);
+        
         if (leftType.PointerOrArrayType.Size() > 1) {
           int size = leftType.PointerOrArrayType.Size();
-          Symbol sizeSymbol = new Symbol(leftType, new BigInteger(size));
+          Symbol sizeSymbol =
+            new Symbol(Type.SignedIntegerType, new BigInteger(size));
           Expression sizeExpression = new Expression(sizeSymbol);
           resultExpression = MultiplyExpression(MiddleOperator.UnsignedDivide,
                                             resultExpression, sizeExpression);
         }
-
-        resultExpression =
-          TypeCast.ImplicitCast(resultExpression, Type.SignedIntegerType);
       }
 
       return resultExpression;
@@ -1657,10 +1658,6 @@ namespace CCompiler {
     public static Expression MultiplyExpression(MiddleOperator middleOp,
                                                 Expression leftExpression,
                                                 Expression rightExpression) {
-      List<MiddleCode> constLongList = new List<MiddleCode>();
-      constLongList.AddRange(leftExpression.LongList);
-      constLongList.AddRange(rightExpression.LongList);
-           
       Expression constantExpression =
         ConstantExpression.Arithmetic(middleOp, leftExpression,
                                       rightExpression);
@@ -1668,19 +1665,21 @@ namespace CCompiler {
         return constantExpression;
       }
 
-      Type maxType = TypeCast.MaxType(leftExpression.Symbol.Type,
-                                      rightExpression.Symbol.Type);
-
+      Type leftType = leftExpression.Symbol.Type,
+           rightType = rightExpression.Symbol.Type;
+           
       if ((middleOp == MiddleOperator.SignedModulo) ||
           (middleOp == MiddleOperator.UnsignedModulo)) {
-        Assert.Error(maxType.IsIntegralPointerArrayStringOrFunction(),
-                      maxType, Message.Invalid_type_in_expression);
+        Assert.Error(leftType.IsIntegral() && rightType.IsIntegral(),
+                     Message.Invalid_type_in_expression);
       }
       else {
-        Assert.Error(maxType.IsArithmeticPointerArrayStringOrFunction(),
-                      maxType, Message.Invalid_type_in_expression);
+        Assert.Error(leftType.IsArithmetic() && rightType.IsArithmetic(),
+                     Message.Invalid_type_in_expression);
       }
 
+      Type maxType = TypeCast.MaxType(leftExpression.Symbol.Type,
+                                      rightExpression.Symbol.Type);
       leftExpression = TypeCast.ImplicitCast(leftExpression, maxType);
       rightExpression = TypeCast.ImplicitCast(rightExpression, maxType);
       Symbol resultSymbol = new Symbol(maxType);
@@ -1691,10 +1690,11 @@ namespace CCompiler {
                                          name.Replace("Signed", "Unsigned"));
       }
 
-      List<MiddleCode> shortList = new List<MiddleCode>(),
-                       longList = new List<MiddleCode>();
+      List<MiddleCode> shortList = new List<MiddleCode>();
       shortList.AddRange(leftExpression.ShortList);
-      shortList.AddRange(rightExpression.ShortList);    
+      shortList.AddRange(rightExpression.ShortList);
+
+      List<MiddleCode> longList = new List<MiddleCode>();
       longList.AddRange(leftExpression.LongList);
       longList.AddRange(rightExpression.LongList);
 
