@@ -1544,45 +1544,54 @@ namespace CCompiler {
         return staticExpression;
       }
 
+      if (leftType.IsPointerOrArray() && rightType.IsIntegral() &&
+          (leftType.PointerOrArrayType.Size() > 1)) {
+        int size = leftType.PointerOrArrayType.Size();
+        Symbol sizeSymbol = new Symbol(rightType, new BigInteger(size));
+        Expression sizeExpression = new Expression(sizeSymbol);
+        rightExpression = MultiplyExpression(MiddleOperator.UnsignedMultiply,
+                                             rightExpression, sizeExpression);
+        rightExpression = TypeCast.ImplicitCast(rightExpression, leftType);
+      }
+      
+      if (leftType.IsIntegral() && rightType.IsPointerOrArray()&&
+          (rightType.PointerOrArrayType.Size() > 1)) {
+        int size = rightType.PointerOrArrayType.Size();
+        Symbol sizeSymbol = new Symbol(leftType, new BigInteger(size));
+        Expression sizeExpression = new Expression(sizeSymbol);
+        leftExpression = MultiplyExpression(MiddleOperator.UnsignedMultiply,
+                                            leftExpression, sizeExpression);
+        leftExpression = TypeCast.ImplicitCast(leftExpression, rightType);
+      }
+
+      Type maxType = TypeCast.MaxType(leftType, rightType);
+      leftExpression = TypeCast.ImplicitCast(leftExpression, maxType);
+      rightExpression = TypeCast.ImplicitCast(rightExpression, maxType);
+
       List<MiddleCode> shortList = new List<MiddleCode>();
       shortList.AddRange(leftExpression.ShortList);
       shortList.AddRange(rightExpression.ShortList);    
 
-      if (leftType.IsPointerOrArray() && rightType.IsIntegral()) {
-        int size = leftType.PointerOrArrayType.Size();
-        Symbol sizeSymbol = new Symbol(rightType, new BigInteger(size));
-        Expression sizeExpression = new Expression(sizeSymbol);
-        rightExpression = MultiplyExpression(MiddleOperator.UnsignedMultiply, rightExpression, sizeExpression);
-      }
-      else if (leftType.IsIntegral() && rightType.IsPointerOrArray()) {
-        int size = rightType.PointerOrArrayType.Size();
-        Symbol sizeSymbol = new Symbol(leftType, new BigInteger(size));
-        Expression sizeExpression = new Expression(sizeSymbol);
-        leftExpression = MultiplyExpression(MiddleOperator.UnsignedMultiply, leftExpression, sizeExpression);
-      }
-      
-      Type maxType = TypeCast.MaxType(leftType, rightType);
-      leftExpression = TypeCast.ImplicitCast(leftExpression, maxType);
-      rightExpression = TypeCast.ImplicitCast(rightExpression, maxType);
-      Symbol resultSymbol = new Symbol(maxType);
-
       List<MiddleCode> longList = new List<MiddleCode>();
       longList.AddRange(leftExpression.LongList);
       longList.AddRange(rightExpression.LongList);
+
+      Symbol resultSymbol = new Symbol(maxType);
       AddMiddleCode(longList, MiddleOperator.BinaryAdd, resultSymbol,
                     leftExpression.Symbol, rightExpression.Symbol);
       return (new Expression(resultSymbol, shortList, longList));
     }
-
     public static Expression SubtractionExpression(Expression leftExpression,
-                                                   Expression rightExpression) {
-      Type leftType = leftExpression.Symbol.Type,
+                                                   Expression rightExpression)
+    { Type leftType = leftExpression.Symbol.Type,
            rightType = rightExpression.Symbol.Type;
 
       Assert.Error((leftType.IsArithmetic() && rightType.IsArithmetic()) ||
                    (leftType.IsPointerOrArray() && rightType.IsIntegral()) ||
-                   (leftType.IsPointerOrArray() && rightType.IsPointerOrArray() &&
-                    (leftType.PointerOrArrayType.Size() == rightType.PointerOrArrayType.Size())),
+                   (leftType.IsPointerOrArray() &&
+                    rightType.IsPointerOrArray() &&
+                    (leftType.PointerOrArrayType.Size() ==
+                     rightType.PointerOrArrayType.Size())),
                    leftExpression, Message.Non__arithmetic_expression);
 
       if (leftType.IsPointerOrArray()) {
@@ -1611,31 +1620,35 @@ namespace CCompiler {
         return staticExpression;
       }
 
+      Type maxType = TypeCast.MaxType(leftType, rightType);
+      leftExpression = TypeCast.ImplicitCast(leftExpression, maxType);
+      rightExpression = TypeCast.ImplicitCast(rightExpression, maxType);
+
       List<MiddleCode> shortList = new List<MiddleCode>();
       shortList.AddRange(leftExpression.ShortList);
       shortList.AddRange(rightExpression.ShortList);    
 
-      Type maxType = TypeCast.MaxType(leftType, rightType);
-      leftExpression = TypeCast.ImplicitCast(leftExpression, maxType);
-      rightExpression = TypeCast.ImplicitCast(rightExpression, maxType);
-      Symbol resultSymbol = new Symbol(maxType);
-
       List<MiddleCode> longList = new List<MiddleCode>();
       longList.AddRange(leftExpression.LongList);
       longList.AddRange(rightExpression.LongList);
+
+      Symbol resultSymbol = new Symbol(maxType);
       AddMiddleCode(longList, MiddleOperator.BinarySubtract, resultSymbol,
                     leftExpression.Symbol, rightExpression.Symbol);
-      Expression resultExpression = new Expression(resultSymbol, shortList, longList);
+      Expression resultExpression =
+        new Expression(resultSymbol, shortList, longList);
 
       if (leftType.IsPointerOrArray() && rightType.IsPointerOrArray()) {
         if (leftType.PointerOrArrayType.Size() > 1) {
           int size = leftType.PointerOrArrayType.Size();
           Symbol sizeSymbol = new Symbol(leftType, new BigInteger(size));
           Expression sizeExpression = new Expression(sizeSymbol);
-          resultExpression = MultiplyExpression(MiddleOperator.UnsignedDivide, resultExpression, sizeExpression);
+          resultExpression = MultiplyExpression(MiddleOperator.UnsignedDivide,
+                                            resultExpression, sizeExpression);
         }
 
-        resultExpression = TypeCast.ImplicitCast(resultExpression, Type.SignedIntegerType);
+        resultExpression =
+          TypeCast.ImplicitCast(resultExpression, Type.SignedIntegerType);
       }
 
       return resultExpression;
