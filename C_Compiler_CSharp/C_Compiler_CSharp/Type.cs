@@ -421,6 +421,10 @@ namespace CCompiler {
       return IsPointer() || IsArray();
     }
 
+    public bool IsPointerArrayOrString() {
+      return IsPointerOrArray() || IsString();
+    }
+
     public bool IsFunction() {
       return (m_sort == Sort.Function);
     }

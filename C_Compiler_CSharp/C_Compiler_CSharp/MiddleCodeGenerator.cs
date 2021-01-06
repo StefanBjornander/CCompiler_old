@@ -1807,8 +1807,6 @@ namespace CCompiler {
       Symbol symbol = expression.Symbol;
       Assert.Error(!symbol.IsRegister() && !symbol.Type.IsBitfield(),
                    expression,  Message.Not_addressable);
-      Assert.Error(!expression.Symbol.IsRegister(), expression,
-                   Message.Invalid_address_of_register_storage);
 
       Expression staticExpression =
         StaticExpression.Unary(MiddleOperator.Address, expression);
@@ -1820,8 +1818,7 @@ namespace CCompiler {
         AddMiddleCode(expression.LongList, MiddleOperator.PopFloat);
       }
 
-      Type pointerType = new Type(expression.Symbol.Type);
-      Symbol resultSymbol = new Symbol(pointerType);
+      Symbol resultSymbol = new Symbol(new Type(expression.Symbol.Type)); 
       AddMiddleCode(expression.LongList, MiddleOperator.Address,
                     resultSymbol, expression.Symbol);
       return (new Expression(resultSymbol, expression.ShortList,
@@ -1843,12 +1840,6 @@ namespace CCompiler {
     public static Expression DereferenceExpression(Expression expression) {
       Assert.Error(expression.Symbol.Type.IsPointerArrayStringOrFunction(),
                    Message.Invalid_dereference_of_non__pointer);
-      /*Symbol staticSymbol =
-        StaticExpression.Unary(MiddleOperator.Dereference, expression);
-      if (staticSymbol != null) {
-        return (new Expression(staticSymbol, null, null));
-      }*/
-
       Symbol resultSymbol =
         new Symbol(expression.Symbol.Type.PointerOrArrayType);
       return Dereference(expression, resultSymbol, 0);
@@ -1860,12 +1851,11 @@ namespace CCompiler {
                    expression.Symbol.Type.PointerType.IsStructOrUnion(),
                    expression,
              Message.Not_a_pointer_to_a_struct_or_union_in_arrow_expression);
+
       Symbol memberSymbol;
       Assert.Error(expression.Symbol.Type.PointerType.MemberMap.
                    TryGetValue(memberName, out memberSymbol),
                    memberName, Message.Unknown_member_in_arrow_expression);
-      Assert.Error(memberSymbol != null, memberName,
-                   Message.Unknown_member_in_arrow_expression);
 
       Symbol resultSymbol = new Symbol(memberSymbol.Type);
       return Dereference(expression, resultSymbol, memberSymbol.Offset);
@@ -1873,6 +1863,17 @@ namespace CCompiler {
 
     public static Expression IndexExpression(Expression leftExpression,
                                              Expression rightExpression) {
+      Type leftType = leftExpression.Symbol.Type,
+           rightType = rightExpression.Symbol.Type;
+
+      Assert.Error((leftType.IsPointerArrayOrString() &&
+                    !leftType.PointerOrArrayType.IsVoid() &&
+                    rightType.IsIntegral()) ||
+                   (leftType.IsIntegral() &&
+                    rightType.IsPointerArrayOrString() &&
+                    !rightType.PointerOrArrayType.IsVoid()),
+                   null, Message.Invalid_type_in_index_expression);
+
       Expression staticExpression =
         StaticExpression.Binary(MiddleOperator.Index, leftExpression,
                                 rightExpression);
@@ -1893,46 +1894,39 @@ namespace CCompiler {
 
       Type arrayType = arrayExpression.Symbol.Type,
            indexType = indexExpression.Symbol.Type;
-
-      Assert.Error(arrayType.IsPointerOrArray() &&
-                   !arrayType.PointerOrArrayType.IsVoid(),
-                   arrayType, Message.Invalid_type_in_index_expression);
-      Assert.Error(indexType.IsIntegral(), indexExpression,
-                   Message.Invalid_type_in_index_expression);
-
-      List<MiddleCode> shortList = new List<MiddleCode>();
-      shortList.AddRange(arrayExpression.ShortList);
-      shortList.AddRange(indexExpression.ShortList);
-
-      Symbol resultSymbol =
-        new Symbol(arrayExpression.Symbol.Type.PointerOrArrayType);
+      Symbol resultSymbol = new Symbol(arrayType.PointerOrArrayType);
 
       if (indexExpression.Symbol.Value is BigInteger) {
-        int indexValue = (int) ((BigInteger)indexExpression.Symbol.Value),
-            indexSize = arrayExpression.Symbol.Type.PointerOrArrayType.Size();
+        int indexValue = (int) ((BigInteger) indexExpression.Symbol.Value),
+            indexSize = arrayType.PointerOrArrayType.Size();
         return Dereference(arrayExpression, resultSymbol,
                            indexValue * indexSize);
       }
       else {
-        indexExpression =
-          TypeCast.ImplicitCast(indexExpression, arrayExpression.Symbol.Type);
+        int size = arrayType.PointerOrArrayType.Size();
+      
+        if (size > 1) {
+          Symbol sizeSymbol = new Symbol(indexType, new BigInteger(size));
+          Expression sizeExpression = new Expression(sizeSymbol);
+          indexExpression =
+            MultiplyExpression(MiddleOperator.UnsignedMultiply,
+                              indexExpression, sizeExpression);
+        }
+        
+        indexExpression = TypeCast.ImplicitCast(indexExpression, arrayType);
+
+        List<MiddleCode> shortList = new List<MiddleCode>();
+        shortList.AddRange(arrayExpression.ShortList);
+        shortList.AddRange(indexExpression.ShortList);
 
         List<MiddleCode> longList = new List<MiddleCode>();
         longList.AddRange(arrayExpression.LongList);
         longList.AddRange(indexExpression.LongList);
 
-        Symbol arraySymbol = arrayExpression.Symbol,
-               indexSymbol = indexExpression.Symbol;
-        Symbol sizeSymbol = new Symbol(indexSymbol.Type, (BigInteger)
-                               arraySymbol.Type.PointerOrArrayType.Size()),
-               multSymbol = new Symbol(arraySymbol.Type);
-        //StaticSymbol sizeStaticSymbol = new StaticSymbol(sizeSymbol.UniqueName);
-        //SymbolTable.StaticSet.Add(sizeStaticSymbol);
-        AddMiddleCode(longList, MiddleOperator.UnsignedMultiply,
-                      multSymbol, indexSymbol, sizeSymbol);
-        Symbol addSymbol = new Symbol(arraySymbol.Type);
+        Symbol addSymbol = new Symbol(arrayType);
         AddMiddleCode(longList, MiddleOperator.BinaryAdd,
-                      addSymbol, arraySymbol, multSymbol);
+                      addSymbol, arrayExpression.Symbol,
+                      indexExpression.Symbol);
 
         Expression addExpression =
           new Expression(addSymbol, shortList, longList);

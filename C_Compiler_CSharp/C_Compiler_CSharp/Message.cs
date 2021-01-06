@@ -91,7 +91,7 @@
     Sizeof_applied_to_function_not_allowed,
     Sizeof_applied_to_bitfield_not_allowed,
     Not_addressable,
-    Invalid_address_of_register_storage,
+//    Invalid_address_of_register_storage,
     Invalid_dereference_of_non__pointer,
     Not_a_pointer_in_arrow_expression,
     Not_a_pointer_to_a_struct_or_union_in_arrow_expression,
