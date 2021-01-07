@@ -614,9 +614,9 @@ assignment_operator:
     ASSIGN             { $$ = MiddleOperator.Assign;         }
   | ADD_ASSIGN         { $$ = MiddleOperator.BinaryAdd;      }
   | SUBTRACT_ASSIGN    { $$ = MiddleOperator.BinarySubtract; }
-  | MULTIPLY_ASSIGN    { $$ = MiddleOperator.SignedMultiply; }
-  | DIVIDE_ASSIGN      { $$ = MiddleOperator.SignedDivide;   }
-  | MODULO_ASSIGN      { $$ = MiddleOperator.SignedModulo;   }
+  | MULTIPLY_ASSIGN    { $$ = MiddleOperator.Multiply;       }
+  | DIVIDE_ASSIGN      { $$ = MiddleOperator.Divide;         }
+  | MODULO_ASSIGN      { $$ = MiddleOperator.Modulo;         }
   | AND_ASSIGN         { $$ = MiddleOperator.BitwiseAnd;     }
   | OR_ASSIGN          { $$ = MiddleOperator.BitwiseOr;      }
   | XOR_ASSIGN         { $$ = MiddleOperator.BitwiseXOr;     }
@@ -704,10 +704,10 @@ relation_expression:
     };
 
 relation_operator:
-    LESS_THAN          { $$ = MiddleOperator.SignedLessThan;         }
-  | LESS_THAN_EQUAL    { $$ = MiddleOperator.SignedLessThanEqual;    }
-  | GREATER_THAN       { $$ = MiddleOperator.SignedGreaterThan;      }
-  | GREATER_THAN_EQUAL { $$ = MiddleOperator.SignedGreaterThanEqual; };
+    LESS_THAN          { $$ = MiddleOperator.LessThan;         }
+  | LESS_THAN_EQUAL    { $$ = MiddleOperator.LessThanEqual;    }
+  | GREATER_THAN       { $$ = MiddleOperator.GreaterThan;      }
+  | GREATER_THAN_EQUAL { $$ = MiddleOperator.GreaterThanEqual; };
 
 shift_expression:
     add_expression {
@@ -741,9 +741,9 @@ multiply_expression:
     };
 
 multiply_operator:
-    ASTERRISK { $$ = MiddleOperator.SignedMultiply; }
-  | DIVIDE    { $$ = MiddleOperator.SignedDivide;   }
-  | MODULO    { $$ = MiddleOperator.SignedModulo;   };
+    ASTERRISK { $$ = MiddleOperator.Multiply; }
+  | DIVIDE    { $$ = MiddleOperator.Divide;   }
+  | MODULO    { $$ = MiddleOperator.Modulo;   };
 
 type_cast_expression:
     prefix_expression {

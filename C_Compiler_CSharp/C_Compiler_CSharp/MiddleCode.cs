@@ -46,10 +46,10 @@ namespace CCompiler {
         case MiddleOperator.Case:
         case MiddleOperator.Equal:
         case MiddleOperator.NotEqual:
-        case MiddleOperator.SignedLessThan:
-        case MiddleOperator.SignedLessThanEqual:
-        case MiddleOperator.SignedGreaterThan:
-        case MiddleOperator.SignedGreaterThanEqual:
+        case MiddleOperator.LessThan:
+        case MiddleOperator.LessThanEqual:
+        case MiddleOperator.GreaterThan:
+        case MiddleOperator.GreaterThanEqual:
           return true;
         
         default:
@@ -69,9 +69,9 @@ namespace CCompiler {
       switch (m_middleOperator) {
         case MiddleOperator.BinaryAdd:
         case MiddleOperator.BinarySubtract:
-        case MiddleOperator.SignedMultiply:
-        case MiddleOperator.SignedDivide:
-        case MiddleOperator.SignedModulo:
+        case MiddleOperator.Multiply:
+        case MiddleOperator.Divide:
+        case MiddleOperator.Modulo:
         case MiddleOperator.LogicalOr:
         case MiddleOperator.LogicalAnd:
         case MiddleOperator.BitwiseOr:
@@ -89,7 +89,7 @@ namespace CCompiler {
     public bool IsCommutative() {
       switch (m_middleOperator) {
         case MiddleOperator.BinaryAdd:
-        case MiddleOperator.SignedMultiply:
+        case MiddleOperator.Multiply:
         case MiddleOperator.BitwiseOr:
         case MiddleOperator.BitwiseXOr:
         case MiddleOperator.BitwiseAnd:
@@ -102,9 +102,9 @@ namespace CCompiler {
 
     public static bool IsMultiply(MiddleOperator middleOp) {
       switch (middleOp) {
-        case MiddleOperator.SignedMultiply:
-        case MiddleOperator.SignedDivide:
-        case MiddleOperator.SignedModulo:
+        case MiddleOperator.Multiply:
+        case MiddleOperator.Divide:
+        case MiddleOperator.Modulo:
                   return true;
         
         default:

@@ -178,9 +178,9 @@ namespace CCompiler {
             }
             break;
 
-          case MiddleOperator.SignedMultiply:
-          case MiddleOperator.SignedDivide:
-          case MiddleOperator.SignedModulo: {
+          case MiddleOperator.Multiply:
+          case MiddleOperator.Divide:
+          case MiddleOperator.Modulo: {
               Symbol resultSymbol = (Symbol) middleCode[0];
 
               if (resultSymbol.Type.IsFloating()) {
@@ -200,10 +200,10 @@ namespace CCompiler {
           case MiddleOperator.Equal:
           case MiddleOperator.NotEqual:
           //case MiddleOperator.EqualZero:
-          case MiddleOperator.SignedLessThan:
-          case MiddleOperator.SignedLessThanEqual:
-          case MiddleOperator.SignedGreaterThan:
-          case MiddleOperator.SignedGreaterThanEqual: {
+          case MiddleOperator.LessThan:
+          case MiddleOperator.LessThanEqual:
+          case MiddleOperator.GreaterThan:
+          case MiddleOperator.GreaterThanEqual: {
               Symbol leftSymbol = (Symbol) middleCode[1];
 
               if (leftSymbol.Type.IsFloating()) {
@@ -1124,9 +1124,9 @@ namespace CCompiler {
       new Dictionary<MiddleOperator, AssemblyOperator>() {
         {MiddleOperator.BitwiseNot, AssemblyOperator.not},
         {MiddleOperator.UnarySubtract, AssemblyOperator.neg},
-        {MiddleOperator.SignedMultiply, AssemblyOperator.imul},
-        {MiddleOperator.SignedDivide, AssemblyOperator.idiv},
-        {MiddleOperator.SignedModulo, AssemblyOperator.idiv},
+        {MiddleOperator.Multiply, AssemblyOperator.imul},
+        {MiddleOperator.Divide, AssemblyOperator.idiv},
+        {MiddleOperator.Modulo, AssemblyOperator.idiv},
         {MiddleOperator.Assign, AssemblyOperator.mov},
         {MiddleOperator.BinaryAdd, AssemblyOperator.add},
         {MiddleOperator.BinarySubtract, AssemblyOperator.sub},
@@ -1140,18 +1140,18 @@ namespace CCompiler {
         {MiddleOperator.Carry, AssemblyOperator.jc},
         {MiddleOperator.NotCarry, AssemblyOperator.jnc},
         {MiddleOperator.Compare, AssemblyOperator.cmp},
-        {MiddleOperator.SignedLessThan, AssemblyOperator.jl},
-        {MiddleOperator.SignedLessThanEqual,AssemblyOperator.jle},
-        {MiddleOperator.SignedGreaterThan, AssemblyOperator.jg},
-        {MiddleOperator.SignedGreaterThanEqual, AssemblyOperator.jge}},
+        {MiddleOperator.LessThan, AssemblyOperator.jl},
+        {MiddleOperator.LessThanEqual,AssemblyOperator.jle},
+        {MiddleOperator.GreaterThan, AssemblyOperator.jg},
+        {MiddleOperator.GreaterThanEqual, AssemblyOperator.jge}},
 
       m_unsignedToIntegralMap =
       new Dictionary<MiddleOperator, AssemblyOperator>() {
         {MiddleOperator.BitwiseNot, AssemblyOperator.not},
         {MiddleOperator.UnarySubtract, AssemblyOperator.neg},
-        {MiddleOperator.SignedMultiply, AssemblyOperator.mul},
-        {MiddleOperator.SignedDivide, AssemblyOperator.div},
-        {MiddleOperator.SignedModulo, AssemblyOperator.div},
+        {MiddleOperator.Multiply, AssemblyOperator.mul},
+        {MiddleOperator.Divide, AssemblyOperator.div},
+        {MiddleOperator.Modulo, AssemblyOperator.div},
         {MiddleOperator.Assign, AssemblyOperator.mov},
         {MiddleOperator.BinaryAdd, AssemblyOperator.add},
         {MiddleOperator.BinarySubtract, AssemblyOperator.sub},
@@ -1165,10 +1165,10 @@ namespace CCompiler {
         {MiddleOperator.Carry, AssemblyOperator.jc},
         {MiddleOperator.NotCarry, AssemblyOperator.jnc},
         {MiddleOperator.Compare, AssemblyOperator.cmp},
-        {MiddleOperator.SignedLessThan, AssemblyOperator.jb},
-        {MiddleOperator.SignedLessThanEqual,AssemblyOperator.jbe},
-        {MiddleOperator.SignedGreaterThan, AssemblyOperator.ja},
-        {MiddleOperator.SignedGreaterThanEqual, AssemblyOperator.jae}};
+        {MiddleOperator.LessThan, AssemblyOperator.jb},
+        {MiddleOperator.LessThanEqual,AssemblyOperator.jbe},
+        {MiddleOperator.GreaterThan, AssemblyOperator.ja},
+        {MiddleOperator.GreaterThanEqual, AssemblyOperator.jae}};
 
     public void IntegralUnary(MiddleCode middleCode) {
       Symbol resultSymbol = (Symbol)middleCode[0],
@@ -1261,7 +1261,7 @@ namespace CCompiler {
       IntegralUnary(middleCode.Operator, rightSymbol, rightSymbol);
       Register resultRegister, discardRegister;
 
-      if (middleCode.Operator == MiddleOperator.SignedModulo) {
+      if (middleCode.Operator == MiddleOperator.Modulo) {
         resultRegister = m_remainderRegisterMap[typeSize];
         discardRegister = m_productQuintentRegisterMap[typeSize];
       }
@@ -1521,14 +1521,14 @@ namespace CCompiler {
           {MiddleOperator.UnarySubtract, AssemblyOperator.fchs},
           {MiddleOperator.BinaryAdd, AssemblyOperator.fadd},
           {MiddleOperator.BinarySubtract, AssemblyOperator.fsub},
-          {MiddleOperator.SignedMultiply, AssemblyOperator.fmul},
-          {MiddleOperator.SignedDivide, AssemblyOperator.fdiv},
+          {MiddleOperator.Multiply, AssemblyOperator.fmul},
+          {MiddleOperator.Divide, AssemblyOperator.fdiv},
           {MiddleOperator.Equal, AssemblyOperator.je},
           {MiddleOperator.NotEqual, AssemblyOperator.jne},
-          {MiddleOperator.SignedLessThan, AssemblyOperator.ja},
-          {MiddleOperator.SignedLessThanEqual, AssemblyOperator.jae},
-          {MiddleOperator.SignedGreaterThan, AssemblyOperator.jb},
-          {MiddleOperator.SignedGreaterThanEqual, AssemblyOperator.jbe}
+          {MiddleOperator.LessThan, AssemblyOperator.ja},
+          {MiddleOperator.LessThanEqual, AssemblyOperator.jae},
+          {MiddleOperator.GreaterThan, AssemblyOperator.jb},
+          {MiddleOperator.GreaterThanEqual, AssemblyOperator.jbe}
         };
 
     public void FloatingBinary(MiddleCode middleCode) {

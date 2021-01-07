@@ -4,9 +4,9 @@
 
 // GPPG version 1.5.2
 // Machine:  STEFAN1968
-// DateTime: 2021-01-07 19:44:30
+// DateTime: 2021-01-07 20:06:04
 // UserName: Stefan
-// Input file <MainParser.gppg - 2021-01-07 11:27:06>
+// Input file <MainParser.gppg - 2021-01-07 20:05:38>
 
 // options: lines gplex
 
@@ -88,13 +88,13 @@ public class ScanObj {
 [GeneratedCodeAttribute( "Gardens Point Parser Generator", "1.5.2")]
 public partial class Parser: ShiftReduceParser<ValueType, LexLocation>
 {
-  // Verbatim content from MainParser.gppg - 2021-01-07 11:27:06
+  // Verbatim content from MainParser.gppg - 2021-01-07 20:05:38
 #line 8 "MainParser.gppg"
   public static Stack<Specifier> SpecifierStack = new Stack<Specifier>();
   public static Stack<BigInteger> EnumValueStack = new Stack<BigInteger>();
   public static Stack<Scope> ScopeStack = new Stack<Scope>();
 #line default
-  // End verbatim content from MainParser.gppg - 2021-01-07 11:27:06
+  // End verbatim content from MainParser.gppg - 2021-01-07 20:05:38
 
 #pragma warning disable 649
   private static Dictionary<int, string> aliases;
@@ -1738,17 +1738,17 @@ public partial class Parser: ShiftReduceParser<ValueType, LexLocation>
         break;
       case 143: // assignment_operator -> MULTIPLY_ASSIGN
 #line 617 "MainParser.gppg"
-                       { CurrentSemanticValue.middleOperator = MiddleOperator.SignedMultiply; }
+                       { CurrentSemanticValue.middleOperator = MiddleOperator.Multiply;       }
 #line default
         break;
       case 144: // assignment_operator -> DIVIDE_ASSIGN
 #line 618 "MainParser.gppg"
-                       { CurrentSemanticValue.middleOperator = MiddleOperator.SignedDivide;   }
+                       { CurrentSemanticValue.middleOperator = MiddleOperator.Divide;         }
 #line default
         break;
       case 145: // assignment_operator -> MODULO_ASSIGN
 #line 619 "MainParser.gppg"
-                       { CurrentSemanticValue.middleOperator = MiddleOperator.SignedModulo;   }
+                       { CurrentSemanticValue.middleOperator = MiddleOperator.Modulo;         }
 #line default
         break;
       case 146: // assignment_operator -> AND_ASSIGN
@@ -1927,22 +1927,22 @@ public partial class Parser: ShiftReduceParser<ValueType, LexLocation>
         break;
       case 172: // relation_operator -> LESS_THAN
 #line 707 "MainParser.gppg"
-                       { CurrentSemanticValue.middleOperator = MiddleOperator.SignedLessThan;         }
+                       { CurrentSemanticValue.middleOperator = MiddleOperator.LessThan;         }
 #line default
         break;
       case 173: // relation_operator -> LESS_THAN_EQUAL
 #line 708 "MainParser.gppg"
-                       { CurrentSemanticValue.middleOperator = MiddleOperator.SignedLessThanEqual;    }
+                       { CurrentSemanticValue.middleOperator = MiddleOperator.LessThanEqual;    }
 #line default
         break;
       case 174: // relation_operator -> GREATER_THAN
 #line 709 "MainParser.gppg"
-                       { CurrentSemanticValue.middleOperator = MiddleOperator.SignedGreaterThan;      }
+                       { CurrentSemanticValue.middleOperator = MiddleOperator.GreaterThan;      }
 #line default
         break;
       case 175: // relation_operator -> GREATER_THAN_EQUAL
 #line 710 "MainParser.gppg"
-                       { CurrentSemanticValue.middleOperator = MiddleOperator.SignedGreaterThanEqual; }
+                       { CurrentSemanticValue.middleOperator = MiddleOperator.GreaterThanEqual; }
 #line default
         break;
       case 176: // shift_expression -> add_expression
@@ -2007,17 +2007,17 @@ public partial class Parser: ShiftReduceParser<ValueType, LexLocation>
         break;
       case 185: // multiply_operator -> ASTERRISK
 #line 744 "MainParser.gppg"
-              { CurrentSemanticValue.middleOperator = MiddleOperator.SignedMultiply; }
+              { CurrentSemanticValue.middleOperator = MiddleOperator.Multiply; }
 #line default
         break;
       case 186: // multiply_operator -> DIVIDE
 #line 745 "MainParser.gppg"
-              { CurrentSemanticValue.middleOperator = MiddleOperator.SignedDivide;   }
+              { CurrentSemanticValue.middleOperator = MiddleOperator.Divide;   }
 #line default
         break;
       case 187: // multiply_operator -> MODULO
 #line 746 "MainParser.gppg"
-              { CurrentSemanticValue.middleOperator = MiddleOperator.SignedModulo;   }
+              { CurrentSemanticValue.middleOperator = MiddleOperator.Modulo;   }
 #line default
         break;
       case 188: // type_cast_expression -> prefix_expression

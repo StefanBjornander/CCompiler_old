@@ -11,9 +11,9 @@ namespace CCompiler {
     BitwiseNot, BitwiseOr, BitwiseXOr, BitwiseAnd,
     ShiftLeft, ShiftRight,
 
-    Compare, Equal, NotEqual, SignedLessThan,
-    SignedLessThanEqual, SignedGreaterThan,
-    SignedGreaterThanEqual, //UnsignedLessThan,
+    Compare, Equal, NotEqual, LessThan,
+    LessThanEqual, GreaterThan,
+    GreaterThanEqual, //UnsignedLessThan,
     //UnsignedLessThanEqual, UnsignedGreaterThan,
     //UnsignedGreaterThanEqual,
 
@@ -22,7 +22,7 @@ namespace CCompiler {
     Index, Dot, Increment, Decrement,
     UnaryAdd, UnarySubtract, BinaryAdd, BinarySubtract,
 
-    SignedMultiply, SignedDivide, SignedModulo,
+    Multiply, Divide, Modulo,
     //UnsignedMultiply, UnsignedDivide, UnsignedModulo,
 
     Address, Dereference,

@@ -86,19 +86,19 @@ namespace CCompiler {
           resultValue = (leftValue != rightValue);
           break;
 
-        case MiddleOperator.SignedLessThan:
+        case MiddleOperator.LessThan:
           resultValue = (leftValue < rightValue);
           break;
 
-        case MiddleOperator.SignedLessThanEqual:
+        case MiddleOperator.LessThanEqual:
           resultValue = (leftValue <= rightValue);
           break;
 
-        case MiddleOperator.SignedGreaterThan:
+        case MiddleOperator.GreaterThan:
           resultValue = (leftValue > rightValue);
           break;
 
-        case MiddleOperator.SignedGreaterThanEqual:
+        case MiddleOperator.GreaterThanEqual:
           resultValue = (leftValue >= rightValue);
           break;
       }
@@ -146,19 +146,19 @@ namespace CCompiler {
           resultValue = (leftValue != rightValue);
           break;
 
-        case MiddleOperator.SignedLessThan:
+        case MiddleOperator.LessThan:
           resultValue = (leftValue < rightValue);
           break;
 
-        case MiddleOperator.SignedLessThanEqual:
+        case MiddleOperator.LessThanEqual:
           resultValue = (leftValue <= rightValue);
           break;
 
-        case MiddleOperator.SignedGreaterThan:
+        case MiddleOperator.GreaterThan:
           resultValue = (leftValue > rightValue);
           break;
 
-        case MiddleOperator.SignedGreaterThanEqual:
+        case MiddleOperator.GreaterThanEqual:
           resultValue = (leftValue >= rightValue);
           break;
       }
@@ -268,15 +268,15 @@ namespace CCompiler {
           }
           break;
 
-        case MiddleOperator.SignedMultiply:
+        case MiddleOperator.Multiply:
           resultValue = leftValue * rightValue;
           break;
         
-        case MiddleOperator.SignedDivide:
+        case MiddleOperator.Divide:
           resultValue = leftValue / rightValue;
           break;
         
-        case MiddleOperator.SignedModulo:
+        case MiddleOperator.Modulo:
           resultValue = leftValue % rightValue;
           break;
 
@@ -336,11 +336,11 @@ namespace CCompiler {
           resultValue = leftValue - rightValue;
           break;
         
-        case MiddleOperator.SignedMultiply:
+        case MiddleOperator.Multiply:
           resultValue = leftValue * rightValue;
           break;
         
-        case MiddleOperator.SignedDivide:
+        case MiddleOperator.Divide:
           resultValue = leftValue / rightValue;
           break;
       }

@@ -112,10 +112,10 @@ namespace CCompiler {
         {MiddleOperator.NotEqual, MiddleOperator.Equal},
         {MiddleOperator.Carry, MiddleOperator.NotCarry},
         {MiddleOperator.NotCarry, MiddleOperator.Carry},
-        {MiddleOperator.SignedLessThan, MiddleOperator.SignedGreaterThanEqual},
-        {MiddleOperator.SignedLessThanEqual, MiddleOperator.SignedGreaterThan},
-        {MiddleOperator.SignedGreaterThan, MiddleOperator.SignedLessThanEqual},
-        {MiddleOperator.SignedGreaterThanEqual, MiddleOperator.SignedLessThan}
+        {MiddleOperator.LessThan, MiddleOperator.GreaterThanEqual},
+        {MiddleOperator.LessThanEqual, MiddleOperator.GreaterThan},
+        {MiddleOperator.GreaterThan, MiddleOperator.LessThanEqual},
+        {MiddleOperator.GreaterThanEqual, MiddleOperator.LessThan}
       };
 
     private void ClearDoubleRelationStatements() {
@@ -400,19 +400,19 @@ namespace CCompiler {
             newSymbol = leftSymbol;
           }
           // t0 = 0 * i
-          else if ((thisCode.Operator == MiddleOperator.SignedMultiply)  &&
+          else if ((thisCode.Operator == MiddleOperator.Multiply)  &&
                     (leftSymbol.Value is BigInteger) &&
                     (leftSymbol.Value.Equals(BigInteger.Zero))) {
             newSymbol = new Symbol(resultSymbol.Type, BigInteger.Zero);
           }
           // t0 = 1 * i
-          else if ((thisCode.Operator == MiddleOperator.SignedMultiply) &&
+          else if ((thisCode.Operator == MiddleOperator.Multiply) &&
                     (leftSymbol.Value is BigInteger) &&
                     (leftSymbol.Value.Equals(BigInteger.One))) {
             newSymbol = rightSymbol;
           }
           // t0 = i * 0
-          else if ((thisCode.Operator == MiddleOperator.SignedMultiply) &&
+          else if ((thisCode.Operator == MiddleOperator.Multiply) &&
                     (rightSymbol.Value is BigInteger) &&
                     (rightSymbol.Value.Equals(BigInteger.Zero))) {
             newSymbol = new Symbol(resultSymbol.Type, BigInteger.Zero);
@@ -420,9 +420,9 @@ namespace CCompiler {
           // t0 = i * 1
           // t0 = i / 1
           // t0 = i % 1
-          else if (((thisCode.Operator == MiddleOperator.SignedMultiply) ||
-                    (thisCode.Operator == MiddleOperator.SignedDivide) ||
-                    (thisCode.Operator == MiddleOperator.SignedModulo)) &&
+          else if (((thisCode.Operator == MiddleOperator.Multiply) ||
+                    (thisCode.Operator == MiddleOperator.Divide) ||
+                    (thisCode.Operator == MiddleOperator.Modulo)) &&
                     (rightSymbol.Value is BigInteger) &&
                     (rightSymbol.Value.Equals(BigInteger.One))) {
             newSymbol = leftSymbol;
@@ -479,10 +479,10 @@ namespace CCompiler {
        new Dictionary<MiddleOperator, MiddleOperator>() {
         {MiddleOperator.Equal, MiddleOperator.Equal},
         {MiddleOperator.NotEqual, MiddleOperator.NotEqual},
-        {MiddleOperator.SignedLessThan, MiddleOperator.SignedGreaterThan},
-        {MiddleOperator.SignedGreaterThan, MiddleOperator.SignedLessThan},
-        {MiddleOperator.SignedLessThanEqual, MiddleOperator.SignedGreaterThanEqual},
-        {MiddleOperator.SignedGreaterThanEqual, MiddleOperator.SignedLessThanEqual},
+        {MiddleOperator.LessThan, MiddleOperator.GreaterThan},
+        {MiddleOperator.GreaterThan, MiddleOperator.LessThan},
+        {MiddleOperator.LessThanEqual, MiddleOperator.GreaterThanEqual},
+        {MiddleOperator.GreaterThanEqual, MiddleOperator.LessThanEqual},
       };
 
     // if 1 < x goto
@@ -783,10 +783,10 @@ namespace CCompiler {
 
           case MiddleOperator.Equal:
           case MiddleOperator.NotEqual:
-          case MiddleOperator.SignedLessThan:
-          case MiddleOperator.SignedLessThanEqual:
-          case MiddleOperator.SignedGreaterThan:
-          case MiddleOperator.SignedGreaterThanEqual: {
+          case MiddleOperator.LessThan:
+          case MiddleOperator.LessThanEqual:
+          case MiddleOperator.GreaterThan:
+          case MiddleOperator.GreaterThanEqual: {
               if (symbol1.Type.IsFloating()) {
                 stackSize -= 2;
               }
@@ -795,8 +795,8 @@ namespace CCompiler {
 
           case MiddleOperator.BinaryAdd:
           case MiddleOperator.BinarySubtract:
-          case MiddleOperator.SignedMultiply:
-          case MiddleOperator.SignedDivide:
+          case MiddleOperator.Multiply:
+          case MiddleOperator.Divide:
             if (symbol1.Type.IsFloating()) {
               --stackSize;
             }

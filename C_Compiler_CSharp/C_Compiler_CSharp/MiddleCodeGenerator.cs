@@ -1045,9 +1045,9 @@ namespace CCompiler {
           return Assignment(leftExpression, SubtractionExpression
                             (leftExpression, rightExpression));
 
-        case MiddleOperator.SignedMultiply:
-        case MiddleOperator.SignedDivide:
-        case MiddleOperator.SignedModulo:
+        case MiddleOperator.Multiply:
+        case MiddleOperator.Divide:
+        case MiddleOperator.Modulo:
           return Assignment(leftExpression,
                             MultiplyExpression(middleOp, leftExpression, 
                                                          rightExpression));
@@ -1520,7 +1520,7 @@ namespace CCompiler {
         Symbol sizeSymbol =
           new Symbol(indexExpression.Symbol.Type, new BigInteger(size));
         Expression sizeExpression = new Expression(sizeSymbol);
-        indexExpression = MultiplyExpression(MiddleOperator.SignedMultiply,
+        indexExpression = MultiplyExpression(MiddleOperator.Multiply,
                                              indexExpression, sizeExpression);
       }
     
@@ -1646,7 +1646,7 @@ namespace CCompiler {
           Symbol sizeSymbol =
             new Symbol(Type.SignedIntegerType, new BigInteger(size));
           Expression sizeExpression = new Expression(sizeSymbol);
-          resultExpression = MultiplyExpression(MiddleOperator.SignedDivide,
+          resultExpression = MultiplyExpression(MiddleOperator.Divide,
                                             resultExpression, sizeExpression);
         }
       }
@@ -1667,7 +1667,7 @@ namespace CCompiler {
       Type leftType = leftExpression.Symbol.Type,
            rightType = rightExpression.Symbol.Type;
            
-      if (middleOp == MiddleOperator.SignedModulo) {
+      if (middleOp == MiddleOperator.Modulo) {
         Assert.Error(leftType.IsIntegral() && rightType.IsIntegral(),
                      Message.Invalid_type_in_expression);
       }
