@@ -87,22 +87,18 @@ namespace CCompiler {
           break;
 
         case MiddleOperator.SignedLessThan:
-        case MiddleOperator.UnsignedLessThan:
           resultValue = (leftValue < rightValue);
           break;
 
         case MiddleOperator.SignedLessThanEqual:
-        case MiddleOperator.UnsignedLessThanEqual:
           resultValue = (leftValue <= rightValue);
           break;
 
         case MiddleOperator.SignedGreaterThan:
-        case MiddleOperator.UnsignedGreaterThan:
           resultValue = (leftValue > rightValue);
           break;
 
         case MiddleOperator.SignedGreaterThanEqual:
-        case MiddleOperator.UnsignedGreaterThanEqual:
           resultValue = (leftValue >= rightValue);
           break;
       }
@@ -273,17 +269,14 @@ namespace CCompiler {
           break;
 
         case MiddleOperator.SignedMultiply:
-        case MiddleOperator.UnsignedMultiply:
           resultValue = leftValue * rightValue;
           break;
         
         case MiddleOperator.SignedDivide:
-        case MiddleOperator.UnsignedDivide:
           resultValue = leftValue / rightValue;
           break;
         
         case MiddleOperator.SignedModulo:
-        case MiddleOperator.UnsignedModulo:
           resultValue = leftValue % rightValue;
           break;
 

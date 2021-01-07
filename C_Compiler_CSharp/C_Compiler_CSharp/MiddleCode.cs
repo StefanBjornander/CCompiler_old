@@ -41,8 +41,8 @@ namespace CCompiler {
              (m_middleOperator == MiddleOperator.NotCarry);
     }
 
-    public bool IsRelation() {
-      switch (m_middleOperator) {
+    public static bool IsRelation(MiddleOperator middleOperator) {
+      switch (middleOperator) {
         case MiddleOperator.Case:
         case MiddleOperator.Equal:
         case MiddleOperator.NotEqual:
@@ -50,15 +50,15 @@ namespace CCompiler {
         case MiddleOperator.SignedLessThanEqual:
         case MiddleOperator.SignedGreaterThan:
         case MiddleOperator.SignedGreaterThanEqual:
-        case MiddleOperator.UnsignedLessThan:
-        case MiddleOperator.UnsignedLessThanEqual:
-        case MiddleOperator.UnsignedGreaterThan:
-        case MiddleOperator.UnsignedGreaterThanEqual:
           return true;
         
         default:
           return false;
       }
+    }
+
+    public bool IsRelation() {
+      return IsRelation(m_middleOperator);
     }
 
     public bool IsRelationCarryOrGoto() {
@@ -72,9 +72,6 @@ namespace CCompiler {
         case MiddleOperator.SignedMultiply:
         case MiddleOperator.SignedDivide:
         case MiddleOperator.SignedModulo:
-        case MiddleOperator.UnsignedMultiply:
-        case MiddleOperator.UnsignedDivide:
-        case MiddleOperator.UnsignedModulo:
         case MiddleOperator.LogicalOr:
         case MiddleOperator.LogicalAnd:
         case MiddleOperator.BitwiseOr:
@@ -93,11 +90,22 @@ namespace CCompiler {
       switch (m_middleOperator) {
         case MiddleOperator.BinaryAdd:
         case MiddleOperator.SignedMultiply:
-        case MiddleOperator.UnsignedMultiply:
         case MiddleOperator.BitwiseOr:
         case MiddleOperator.BitwiseXOr:
         case MiddleOperator.BitwiseAnd:
           return true;
+        
+        default:
+          return false;
+      }
+    }
+
+    public static bool IsMultiply(MiddleOperator middleOp) {
+      switch (middleOp) {
+        case MiddleOperator.SignedMultiply:
+        case MiddleOperator.SignedDivide:
+        case MiddleOperator.SignedModulo:
+                  return true;
         
         default:
           return false;

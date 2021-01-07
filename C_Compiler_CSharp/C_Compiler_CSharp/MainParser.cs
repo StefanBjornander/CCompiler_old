@@ -4,9 +4,9 @@
 
 // GPPG version 1.5.2
 // Machine:  STEFAN1968
-// DateTime: 2021-01-06 21:16:47
+// DateTime: 2021-01-07 19:44:30
 // UserName: Stefan
-// Input file <MainParser.gppg - 2021-01-04 17:23:16>
+// Input file <MainParser.gppg - 2021-01-07 11:27:06>
 
 // options: lines gplex
 
@@ -88,13 +88,13 @@ public class ScanObj {
 [GeneratedCodeAttribute( "Gardens Point Parser Generator", "1.5.2")]
 public partial class Parser: ShiftReduceParser<ValueType, LexLocation>
 {
-  // Verbatim content from MainParser.gppg - 2021-01-04 17:23:16
+  // Verbatim content from MainParser.gppg - 2021-01-07 11:27:06
 #line 8 "MainParser.gppg"
   public static Stack<Specifier> SpecifierStack = new Stack<Specifier>();
   public static Stack<BigInteger> EnumValueStack = new Stack<BigInteger>();
   public static Stack<Scope> ScopeStack = new Stack<Scope>();
 #line default
-  // End verbatim content from MainParser.gppg - 2021-01-04 17:23:16
+  // End verbatim content from MainParser.gppg - 2021-01-07 11:27:06
 
 #pragma warning disable 649
   private static Dictionary<int, string> aliases;
@@ -794,7 +794,7 @@ public partial class Parser: ShiftReduceParser<ValueType, LexLocation>
       case 7: // Anon@2 -> /* empty */
 #line 134 "MainParser.gppg"
                               {
-      MiddleCodeGenerator.CheckFunctionDefinition();
+      MiddleCodeGenerator.FunctionDefinition();
     }
 #line default
         break;
@@ -820,7 +820,7 @@ public partial class Parser: ShiftReduceParser<ValueType, LexLocation>
       case 10: // Anon@4 -> /* empty */
 #line 145 "MainParser.gppg"
                               {
-      MiddleCodeGenerator.CheckFunctionDefinition();
+      MiddleCodeGenerator.FunctionDefinition();
     }
 #line default
         break;

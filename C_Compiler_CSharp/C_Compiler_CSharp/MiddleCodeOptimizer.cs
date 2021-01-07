@@ -115,11 +115,7 @@ namespace CCompiler {
         {MiddleOperator.SignedLessThan, MiddleOperator.SignedGreaterThanEqual},
         {MiddleOperator.SignedLessThanEqual, MiddleOperator.SignedGreaterThan},
         {MiddleOperator.SignedGreaterThan, MiddleOperator.SignedLessThanEqual},
-        {MiddleOperator.SignedGreaterThanEqual, MiddleOperator.SignedLessThan},
-        {MiddleOperator.UnsignedLessThan, MiddleOperator.UnsignedGreaterThanEqual},
-        {MiddleOperator.UnsignedLessThanEqual, MiddleOperator.UnsignedGreaterThan},
-        {MiddleOperator.UnsignedGreaterThan, MiddleOperator.UnsignedLessThanEqual},
-        {MiddleOperator.UnsignedGreaterThanEqual, MiddleOperator.UnsignedLessThan}
+        {MiddleOperator.SignedGreaterThanEqual, MiddleOperator.SignedLessThan}
       };
 
     private void ClearDoubleRelationStatements() {
@@ -404,22 +400,19 @@ namespace CCompiler {
             newSymbol = leftSymbol;
           }
           // t0 = 0 * i
-          else if (((thisCode.Operator == MiddleOperator.SignedMultiply) ||
-                    (thisCode.Operator == MiddleOperator.UnsignedMultiply)) &&
+          else if ((thisCode.Operator == MiddleOperator.SignedMultiply)  &&
                     (leftSymbol.Value is BigInteger) &&
                     (leftSymbol.Value.Equals(BigInteger.Zero))) {
             newSymbol = new Symbol(resultSymbol.Type, BigInteger.Zero);
           }
           // t0 = 1 * i
-          else if (((thisCode.Operator == MiddleOperator.SignedMultiply) ||
-                    (thisCode.Operator == MiddleOperator.UnsignedMultiply)) &&
+          else if ((thisCode.Operator == MiddleOperator.SignedMultiply) &&
                     (leftSymbol.Value is BigInteger) &&
                     (leftSymbol.Value.Equals(BigInteger.One))) {
             newSymbol = rightSymbol;
           }
           // t0 = i * 0
-          else if (((thisCode.Operator == MiddleOperator.SignedMultiply) ||
-                    (thisCode.Operator == MiddleOperator.UnsignedMultiply)) &&
+          else if ((thisCode.Operator == MiddleOperator.SignedMultiply) &&
                     (rightSymbol.Value is BigInteger) &&
                     (rightSymbol.Value.Equals(BigInteger.Zero))) {
             newSymbol = new Symbol(resultSymbol.Type, BigInteger.Zero);
@@ -428,11 +421,8 @@ namespace CCompiler {
           // t0 = i / 1
           // t0 = i % 1
           else if (((thisCode.Operator == MiddleOperator.SignedMultiply) ||
-                    (thisCode.Operator == MiddleOperator.UnsignedMultiply) ||
                     (thisCode.Operator == MiddleOperator.SignedDivide) ||
-                    (thisCode.Operator == MiddleOperator.UnsignedDivide) ||
-                    (thisCode.Operator == MiddleOperator.SignedModulo) ||
-                    (thisCode.Operator == MiddleOperator.UnsignedModulo)) &&
+                    (thisCode.Operator == MiddleOperator.SignedModulo)) &&
                     (rightSymbol.Value is BigInteger) &&
                     (rightSymbol.Value.Equals(BigInteger.One))) {
             newSymbol = leftSymbol;
@@ -493,10 +483,6 @@ namespace CCompiler {
         {MiddleOperator.SignedGreaterThan, MiddleOperator.SignedLessThan},
         {MiddleOperator.SignedLessThanEqual, MiddleOperator.SignedGreaterThanEqual},
         {MiddleOperator.SignedGreaterThanEqual, MiddleOperator.SignedLessThanEqual},
-        {MiddleOperator.UnsignedLessThan, MiddleOperator.UnsignedGreaterThan},
-        {MiddleOperator.UnsignedGreaterThan, MiddleOperator.UnsignedLessThan},
-        {MiddleOperator.UnsignedLessThanEqual, MiddleOperator.UnsignedGreaterThanEqual},
-        {MiddleOperator.UnsignedGreaterThanEqual, MiddleOperator.UnsignedLessThanEqual}
       };
 
     // if 1 < x goto

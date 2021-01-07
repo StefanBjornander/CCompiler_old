@@ -72,7 +72,7 @@ namespace CCompiler {
         new SymbolTable(SymbolTable.CurrentTable, Scope.Function);
     }
 
-    public static void CheckFunctionDefinition() {
+    public static void FunctionDefinition() {
       Type funcType = SymbolTable.CurrentFunction.Type;
 
       if (funcType.Style == Type.FunctionStyle.Old) {
@@ -1430,10 +1430,13 @@ namespace CCompiler {
       shortList.AddRange(leftExpression.ShortList);
       shortList.AddRange(rightExpression.ShortList);
 
-      if (maxType.IsUnsigned()) {
-        string name = Enum.GetName(typeof(MiddleOperator), middleOp);
-        middleOp = (MiddleOperator) Enum.Parse(typeof(MiddleOperator),
-                                         name.Replace("Signed", "Unsigned"));
+      if (leftExpression.Symbol.Type.IsSigned() &&
+          rightExpression.Symbol.Type.IsUnsigned()) {
+        rightExpression.Symbol.Type = leftExpression.Symbol.Type;
+      }
+      else if (leftExpression.Symbol.Type.IsUnsigned() &&
+               rightExpression.Symbol.Type.IsSigned()) {
+        leftExpression.Symbol.Type = rightExpression.Symbol.Type;
       }
 
       List<MiddleCode> longList = new List<MiddleCode>();
@@ -1517,7 +1520,7 @@ namespace CCompiler {
         Symbol sizeSymbol =
           new Symbol(indexExpression.Symbol.Type, new BigInteger(size));
         Expression sizeExpression = new Expression(sizeSymbol);
-        indexExpression = MultiplyExpression(MiddleOperator.UnsignedMultiply,
+        indexExpression = MultiplyExpression(MiddleOperator.SignedMultiply,
                                              indexExpression, sizeExpression);
       }
     
@@ -1643,7 +1646,7 @@ namespace CCompiler {
           Symbol sizeSymbol =
             new Symbol(Type.SignedIntegerType, new BigInteger(size));
           Expression sizeExpression = new Expression(sizeSymbol);
-          resultExpression = MultiplyExpression(MiddleOperator.UnsignedDivide,
+          resultExpression = MultiplyExpression(MiddleOperator.SignedDivide,
                                             resultExpression, sizeExpression);
         }
       }
@@ -1664,8 +1667,7 @@ namespace CCompiler {
       Type leftType = leftExpression.Symbol.Type,
            rightType = rightExpression.Symbol.Type;
            
-      if ((middleOp == MiddleOperator.SignedModulo) ||
-          (middleOp == MiddleOperator.UnsignedModulo)) {
+      if (middleOp == MiddleOperator.SignedModulo) {
         Assert.Error(leftType.IsIntegral() && rightType.IsIntegral(),
                      Message.Invalid_type_in_expression);
       }
@@ -1680,10 +1682,13 @@ namespace CCompiler {
       rightExpression = TypeCast.ImplicitCast(rightExpression, maxType);
       Symbol resultSymbol = new Symbol(maxType);
 
-      if (maxType.IsUnsigned()) {
-        string name = Enum.GetName(typeof(MiddleOperator), middleOp);
-        middleOp = (MiddleOperator) Enum.Parse(typeof(MiddleOperator),
-                                         name.Replace("Signed", "Unsigned"));
+      if (leftExpression.Symbol.Type.IsSigned() &&
+          rightExpression.Symbol.Type.IsUnsigned()) {
+        rightExpression.Symbol.Type = leftExpression.Symbol.Type;
+      }
+      else if (leftExpression.Symbol.Type.IsUnsigned() &&
+               rightExpression.Symbol.Type.IsSigned()) {
+        leftExpression.Symbol.Type = rightExpression.Symbol.Type;
       }
 
       List<MiddleCode> shortList = new List<MiddleCode>();
