@@ -1166,7 +1166,6 @@ namespace CCompiler {
     public void IntegralUnary(MiddleOperator middleOperator,
                               Symbol resultSymbol, Symbol unarySymbol) {
       AssemblyOperator objectOperator;
-
       if (MiddleCode.IsMultiply(middleOperator) &&
           unarySymbol.Type.IsUnsigned()) {
         objectOperator = m_unsignedToIntegralMap[middleOperator];
@@ -1176,7 +1175,6 @@ namespace CCompiler {
       }
 
       int typeSize = unarySymbol.Type.SizeArray();
-
       Track unaryTrack = null;
       if (unarySymbol.Value is BigInteger) {
         SymbolTable.StaticSet.Add(ConstantExpression.Value(unarySymbol));

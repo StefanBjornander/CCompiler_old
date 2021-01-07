@@ -13,9 +13,7 @@ namespace CCompiler {
 
     Compare, Equal, NotEqual, LessThan,
     LessThanEqual, GreaterThan,
-    GreaterThanEqual, //UnsignedLessThan,
-    //UnsignedLessThanEqual, UnsignedGreaterThan,
-    //UnsignedGreaterThanEqual,
+    GreaterThanEqual,
 
     Carry, NotCarry, Case, CaseEnd, Jump,
 
@@ -23,7 +21,6 @@ namespace CCompiler {
     UnaryAdd, UnarySubtract, BinaryAdd, BinarySubtract,
 
     Multiply, Divide, Modulo,
-    //UnsignedMultiply, UnsignedDivide, UnsignedModulo,
 
     Address, Dereference,
 
