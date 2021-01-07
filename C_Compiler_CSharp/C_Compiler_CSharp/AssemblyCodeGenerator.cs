@@ -1147,24 +1147,11 @@ namespace CCompiler {
 
       m_unsignedToIntegralMap =
       new Dictionary<MiddleOperator, AssemblyOperator>() {
-        {MiddleOperator.BitwiseNot, AssemblyOperator.not},
-        {MiddleOperator.UnarySubtract, AssemblyOperator.neg},
         {MiddleOperator.Multiply, AssemblyOperator.mul},
         {MiddleOperator.Divide, AssemblyOperator.div},
         {MiddleOperator.Modulo, AssemblyOperator.div},
-        {MiddleOperator.Assign, AssemblyOperator.mov},
-        {MiddleOperator.BinaryAdd, AssemblyOperator.add},
-        {MiddleOperator.BinarySubtract, AssemblyOperator.sub},
-        {MiddleOperator.BitwiseAnd, AssemblyOperator.and},
-        {MiddleOperator.BitwiseOr, AssemblyOperator.or},
-        {MiddleOperator.BitwiseXOr, AssemblyOperator.xor},
-        {MiddleOperator.ShiftLeft, AssemblyOperator.shl},
-        {MiddleOperator.ShiftRight, AssemblyOperator.shr},
         {MiddleOperator.Equal, AssemblyOperator.je},
         {MiddleOperator.NotEqual, AssemblyOperator.jne},
-        {MiddleOperator.Carry, AssemblyOperator.jc},
-        {MiddleOperator.NotCarry, AssemblyOperator.jnc},
-        {MiddleOperator.Compare, AssemblyOperator.cmp},
         {MiddleOperator.LessThan, AssemblyOperator.jb},
         {MiddleOperator.LessThanEqual,AssemblyOperator.jbe},
         {MiddleOperator.GreaterThan, AssemblyOperator.ja},
@@ -1319,8 +1306,8 @@ namespace CCompiler {
       Symbol leftSymbol = (Symbol) middleCode[1],
              rightSymbol = (Symbol) middleCode[2];
       IntegralBinary(MiddleOperator.Compare, null, leftSymbol, rightSymbol);
-      AssemblyOperator objectOperator;
 
+      AssemblyOperator objectOperator;
       if (leftSymbol.Type.IsUnsigned()) {
         objectOperator = m_unsignedToIntegralMap[middleCode.Operator];
       }
