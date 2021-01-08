@@ -1042,27 +1042,24 @@ namespace CCompiler {
                             (leftExpression, rightExpression));
 
         case MiddleOperator.BinarySubtract:
-          return Assignment(leftExpression, SubtractionExpression
-                            (leftExpression, rightExpression));
+          return Assignment(leftExpression,
+            SubtractionExpression(leftExpression, rightExpression));
 
         case MiddleOperator.Multiply:
         case MiddleOperator.Divide:
         case MiddleOperator.Modulo:
           return Assignment(leftExpression,
-                            MultiplyExpression(middleOp, leftExpression, 
-                                                         rightExpression));
+            MultiplyExpression(middleOp, leftExpression, rightExpression));
 
         case MiddleOperator.BitwiseAnd:
         case MiddleOperator.BitwiseOr:
         case MiddleOperator.BitwiseXOr:
           return Assignment(leftExpression,
-                            BitwiseExpression(middleOp, leftExpression,
-                                              rightExpression));
+            BitwiseExpression(middleOp, leftExpression, rightExpression));
 
         default: // shift left, shift right
           return Assignment(leftExpression,
-                            ShiftExpression(middleOp, leftExpression,
-                                            rightExpression));
+            ShiftExpression(middleOp, leftExpression, rightExpression));
       }
     }
 
@@ -1995,24 +1992,14 @@ namespace CCompiler {
     }
   
     private static IDictionary<MiddleOperator,MiddleOperator> m_incrementMap =
-      new Dictionary<MiddleOperator, MiddleOperator>();
+      new Dictionary<MiddleOperator, MiddleOperator>() {
+        {MiddleOperator.Increment, MiddleOperator.BinaryAdd},
+        {MiddleOperator.Decrement, MiddleOperator.BinarySubtract}};
 
     private static IDictionary<MiddleOperator,MiddleOperator>
-      m_incrementInverseMap = new Dictionary<MiddleOperator,MiddleOperator>();
-
-    static MiddleCodeGenerator() {
-      m_incrementMap.Add(MiddleOperator.Increment,
-                         MiddleOperator.BinaryAdd);
-      m_incrementMap.Add(MiddleOperator.Decrement,
-                         MiddleOperator.BinarySubtract);
-      m_incrementInverseMap.Add(MiddleOperator.Increment,
-                                 MiddleOperator.BinarySubtract);
-      m_incrementInverseMap.Add(MiddleOperator.Decrement,
-                                 MiddleOperator.BinaryAdd);
-    }
-
-    private static IDictionary<MiddleOperator,MiddleOperator>
-      incrementMap = new Dictionary<MiddleOperator,MiddleOperator>();
+      m_incrementInverseMap = new Dictionary<MiddleOperator,MiddleOperator>(){
+        {MiddleOperator.Increment, MiddleOperator.BinarySubtract},
+        {MiddleOperator.Decrement, MiddleOperator.BinaryAdd}};
 
     public static Expression PrefixIncrementExpression(MiddleOperator middleOp,
                                                        Expression expression) {
