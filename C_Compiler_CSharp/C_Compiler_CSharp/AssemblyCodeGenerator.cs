@@ -12,13 +12,10 @@ namespace CCompiler {
     public const int FloatingStackMaxSize = 7;
     private Stack<int> m_topStack = new Stack<int>();
 
-    //public static string IntegralStorageName =
-      //Symbol.SeparatorId + "IntegralStorage" + Symbol.NumberId;
     public static string MainName = "main";
     public static string InitializerName = Symbol.SeparatorId + "initializer";
     public static string ArgsName = Symbol.SeparatorId + "args";
     public static string PathName = Symbol.SeparatorId + "PathName";
-//    public static string PathText = "";
   
     public AssemblyCodeGenerator(List<AssemblyCode> assemblyCodeList) {
       m_assemblyCodeList = assemblyCodeList;
@@ -199,7 +196,6 @@ namespace CCompiler {
 
           case MiddleOperator.Equal:
           case MiddleOperator.NotEqual:
-          //case MiddleOperator.EqualZero:
           case MiddleOperator.LessThan:
           case MiddleOperator.LessThanEqual:
           case MiddleOperator.GreaterThan:

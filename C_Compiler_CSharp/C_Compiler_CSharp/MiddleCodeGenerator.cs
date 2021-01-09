@@ -2001,8 +2001,8 @@ namespace CCompiler {
         {MiddleOperator.Increment, MiddleOperator.BinarySubtract},
         {MiddleOperator.Decrement, MiddleOperator.BinaryAdd}};
 
-    public static Expression PrefixIncrementExpression(MiddleOperator middleOp,
-                                                       Expression expression) {
+    public static Expression PrefixIncrementExpression
+                             (MiddleOperator middleOp, Expression expression){
       Symbol symbol = expression.Symbol;
       Assert.Error(symbol.IsAssignable(),  Message.Not_assignable);
       Assert.Error(symbol.Type.IsArithmeticOrPointer(),
@@ -2010,21 +2010,26 @@ namespace CCompiler {
 
       if (symbol.Type.IsIntegralOrPointer()) {
         Symbol oneSymbol = new Symbol(symbol.Type, BigInteger.One);
-        AddMiddleCode(expression.ShortList, m_incrementMap[middleOp], symbol, symbol, oneSymbol);
-        AddMiddleCode(expression.LongList, m_incrementMap[middleOp], symbol, symbol, oneSymbol);
+        AddMiddleCode(expression.ShortList, m_incrementMap[middleOp],
+                      symbol, symbol, oneSymbol);
+        AddMiddleCode(expression.LongList, m_incrementMap[middleOp],
+                      symbol, symbol, oneSymbol);
 
         BigInteger? bitFieldMask = symbol.Type.GetBitfieldMask();
         if (bitFieldMask != null) {
           Symbol maskSymbol = new Symbol(symbol.Type, bitFieldMask.Value);
-          MiddleCode maskCode = new MiddleCode(MiddleOperator.BitwiseAnd, symbol, symbol, maskSymbol);
+          MiddleCode maskCode = new MiddleCode(MiddleOperator.BitwiseAnd,
+                                               symbol, symbol, maskSymbol);
           expression.ShortList.Add(maskCode);
           expression.LongList.Add(maskCode);
         }
     
         Symbol resultSymbol = new Symbol(symbol.Type);
-        AddMiddleCode(expression.LongList, MiddleOperator.Assign, resultSymbol, symbol);
+        AddMiddleCode(expression.LongList, MiddleOperator.Assign,
+                      resultSymbol, symbol);
       
-        return (new Expression(resultSymbol, expression.ShortList, expression.LongList));
+        return (new Expression(resultSymbol, expression.ShortList,
+                               expression.LongList));
       }
       else {
         AddMiddleCode(expression.ShortList, MiddleOperator.PushOne);
@@ -2045,7 +2050,7 @@ namespace CCompiler {
     }
 
     public static Expression PostfixIncrementExpression
-      (MiddleOperator middleOp, Expression expression) {
+                             (MiddleOperator middleOp, Expression expression){
       Symbol symbol = expression.Symbol;
       Assert.Error(symbol.IsAssignable(), Message.Not_assignable);
       Assert.Error(symbol.Type.IsArithmeticOrPointer(),
@@ -2056,8 +2061,10 @@ namespace CCompiler {
         AddMiddleCode(expression.LongList, MiddleOperator.Assign,
                       resultSymbol, symbol);
         Symbol oneSymbol = new Symbol(symbol.Type, BigInteger.One);
-        AddMiddleCode(expression.ShortList, m_incrementMap[middleOp], symbol, symbol, oneSymbol);
-        AddMiddleCode(expression.LongList, m_incrementMap[middleOp], symbol, symbol, oneSymbol);
+        AddMiddleCode(expression.ShortList, m_incrementMap[middleOp],
+                      symbol, symbol, oneSymbol);
+        AddMiddleCode(expression.LongList, m_incrementMap[middleOp],
+                      symbol, symbol, oneSymbol);
 
         BigInteger? bitFieldMask = symbol.Type.GetBitfieldMask();
         if (bitFieldMask != null) {
@@ -2078,7 +2085,6 @@ namespace CCompiler {
                       symbol, symbol, oneSymbol);
         AddMiddleCode(expression.ShortList, MiddleOperator.PopFloat, symbol);
 
-        //AddMiddleCode(expression.LongList, MiddleOperator.PushFloat, symbol);
         AddMiddleCode(expression.LongList, MiddleOperator.PushOne);
         AddMiddleCode(expression.LongList, m_incrementMap[middleOp],
                       symbol, symbol, oneSymbol);
