@@ -94,7 +94,8 @@ namespace CCompiler {
 
       ISet<Graph<VertexType>> graphSet = new HashSet<Graph<VertexType>>();
       foreach (ISet<VertexType> vertexSet in subgraphSet) {
-        graphSet.Add(InducedSubGraph(vertexSet));
+        Graph<VertexType> subGraph = InducedSubGraph(vertexSet);
+        graphSet.Add(subGraph);
       }
 
       return graphSet;
