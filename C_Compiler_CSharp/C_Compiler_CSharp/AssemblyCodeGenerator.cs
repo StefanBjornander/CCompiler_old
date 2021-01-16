@@ -1361,9 +1361,14 @@ namespace CCompiler {
           LoadValueToRegister(rightSymbol, AssemblyCode.ShiftRegister);
       }
 
+      if ((leftTrack == null) && (leftSymbol.Value is BigInteger)) {
+        leftTrack = LoadValueToRegister(leftSymbol);
+      }
+
       int typeSize = leftSymbol.Type.Size();
       AssemblyOperator objectOperator = m_middleToIntegralMap[middleOperator];
-      Assert.ErrorXXX(!(leftSymbol.Value is BigInteger));
+      
+      //Assert.ErrorXXX(!(leftSymbol.Value is BigInteger));
 
       if (leftTrack != null) {
         if (rightTrack != null) {
