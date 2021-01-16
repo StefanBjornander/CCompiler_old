@@ -58,7 +58,7 @@ namespace CCompiler {
         new Symbol(declarator.Name, specifier.ExternalLinkage, storage.Value, declarator.Type);
       
       Assert.Error(SymbolTable.CurrentFunction.IsExternOrStatic(),
-                declarator.Name, Message.A_function_must_be_static_or_extern);
+                   declarator.Name, Message.A_function_must_be_static_or_extern);
 
       SymbolTable.CurrentFunction.FunctionDefinition = true;
       SymbolTable.CurrentTable.AddSymbol(SymbolTable.CurrentFunction);
@@ -143,7 +143,7 @@ namespace CCompiler {
       AddMiddleCode(statement.CodeList, MiddleOperator.FunctionEnd,
                     SymbolTable.CurrentFunction);
 
-      if (SymbolTable.CurrentFunction.Name.Equals("time")) {
+      if (SymbolTable.CurrentFunction.Name.Equals("strftime")) {
         string name = @"C:\Users\Stefan\Documents\vagrant\homestead\code\code\" +
                       SymbolTable.CurrentFunction.Name + ".middlebefore";
         StreamWriter streamWriter = new StreamWriter(name);
@@ -160,7 +160,7 @@ namespace CCompiler {
         new MiddleCodeOptimizer(statement.CodeList);
       middleCodeOptimizer.Optimize();
 
-      if (SymbolTable.CurrentFunction.Name.Equals("time")) {
+      if (SymbolTable.CurrentFunction.Name.Equals("strftime")) {
         string name = @"C:\Users\Stefan\Documents\vagrant\homestead\code\code\" +
                       SymbolTable.CurrentFunction.Name + ".middleafter";
         StreamWriter streamWriter = new StreamWriter(name);

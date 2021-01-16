@@ -89,6 +89,8 @@ namespace CCompiler {
           Assert.Error(oldSymbol.Type.Equals(newSymbol.Type),
                        name, Message.Different_types_in_redeclaration);
 
+          newSymbol.UniqueName = oldSymbol.UniqueName;
+
           if (!newSymbol.IsExtern()) {
             m_entryMap[name] = newSymbol;
             m_entryList.Remove(oldSymbol);
