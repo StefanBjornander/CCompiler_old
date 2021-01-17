@@ -72,11 +72,11 @@ namespace CCompiler {
       }
     }
 
-  // --------------------------------------------------------------------------
+    // --------------------------------------------------------------------------
 
     // 1. goto 2
     // 2. ...
-  
+
     private void ClearGotoNextStatements() {
       for (int index = 0; index < (m_middleCodeList.Count - 1); ++index) {        
         MiddleCode middleCode = m_middleCodeList[index];

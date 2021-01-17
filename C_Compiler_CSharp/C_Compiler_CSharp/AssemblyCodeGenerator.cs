@@ -2206,6 +2206,7 @@ namespace CCompiler {
             byteSize += assemblyCode.ByteList().Count;
           }
         }
+
         assemblyToByteMap.Add(m_assemblyCodeList.Count, byteSize);
       }
 
@@ -2214,14 +2215,12 @@ namespace CCompiler {
           AssemblyCode thisCode = m_assemblyCodeList[line],
                        nextCode = m_assemblyCodeList[line + 1];
 
-          if (/*(thisCode[0] == null) && */
-              (thisCode.IsRelationNotRegister() ||
-               thisCode.IsJumpNotRegister())) {
+          if (thisCode.IsRelationNotRegister() || 
+              thisCode.IsJumpNotRegister()) {
             int assemblyTarget = (int) thisCode[1];
             int byteSource = assemblyToByteMap[line + 1],
                 byteTarget = assemblyToByteMap[assemblyTarget];
             int byteDistance = byteTarget - byteSource;
-            Assert.ErrorXXX(byteDistance != 0);
             thisCode[0] = byteDistance;
           }
         }
@@ -2241,6 +2240,17 @@ namespace CCompiler {
 
         if (!update) {
           break;
+        }
+      }
+
+      foreach (AssemblyCode objectCode in m_assemblyCodeList) {
+        if (objectCode.IsRelationNotRegister() ||
+            objectCode.IsJumpNotRegister()) {
+          int byteDistance = (int) objectCode[0];
+
+          if (byteDistance == 0) {
+            objectCode.Operator = AssemblyOperator.empty;
+          }
         }
       }
 

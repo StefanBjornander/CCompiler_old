@@ -2147,27 +2147,28 @@ namespace CCompiler {
 
       int index = 0, offset = SymbolTable.FunctionHeaderSize, extra = 0;
       foreach (Expression argumentExpression in argumentList) {
-        longList.AddRange(argumentExpression.LongList);
-
-        Type type;
+        Type parameterType;
         if ((typeList != null) && (index < typeList.Count)) {
-          type = typeList[index++];
+          parameterType = typeList[index++];
         }
         else {
-          type = ParameterType(argumentExpression.Symbol);
-          extra += type.Size();
+          parameterType = ParameterType(argumentExpression.Symbol);
+          extra += parameterType.Size();
         }
 
-        if (type.IsStructOrUnion()) {
+        Expression parameterExpression = TypeCast.ImplicitCast(argumentExpression, parameterType);
+        longList.AddRange(parameterExpression.LongList);
+
+        if (parameterType.IsStructOrUnion()) {
           AddMiddleCode(longList, MiddleOperator.ParameterInitSize,
                         SymbolTable.CurrentTable.CurrentOffset + totalOffset +
-                        offset, type, argumentExpression.Symbol);
+                        offset, parameterType, parameterExpression.Symbol);
         }
 
         AddMiddleCode(longList, MiddleOperator.Parameter,
-                      SymbolTable.CurrentTable. CurrentOffset + totalOffset +
-                      offset, type, argumentExpression.Symbol);
-        offset += type.Size();
+                      SymbolTable.CurrentTable.CurrentOffset + totalOffset +
+                      offset, parameterType, parameterExpression.Symbol);
+        offset += parameterType.Size();
       }
 
       Symbol functionSymbol = functionExpression.Symbol;
@@ -2244,11 +2245,14 @@ namespace CCompiler {
         case Sort.String:
           return (new Type(new Type(Sort.SignedChar)));
 
+        case Sort.Logical:
+          return Type.SignedIntegerType;
+
         default:
           return symbol.Type;
       }
     }
-   
+
     // ---------------------------------------------------------------------------------------------------------------------
 
     public static Expression ValueExpression(Symbol symbol) {
