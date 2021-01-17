@@ -550,6 +550,7 @@ namespace CCompiler {
       if (m_returnType.IsIntegralLogicalOrPointer() ||
           m_returnType.IsStructOrUnion()) {
         m_returnTrack = null;
+
         foreach (KeyValuePair<Track,int> pair in postMap) {
           Track track = pair.Key;
 
@@ -560,7 +561,7 @@ namespace CCompiler {
           }
 
           int offset = pair.Value;
-          AddAssemblyCode(AssemblyOperator.mov, track, baseRegister,offset);
+          AddAssemblyCode(AssemblyOperator.mov, track, baseRegister, offset);
         }
 
         if (m_returnTrack == null) {
@@ -568,12 +569,19 @@ namespace CCompiler {
           m_returnTrack.Register = AssemblyCode.RegisterToSize(AssemblyCode.ReturnValueRegister, m_returnType.ReturnSize());
         }
       }
+      else {
+        foreach (KeyValuePair<Track,int> pair in postMap) {
+          Track track = pair.Key;
+          int offset = pair.Value;
+          AddAssemblyCode(AssemblyOperator.mov, track, baseRegister, offset);
+        }
+      }
 
       Assert.ErrorXXX(m_topStack.Count > 0);
       int topSize = m_topStack.Pop();
 
       if (topSize > 0) {
-        int recordOffset = (int)middleCode[0]; 
+        int recordOffset = (int) middleCode[0]; 
         int doubleTypeSize = Type.DoubleType.Size();
         int recordSize = m_recordSizeStack.Pop();
 
