@@ -36,7 +36,7 @@ namespace CCompiler {
         m_sizeMap.Add(Sort.Logical, 1);
         m_sizeMap.Add(Sort.Pointer, 8);
         m_sizeMap.Add(Sort.Array, 8);
-        m_sizeMap.Add(Sort.String, 4);
+        m_sizeMap.Add(Sort.String, 8); 
         m_sizeMap.Add(Sort.SignedChar, 1);
         m_sizeMap.Add(Sort.UnsignedChar, 1);
         m_sizeMap.Add(Sort.SignedShortInt, 2);
