@@ -38,12 +38,15 @@ namespace CCompiler {
                                       Declarator declarator) {
       Storage? storage;
       Type returnType;
+      bool externalLinkage;
 
       if (specifier != null) {
+        externalLinkage = specifier.ExternalLinkage;
         storage = specifier.Storage;
         returnType = specifier.Type;
       }
       else {
+        externalLinkage = true;
         storage = Storage.Extern;
         returnType = Type.SignedIntegerType;
       }
@@ -54,8 +57,8 @@ namespace CCompiler {
       Assert.Error(declarator.Type.IsFunction(), declarator.Name,
                    Message.Not_a_function);
 
-      SymbolTable.CurrentFunction =
-        new Symbol(declarator.Name, specifier.ExternalLinkage, storage.Value, declarator.Type);
+      SymbolTable.CurrentFunction = new Symbol(declarator.Name, externalLinkage,
+                                               storage.Value, declarator.Type);
       
       Assert.Error(SymbolTable.CurrentFunction.IsExternOrStatic(),
                    declarator.Name, Message.A_function_must_be_static_or_extern);
