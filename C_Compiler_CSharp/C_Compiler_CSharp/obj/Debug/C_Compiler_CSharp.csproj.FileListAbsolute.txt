@@ -38,3 +38,5 @@ C:\Users\Stefan\Documents\A A A C_Compiler_Assembler - CSharp\C_Compiler_CSharp\
 C:\Users\Stefan\Documents\A A A C_Compiler_Assembler - CSharp\C_Compiler_CSharp\C_Compiler_CSharp\obj\Debug\C_Compiler_CSharp.exe
 C:\Users\Stefan\Documents\A A A C_Compiler_Assembler - CSharp\C_Compiler_CSharp\C_Compiler_CSharp\obj\Debug\C_Compiler_CSharp.pdb
 C:\Users\Stefan\Documents\A A A C_Compiler_Assembler - CSharp\C_Compiler_CSharp\C_Compiler_CSharp\obj\Debug\C_Compiler_CSharp.csprojResolveAssemblyReference.cache
+C:\Users\Stefan\Documents\A A A C_Compiler_Assembler - CSharp\C_Compiler_CSharp\C_Compiler_CSharp\bin\Debug\C_Compiler_CSharp.exe.CodeAnalysisLog.xml
+C:\Users\Stefan\Documents\A A A C_Compiler_Assembler - CSharp\C_Compiler_CSharp\C_Compiler_CSharp\bin\Debug\C_Compiler_CSharp.exe.lastcodeanalysissucceeded
