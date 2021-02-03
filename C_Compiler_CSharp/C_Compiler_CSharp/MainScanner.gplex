@@ -15,9 +15,14 @@ HEXADECIMAL_VALUE [\+\-]?0[xX][0-9a-fA-F]+
 POSTFIX ([uU]?[sSlL]?)|([sSlL]?[uU]?)
 INTEGRAL_VALUE ({DECIMAL_VALUE}|{OCTAL_VALUE}|{HEXADECIMAL_VALUE}){POSTFIX}
 
-DECIMAL_PART [\+\-]?([0-9]+|[0-9]+\.[0-9]*|\.[0-9]+)
+DECIMAL_WITHOUT_EXPONENT (([0-9]+\.[0-9]*)|([0-9]*\.[0-9]+))
+DECIMAL_WITH_EXPONENT    [0-9]+|([0-9]*\.[0-9]*)
+EXPONENT                 [eE][\+\-]?[0-9]+
+FLOATING_VALUE           [\+\-]?({DECIMAL_WITHOUT_EXPONENT}|({DECIMAL_WITH_EXPONENT}{EXPONENT}))[flFL]?
+
+/*DECIMAL_PART [\+\-]?([0-9]+|[0-9]+\.[0-9]*|\.[0-9]+)
 EXPONENT_PART (([eE][\+\-]?[0-9]+)?|[0-9]+[eE][\+\-]?[0-9]+)([fF]|[lL])?
-FLOATING_VALUE {DECIMAL_PART}{EXPONENT_PART}
+FLOATING_VALUE {DECIMAL_PART}{EXPONENT_PART}*/
 
 CHAR_VALUE \'(\\\'|[^'])*\'
 STRING_VALUE \"(\\\"|[^"])*\"
