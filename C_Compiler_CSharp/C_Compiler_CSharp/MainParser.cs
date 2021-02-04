@@ -4,9 +4,9 @@
 
 // GPPG version 1.5.2
 // Machine:  STEFAN1968
-// DateTime: 2021-02-03 19:14:23
+// DateTime: 2021-02-04 23:35:14
 // UserName: Stefan
-// Input file <MainParser.gppg - 2021-01-07 20:05:38>
+// Input file <MainParser.gppg - 2021-02-04 23:34:46>
 
 // options: lines gplex
 
@@ -88,13 +88,13 @@ public class ScanObj {
 [GeneratedCodeAttribute( "Gardens Point Parser Generator", "1.5.2")]
 public partial class Parser: ShiftReduceParser<ValueType, LexLocation>
 {
-  // Verbatim content from MainParser.gppg - 2021-01-07 20:05:38
+  // Verbatim content from MainParser.gppg - 2021-02-04 23:34:46
 #line 8 "MainParser.gppg"
   public static Stack<Specifier> SpecifierStack = new Stack<Specifier>();
   public static Stack<BigInteger> EnumValueStack = new Stack<BigInteger>();
   public static Stack<Scope> ScopeStack = new Stack<Scope>();
 #line default
-  // End verbatim content from MainParser.gppg - 2021-01-07 20:05:38
+  // End verbatim content from MainParser.gppg - 2021-02-04 23:34:46
 
 #pragma warning disable 649
   private static Dictionary<int, string> aliases;
@@ -1723,57 +1723,57 @@ public partial class Parser: ShiftReduceParser<ValueType, LexLocation>
         break;
       case 140: // assignment_operator -> ASSIGN
 #line 614 "MainParser.gppg"
-                       { CurrentSemanticValue.middleOperator = MiddleOperator.Assign;         }
+                       { CurrentSemanticValue.middleOperator = MiddleOperator.Assign;     }
 #line default
         break;
       case 141: // assignment_operator -> ADD_ASSIGN
 #line 615 "MainParser.gppg"
-                       { CurrentSemanticValue.middleOperator = MiddleOperator.BinaryAdd;      }
+                       { CurrentSemanticValue.middleOperator = MiddleOperator.Add;        }
 #line default
         break;
       case 142: // assignment_operator -> SUBTRACT_ASSIGN
 #line 616 "MainParser.gppg"
-                       { CurrentSemanticValue.middleOperator = MiddleOperator.BinarySubtract; }
+                       { CurrentSemanticValue.middleOperator = MiddleOperator.Subtract;   }
 #line default
         break;
       case 143: // assignment_operator -> MULTIPLY_ASSIGN
 #line 617 "MainParser.gppg"
-                       { CurrentSemanticValue.middleOperator = MiddleOperator.Multiply;       }
+                       { CurrentSemanticValue.middleOperator = MiddleOperator.Multiply;   }
 #line default
         break;
       case 144: // assignment_operator -> DIVIDE_ASSIGN
 #line 618 "MainParser.gppg"
-                       { CurrentSemanticValue.middleOperator = MiddleOperator.Divide;         }
+                       { CurrentSemanticValue.middleOperator = MiddleOperator.Divide;     }
 #line default
         break;
       case 145: // assignment_operator -> MODULO_ASSIGN
 #line 619 "MainParser.gppg"
-                       { CurrentSemanticValue.middleOperator = MiddleOperator.Modulo;         }
+                       { CurrentSemanticValue.middleOperator = MiddleOperator.Modulo;     }
 #line default
         break;
       case 146: // assignment_operator -> AND_ASSIGN
 #line 620 "MainParser.gppg"
-                       { CurrentSemanticValue.middleOperator = MiddleOperator.BitwiseAnd;     }
+                       { CurrentSemanticValue.middleOperator = MiddleOperator.BitwiseAnd; }
 #line default
         break;
       case 147: // assignment_operator -> OR_ASSIGN
 #line 621 "MainParser.gppg"
-                       { CurrentSemanticValue.middleOperator = MiddleOperator.BitwiseOr;      }
+                       { CurrentSemanticValue.middleOperator = MiddleOperator.BitwiseOr;  }
 #line default
         break;
       case 148: // assignment_operator -> XOR_ASSIGN
 #line 622 "MainParser.gppg"
-                       { CurrentSemanticValue.middleOperator = MiddleOperator.BitwiseXOr;     }
+                       { CurrentSemanticValue.middleOperator = MiddleOperator.BitwiseXOr; }
 #line default
         break;
       case 149: // assignment_operator -> LEFT_SHIFT_ASSIGN
 #line 623 "MainParser.gppg"
-                       { CurrentSemanticValue.middleOperator = MiddleOperator.ShiftLeft;      }
+                       { CurrentSemanticValue.middleOperator = MiddleOperator.ShiftLeft;  }
 #line default
         break;
       case 150: // assignment_operator -> RIGHT_SHIFT_ASSIGN
 #line 624 "MainParser.gppg"
-                       { CurrentSemanticValue.middleOperator = MiddleOperator.ShiftRight;     }
+                       { CurrentSemanticValue.middleOperator = MiddleOperator.ShiftRight; }
 #line default
         break;
       case 151: // condition_expression -> logical_or_expression
@@ -2123,12 +2123,12 @@ public partial class Parser: ShiftReduceParser<ValueType, LexLocation>
         break;
       case 202: // prefix_add_operator -> PLUS
 #line 803 "MainParser.gppg"
-          { CurrentSemanticValue.middleOperator = MiddleOperator.UnaryAdd;      }
+          { CurrentSemanticValue.middleOperator = MiddleOperator.Plus;  }
 #line default
         break;
       case 203: // prefix_add_operator -> MINUS
 #line 804 "MainParser.gppg"
-          { CurrentSemanticValue.middleOperator = MiddleOperator.UnarySubtract; }
+          { CurrentSemanticValue.middleOperator = MiddleOperator.Minus; }
 #line default
         break;
       case 204: // increment_operator -> INCREMENT

@@ -239,7 +239,7 @@ namespace CCompiler {
                  resultValue = 0;
 
       switch (middleOp) {
-        case MiddleOperator.BinaryAdd:
+        case MiddleOperator.Add:
           if (leftType.IsPointerOrArray()) {
             resultValue = leftValue +
                           (rightValue * leftType.PointerOrArrayType.Size());
@@ -254,7 +254,7 @@ namespace CCompiler {
           }
           break;
 
-        case MiddleOperator.BinarySubtract:
+        case MiddleOperator.Subtract:
           if (leftType.IsPointerOrArray() && rightType.IsPointerOrArray()) {
             resultValue = (leftValue - rightValue) /
                           leftType.PointerOrArrayType.Size();
@@ -328,11 +328,11 @@ namespace CCompiler {
       }
 
       switch (middleOp) {
-        case MiddleOperator.BinaryAdd:
+        case MiddleOperator.Add:
           resultValue = leftValue + rightValue;
           break;
         
-        case MiddleOperator.BinarySubtract:
+        case MiddleOperator.Subtract:
           resultValue = leftValue - rightValue;
           break;
         
@@ -385,11 +385,11 @@ namespace CCompiler {
                  resultValue = 0;
 
       switch (middleOp) {
-        case MiddleOperator.UnaryAdd:
+        case MiddleOperator.Plus:
           resultValue = value;
           break;
         
-        case MiddleOperator.UnarySubtract:
+        case MiddleOperator.Minus:
           resultValue = -value;
           break;
 
@@ -409,11 +409,11 @@ namespace CCompiler {
       Symbol resultSymbol = null;
 
       switch (middleOp) {
-        case MiddleOperator.UnaryAdd:
+        case MiddleOperator.Plus:
           resultSymbol = new Symbol(expression.Symbol.Type, value);
           break;
         
-        case MiddleOperator.UnarySubtract:
+        case MiddleOperator.Minus:
           resultSymbol = new Symbol(expression.Symbol.Type, -value);
           break;
       }

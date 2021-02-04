@@ -11,7 +11,7 @@ namespace CCompiler {
              rightValue = rightExpression.Symbol.Value;
     
       switch (middleOp) {
-        case MiddleOperator.BinaryAdd: // &i + 2, a + 2
+        case MiddleOperator.Add: // &i + 2, a + 2
           if (((leftValue is StaticAddress) ||
                (leftExpression.Symbol.IsExternOrStatic() && leftType.IsArray())) &&
               (rightValue is BigInteger)) {
@@ -24,7 +24,7 @@ namespace CCompiler {
           }
           break;
 
-        case MiddleOperator.BinarySubtract: // &i - 2, a - 2
+        case MiddleOperator.Subtract: // &i - 2, a - 2
           if (((leftValue is StaticAddress) ||
                (leftExpression.Symbol.IsExternOrStatic() && leftType.IsArray())) &&
               (rightValue is BigInteger)) {

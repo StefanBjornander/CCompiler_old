@@ -18,7 +18,7 @@ namespace CCompiler {
     Carry, NotCarry, Case, CaseEnd, Jump,
 
     Index, Dot, Increment, Decrement,
-    UnaryAdd, UnarySubtract, BinaryAdd, BinarySubtract,
+    Plus, Minus, Add, Subtract,
 
     Multiply, Divide, Modulo,
 

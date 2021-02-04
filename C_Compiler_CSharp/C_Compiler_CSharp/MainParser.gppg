@@ -611,17 +611,17 @@ assignment_expression:
     };
 
 assignment_operator:
-    ASSIGN             { $$ = MiddleOperator.Assign;         }
-  | ADD_ASSIGN         { $$ = MiddleOperator.BinaryAdd;      }
-  | SUBTRACT_ASSIGN    { $$ = MiddleOperator.BinarySubtract; }
-  | MULTIPLY_ASSIGN    { $$ = MiddleOperator.Multiply;       }
-  | DIVIDE_ASSIGN      { $$ = MiddleOperator.Divide;         }
-  | MODULO_ASSIGN      { $$ = MiddleOperator.Modulo;         }
-  | AND_ASSIGN         { $$ = MiddleOperator.BitwiseAnd;     }
-  | OR_ASSIGN          { $$ = MiddleOperator.BitwiseOr;      }
-  | XOR_ASSIGN         { $$ = MiddleOperator.BitwiseXOr;     }
-  | LEFT_SHIFT_ASSIGN  { $$ = MiddleOperator.ShiftLeft;      }
-  | RIGHT_SHIFT_ASSIGN { $$ = MiddleOperator.ShiftRight;     };
+    ASSIGN             { $$ = MiddleOperator.Assign;     }
+  | ADD_ASSIGN         { $$ = MiddleOperator.Add;        }
+  | SUBTRACT_ASSIGN    { $$ = MiddleOperator.Subtract;   }
+  | MULTIPLY_ASSIGN    { $$ = MiddleOperator.Multiply;   }
+  | DIVIDE_ASSIGN      { $$ = MiddleOperator.Divide;     }
+  | MODULO_ASSIGN      { $$ = MiddleOperator.Modulo;     }
+  | AND_ASSIGN         { $$ = MiddleOperator.BitwiseAnd; }
+  | OR_ASSIGN          { $$ = MiddleOperator.BitwiseOr;  }
+  | XOR_ASSIGN         { $$ = MiddleOperator.BitwiseXOr; }
+  | LEFT_SHIFT_ASSIGN  { $$ = MiddleOperator.ShiftLeft;  }
+  | RIGHT_SHIFT_ASSIGN { $$ = MiddleOperator.ShiftRight; };
 
 condition_expression:
     logical_or_expression {
@@ -800,8 +800,8 @@ prefix_expression:
     };
 
 prefix_add_operator:
-    PLUS  { $$ = MiddleOperator.UnaryAdd;      }
-  | MINUS { $$ = MiddleOperator.UnarySubtract; };
+    PLUS  { $$ = MiddleOperator.Plus;  }
+  | MINUS { $$ = MiddleOperator.Minus; };
 
 increment_operator:
     INCREMENT { $$ = MiddleOperator.Increment; }

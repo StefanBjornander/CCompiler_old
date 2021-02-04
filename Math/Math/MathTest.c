@@ -124,7 +124,7 @@ void math_test_2(double x, double y) {
 
 #define X(m) { strftime(s, 1000, "%" #m, &u); printf(#m ": <%s>\n", s); }
 
-void main() {
+void mainX() {
   { char s[1000];
     time_t t = time(NULL);
     struct tm u;

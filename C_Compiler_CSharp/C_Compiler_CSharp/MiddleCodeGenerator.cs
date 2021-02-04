@@ -1040,11 +1040,11 @@ namespace CCompiler {
         case MiddleOperator.Assign:
           return Assignment(leftExpression, rightExpression, true);
 
-        case MiddleOperator.BinaryAdd:
+        case MiddleOperator.Add:
           return Assignment(leftExpression, AdditionExpression
                             (leftExpression, rightExpression));
 
-        case MiddleOperator.BinarySubtract:
+        case MiddleOperator.Subtract:
           return Assignment(leftExpression,
             SubtractionExpression(leftExpression, rightExpression));
 
@@ -1542,14 +1542,14 @@ namespace CCompiler {
                    leftExpression, Message.Non__arithmetic_expression);
 
       Expression constantExpression =
-        ConstantExpression.Arithmetic(MiddleOperator.BinaryAdd,
+        ConstantExpression.Arithmetic(MiddleOperator.Add,
                                       leftExpression, rightExpression);
       if (constantExpression != null) {
         return constantExpression;
       }
 
       Expression staticExpression =
-        StaticExpression.Binary(MiddleOperator.BinarySubtract,
+        StaticExpression.Binary(MiddleOperator.Subtract,
                                 leftExpression, rightExpression);
       if (staticExpression != null) {
         return staticExpression;
@@ -1576,7 +1576,7 @@ namespace CCompiler {
       longList.AddRange(rightExpression.LongList);
 
       Symbol resultSymbol = new Symbol(maxType);
-      AddMiddleCode(longList, MiddleOperator.BinaryAdd, resultSymbol,
+      AddMiddleCode(longList, MiddleOperator.Add, resultSymbol,
                     leftExpression.Symbol, rightExpression.Symbol);
       return (new Expression(resultSymbol, shortList, longList));
     }
@@ -1606,14 +1606,14 @@ namespace CCompiler {
       }
 
       Expression constantExpression =
-        ConstantExpression.Arithmetic(MiddleOperator.BinarySubtract,
+        ConstantExpression.Arithmetic(MiddleOperator.Subtract,
                                       leftExpression, rightExpression);
       if (constantExpression != null) {
         return constantExpression;
       }
 
       Expression staticExpression =
-        StaticExpression.Binary(MiddleOperator.BinarySubtract,
+        StaticExpression.Binary(MiddleOperator.Subtract,
                                 leftExpression, rightExpression);
       if (staticExpression != null) {
         return staticExpression;
@@ -1632,7 +1632,7 @@ namespace CCompiler {
       longList.AddRange(rightExpression.LongList);
 
       Symbol resultSymbol = new Symbol(maxType);
-      AddMiddleCode(longList, MiddleOperator.BinarySubtract, resultSymbol,
+      AddMiddleCode(longList, MiddleOperator.Subtract, resultSymbol,
                     leftExpression.Symbol, rightExpression.Symbol);
       Expression resultExpression =
         new Expression(resultSymbol, shortList, longList);
@@ -1934,7 +1934,7 @@ namespace CCompiler {
         longList.AddRange(indexExpression.LongList);
 
         Symbol addSymbol = new Symbol(arrayType);
-        AddMiddleCode(longList, MiddleOperator.BinaryAdd,
+        AddMiddleCode(longList, MiddleOperator.Add,
                       addSymbol, arrayExpression.Symbol,
                       indexExpression.Symbol);
 
@@ -1996,13 +1996,13 @@ namespace CCompiler {
   
     private static IDictionary<MiddleOperator,MiddleOperator> m_incrementMap =
       new Dictionary<MiddleOperator, MiddleOperator>() {
-        {MiddleOperator.Increment, MiddleOperator.BinaryAdd},
-        {MiddleOperator.Decrement, MiddleOperator.BinarySubtract}};
+        {MiddleOperator.Increment, MiddleOperator.Add},
+        {MiddleOperator.Decrement, MiddleOperator.Subtract}};
 
     private static IDictionary<MiddleOperator,MiddleOperator>
       m_incrementInverseMap = new Dictionary<MiddleOperator,MiddleOperator>(){
-        {MiddleOperator.Increment, MiddleOperator.BinarySubtract},
-        {MiddleOperator.Decrement, MiddleOperator.BinaryAdd}};
+        {MiddleOperator.Increment, MiddleOperator.Subtract},
+        {MiddleOperator.Decrement, MiddleOperator.Add}};
 
     public static Expression PrefixIncrementExpression
                              (MiddleOperator middleOp, Expression expression){

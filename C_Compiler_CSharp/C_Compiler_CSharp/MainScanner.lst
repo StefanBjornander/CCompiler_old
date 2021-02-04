@@ -4,7 +4,7 @@
 // ==========================================================================
 //  Version:  1.2.2
 //  Machine:  STEFAN1968
-//  DateTime: 2021-02-03 17:00:08
+//  DateTime: 2021-02-04 17:25:35
 //  UserName: Stefan
 // ==========================================================================
 
@@ -26,13 +26,18 @@ HEXADECIMAL_VALUE [\+\-]?0[xX][0-9a-fA-F]+
 POSTFIX ([uU]?[sSlL]?)|([sSlL]?[uU]?)
 INTEGRAL_VALUE ({DECIMAL_VALUE}|{OCTAL_VALUE}|{HEXADECIMAL_VALUE}){POSTFIX}
 
-DECIMAL_WITHOUT_EXPONENT [\+\-]?(([0-9]+\.[0-9]*)|([0-9]*\.[0-9]+))
-DECIMAL_WITH_EXPONENT    [\+\-]?([0-9]*\.[0-9]*)?
-EXPONENT                 [eE][\+\-]?[0-9]+[flFL]?
-FLOATING_VALUE           {DECIMAL_WITHOUT_EXPONENT}|({DECIMAL_WITH_EXPONENT}{EXPONENT_PART})
-//---------------------------------------------------------------------------^^^
-// Error: Unknown lexical category <EXPONENT_PART> 
-// ------------------------------------------------
+DECIMAL_WITHOUT_EXPONENT (([0-9]+\.[0-9]*)|([0-9]*\.[0-9]+))
+DECIMAL_WITH_EXPONENT    [0-9]+|(([0-9]+\.[0-9]*)|([0-9]*\.[0-9]+))
+EXPONENT                 [eE][\+\-]?[0-9]+
+FLOATING_VALUE           [\+\-]?({DECIMAL_WITHOUT_EXPONENT}|
+//---------------------------------------------------------^
+// Error: Expected character <')'> 
+// --------------------------------
+                         ({DECIMAL_WITH_EXPONENT}{EXPONENT}))[flFL]?
+//----------------------------------------------------------^
+// Error: This token unexpected
+// Error: Parser error <Syntax error, unexpected )> 
+// -------------------------------------------------
 
 /*DECIMAL_PART [\+\-]?([0-9]+|[0-9]+\.[0-9]*|\.[0-9]+)
 EXPONENT_PART (([eE][\+\-]?[0-9]+)?|[0-9]+[eE][\+\-]?[0-9]+)([fF]|[lL])?

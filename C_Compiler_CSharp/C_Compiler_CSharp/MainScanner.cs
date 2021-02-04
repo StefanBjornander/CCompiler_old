@@ -6,9 +6,9 @@
 //
 //  GPLEX Version:  1.2.2
 //  Machine:  STEFAN1968
-//  DateTime: 2021-02-03 19:14:24
+//  DateTime: 2021-02-04 23:35:20
 //  UserName: Stefan
-//  GPLEX input file <MainScanner.gplex - 2021-02-03 18:07:40>
+//  GPLEX input file <MainScanner.gplex - 2021-02-04 18:31:13>
 //  GPLEX frame file <embedded resource>
 //
 //  Option settings: parser, minimize
@@ -205,11 +205,8 @@ FLOATING_VALUE {DECIMAL_PART}{EXPONENT_PART}*/
 /* NxS[  13] */ new Table(0, 0, -1, null),
 /* NxS[  14] */ new Table(45, 18, -1, new short[] {235, 256, -1, 17, 18, 18, 
           18, 18, 18, 18, 18, 18, 18, -1, -1, -1, 236, 237}),
-/* NxS[  15] */ new Table(46, 56, -1, new short[] {255, -1, 225, 225, 225, 225, 
-          225, 225, 225, 225, 225, 225, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 
-          -1, 251, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 
-          -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 
-          -1, 251}),
+/* NxS[  15] */ new Table(46, 12, -1, new short[] {255, -1, 225, 225, 225, 225, 
+          225, 225, 225, 225, 225, 225}),
 /* NxS[  16] */ new Table(61, 1, -1, new short[] {233}),
 /* NxS[  17] */ new Table(46, 75, -1, new short[] {225, -1, 231, 231, 231, 231, 
           231, 231, 231, 231, 253, 253, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 
@@ -1427,10 +1424,8 @@ FLOATING_VALUE {DECIMAL_PART}{EXPONENT_PART}*/
           -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 232, 232, 232, 232, 232, 
           232}),
 /* NxS[ 255] */ new Table(46, 1, -1, new short[] {234}),
-/* NxS[ 256] */ new Table(48, 54, -1, new short[] {225, 225, 225, 225, 225, 225, 
-          225, 225, 225, 225, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 251, 
-          -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 
-          -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 251}),
+/* NxS[ 256] */ new Table(48, 10, -1, new short[] {225, 225, 225, 225, 225, 225, 
+          225, 225, 225, 225}),
 /* NxS[ 257] */ new Table(39, 54, 257, new short[] {241, 257, 257, 257, 257, 257, 
           257, 257, 257, 257, 257, 257, 257, 257, 257, 257, 257, 257, 257, 257, 257, 257, 
           257, 257, 257, 257, 257, 257, 257, 257, 257, 257, 257, 257, 257, 257, 257, 257, 
@@ -2361,7 +2356,7 @@ return ((int) Tokens.LEFT_SHIFT_ASSIGN);
         case 229:
         case 230:
 { string text = yytext.ToLower();
-    CCompiler.Type type = CCompiler.Type.DoubleType;
+    CCompiler.Type type;
 
     if (text.EndsWith("f")) {
       type = CCompiler.Type.FloatType;
@@ -2370,6 +2365,9 @@ return ((int) Tokens.LEFT_SHIFT_ASSIGN);
     else if (text.EndsWith("l")) {
       type = CCompiler.Type.LongDoubleType;
       text = text.Substring(0, text.Length - 1);
+    }
+    else {
+      type = CCompiler.Type.DoubleType;
     }
 
     try {

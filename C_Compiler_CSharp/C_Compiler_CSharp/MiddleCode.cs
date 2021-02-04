@@ -72,8 +72,8 @@ namespace CCompiler {
 
     public bool IsBinary() {
       switch (m_middleOperator) {
-        case MiddleOperator.BinaryAdd:
-        case MiddleOperator.BinarySubtract:
+        case MiddleOperator.Add:
+        case MiddleOperator.Subtract:
         case MiddleOperator.Multiply:
         case MiddleOperator.Divide:
         case MiddleOperator.Modulo:
@@ -93,7 +93,7 @@ namespace CCompiler {
  
     public bool IsCommutative() {
       switch (m_middleOperator) {
-        case MiddleOperator.BinaryAdd:
+        case MiddleOperator.Add:
         case MiddleOperator.Multiply:
         case MiddleOperator.BitwiseOr:
         case MiddleOperator.BitwiseXOr:

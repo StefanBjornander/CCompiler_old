@@ -162,8 +162,8 @@ namespace CCompiler {
             IntegralRelation(middleCode);
             break;
           
-          case MiddleOperator.BinaryAdd:
-          case MiddleOperator.BinarySubtract: {
+          case MiddleOperator.Add:
+          case MiddleOperator.Subtract: {
               Symbol resultSymbol = (Symbol) middleCode[1];
 
               if (resultSymbol.Type.IsFloating()) {
@@ -219,8 +219,8 @@ namespace CCompiler {
             CaseEnd(middleCode);
             break;
 
-          case MiddleOperator.UnaryAdd:
-          case MiddleOperator.UnarySubtract:
+          case MiddleOperator.Plus:
+          case MiddleOperator.Minus:
           case MiddleOperator.BitwiseNot: {
               Symbol resultSymbol = (Symbol) middleCode[0];
 
@@ -1127,13 +1127,13 @@ namespace CCompiler {
       m_middleToIntegralMap =
       new Dictionary<MiddleOperator, AssemblyOperator>() {
         {MiddleOperator.BitwiseNot, AssemblyOperator.not},
-        {MiddleOperator.UnarySubtract, AssemblyOperator.neg},
+        {MiddleOperator.Minus, AssemblyOperator.neg},
         {MiddleOperator.Multiply, AssemblyOperator.imul},
         {MiddleOperator.Divide, AssemblyOperator.idiv},
         {MiddleOperator.Modulo, AssemblyOperator.idiv},
         {MiddleOperator.Assign, AssemblyOperator.mov},
-        {MiddleOperator.BinaryAdd, AssemblyOperator.add},
-        {MiddleOperator.BinarySubtract, AssemblyOperator.sub},
+        {MiddleOperator.Add, AssemblyOperator.add},
+        {MiddleOperator.Subtract, AssemblyOperator.sub},
         {MiddleOperator.BitwiseAnd, AssemblyOperator.and},
         {MiddleOperator.BitwiseOr, AssemblyOperator.or},
         {MiddleOperator.BitwiseXOr, AssemblyOperator.xor},
@@ -1186,14 +1186,14 @@ namespace CCompiler {
                         0, null, typeSize);
       }
       else if (m_trackMap.TryGetValue(unarySymbol, out unaryTrack)) {
-        if (middleOperator != MiddleOperator.UnaryAdd) {
+        if (middleOperator != MiddleOperator.Plus) {
           AddAssemblyCode(objectOperator, unaryTrack);
         }
         m_trackMap.Remove(unarySymbol);
       }
       else if (resultSymbol == unarySymbol) {
         Assert.ErrorXXX(unaryTrack == null);
-        if (middleOperator != MiddleOperator.UnaryAdd) {
+        if (middleOperator != MiddleOperator.Plus) {
           AddAssemblyCode(objectOperator, Base(unarySymbol),
                           Offset(unarySymbol), null, typeSize);
         }
@@ -1201,7 +1201,7 @@ namespace CCompiler {
       else {
         unaryTrack = LoadValueToRegister(unarySymbol);
 
-        if (middleOperator != MiddleOperator.UnaryAdd) {
+        if (middleOperator != MiddleOperator.Plus) {
           AddAssemblyCode(objectOperator, unaryTrack);
         }
 
@@ -1345,7 +1345,7 @@ namespace CCompiler {
 
       if ((rightTrack == null) &&
           (middleOperator != MiddleOperator.Assign) &&
-          (middleOperator != MiddleOperator.BinaryAdd) &&
+          (middleOperator != MiddleOperator.Add) &&
           // (middleOperator != MiddleOperator.BinarySubtract) && // XXX
           ((rightSymbol.Type.IsArrayFunctionOrString() &&
            (rightSymbol.Offset != 0)) ||
@@ -1512,9 +1512,9 @@ namespace CCompiler {
     public static IDictionary<MiddleOperator, AssemblyOperator>
       m_middleToFloatingMap =
         new Dictionary<MiddleOperator, AssemblyOperator>() {
-          {MiddleOperator.UnarySubtract, AssemblyOperator.fchs},
-          {MiddleOperator.BinaryAdd, AssemblyOperator.fadd},
-          {MiddleOperator.BinarySubtract, AssemblyOperator.fsub},
+          {MiddleOperator.Minus, AssemblyOperator.fchs},
+          {MiddleOperator.Add, AssemblyOperator.fadd},
+          {MiddleOperator.Subtract, AssemblyOperator.fsub},
           {MiddleOperator.Multiply, AssemblyOperator.fmul},
           {MiddleOperator.Divide, AssemblyOperator.fdiv},
           {MiddleOperator.Equal, AssemblyOperator.je},

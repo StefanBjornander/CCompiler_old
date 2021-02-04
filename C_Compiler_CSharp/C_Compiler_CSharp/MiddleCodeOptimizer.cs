@@ -377,24 +377,24 @@ namespace CCompiler {
                                                     leftSymbol, rightSymbol);
           }
           // t0 = 0 + i
-          else if ((thisCode.Operator == MiddleOperator.BinaryAdd) &&
+          else if ((thisCode.Operator == MiddleOperator.Add) &&
                     (leftSymbol.Value is BigInteger) &&
                     (leftSymbol.Value.Equals(BigInteger.Zero))) {
             newSymbol = rightSymbol;
           }
           // t0 = 0 - i; t0 = -i
-          else if ((thisCode.Operator == MiddleOperator.BinarySubtract) &&
+          else if ((thisCode.Operator == MiddleOperator.Subtract) &&
                     (leftSymbol.Value is BigInteger) &&
                     (leftSymbol.Value.Equals(BigInteger.Zero))) {
-            thisCode.Operator = MiddleOperator.UnarySubtract;
+            thisCode.Operator = MiddleOperator.Minus;
             thisCode[0] = thisCode[1];
             thisCode[1] = null;
           }
 
           // t0 = i + 0
           // t0 = i - 0
-          else if (((thisCode.Operator == MiddleOperator.BinaryAdd) ||
-                    (thisCode.Operator == MiddleOperator.BinarySubtract)) &&
+          else if (((thisCode.Operator == MiddleOperator.Add) ||
+                    (thisCode.Operator == MiddleOperator.Subtract)) &&
                     (rightSymbol.Value is BigInteger) &&
                     (rightSymbol.Value.Equals(BigInteger.Zero))) {
             newSymbol = leftSymbol;
@@ -793,8 +793,8 @@ namespace CCompiler {
             }
             break;
 
-          case MiddleOperator.BinaryAdd:
-          case MiddleOperator.BinarySubtract:
+          case MiddleOperator.Add:
+          case MiddleOperator.Subtract:
           case MiddleOperator.Multiply:
           case MiddleOperator.Divide:
             if (symbol1.Type.IsFloating()) {
