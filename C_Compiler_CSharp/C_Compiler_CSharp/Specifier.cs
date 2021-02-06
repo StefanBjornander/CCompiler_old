@@ -186,8 +186,12 @@ namespace CCompiler {
           type.Volatile = isVolatile;
         }
         else {
-          Assert.Error(MaskToString((int) sortMaskValue), Message.
-                             Invalid_specifier_sequence_together_with_type);
+          Assert.Error(MaskToString((int)sortMaskValue), Message.
+                       Invalid_specifier_sequence_together_with_type);
+        }
+
+        if (type.IsFunction()) {
+          storage = Storage.Extern;
         }
 
         return (new Specifier(externalLinkage, storage, type));

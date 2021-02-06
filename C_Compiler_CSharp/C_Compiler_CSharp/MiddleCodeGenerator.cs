@@ -15,11 +15,7 @@ namespace CCompiler {
 
     public static void Backpatch(ISet<MiddleCode> sourceSet,
                                  List<MiddleCode> list) {
-      if (list.Count == 0) {
-        AddMiddleCode(list, MiddleOperator.Empty);
-      }
-
-      Backpatch(sourceSet, list[0]);
+      Backpatch(sourceSet, GetFirst(list));
     }
 
     public static void Backpatch(ISet<MiddleCode> sourceSet,
@@ -32,22 +28,30 @@ namespace CCompiler {
       }
     }
 
+    private static MiddleCode GetFirst(List<MiddleCode> list) {
+      if (list.Count == 0) {
+        AddMiddleCode(list, MiddleOperator.Empty);
+      }
+    
+      return list[0];
+    }
+  
     // ---------------------------------------------------------------------------------------------------------------------
 
     public static void FunctionHeader(Specifier specifier,
                                       Declarator declarator) {
-      Storage? storage;
+      //Storage? storage;
       Type returnType;
       bool externalLinkage;
 
       if (specifier != null) {
         externalLinkage = specifier.ExternalLinkage;
-        storage = specifier.Storage;
+        //storage = specifier.Storage;
         returnType = specifier.Type;
       }
       else {
         externalLinkage = true;
-        storage = Storage.Extern;
+        //storage = Storage.Extern;
         returnType = Type.SignedIntegerType;
       }
 
@@ -57,13 +61,19 @@ namespace CCompiler {
       Assert.Error(declarator.Type.IsFunction(), declarator.Name,
                    Message.Not_a_function);
 
-      SymbolTable.CurrentFunction = new Symbol(declarator.Name, externalLinkage,
-                                               storage.Value, declarator.Type);
-      
-      Assert.Error(SymbolTable.CurrentFunction.IsExternOrStatic(),
+      SymbolTable.CurrentFunction=new Symbol(declarator.Name, externalLinkage,
+                                             Storage.Static, declarator.Type);
+      //      SymbolTable.CurrentFunction = new Symbol(declarator.Name, externalLinkage,
+//                                               Storage.Static, declarator.Type);
+
+/*      Assert.Error(!SymbolTable.CurrentFunction.IsTypedef() &&
+                   !SymbolTable.CurrentFunction.IsAutoOrRegister(),
                    declarator.Name, Message.A_function_must_be_static_or_extern);
 
-      SymbolTable.CurrentFunction.FunctionDefinition = true;
+      Assert.Error(SymbolTable.CurrentFunction.IsStatic(),
+                   declarator.Name, Message.A_function_must_be_static_or_extern);*/
+
+      //SymbolTable.CurrentFunction.FunctionDefinition = true;
       SymbolTable.CurrentTable.AddSymbol(SymbolTable.CurrentFunction);
 
       if (SymbolTable.CurrentFunction.UniqueName.Equals(AssemblyCodeGenerator.MainName)) {
@@ -137,8 +147,7 @@ namespace CCompiler {
       if (SymbolTable.CurrentFunction.Type.ReturnType.IsVoid()) {
         AddMiddleCode(statement.CodeList, MiddleOperator.Return);
 
-        if (SymbolTable.CurrentFunction.UniqueName.Equals
-                        (AssemblyCodeGenerator.MainName)) {
+        if (SymbolTable.CurrentFunction.UniqueName.Equals("main")) {          
           AddMiddleCode(statement.CodeList, MiddleOperator.Exit);
         }
       }
@@ -418,6 +427,7 @@ namespace CCompiler {
                      (specifier.Storage == Storage.Extern),
                      specifier.Storage, Message.
           Only_extern_or_static_storage_allowed_for_functions);
+        storage = Storage.Extern;
       }
 
       Symbol symbol = new Symbol(declarator.Name, specifier.ExternalLinkage,
@@ -743,14 +753,6 @@ namespace CCompiler {
       return statement;
     }
   
-    private static MiddleCode GetFirst(List<MiddleCode> list) {
-      if (list.Count == 0) {
-        AddMiddleCode(list, MiddleOperator.Empty);
-      }
-    
-      return list[0];
-    }
-  
     public static Statement DefaultStatement(Statement statement) {
       Assert.Error(m_defaultStack.Count > 0, Message.Default_without_switch);
       Assert.Error(m_defaultStack.Pop() == null, Message.Repeted_default);
@@ -893,7 +895,7 @@ namespace CCompiler {
                      labelName, Message.Missing_goto_address);
         Backpatch(gotoSet, labelCode);
       }
-    }  
+    }
 
     public static Statement ReturnStatement(Expression expression) {
       List<MiddleCode> codeList;

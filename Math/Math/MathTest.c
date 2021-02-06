@@ -20,6 +20,8 @@ void math_test_1(double x);
 void math_test_2(double x, double y);
 void math_test_int(double x, int i);
 
+static void math_test_1x();
+
 void math_test_1x() {
   math_test_1(-2 * PI);
   math_test_1(-PI);

@@ -12,6 +12,6 @@ void main(void) {
   int j = 2;
   int &q = j;
 
-  double x = 1., y = .2, z = .e3;
+  double x = 1., y = .2, z = 1.e3, z2 = .3e3;
   cout << "Hello, World! " << *p << " " << q << endl;
 }
