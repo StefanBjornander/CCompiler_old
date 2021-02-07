@@ -123,26 +123,33 @@ namespace CCompiler {
       }
 
       if ((compoundType != null) && (compoundType.EnumItemSet != null)){
-        foreach (Pair<Symbol,bool> pair in compoundType.EnumItemSet){
-          Symbol enumSymbol = pair.First;          
+        if (storage == Storage.Typedef) {
+          compoundType = Type.SignedIntegerType;
+          storage = (SymbolTable.CurrentTable.Scope == Scope.Global)
+                    ? Storage.Static : Storage.Auto;
+        }
 
-          switch (enumSymbol.Storage = storage.Value) {
+        foreach (Pair<Symbol,bool> pair in compoundType.EnumItemSet){
+          Symbol itemSymbol = pair.First;
+          itemSymbol.Storage = storage.Value;
+
+          switch (itemSymbol.Storage) {
             case CCompiler.Storage.Static:
               SymbolTable.StaticSet.Add(ConstantExpression.
-                                         Value(enumSymbol));
+                                         Value(itemSymbol));
               break;
 
             case CCompiler.Storage.Extern: {
                 bool enumInitializer = pair.Second;
                 Assert.Error(!enumInitializer,
-                              enumSymbol + " = " + enumSymbol.Value,
+                              itemSymbol + " = " + itemSymbol.Value,
                   Message.Extern_enumeration_item_cannot_be_initialized);
               }
               break;
 
             case CCompiler.Storage.Auto:
             case CCompiler.Storage.Register:
-              SymbolTable.CurrentTable.SetOffset(enumSymbol);
+              SymbolTable.CurrentTable.SetOffset(itemSymbol);
               break;
           }
         }

@@ -57,7 +57,7 @@ namespace CCompiler {
 
       declarator.Add(returnType);
       Assert.Error(declarator.Name != null,
-                   Message.Unnamed_function_definitializerion);
+                   Message.Unnamed_function_definition);
       Assert.Error(declarator.Type.IsFunction(), declarator.Name,
                    Message.Not_a_function);
 
@@ -76,8 +76,8 @@ namespace CCompiler {
       //SymbolTable.CurrentFunction.FunctionDefinition = true;
       SymbolTable.CurrentTable.AddSymbol(SymbolTable.CurrentFunction);
 
-      if (SymbolTable.CurrentFunction.UniqueName.Equals(AssemblyCodeGenerator.MainName)) {
-        Assert.Error(returnType.IsVoid() || returnType.IsInteger(), AssemblyCodeGenerator.MainName,
+      if (SymbolTable.CurrentFunction.UniqueName.Equals("main")) {
+        Assert.Error(returnType.IsVoid() || returnType.IsInteger(), "main",
                      Message.Function_main_must_return_void_or_integer);
       }
 
@@ -94,8 +94,8 @@ namespace CCompiler {
           SymbolTable.CurrentTable.EntryMap;
 
         Assert.Error(nameList.Count == entryMap.Count,
-                     SymbolTable.CurrentFunction.Name, Message. 
-          Unmatched_number_of_parameters_in_old__style_function_definitializerion);
+                     SymbolTable.CurrentFunction.Name, Message.
+          Unmatched_number_of_parameters_in_old__style_function_definition);
 
         int offset = SymbolTable.FunctionHeaderSize;
         foreach (string name in nameList) {
@@ -103,23 +103,23 @@ namespace CCompiler {
 
           if (!entryMap.TryGetValue(name, out symbol)) {
             Assert.Error(name, Message. 
-                      Undefined_parameter_in_old__style_function_definitializerion);
+                      Undefined_parameter_in_old__style_function_definition);
           }
 
           symbol.Offset = offset;
-          offset += symbol.Type.Size();
+          offset += symbol.Type.SizeArray();
         }
       }
       else {
         Assert.Error(SymbolTable.CurrentTable.EntryMap.Count == 0,
-          Message.New_and_old_style_mixed_function_definitializerion);
+          Message.New_and_old_style_mixed_function_definition);
 
         foreach (Symbol symbol in funcType.ParameterList) {
           SymbolTable.CurrentTable.AddSymbol(symbol);
         }
       }
 
-      if (SymbolTable.CurrentFunction.UniqueName.Equals(AssemblyCodeGenerator.MainName)) {
+      if (SymbolTable.CurrentFunction.UniqueName.Equals("main")) {
         AssemblyCodeGenerator.InitializationCodeList();
         List<Type> typeList =
           SymbolTable.CurrentFunction.Type.TypeList;
@@ -129,12 +129,12 @@ namespace CCompiler {
                        typeList[1].IsPointer() &&
                        typeList[1].PointerType.IsPointer() &&
                        typeList[1].PointerType.PointerType.IsChar(),
-                       AssemblyCodeGenerator.MainName, Message.Invalid_parameter_list);
+                       "main", Message.Invalid_parameter_list);
           AssemblyCodeGenerator.ArgumentCodeList();
         }
         else {
           Assert.Error((typeList == null) || (typeList.Count == 0),
-                       AssemblyCodeGenerator.MainName, Message.Invalid_parameter_list);
+                       "main", Message.Invalid_parameter_list);
         }
       }
     }
@@ -192,8 +192,7 @@ namespace CCompiler {
       if (Start.Linux) {
         List<string> textList = new List<string>();
 
-        if (SymbolTable.CurrentFunction.UniqueName.
-            Equals(AssemblyCodeGenerator.MainName)) {
+        if (SymbolTable.CurrentFunction.UniqueName.Equals("main")) {
           textList.AddRange(SymbolTable.InitSymbol.TextList);
           if (SymbolTable.ArgsSymbol != null) {
             textList.AddRange(SymbolTable.ArgsSymbol.TextList);
@@ -243,7 +242,7 @@ namespace CCompiler {
         AddMiddleCode(statement.CodeList, MiddleOperator.Empty);
       Backpatch(statement.NextSet, nextCode);
     
-      if (SymbolTable.CurrentFunction.UniqueName.Equals(AssemblyCodeGenerator.MainName) && 
+      if (SymbolTable.CurrentFunction.UniqueName.Equals("main") && 
           SymbolTable.CurrentFunction.Type.ReturnType.IsVoid()) {
         Type signedShortType = new Type(Sort.Signed_Short_Int);
         Symbol zeroSymbol = new Symbol(signedShortType, ((BigInteger) 0));
@@ -287,12 +286,12 @@ namespace CCompiler {
 
       List<AssemblyCode> assemblyCodeList = new List<AssemblyCode>();
     
-      if (SymbolTable.CurrentFunction.UniqueName.Equals(AssemblyCodeGenerator.MainName)) {
+      if (SymbolTable.CurrentFunction.UniqueName.Equals("main")) {
         List<Type> typeList =
           SymbolTable.CurrentFunction.Type.TypeList;
         Assert.Error((typeList == null) || (typeList.Count == 0) ||
                      IsMainArgs(SymbolTable.CurrentFunction),
-                     AssemblyCodeGenerator.MainName, Message.Invalid_parameter_list);
+                     "main", Message.Invalid_parameter_list);
 
         AssemblyCodeGenerator.InitializationCodeList();
         //assemblyCodeList.AddRange(AssemblyCodeGenerator.InitializationCodeList());
@@ -376,7 +375,7 @@ namespace CCompiler {
   
     public static Symbol EnumItem(string itemName,
                                   Symbol optInitializerSymbol) {
-      Type itemType = new Type(Sort.SignedInt, true);      
+      Type itemType = new Type(Sort.SignedInt);      
       itemType.Constant = true;
 
       BigInteger value;
@@ -401,7 +400,7 @@ namespace CCompiler {
   
     public static Type EnumSpecifier(string optionalName,
                                      ISet<Pair<Symbol,bool>> enumSet) {
-      Type enumType = new Type(Sort.SignedInt, enumSet);
+      Type enumType = new Type(enumSet);
 
       if (optionalName != null) {
         SymbolTable.CurrentTable.AddTag(optionalName, enumType);
@@ -917,8 +916,7 @@ namespace CCompiler {
         AddMiddleCode(codeList, MiddleOperator.Return);
       }
 
-      if (SymbolTable.CurrentFunction.UniqueName.Equals
-                      (AssemblyCodeGenerator.MainName)) {
+      if (SymbolTable.CurrentFunction.UniqueName.Equals("main")) {
         AddMiddleCode(codeList, MiddleOperator.Exit);
       }
 

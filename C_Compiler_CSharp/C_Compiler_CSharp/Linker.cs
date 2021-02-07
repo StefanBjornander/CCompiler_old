@@ -48,7 +48,7 @@ namespace CCompiler {
       }
 
       StaticSymbolWindows mainInfo;
-      Assert.Error(m_globalMap.TryGetValue(AssemblyCodeGenerator.MainName, out mainInfo),
+      Assert.Error(m_globalMap.TryGetValue("main", out mainInfo),
                    "non-static main", Message.Function_missing);
       GenerateTrace(mainInfo);
       

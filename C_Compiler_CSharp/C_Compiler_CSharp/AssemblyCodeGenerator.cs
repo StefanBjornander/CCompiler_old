@@ -12,7 +12,7 @@ namespace CCompiler {
     public const int FloatingStackMaxSize = 7;
     private Stack<int> m_topStack = new Stack<int>();
 
-    public static string MainName = "main";
+    //public static string MainName = "main";
     public static string InitializerName = Symbol.SeparatorId + "initializer";
     public static string ArgsName = Symbol.SeparatorId + "args";
     public static string PathName = Symbol.SeparatorId + "PathName";
@@ -727,12 +727,12 @@ namespace CCompiler {
     // Return, Exit, and Goto --------------------------------------------------------------------------
 
     public void Return(MiddleCode middleCode, int middleIndex) {
-      if (SymbolTable.CurrentFunction.UniqueName.Equals
-                      (AssemblyCodeGenerator.MainName)) {
+      if (SymbolTable.CurrentFunction.UniqueName.Equals("main")) {
         Assert.ErrorXXX(m_floatStackSize == 0);
-        AddAssemblyCode(AssemblyOperator.cmp, AssemblyCode.RegularFrameRegister,
-                        SymbolTable.ReturnAddressOffset, BigInteger.Zero,
-                        TypeSize.PointerSize);
+        AddAssemblyCode(AssemblyOperator.cmp,
+                        AssemblyCode.RegularFrameRegister,
+                        SymbolTable.ReturnAddressOffset,
+                        BigInteger.Zero, TypeSize.PointerSize);
 
         AssemblyCode jumpCode =
           AddAssemblyCode(AssemblyOperator.je, null, null, middleIndex + 1);

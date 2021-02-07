@@ -4,7 +4,10 @@
 #include <ErrNo.h>
 #include <String.h>
 
-#define PI    3.1415926535897932384626433
+typedef enum {One, Two, Three} MyType;
+MyType e;
+
+#define PI 3.1415926535897932384626433
 
 #define PRINT(f) { printf("  " #f "(%f) = %f, errno = %i\n", x, f(x), errno); errno = 0; }
 #define PRINT2(f) { printf(#f "(%f, %f) = %f, errno = %i\n", x, y, f(x, y), errno); errno = 0;}
@@ -23,6 +26,9 @@ void math_test_int(double x, int i);
 static void math_test_1x();
 
 void math_test_1x() {
+  typedef enum { One, Two, Three } MyType;
+  MyType e;
+
   math_test_1(-2 * PI);
   math_test_1(-PI);
   math_test_1(-PI / 2);

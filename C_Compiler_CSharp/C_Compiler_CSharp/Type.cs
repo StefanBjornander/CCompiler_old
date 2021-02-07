@@ -162,25 +162,15 @@ namespace CCompiler {
 
     // ------------------------------------------------------------------------
   
-    private ISet<Pair<Symbol,bool>> m_enumeratorItemSet;
-    private bool m_enumeratorItem;
+    private ISet<Pair<Symbol,bool>> m_enumItemSet;
 
-    public Type(Sort sort, bool enumeratorItem) {
-      m_sort = sort;
-      m_enumeratorItem = enumeratorItem;
-    }
-
-    public bool EnumeratorItem {
-      get { return m_enumeratorItem; }
-    }
-
-    public Type(Sort sort, ISet<Pair<Symbol,bool>> enumSet) {
-      m_sort = sort;
-      m_enumeratorItemSet = enumSet;
+    public Type(ISet<Pair<Symbol,bool>> enumItemSet) {
+      m_sort = Sort.SignedInt;
+      m_enumItemSet = enumItemSet;
     }
 
     public ISet<Pair<Symbol,bool>> EnumItemSet {
-      get { return m_enumeratorItemSet; }
+      get { return m_enumItemSet; }
     }
 
     // ------------------------------------------------------------------------
@@ -498,7 +488,7 @@ namespace CCompiler {
     }
   
     public bool IsEnumerator() {
-      return (m_enumeratorItemSet != null);
+      return (m_enumItemSet != null);
     }
 
     public override string ToString() {

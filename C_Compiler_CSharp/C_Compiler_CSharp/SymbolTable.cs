@@ -95,8 +95,8 @@ namespace CCompiler {
 
           if (!newSymbol.IsExtern()) {
             m_entryMap[name] = newSymbol;
-            m_entryList.Remove(oldSymbol);
-            m_entryList.Add(newSymbol);
+            //m_entryList.Remove(oldSymbol);
+            //m_entryList.Add(newSymbol);
           }
         }
         else {
@@ -110,7 +110,7 @@ namespace CCompiler {
           if (m_scope == Scope.Union) {
             newSymbol.Offset = 0;
           }
-          else if (!newSymbol.Type.EnumeratorItem) {
+          else if (!newSymbol.Type.IsEnumerator()) {
             newSymbol.Offset = m_currentOffset;
             m_currentOffset += newSymbol.Type.Size();
           }
