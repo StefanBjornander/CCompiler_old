@@ -1814,7 +1814,8 @@ namespace CCompiler {
         AddAssemblyCode(assemblyCodeList, AssemblyOperator.fstcw,
                         AssemblyCode.RegularFrameRegister, 0);
         AddAssemblyCode(assemblyCodeList, AssemblyOperator.or_word,
-                        AssemblyCode.RegularFrameRegister, 0, (BigInteger) 0x0C00);
+                        AssemblyCode.RegularFrameRegister, 0,
+                        (BigInteger)0x0C00);
         AddAssemblyCode(assemblyCodeList, AssemblyOperator.fldcw,
                         AssemblyCode.RegularFrameRegister, 0);
         AddAssemblyCode(assemblyCodeList, AssemblyOperator.mov,
@@ -1837,7 +1838,8 @@ namespace CCompiler {
         AddAssemblyCode(assemblyCodeList, AssemblyOperator.fstcw,
                         AssemblyCode.RegularFrameRegister, 0);
         AddAssemblyCode(assemblyCodeList, AssemblyOperator.or_word,
-                        AssemblyCode.RegularFrameRegister, 0, (BigInteger) 0x0C00);
+                        AssemblyCode.RegularFrameRegister, 0,
+                        (BigInteger) 0x0C00);
         AddAssemblyCode(assemblyCodeList, AssemblyOperator.fldcw,
                         AssemblyCode.RegularFrameRegister, 0);
         AddAssemblyCode(assemblyCodeList, AssemblyOperator.mov,
