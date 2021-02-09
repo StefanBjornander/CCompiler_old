@@ -26,8 +26,8 @@ void math_test_int(double x, int i);
 static void math_test_1x();
 
 void math_test_1x() {
-  typedef enum { One, Two, Three } MyType;
-  MyType e;
+  //typedef enum { One, Two, Three } MyType;
+  //MyType e;
 
   math_test_1(-2 * PI);
   math_test_1(-PI);

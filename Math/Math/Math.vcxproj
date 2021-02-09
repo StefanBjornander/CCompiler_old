@@ -80,6 +80,10 @@
   <ItemGroup>
     <ClCompile Include="Main.cpp" />
     <ClCompile Include="MathTest.c" />
+    <ClCompile Include="MyAllocator.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="MyAllocator.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
