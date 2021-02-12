@@ -197,10 +197,12 @@ namespace CCompiler {
 
     public ISet<MiddleCode> TrueSet {
       get { return m_trueSet; }
+      set { m_trueSet = value; }
     }
 
     public ISet<MiddleCode> FalseSet {
       get { return m_falseSet; }
+      set { m_falseSet = value; }
     }
 
     public bool Parameter

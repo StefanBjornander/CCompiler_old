@@ -5,20 +5,27 @@ namespace CCompiler {
   public class ConstantExpression {
     public static bool IsConstant(Expression expression) {
       Symbol resultSymbol = expression.Symbol;
-      Type type = resultSymbol.Type;
-      return (type.IsLogical() && ((resultSymbol.TrueSet.Count == 0) ||
-              (resultSymbol.FalseSet.Count == 0))) ||
-             (type.IsIntegralOrPointer() &&
-              (resultSymbol.Value is BigInteger)) ||
-             (type.IsFloating() && (resultSymbol.Value is decimal));
+
+      if (resultSymbol.Type.IsLogical()) {
+        return (resultSymbol.TrueSet.Count == 0) ||
+               (resultSymbol.FalseSet.Count == 0);
+      }
+      else {
+        return (resultSymbol.Value is BigInteger) ||
+               (resultSymbol.Value is decimal);
+      }
     }
 
     public static bool IsTrue(Expression expression) {
-      return ((expression.Symbol.Value is BigInteger) &&
-              !((BigInteger) expression.Symbol.Value).IsZero) ||
-             ((expression.Symbol.Value is decimal) &&
-              !((decimal) expression.Symbol.Value).Equals((decimal) 0)) ||
-             (expression.Symbol.TrueSet.Count > 0);
+      Symbol symbol = expression.Symbol;
+
+      if (symbol.Type.IsLogical()) {
+        return (expression.Symbol.TrueSet.Count > 0);
+      }
+      else {
+        return !symbol.Value.Equals(BigInteger.Zero) &&
+               !symbol.Value.Equals((decimal) 0);
+      }
     }
 
     private static Expression LogicalToIntegral(Expression expression) {
@@ -52,119 +59,69 @@ namespace CCompiler {
         return null;
       }
 
-      else if (leftExpression.Symbol.Type.IsFloating() ||
-               rightExpression.Symbol.Type.IsFloating()) {
-        return RelationFloating(middleOp, leftExpression, rightExpression);
+      leftExpression = LogicalToIntegral(leftExpression);
+      rightExpression = LogicalToIntegral(rightExpression);
+                     
+      int compareTo = 0;
+      if (leftExpression.Symbol.Type.IsFloating() ||
+          rightExpression.Symbol.Type.IsFloating()) {
+        Type maxType =
+          TypeCast.MaxType(leftExpression.Symbol.Type, rightExpression.Symbol.Type);
+        leftExpression = ConstantCast(leftExpression, maxType);
+        rightExpression = ConstantCast(rightExpression, maxType);
+
+        decimal leftDecimal = (decimal) leftExpression.Symbol.Value,
+                rightDecimal = (decimal) rightExpression.Symbol.Value;
+        compareTo = leftDecimal.CompareTo(rightDecimal);
       }
       else {
-        return RelationIntegral(middleOp, leftExpression, rightExpression);
+        BigInteger leftBigInteger = (BigInteger) leftExpression.Symbol.Value,
+                   rightBigInteger = (BigInteger) rightExpression.Symbol.Value;
+        compareTo = leftBigInteger.CompareTo(rightBigInteger);
       }
-    }
-
-    private static Expression RelationIntegral(MiddleOperator middleOp,
-                                               Expression leftExpression,
-                                               Expression rightExpression) {
-      leftExpression = TypeCast.LogicalToIntegral(leftExpression);
-      rightExpression = TypeCast.LogicalToIntegral(rightExpression);
-
-      BigInteger leftValue = (BigInteger) leftExpression.Symbol.Value,
-                 rightValue = (BigInteger) rightExpression.Symbol.Value;
-
-      List<MiddleCode> longList = new List<MiddleCode>();
-      MiddleCode jumpCode = new MiddleCode(MiddleOperator.Jump);
-      longList.Add(jumpCode);
-      ISet<MiddleCode> jumpSet = new HashSet<MiddleCode>();
-      jumpSet.Add(jumpCode);
 
       bool resultValue = false;
       switch (middleOp) {
         case MiddleOperator.Equal:
-          resultValue = (leftValue == rightValue);
+          resultValue = (compareTo == 0);
           break;
 
         case MiddleOperator.NotEqual:
-          resultValue = (leftValue != rightValue);
+          resultValue = (compareTo != 0);
           break;
 
         case MiddleOperator.LessThan:
-          resultValue = (leftValue < rightValue);
+          resultValue = (compareTo < 0);
           break;
 
         case MiddleOperator.LessThanEqual:
-          resultValue = (leftValue <= rightValue);
+          resultValue = (compareTo <= 0);
           break;
 
         case MiddleOperator.GreaterThan:
-          resultValue = (leftValue > rightValue);
+          resultValue = (compareTo > 0);
           break;
 
         case MiddleOperator.GreaterThanEqual:
-          resultValue = (leftValue >= rightValue);
+          resultValue = (compareTo >= 0);
           break;
-      }
-
-      Symbol resultSymbol = resultValue ? (new Symbol(jumpSet, null))
-                                        : (new Symbol(null, jumpSet));
-      return (new Expression(resultSymbol, null, longList));
-    }
-
-    private static Expression RelationFloating(MiddleOperator middleOp,
-                                               Expression leftExpression,
-                                               Expression rightExpression) {
-      leftExpression = LogicalToFloating(leftExpression);
-      rightExpression = LogicalToFloating(leftExpression);
-
-      decimal leftValue;
-      if (leftExpression.Symbol.Value is BigInteger) {
-        leftValue = (decimal) ((BigInteger) leftExpression.Symbol.Value);
-      }
-      else {
-        leftValue = (decimal) leftExpression.Symbol.Value;
-      }
-
-      decimal rightValue;
-      if (rightExpression.Symbol.Value is BigInteger) {
-        rightValue = (decimal) ((BigInteger) rightExpression.Symbol.Value);
-      }
-      else {
-        rightValue = (decimal) rightExpression.Symbol.Value;
       }
 
       List<MiddleCode> longList = new List<MiddleCode>();
       MiddleCode jumpCode = new MiddleCode(MiddleOperator.Jump);
       longList.Add(jumpCode);
+
       ISet<MiddleCode> jumpSet = new HashSet<MiddleCode>();
       jumpSet.Add(jumpCode);
 
-      bool resultValue = false;
-      switch (middleOp) {
-        case MiddleOperator.Equal:
-          resultValue = (leftValue == rightValue);
-          break;
-
-        case MiddleOperator.NotEqual:
-          resultValue = (leftValue != rightValue);
-          break;
-
-        case MiddleOperator.LessThan:
-          resultValue = (leftValue < rightValue);
-          break;
-
-        case MiddleOperator.LessThanEqual:
-          resultValue = (leftValue <= rightValue);
-          break;
-
-        case MiddleOperator.GreaterThan:
-          resultValue = (leftValue > rightValue);
-          break;
-
-        case MiddleOperator.GreaterThanEqual:
-          resultValue = (leftValue >= rightValue);
-          break;
+      Symbol resultSymbol = new Symbol(null, null);
+      if (resultValue) {
+        resultSymbol.TrueSet = jumpSet;
+      }
+      else {
+        resultSymbol.FalseSet = jumpSet;
       }
 
-      Symbol resultSymbol = resultValue ? (new Symbol(jumpSet, null))
-                                        : (new Symbol(null, jumpSet));
       return (new Expression(resultSymbol, null, longList));
     }
 
@@ -175,31 +132,32 @@ namespace CCompiler {
         return null;
       }
 
-      Expression leftLogicalExpression = ToLogical(leftExpression),
-                 rightLogicalExpression = ToLogical(rightExpression);
+      bool resultValue = false;
+      switch (middleOp) {
+        case MiddleOperator.LogicalAnd:
+          resultValue = IsTrue(leftExpression) && IsTrue(rightExpression);
+          break;
 
-      bool leftValue = leftLogicalExpression.Symbol.TrueSet.Count > 0,
-           rightValue = rightLogicalExpression.Symbol.TrueSet.Count > 0;
+        case MiddleOperator.LogicalOr:
+          resultValue = IsTrue(leftExpression) || IsTrue(rightExpression);
+          break;
+      }
 
       List<MiddleCode> longList = new List<MiddleCode>();
       MiddleCode jumpCode = new MiddleCode(MiddleOperator.Jump);
       longList.Add(jumpCode);
+
       ISet<MiddleCode> jumpSet = new HashSet<MiddleCode>();
       jumpSet.Add(jumpCode);
 
-      bool resultValue = false;
-      switch (middleOp) {
-        case MiddleOperator.LogicalAnd:
-          resultValue = leftValue && rightValue;
-          break;
-
-        case MiddleOperator.LogicalOr:
-          resultValue = leftValue || rightValue;
-          break;
+      Symbol resultSymbol = new Symbol(null, null);
+      if (resultValue) {
+        resultSymbol.TrueSet = jumpSet;
+      }
+      else {
+        resultSymbol.FalseSet = jumpSet;
       }
 
-      Symbol resultSymbol = resultValue ? (new Symbol(jumpSet, null))
-                                        : (new Symbol(null, jumpSet));
       return (new Expression(resultSymbol, null, longList));
     }
 
@@ -244,7 +202,6 @@ namespace CCompiler {
             resultValue = leftValue +
                           (rightValue * leftType.PointerOrArrayType.Size());
           }
-
           else if (leftType.IsPointerOrArray()) {
             resultValue = (leftValue * rightType.PointerOrArrayType.Size()) +
                           rightValue;
@@ -262,6 +219,10 @@ namespace CCompiler {
           else if (leftType.IsPointerOrArray()) {
             resultValue = leftValue -
                           (rightValue * leftType.PointerOrArrayType.Size());
+          }
+          else if (leftType.IsPointerOrArray()) {
+            resultValue = (leftValue * rightType.PointerOrArrayType.Size()) -
+                          rightValue;
           }
           else {
             resultValue = leftValue - rightValue;
@@ -302,7 +263,6 @@ namespace CCompiler {
       }
 
       Type maxType = TypeCast.MaxType(leftSymbol.Type, rightSymbol.Type);
-
       return (new Symbol(maxType, resultValue));
     }
 
@@ -311,21 +271,15 @@ namespace CCompiler {
                                                  Expression rightExpression) {
       leftExpression = LogicalToFloating(leftExpression);
       rightExpression = LogicalToFloating(rightExpression);
-      decimal leftValue, rightValue, resultValue = 0;
 
-      if (leftExpression.Symbol.Value is BigInteger) {
-        leftValue = (decimal) ((BigInteger) leftExpression.Symbol.Value);
-      }
-      else {
-        leftValue = (decimal) leftExpression.Symbol.Value;
-      }
+      Type maxType =
+        TypeCast.MaxType(leftExpression.Symbol.Type, rightExpression.Symbol.Type);
+      leftExpression = ConstantCast(leftExpression, maxType);
+      rightExpression = ConstantCast(rightExpression, maxType);
 
-      if (rightExpression.Symbol.Value is BigInteger) {
-        rightValue = (decimal) ((BigInteger) rightExpression.Symbol.Value);
-      }
-      else {
-        rightValue = (decimal) rightExpression.Symbol.Value;
-      }
+      decimal leftValue = (decimal) leftExpression.Symbol.Value,
+              rightValue = (decimal) rightExpression.Symbol.Value,
+              resultValue = 0;
 
       switch (middleOp) {
         case MiddleOperator.Add:
@@ -345,8 +299,6 @@ namespace CCompiler {
           break;
       }
 
-      Type maxType = TypeCast.MaxType(leftExpression.Symbol.Type,
-                                      rightExpression.Symbol.Type);
       Symbol resultSymbol = new Symbol(maxType, resultValue);
       List<MiddleCode> longList = new List<MiddleCode>();
       MiddleCodeGenerator.AddMiddleCode(longList, MiddleOperator.PushFloat,
@@ -357,8 +309,8 @@ namespace CCompiler {
     public static Expression LogicalNot(Expression expression) {
       if (IsConstant(expression)) {
         expression = ToLogical(expression);
-        Symbol resultSymbol = new Symbol(expression.Symbol.FalseSet,
-                                         expression.Symbol.TrueSet);
+        Symbol resultSymbol =
+          new Symbol(expression.Symbol.FalseSet, expression.Symbol.TrueSet);
         return (new Expression(resultSymbol, null, expression.LongList));
       }
 
@@ -381,24 +333,23 @@ namespace CCompiler {
     private static Expression ArithmeticIntegral(MiddleOperator middleOp,
                                                  Expression expression) {
       expression = LogicalToIntegral(expression);
-      BigInteger value = (BigInteger) expression.Symbol.Value,
-                 resultValue = 0;
+      BigInteger value = (BigInteger) expression.Symbol.Value;
+      Symbol resultSymbol = null;
 
       switch (middleOp) {
         case MiddleOperator.Plus:
-          resultValue = value;
+          resultSymbol = new Symbol(expression.Symbol.Type, value);
           break;
         
         case MiddleOperator.Minus:
-          resultValue = -value;
+          resultSymbol = new Symbol(expression.Symbol.Type, -value);
           break;
 
         case MiddleOperator.BitwiseNot:
-          resultValue = ~value;
+          resultSymbol = new Symbol(expression.Symbol.Type, ~value);
           break;
       }
 
-      Symbol resultSymbol = new Symbol(expression.Symbol.Type, resultValue);
       return (new Expression(resultSymbol, null, null));
     }
 
@@ -426,42 +377,37 @@ namespace CCompiler {
 
     public static Expression ConstantCast(Expression sourceExpression,
                                           Type targetType) {
-      Symbol sourceSymbol = sourceExpression.Symbol, targetSymbol;
-      Type sourceType = sourceSymbol.Type;
-      
-      if (!IsConstant(sourceExpression) || sourceType.IsVoid()) {
+      if (!IsConstant(sourceExpression)) {
         return null;
       }
-
+      
+      Symbol sourceSymbol = sourceExpression.Symbol, targetSymbol;
+      Type sourceType = sourceSymbol.Type;
       object sourceValue = sourceSymbol.Value;
       List<MiddleCode> longList = new List<MiddleCode>();
 
-      if (targetType.IsVoid()) {
-        targetSymbol = new Symbol(targetType);
-      }
-      else if (sourceType.IsIntegralPointerArrayStringOrFunction() &&
-               targetType.IsFloating()) {
+      if (sourceType.IsIntegralOrPointer() && targetType.IsFloating()) {
         decimal targetValue = ((decimal) ((BigInteger) sourceValue));
         targetSymbol = new Symbol(targetType, targetValue);
       }
-      else if (sourceType.IsFloating() &&
-               targetType.IsIntegralPointerOrArray()) {
-        BigInteger targetValue = ((BigInteger) ((decimal) sourceValue));
+      else if (sourceType.IsFloating() && targetType.IsIntegralOrPointer()) {
+        BigInteger targetValue = ((BigInteger)((decimal)sourceValue));
         targetSymbol = new Symbol(targetType, targetValue);
       }
-      else if (sourceType.IsLogical() &&
-               targetType.IsIntegralPointerOrArray()) {
+      else if (sourceType.IsLogical() && targetType.IsArithmeticOrPointer()) {
         bool isTrue = (sourceSymbol.TrueSet.Count > 0);
-        BigInteger targetValue = isTrue ? BigInteger.One : BigInteger.Zero;
+        object targetValue;
+
+        if (targetType.IsIntegralOrPointer()) {
+          targetValue = isTrue ? BigInteger.One : BigInteger.Zero;
+        }
+        else {
+          targetValue = isTrue ? decimal.One : decimal.Zero;
+        }
+
         targetSymbol = new Symbol(targetType, targetValue);
       }
-      else if (sourceType.IsLogical() && targetType.IsFloating()) {
-        bool isTrue = (sourceSymbol.TrueSet.Count > 0);
-        decimal targetValue = isTrue ? decimal.One : decimal.Zero;
-        targetSymbol = new Symbol(targetType, targetValue);
-      }
-      else if (sourceType.IsArithmeticPointerArrayStringOrFunction() &&
-               targetType.IsLogical()) {
+      else if (sourceType.IsArithmeticOrPointer() && targetType.IsLogical()) {
         bool isTrue = !sourceValue.Equals(BigInteger.Zero) &&
                       !sourceValue.Equals(decimal.Zero);
 
@@ -489,85 +435,6 @@ namespace CCompiler {
 
       return (new Expression(targetSymbol, null, longList));
     }
-/*
-    public static Expression ConstantCast(Expression sourceExpression,
-                                  Type targetType) {
-      if (!IsConstant(sourceExpression)) {
-        return null;
-      }
-
-      Symbol sourceSymbol = sourceExpression.Symbol;
-      Type sourceType = sourceSymbol.Type;
-      object sourceValue = sourceSymbol.Value;
-
-      if (sourceType.Equals(targetType)) {
-        return sourceExpression;
-      }
-      else if ((sourceType.Size() == targetType.Size()) &&
-               ((sourceType.IsIntegralArrayOrPointer() &&
-                 targetType.IsIntegralArrayOrPointer()) ||
-               (sourceType.IsFloating() && targetType.IsFloating()))) {
-        Symbol targetSymbol = new Symbol(targetType, sourceValue);
-        return (new Expression(targetSymbol, sourceExpression.ShortList,
-                               sourceExpression.LongList));
-      }
-      else if (sourceType.IsLogical() &&
-               targetType.IsIntegralArrayOrPointer()) {
-        if (sourceSymbol.TrueSet.Count > 0) {
-          Symbol targetSymbol = new Symbol(targetType, BigInteger.One);
-          return (new Expression(targetSymbol, null, null));
-        }
-        else {
-          Symbol targetSymbol = new Symbol(targetType, BigInteger.Zero);
-          return (new Expression(targetSymbol, null, null));
-        }
-      }
-      else if ((sourceType.IsIntegralArrayOrPointer() ||
-                sourceType.IsFloating()) &&
-                targetType.IsLogical()) {
-        List<MiddleCode> longList = new List<MiddleCode>();
-        MiddleCode jumpCode = new MiddleCode(MiddleOperator.Goto);
-        longList.Add(jumpCode);
-        ISet<MiddleCode> jumpSet = new HashSet<MiddleCode>();
-        jumpSet.Add(jumpCode);
-
-        Symbol targetSymbol;
-        if (sourceValue.Equals(BigInteger.Zero) ||
-            sourceValue.Equals((decimal) 0)) {
-          targetSymbol = new Symbol(null, jumpSet);
-        }
-        else {
-          targetSymbol = new Symbol(jumpSet, null);
-        }
-
-        return (new Expression(targetSymbol, null, longList));
-      }
-      else {
-        Assert.ErrorXXX((sourceValue is BigInteger) || (sourceValue is decimal));
-        Symbol targetSymbol = null;
-
-        if (sourceType.IsIntegralArrayOrPointer() && targetType.IsFloating()){
-          targetSymbol =
-            new Symbol(targetType, (decimal) ((BigInteger) sourceValue));
-        }
-        else if (sourceType.IsFloating() &&
-                 targetType.IsIntegralArrayOrPointer()) {
-          targetSymbol =
-            new Symbol(targetType, (BigInteger) ((decimal) sourceValue));
-        }
-        else {
-          targetSymbol = new Symbol(targetType, sourceValue);
-        }
-
-        List<MiddleCode> longList = new List<MiddleCode>();
-        if (targetType.IsFloating()) {
-          MiddleCodeGenerator.
-            AddMiddleCode(longList, MiddleOperator.PushFloat, targetSymbol);
-        }
-
-        return (new Expression(targetSymbol, null, longList));
-      }
-    }*/
     
     public static StaticSymbol Value(Symbol symbol) {
       return Value(symbol.UniqueName, symbol.Type, symbol.Value);

@@ -1625,16 +1625,16 @@ namespace CCompiler {
 
     public void StructUnionGetReturnValue(MiddleCode middleCode) {
       Symbol targetSymbol = (Symbol) middleCode[0];
-      CheckRegister(targetSymbol, AssemblyCode.ReturnPointerRegister);
+      CheckRegister(targetSymbol, AssemblyCode.ReturnAddressRegister);
       Track targetAddressTrack =
         new Track(targetSymbol.AddressSymbol, 
-                  AssemblyCode.ReturnPointerRegister);
+                  AssemblyCode.ReturnAddressRegister);
       m_trackMap.Add(targetSymbol.AddressSymbol, targetAddressTrack);
     }
 
     public void StructUnionSetReturnValue(MiddleCode middleCode) {
       Symbol returnSymbol = (Symbol) middleCode[1];
-      LoadAddressToRegister(returnSymbol, AssemblyCode.ReturnPointerRegister);
+      LoadAddressToRegister(returnSymbol, AssemblyCode.ReturnAddressRegister);
     }
 
     private Track m_targetAddressTrack = null, m_sourceAddressTrack = null;

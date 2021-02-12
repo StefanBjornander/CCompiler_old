@@ -5,17 +5,15 @@ using System.Collections.Generic;
 
 namespace CCompiler {
   public class AssemblyCode {
-    public static Register RegularFrameRegister, VariadicFrameRegister, 
-                           ReturnValueRegister, ReturnPointerRegister;
-                           //StorageRegister;
-    public const Register ShiftRegister = Register.cl;
+    public static Register RegularFrameRegister, VariadicFrameRegister,
+                           ReturnAddressRegister;
+    public const Register ReturnValueRegister = Register.bx, 
+                          ShiftRegister = Register.cl;
 
     static AssemblyCode() {
       RegularFrameRegister = RegisterToSize(Register.bp, TypeSize.PointerSize);
       VariadicFrameRegister = RegisterToSize(Register.di, TypeSize.PointerSize);
-      ReturnValueRegister = RegisterToSize(Register.bx, TypeSize.PointerSize);
-      ReturnPointerRegister = RegisterToSize(Register.bx, TypeSize.PointerSize);
-      //StorageRegister = RegisterToSize(Register.si, TypeSize.PointerSize);
+      ReturnAddressRegister = RegisterToSize(Register.bx, TypeSize.PointerSize);
     }
 
     private AssemblyOperator m_operator;
@@ -42,7 +40,7 @@ namespace CCompiler {
       set { m_operandArray[index] = value; }
     }
 
-    private void FromAdditionToIncrement() {      
+    private void FromAdditionToIncrement() {
       if (((Operator == AssemblyOperator.add) ||
            (Operator == AssemblyOperator.sub)) &&
           ((m_operandArray[0] is Track) || (m_operandArray[0] is Register) ||
