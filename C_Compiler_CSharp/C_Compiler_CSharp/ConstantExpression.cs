@@ -61,17 +61,30 @@ namespace CCompiler {
 
       leftExpression = LogicalToIntegral(leftExpression);
       rightExpression = LogicalToIntegral(rightExpression);
-                     
-      int compareTo = 0;
-      if (leftExpression.Symbol.Type.IsFloating() ||
-          rightExpression.Symbol.Type.IsFloating()) {
-        Type maxType =
-          TypeCast.MaxType(leftExpression.Symbol.Type, rightExpression.Symbol.Type);
-        leftExpression = ConstantCast(leftExpression, maxType);
-        rightExpression = ConstantCast(rightExpression, maxType);
+                
+      Type leftType = leftExpression.Symbol.Type,
+           rightType = rightExpression.Symbol.Type;
 
-        decimal leftDecimal = (decimal) leftExpression.Symbol.Value,
-                rightDecimal = (decimal) rightExpression.Symbol.Value;
+      object leftValue = leftExpression.Symbol.Value,
+             rightValue = rightExpression.Symbol.Value;
+
+      int compareTo = 0;
+      if (leftType.IsFloating() || rightType.IsFloating()) {
+        decimal leftDecimal, rightDecimal;
+
+        if (leftValue is BigInteger) {
+          leftDecimal = (decimal) ((BigInteger) leftValue);
+          rightDecimal = (decimal) rightValue;
+        }
+        else if (rightValue is BigInteger) {
+          leftDecimal = (decimal) leftValue;
+          rightDecimal = (decimal) ((BigInteger) rightValue);
+        }
+        else {
+          leftDecimal = (decimal) leftValue;
+          rightDecimal = (decimal) rightValue;
+        }
+
         compareTo = leftDecimal.CompareTo(rightDecimal);
       }
       else {
@@ -192,8 +205,8 @@ namespace CCompiler {
       Type leftType = leftSymbol.Type,
            rightType = rightSymbol.Type;
 
-      BigInteger leftValue = (BigInteger) leftSymbol.Value,
-                 rightValue = (BigInteger) rightSymbol.Value,
+      BigInteger leftValue = (BigInteger)leftSymbol.Value,
+                 rightValue = (BigInteger)rightSymbol.Value,
                  resultValue = 0;
 
       switch (middleOp) {
@@ -219,10 +232,6 @@ namespace CCompiler {
           else if (leftType.IsPointerOrArray()) {
             resultValue = leftValue -
                           (rightValue * leftType.PointerOrArrayType.Size());
-          }
-          else if (leftType.IsPointerOrArray()) {
-            resultValue = (leftValue * rightType.PointerOrArrayType.Size()) -
-                          rightValue;
           }
           else {
             resultValue = leftValue - rightValue;
@@ -269,37 +278,37 @@ namespace CCompiler {
     private static Expression ArithmeticFloating(MiddleOperator middleOp,
                                                  Expression leftExpression,
                                                  Expression rightExpression) {
-      leftExpression = LogicalToFloating(leftExpression);
-      rightExpression = LogicalToFloating(rightExpression);
+      leftExpression = TypeCast.LogicalToFloating(leftExpression);
+      rightExpression = TypeCast.LogicalToFloating(rightExpression);
 
-      Type maxType =
-        TypeCast.MaxType(leftExpression.Symbol.Type, rightExpression.Symbol.Type);
+      Type maxType = TypeCast.MaxType(leftExpression.Symbol.Type,
+                                      rightExpression.Symbol.Type);
       leftExpression = ConstantCast(leftExpression, maxType);
       rightExpression = ConstantCast(rightExpression, maxType);
 
-      decimal leftValue = (decimal) leftExpression.Symbol.Value,
-              rightValue = (decimal) rightExpression.Symbol.Value,
-              resultValue = 0;
+      decimal leftDecimal = (decimal) leftExpression.Symbol.Value,
+              rightDecimal = (decimal) rightExpression.Symbol.Value,
+              resultDecimal = 0;
 
       switch (middleOp) {
         case MiddleOperator.Add:
-          resultValue = leftValue + rightValue;
+          resultDecimal = leftDecimal + rightDecimal;
           break;
         
         case MiddleOperator.Subtract:
-          resultValue = leftValue - rightValue;
+          resultDecimal = leftDecimal - rightDecimal;
           break;
         
         case MiddleOperator.Multiply:
-          resultValue = leftValue * rightValue;
+          resultDecimal = leftDecimal * rightDecimal;
           break;
         
         case MiddleOperator.Divide:
-          resultValue = leftValue / rightValue;
+          resultDecimal = leftDecimal / rightDecimal;
           break;
       }
 
-      Symbol resultSymbol = new Symbol(maxType, resultValue);
+      Symbol resultSymbol = new Symbol(maxType, resultDecimal);
       List<MiddleCode> longList = new List<MiddleCode>();
       MiddleCodeGenerator.AddMiddleCode(longList, MiddleOperator.PushFloat,
                                         resultSymbol);
@@ -332,15 +341,15 @@ namespace CCompiler {
 
     private static Expression ArithmeticIntegral(MiddleOperator middleOp,
                                                  Expression expression) {
-      expression = LogicalToIntegral(expression);
+      expression = TypeCast.LogicalToIntegral(expression);
       BigInteger value = (BigInteger) expression.Symbol.Value;
-      Symbol resultSymbol = null;
 
+      Symbol resultSymbol = null;
       switch (middleOp) {
         case MiddleOperator.Plus:
           resultSymbol = new Symbol(expression.Symbol.Type, value);
           break;
-        
+
         case MiddleOperator.Minus:
           resultSymbol = new Symbol(expression.Symbol.Type, -value);
           break;
