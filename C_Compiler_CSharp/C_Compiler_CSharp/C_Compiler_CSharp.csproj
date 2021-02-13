@@ -109,12 +109,10 @@
     <Compile Include="Sort.cs" />
     <Compile Include="Specifier.cs" />
     <Compile Include="Statement.cs" />
-    <Compile Include="StaticAddress.cs" />
     <Compile Include="StaticExpression.cs" />
     <Compile Include="StaticSymbolLinux.cs" />
     <Compile Include="StaticSymbolWindows.cs" />
     <Compile Include="StaticSymbol.cs" />
-    <Compile Include="StaticValue.cs" />
     <Compile Include="Storage.cs" />
     <Compile Include="Symbol.cs" />
     <Compile Include="SymbolTable.cs" />

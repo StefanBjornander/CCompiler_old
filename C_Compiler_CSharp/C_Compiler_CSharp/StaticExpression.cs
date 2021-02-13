@@ -9,7 +9,7 @@ namespace CCompiler {
            rightType = rightExpression.Symbol.Type;
       object leftValue = leftExpression.Symbol.Value,
              rightValue = rightExpression.Symbol.Value;
-    
+
       switch (middleOp) {
         case MiddleOperator.Add: // &i + 2, a + 2
           if (((leftValue is StaticAddress) ||
