@@ -4,7 +4,7 @@ using System.Collections.Generic;
 
 namespace CCompiler {
   public class Linker {    
-    public static string StackStart = Symbol.SeparatorId + "StackTop";    
+    public static string StackStart = Symbol.SeparatorId + "StackTop";
     private int m_totalSize = 256;
     private IDictionary<string,StaticSymbolWindows> m_globalMap =
       new Dictionary<string,StaticSymbolWindows>();
@@ -35,15 +35,18 @@ namespace CCompiler {
       
       StaticSymbolWindows pathNameSymbol = null;
       if (m_globalMap.ContainsKey(AssemblyCodeGenerator.ArgsName)) {
-        StaticSymbolWindows argsInfo = m_globalMap[AssemblyCodeGenerator.ArgsName];
+        StaticSymbolWindows argsInfo =
+          m_globalMap[AssemblyCodeGenerator.ArgsName];
         m_globalList.Add(argsInfo);
         Console.Out.WriteLine(argsInfo.UniqueName);
         m_totalSize += argsInfo.ByteList.Count;
         m_addressMap.Add(AssemblyCodeGenerator.ArgsName, 0);
-        
+
         List<byte> byteList = new List<byte>();
         IDictionary<int, string> accessMap = new Dictionary<int, string>();
-        pathNameSymbol = (StaticSymbolWindows) ConstantExpression.Value(AssemblyCodeGenerator.PathName, Type.StringType, @"C:\D\Main.com");
+        pathNameSymbol = (StaticSymbolWindows)
+          ConstantExpression.Value(AssemblyCodeGenerator.PathName,
+                                   Type.StringType, @"C:\D\Main.com");
         m_globalMap.Add(AssemblyCodeGenerator.PathName, pathNameSymbol);
       }
 
@@ -71,7 +74,8 @@ namespace CCompiler {
 
       { Console.Out.WriteLine("Generating \"" + targetFile.FullName + "\".");
         targetFile.Delete();
-        BinaryWriter targetStream = new BinaryWriter(File.OpenWrite(targetFile.FullName));
+        BinaryWriter targetStream =
+          new BinaryWriter(File.OpenWrite(targetFile.FullName));
 
         foreach (StaticSymbolWindows staticSymbol in m_globalList) {
           foreach (sbyte b in staticSymbol.ByteList) {
@@ -89,7 +93,8 @@ namespace CCompiler {
         m_addressMap.Add(staticSymbol.UniqueName, m_totalSize);
         m_totalSize += (int) staticSymbol.ByteList.Count;
       
-        ISet<string> accessNameSet = new HashSet<string>(staticSymbol.AccessMap.Values);
+        ISet<string> accessNameSet =
+          new HashSet<string>(staticSymbol.AccessMap.Values);
         foreach (string accessName in accessNameSet) {
           StaticSymbolWindows accessSymbol;
           Assert.Error(m_globalMap.TryGetValue(accessName, out accessSymbol),
@@ -98,10 +103,12 @@ namespace CCompiler {
           GenerateTrace(accessSymbol);
         }
 
-        ISet<string> callNameSet = new HashSet<string>(staticSymbol.CallMap.Values);
+        ISet<string> callNameSet =
+          new HashSet<string>(staticSymbol.CallMap.Values);
         foreach (string callName in callNameSet) {
           StaticSymbolWindows funcSymbol;
-          Assert.Error(m_globalMap.TryGetValue(callName, out funcSymbol), callName, Message.Function_missing_in_linking);
+          Assert.Error(m_globalMap.TryGetValue(callName, out funcSymbol),
+                       callName, Message.Function_missing_in_linking);
           Assert.Error(funcSymbol != null, SimpleName(callName), 
                          Message.Missing_external_function);
           GenerateTrace(funcSymbol);
@@ -123,7 +130,7 @@ namespace CCompiler {
       }
     }
 
-    private void GenerateCallX(int callerStartAddress,
+/*    private void GenerateCallX(int callerStartAddress,
                               IDictionary<int,string> callMap,
                               List<byte> byteList) {
       foreach (KeyValuePair<int,string> entry in callMap) {
@@ -135,7 +142,7 @@ namespace CCompiler {
         byteList[sourceAddress] = (byte) ((sbyte) relativeAddress);
         byteList[sourceAddress + 1] = (byte) ((sbyte) (relativeAddress >> 8));
       }
-    }
+    }*/
   
     private void GenerateReturn(int functionStartAddress, ISet<int> returnSet,
                                 List<byte> byteList) {
@@ -154,7 +161,36 @@ namespace CCompiler {
       return (index != -1) ? name.Substring(0, index) : name;
     }
 
-    private void GenerateCall(int startAddress, IDictionary<int, string> callMap,
+    private void GenerateCallX(int startAddress, IDictionary<int, string> callMap,
+                              List<byte> byteList) {
+      const byte NopOperator = -112 + 256;
+      const byte ShortJumpOperator = -21 + 256;
+
+      foreach (KeyValuePair<int,string> entry in callMap) {
+        int address = entry.Key;
+        int callerAddress = startAddress + address + 2;
+        int calleeAddress = m_addressMap[entry.Value];
+        int relativeAddress = calleeAddress - callerAddress;
+
+        if (relativeAddress == -129) {
+          byteList[address - 1] = (byte) ShortJumpOperator;
+          byteList[address] = (byte) (-128 + 256); // (byte)((sbyte)-128);
+          byteList[address + 1] = (byte) NopOperator;
+        }
+        else if (relativeAddress >= -128) {
+          byteList[address - 1] = (byte) NopOperator;
+          byteList[address] = (byte) ShortJumpOperator;
+          byteList[address + 1] = (byte) relativeAddress;
+        }
+        else {
+          byteList[address] = (byte) ((sbyte) relativeAddress);
+          byteList[address + 1] = (byte) ((sbyte) (relativeAddress >> 8));
+        }
+      }
+    }
+
+    private void GenerateCall(int startAddress,
+                              IDictionary<int, string> callMap,
                               List<byte> byteList) {
       const byte NopOperator = -112 + 256;
       const byte ShortJumpOperator = -21 + 256;

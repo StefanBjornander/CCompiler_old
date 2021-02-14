@@ -179,6 +179,10 @@ namespace CCompiler {
       return IsExtern() || IsStatic();
     }
   
+    public bool IsExternOrStaticArray() {
+      return IsExternOrStatic() && m_type.IsArray();
+    }
+
     public bool IsTypedef() {
       return (m_storage == Storage.Typedef);
     }

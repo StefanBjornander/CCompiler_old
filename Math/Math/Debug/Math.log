@@ -1,18 +1,12 @@
-﻿Build started 2021-02-08 13:53:44.
+﻿Build started 2021-02-14 13:34:21.
      1>Project "C:\Users\Stefan\Documents\A A A C_Compiler_Assembler - CSharp\Math\Math\Math.vcxproj" on node 2 (Build target(s)).
      1>ClCompile:
-         C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\bin\CL.exe /c /ZI /nologo /W3 /WX- /sdl /Od /Oy- /D WIN32 /D _DEBUG /D _CONSOLE /D _LIB /D _UNICODE /D UNICODE /Gm /EHsc /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Fo"Debug\\" /Fd"Debug\vc120.pdb" /Gd /TP /analyze- /errorReport:prompt Main.cpp
-         Main.cpp
          C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\bin\CL.exe /c /ZI /nologo /W3 /WX- /sdl /Od /Oy- /D WIN32 /D _DEBUG /D _CONSOLE /D _LIB /D _UNICODE /D UNICODE /Gm /EHsc /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Fo"Debug\\" /Fd"Debug\vc120.pdb" /Gd /TC /analyze- /errorReport:prompt MathTest.c
          MathTest.c
-     1>c:\users\stefan\documents\a a a c_compiler_assembler - csharp\math\math\mathtest.c(30): warning C4101: 'e' : unreferenced local variable
-       Link:
-         C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\bin\link.exe /ERRORREPORT:PROMPT /OUT:"C:\Users\Stefan\Documents\A A A C_Compiler_Assembler - CSharp\Math\Math\Debug\Math.exe" /INCREMENTAL /NOLOGO kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /MANIFEST /MANIFESTUAC:"level='asInvoker' uiAccess='false'" /manifest:embed /DEBUG /PDB:"C:\Users\Stefan\Documents\A A A C_Compiler_Assembler - CSharp\Math\Math\Debug\Math.pdb" /SUBSYSTEM:CONSOLE /TLBID:1 /DYNAMICBASE /NXCOMPAT /IMPLIB:"C:\Users\Stefan\Documents\A A A C_Compiler_Assembler - CSharp\Math\Math\Debug\Math.lib" /MACHINE:X86 Debug\Main.obj
-         Debug\MathTest.obj
-         Debug\MyAllocator.obj
-         Math.vcxproj -> C:\Users\Stefan\Documents\A A A C_Compiler_Assembler - CSharp\Math\Math\Debug\Math.exe
-     1>Done Building Project "C:\Users\Stefan\Documents\A A A C_Compiler_Assembler - CSharp\Math\Math\Math.vcxproj" (Build target(s)).
+     1>c:\users\stefan\documents\a a a c_compiler_assembler - csharp\math\math\mathtest.c(36): error C2113: '-' : pointer can only be subtracted from another pointer
+     1>c:\users\stefan\documents\a a a c_compiler_assembler - csharp\math\math\mathtest.c(37): error C2113: '-' : pointer can only be subtracted from another pointer
+     1>Done Building Project "C:\Users\Stefan\Documents\A A A C_Compiler_Assembler - CSharp\Math\Math\Math.vcxproj" (Build target(s)) -- FAILED.
 
-Build succeeded.
+Build FAILED.
 
-Time Elapsed 00:00:03.17
+Time Elapsed 00:00:00.50

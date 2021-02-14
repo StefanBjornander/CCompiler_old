@@ -57,22 +57,20 @@ namespace CCompiler {
       }
     }
 
-//The DeepFirstSearch method searches the graph in a deep-first manner. It takes the track list and the current index in that list as well as the track graph.
     private bool DeepFirstSearch(List<Track> trackList, int listIndex,
                                  Graph<Track> trackGraph) {
-//If the index equals the size of the track list, we return true because we have iterated through the list and found a match; that is, each track has been assigned a register and no overlapping tracks have the same register.
       if (listIndex == trackList.Count) {
         return true;
       }
-//If the current track has already been assigned a register, we just call DeepFirstSearch with the next index.
+
       Track track = trackList[listIndex];
       if (track.Register != null) {
         return DeepFirstSearch(trackList, listIndex + 1, trackGraph);
       }
-//If the current track has not been assigned a register, we look up the set of possible register and the set of neighbor vertices; that is, the set of overlapping tracks.
+
       ISet<Register> possibleSet = GetPossibleSet(track);
       ISet<Track> neighbourSet = trackGraph.GetNeighbourSet(track);
-//We iterate throught the set of possible register and, for each register that does not cause an overlapping, we assign the track the register and call DeepFirstSearch recursively with the next index. If the call returns true, we have found a total mapping of registers to the track, and we just return true. In this way, every call to DeepFirstSearch, including the first call in RegisterAllocator. However, if the call does not return false, we just try with another of the possible register. If the none of the registers causes a match, we clear the register of the track and return false.
+
       foreach (Register possibleRegister in possibleSet) {
         if (!OverlapNeighbourSet(possibleRegister, neighbourSet)) {
           track.Register = possibleRegister;
@@ -88,7 +86,7 @@ namespace CCompiler {
       track.Register = null;
       return false;
     }
-//The OverlapNeighbourSet method return true if the register overlaps any of its neighbors. The RegisterOverlap method in the AssemblyCode class test whether two register overlaps.
+
     private bool OverlapNeighbourSet(Register register,
                                      ISet<Track> neighbourSet) {
       foreach (Track neighbourTrack in neighbourSet) {
@@ -99,7 +97,7 @@ namespace CCompiler {
 
       return false;
     }
-    //The VariadicFunctionPointerRegisterSet set holds the possible pointer registers of an variadic function while RegularFunctionPointerRegisterSet holds the possible pointer registers of an regular function. The Byte1RegisterSet set holds all registers of one byte while Byte2RegisterSet holds all registers of two bytes.
+
     public static ISet<Register>
       VariadicFunctionPointerRegisterSet = new HashSet<Register>() {
         AssemblyCode.RegisterToSize(Register.bp, TypeSize.PointerSize),
@@ -124,7 +122,7 @@ namespace CCompiler {
       RegularFunctionPointerRegisterSet.
         Remove(AssemblyCode.VariadicFrameRegister);
     }
-//The GetPossibleSet method returns the possible set a track, depending on whether the track holds a pointer, or the size of the track.
+
     private static ISet<Register> GetPossibleSet(Track track) {
       if (track.Pointer) {
         if (SymbolTable.CurrentFunction.Type.IsVariadic()) {
@@ -134,11 +132,9 @@ namespace CCompiler {
           return VariadicFunctionPointerRegisterSet;
         }
       }
-//If the track does not hold a pointer wee look into its size. If the size is one, we have a larger set to choose from. There are eight non-pointer registers of size one while there is four registers of the other sizes. 
       else if (track.MaxSize == 1) {
         return Byte1RegisterSet;
       }
-//We return the set of registers of size two, even if the size is actually larger than two. In that case, the RegisterToSize method in the AssemblyCode class will find the register of correct size.
       else {
         return Byte2RegisterSet;
       }
