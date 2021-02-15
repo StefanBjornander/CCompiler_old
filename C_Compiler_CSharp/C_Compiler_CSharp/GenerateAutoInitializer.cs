@@ -13,7 +13,7 @@ namespace CCompiler {
           case MiddleOperator.Parameter:
           case MiddleOperator.Call:
           case MiddleOperator.PostCall:
-            middleCode[0] = ((int)middleCode[0]) + Extra;
+            middleCode[0] = ((int) middleCode[0]) + Extra;
             break;
         }
       }
