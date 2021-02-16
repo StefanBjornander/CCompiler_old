@@ -3,26 +3,8 @@ using System.Collections.Generic;
 
 namespace CCompiler {
   class GenerateAutoInitializer {
-    public static int Extra;
-
-    private static void UpdateExtra(List<MiddleCode> codeList) {
-      foreach (MiddleCode middleCode in codeList) {
-        switch (middleCode.Operator) {
-          case MiddleOperator.PreCall:
-          case MiddleOperator.ParameterInitSize:
-          case MiddleOperator.Parameter:
-          case MiddleOperator.Call:
-          case MiddleOperator.PostCall:
-            middleCode[0] = ((int) middleCode[0]) + Extra;
-            break;
-        }
-      }
-    }
-
     public static List<MiddleCode> GenerateAuto(Symbol toSymbol,
-                                                object fromInitializer) {
-      Assert.ErrorXXX((fromInitializer is Expression) ||
-                      (fromInitializer is List<object>));
+                                                object fromInitializer, int extraOffset) {
       Type toType = toSymbol.Type;
       List<MiddleCode> codeList = new List<MiddleCode>();
 
@@ -35,16 +17,29 @@ namespace CCompiler {
           List<object> list = new List<object>();
 
           foreach (char c in text) {
-            Symbol charSymbol = new Symbol(toType.ArrayType, (BigInteger) ((int) c));
+            Symbol charSymbol =
+              new Symbol(toType.ArrayType, (BigInteger) ((int) c));
             Expression charExpression = new Expression(charSymbol, null, null);
             list.Add(charExpression);
           }
 
-          return GenerateAuto(toSymbol, list);
+          return GenerateAuto(toSymbol, list, extraOffset);
         }
         else {
           fromExpression = TypeCast.ImplicitCast(fromExpression, toType);
-          UpdateExtra(fromExpression.LongList);
+
+          foreach (MiddleCode middleCode in fromExpression.LongList) {
+            switch (middleCode.Operator) {
+              case MiddleOperator.PreCall:
+              case MiddleOperator.ParameterInitSize:
+              case MiddleOperator.Parameter:
+              case MiddleOperator.Call:
+              case MiddleOperator.PostCall:
+                middleCode[0] = ((int) middleCode[0]) + extraOffset;
+                break;
+            }
+          }
+
           codeList.AddRange(fromExpression.LongList);
       
           if (toSymbol.Type.IsFloating()) {
@@ -59,14 +54,9 @@ namespace CCompiler {
             codeList.Add(new MiddleCode(MiddleOperator.Assign, toSymbol,
                                         fromExpression.Symbol));
           }
-
-          Extra += toType.Size();
         }
       }
       else {
-        Assert.Error(toType.IsArray() ||toType.IsStructOrUnion(),
-                     toType, Message.
-            Only_array_struct_or_union_can_be_initialized_by_a_list);
         List<object> fromList = (List<object>) fromInitializer;
 
         switch (toType.Sort) {
@@ -78,7 +68,7 @@ namespace CCompiler {
               }
               else {
                 Assert.Error(fromList.Count <= toType.ArraySize,
-                             toType, Message.Too_many_initializers);
+                             toType, Message.Too_many_initializers_in_array);
               }
 
               for (int index = 0; index < fromList.Count; ++index) {
@@ -86,29 +76,46 @@ namespace CCompiler {
                 indexSymbol.Offset = toSymbol.Offset +
                                     (index * toType.ArrayType.Size());
                 indexSymbol.Name = toSymbol.Name + "[" + index + "]";
-                codeList.AddRange(GenerateAuto(indexSymbol, fromList[index]));
+                codeList.AddRange(GenerateAuto(indexSymbol, fromList[index],
+                                               extraOffset));
+                extraOffset += toType.ArrayType.Size();
               }
             }
             break;
 
-          case Sort.Struct:
-          case Sort.Union: {
+          case Sort.Struct: {
             List<Symbol> memberList = toType.MemberList; 
-              Assert.Error((toType.IsStruct() && (fromList.Count <= memberList.Count)) ||
-                           (toType.IsUnion() && (fromList.Count == 1)),
-                           toType, Message.Too_many_initializers);
+              Assert.Error(fromList.Count <= memberList.Count, toType,
+                           Message.Too_many_initializers_in_struct);
 
-              IEnumerator<Symbol> enumerator = memberList.GetEnumerator();
-
-              foreach (object fromInitializor in fromList) {
-                enumerator.MoveNext();
-                Symbol memberSymbol = enumerator.Current;
-                Symbol subSymbol = new Symbol(memberSymbol.Type); 
+              for (int index = 0; index < fromList.Count; ++index) {
+                Symbol memberSymbol = memberList[index];
+                Symbol subSymbol = new Symbol(memberList[index].Type); 
                 subSymbol.Name = toSymbol.Name + "." + memberSymbol.Name;
                 subSymbol.Offset = toSymbol.Offset + memberSymbol.Offset;
-                codeList.AddRange(GenerateAuto(subSymbol, fromInitializor));
+                codeList.AddRange(GenerateAuto(subSymbol, fromList[index],
+                                               extraOffset));
+                extraOffset += memberSymbol.Type.Size();
               }
             }
+            break;
+
+          case Sort.Union: {
+              List<Symbol> memberList = toType.MemberList;
+              Assert.Error(fromList.Count == 1, toType,
+                           Message.Only_one_Initlizer_allowed_in_unions);
+              Symbol memberSymbol = memberList[0];
+              Symbol subSymbol = new Symbol(memberSymbol.Type); 
+              subSymbol.Name = toSymbol.Name + "." + memberSymbol.Name;
+              subSymbol.Offset = toSymbol.Offset;
+              codeList.AddRange(GenerateAuto(subSymbol, fromList[0],
+                                             extraOffset));
+            }
+            break;
+
+          default:
+            Assert.Error(toType, Message.
+                Only_array_struct_or_union_can_be_initialized_by_a_list);
             break;
         }
       }

@@ -4,8 +4,6 @@ namespace CCompiler {
   public class GenerateStaticInitializer {
     public static List<MiddleCode> GenerateStatic(Type toType,
                                                   object fromInitializer) {
-      Assert.ErrorXXX((fromInitializer is Expression) ||
-                    (fromInitializer is List<object>));
       List<MiddleCode> codeList = new List<MiddleCode>();
 
       if (fromInitializer is Expression) {
@@ -23,8 +21,8 @@ namespace CCompiler {
             toType.ArraySize = text.Length + 1;
           }
           else {
-            Assert.Error(text.Length < toType.ArraySize,
-                         toType, Message.Too_many_initializers);
+            Assert.Error(text.Length < toType.ArraySize, toType,
+                         Message.Too_many_initializers_in_array);
           }
 
           codeList.Add(new MiddleCode(MiddleOperator.Initializer,
@@ -52,9 +50,6 @@ namespace CCompiler {
         }
       }
       else {
-        Assert.Error(toType.IsArray() || toType.IsStructOrUnion(),
-                     toType, Message.
-                    Only_array_struct_or_union_can_be_initialized_by_a_list);
         List<object> fromList = (List<object>) fromInitializer;
       
         switch (toType.Sort) {
@@ -66,7 +61,7 @@ namespace CCompiler {
               }
               else {
                 Assert.Error(fromList.Count <= toType.ArraySize,
-                             toType, Message.Too_many_initializers);
+                             toType, Message.Too_many_initializers_in_array);
               }
 
               foreach (object value in fromList) {
@@ -82,30 +77,47 @@ namespace CCompiler {
             }
             break;
           
-          case Sort.Struct:
-          case Sort.Union: {
-            List<Symbol> memberList = toType.MemberList; 
-            Assert.Error((toType.IsStruct() &&
-                           (fromList.Count <= memberList.Count)) ||
-                           (toType.IsUnion() && (fromList.Count == 1)),
-                           toType, Message.Too_many_initializers);
+          case Sort.Struct: {
+              List<Symbol> memberList = toType.MemberList;
+              Assert.Error(fromList.Count <= memberList.Count, toType,
+                           Message.Too_many_initializers_in_struct);
 
-              int size = 0;
-              IEnumerator<Symbol> enumerator = memberList.GetEnumerator();              
-              foreach (object fromInitializor in fromList) {
-                enumerator.MoveNext();
-                Symbol memberSymbol = enumerator.Current;
+              int initSize = 0;
+              for (int index = 0; index < fromList.Count; ++index) {
+                Symbol memberSymbol = memberList[index];
                 codeList.AddRange(GenerateStatic(memberSymbol.Type,
-                                                 fromInitializor));
-                size += memberSymbol.Type.Size();
+                                                 fromList[index]));
+                initSize += memberSymbol.Type.Size();
               }
 
-              int restSize = toType.Size() - size;
+              int restSize = toType.Size() - initSize;
               if (restSize > 0) {
                 codeList.Add(new MiddleCode(MiddleOperator.InitializerZero,
                                             restSize));
               }
             }
+            break;
+          
+          case Sort.Union: {
+              List<Symbol> memberList = toType.MemberList;
+              Assert.Error(fromList.Count == 1, toType,
+                           Message.Only_one_Initlizer_allowed_in_unions);
+
+              Symbol memberSymbol = memberList[0];
+              codeList.AddRange(GenerateStatic(memberSymbol.Type,
+                                               fromList[0]));
+
+              int restSize = toType.Size() - memberSymbol.Type.Size();
+              if (restSize > 0) {
+                codeList.Add(new MiddleCode(MiddleOperator.InitializerZero,
+                                            restSize));
+              }
+            }
+            break;
+
+          default:
+            Assert.Error(toType, Message.
+                         Only_array_struct_or_union_can_be_initialized_by_a_list);
             break;
         }
       }

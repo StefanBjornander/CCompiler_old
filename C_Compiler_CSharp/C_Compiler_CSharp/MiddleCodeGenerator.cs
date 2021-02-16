@@ -472,9 +472,8 @@ namespace CCompiler {
         Symbol symbol =
           new Symbol(name, specifier.ExternalLinkage, storage, type);
         symbol.Offset = SymbolTable.CurrentTable.CurrentOffset;
-        GenerateAutoInitializer.Extra = 0;
         List<MiddleCode> codeList =
-          GenerateAutoInitializer.GenerateAuto(symbol, initializer);
+          GenerateAutoInitializer.GenerateAuto(symbol, initializer, 0); 
         SymbolTable.CurrentTable.AddSymbol(symbol);
         return codeList;
       }
