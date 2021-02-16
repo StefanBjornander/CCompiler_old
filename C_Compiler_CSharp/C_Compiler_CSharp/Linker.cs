@@ -22,7 +22,8 @@ namespace CCompiler {
       }
       else {
         Assert.Error(uniqueName.EndsWith(Symbol.NumberId),
-                     SimpleName(uniqueName), Message.Duplicate_global_name);
+                     Symbol.SimpleName(uniqueName),
+                     Message.Duplicate_global_name);
       }
     }
 
@@ -109,8 +110,8 @@ namespace CCompiler {
           StaticSymbolWindows funcSymbol;
           Assert.Error(m_globalMap.TryGetValue(callName, out funcSymbol),
                        callName, Message.Function_missing_in_linking);
-          Assert.Error(funcSymbol != null, SimpleName(callName), 
-                         Message.Missing_external_function);
+          Assert.Error(funcSymbol != null, Symbol.SimpleName(callName), 
+                       Message.Missing_external_function);
           GenerateTrace(funcSymbol);
         }      
       }
@@ -154,11 +155,6 @@ namespace CCompiler {
         byteList[sourceAddress] = (byte) targetAddress;
         byteList[sourceAddress + 1] = (byte) (targetAddress >> 8);
       }
-    }
-
-    public static string SimpleName(string name) {
-      int index = name.LastIndexOf(Symbol.SeparatorId);
-      return (index != -1) ? name.Substring(0, index) : name;
     }
 
     private void GenerateCallX(int startAddress, IDictionary<int, string> callMap,

@@ -393,13 +393,17 @@ namespace CCompiler {
     
       // enum {a,b,c} extern;
       Symbol itemSymbol = new Symbol(itemName, false, Storage.Auto, itemType, false, value);
+      if (optInitializerSymbol != null) {
+        itemSymbol.InitializedEnum = true;
+      }
+
       SymbolTable.CurrentTable.AddSymbol(itemSymbol);
       CCompiler_Main.Parser.EnumValueStack.Push(value + 1);
       return itemSymbol;
     }
   
     public static Type EnumSpecifier(string optionalName,
-                                     ISet<Pair<Symbol,bool>> enumSet) {
+                                     ISet<Symbol> enumSet) {
       Type enumType = new Type(enumSet);
 
       if (optionalName != null) {

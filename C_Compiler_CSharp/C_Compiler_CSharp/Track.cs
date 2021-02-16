@@ -12,6 +12,10 @@ namespace CCompiler {
       Assert.ErrorXXX(symbol != null);
       //Assert.ErrorXXX(!symbol.Type.IsStructOrUnion());
       CurrentSize = m_maxSize = symbol.Type.ReturnSize();
+
+      if (CurrentSize == 12) {
+        int i = 1;
+      }
     }
 
     public Track(Type type) {
@@ -20,6 +24,10 @@ namespace CCompiler {
       //Assert.ErrorXXX(!type.IsStructOrUnion());
       Assert.ErrorXXX(!type.IsArrayFunctionOrString());
       CurrentSize = m_maxSize = type.ReturnSize();
+
+      if (CurrentSize == 12) {
+        int i = 1;
+      }
     }
 
     public int CurrentSize { get; set; }

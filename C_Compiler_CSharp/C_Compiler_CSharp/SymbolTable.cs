@@ -76,16 +76,6 @@ namespace CCompiler {
         Symbol oldSymbol;
 
         if (m_entryMap.TryGetValue(name, out oldSymbol)) {
-          /*if (oldSymbol.Type.IsFunction() && newSymbol.Type.IsFunction()) {
-            Assert.Error(!oldSymbol.FunctionDefinition ||
-                         !newSymbol.FunctionDefinition, name,
-                         Message.Name_already_defined);
-          }
-          else {
-            Assert.Error(oldSymbol.IsExtern() || newSymbol.IsExtern(),
-                         name, Message.Name_already_defined);
-          }*/
-
           Assert.Error(oldSymbol.IsExtern() || newSymbol.IsExtern(),
                        name, Message.Name_already_defined);
           Assert.Error(oldSymbol.Type.Equals(newSymbol.Type),
@@ -95,8 +85,6 @@ namespace CCompiler {
 
           if (!newSymbol.IsExtern()) {
             m_entryMap[name] = newSymbol;
-            //m_entryList.Remove(oldSymbol);
-            //m_entryList.Add(newSymbol);
           }
         }
         else {

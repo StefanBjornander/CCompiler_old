@@ -129,8 +129,7 @@ namespace CCompiler {
                     ? Storage.Static : Storage.Auto;
         }
 
-        foreach (Pair<Symbol,bool> pair in compoundType.EnumItemSet){
-          Symbol itemSymbol = pair.First;
+        foreach (Symbol itemSymbol in compoundType.EnumItemSet){
           itemSymbol.Storage = storage.Value;
 
           switch (itemSymbol.Storage) {
@@ -139,17 +138,16 @@ namespace CCompiler {
                                          Value(itemSymbol));
               break;
 
-            case CCompiler.Storage.Extern: {
-                bool enumInitializer = pair.Second;
-                Assert.Error(!enumInitializer,
-                              itemSymbol + " = " + itemSymbol.Value,
-                  Message.Extern_enumeration_item_cannot_be_initialized);
-              }
-              break;
-
             case CCompiler.Storage.Auto:
             case CCompiler.Storage.Register:
               SymbolTable.CurrentTable.SetOffset(itemSymbol);
+              break;
+
+            case CCompiler.Storage.Extern: {
+                Assert.Error(!itemSymbol.InitializedEnum,
+                              itemSymbol + " = " + itemSymbol.Value,
+                  Message.Extern_enumeration_item_cannot_be_initialized);
+              }
               break;
           }
         }

@@ -161,15 +161,15 @@ namespace CCompiler {
     }
 
     // ------------------------------------------------------------------------
-  
-    private ISet<Pair<Symbol,bool>> m_enumItemSet;
 
-    public Type(ISet<Pair<Symbol,bool>> enumItemSet) {
+    private ISet<Symbol> m_enumItemSet;
+
+    public Type(ISet<Symbol> enumItemSet) {
       m_sort = Sort.SignedInt;
       m_enumItemSet = enumItemSet;
     }
 
-    public ISet<Pair<Symbol,bool>> EnumItemSet {
+    public ISet<Symbol> EnumItemSet {
       get { return m_enumItemSet; }
     }
 
@@ -225,10 +225,11 @@ namespace CCompiler {
       switch (m_sort) {
         case Sort.Struct:
         case Sort.Union:
+        case Sort.Array:
           return TypeSize.PointerSize;
 
         default:
-          return TypeSize.Size(m_sort);
+          return Size();
       }
     }
 

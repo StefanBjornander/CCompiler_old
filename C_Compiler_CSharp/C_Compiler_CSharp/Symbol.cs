@@ -14,7 +14,6 @@ namespace CCompiler {
     public const string FileMarker = "@";
 
     private bool m_externalLinkage;
-    //private bool m_externalLinkage, m_functionDefinition;
     private string m_name, m_uniqueName;
     private bool m_parameter;
     private Storage m_storage;
@@ -25,6 +24,7 @@ namespace CCompiler {
     private int m_addressOffset;
     private ISet<MiddleCode> m_trueSet, m_falseSet;
     private static int UniqueNameCount = 0, TemporaryNameCount = 0;
+    public bool InitializedEnum { get; set; }
 
     public Symbol(string name, bool externalLinkage, Storage storage,
                   Type type, bool parameter = false, object value = null) {
@@ -147,11 +147,6 @@ namespace CCompiler {
       get { return m_externalLinkage; }
     }
 
-    /*public bool FunctionDefinition {
-      get { return m_functionDefinition; }
-      set { m_functionDefinition = value; }
-    }*/
-
     public Storage Storage {
       get { return m_storage; }
       set { m_storage = value; }
@@ -270,8 +265,8 @@ namespace CCompiler {
 
     public static string SimpleName(string name) {
       int index = name.LastIndexOf(Symbol.SeparatorId);
-      return (index != -1) ? name.Substring(index + 1).Replace("#", "")
-                           : name;
+      return ((index != -1) ? name.Substring(index + 1)
+                            : name).Replace(NumberId, "");
     }
   }
 }

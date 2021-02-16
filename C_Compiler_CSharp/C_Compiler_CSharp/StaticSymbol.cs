@@ -18,7 +18,8 @@ namespace CCompiler {
 
     public override bool Equals(object obj) {
       if (obj is StaticSymbol) {
-        return m_uniqueName.Equals(((StaticSymbol) obj).m_uniqueName);
+        StaticSymbol staticSymbol = (StaticSymbol) obj;
+        return m_uniqueName.Equals(staticSymbol.m_uniqueName);
       }
 
       return false;

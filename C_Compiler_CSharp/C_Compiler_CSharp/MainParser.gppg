@@ -35,9 +35,8 @@
   public Sort sort;
   public Symbol symbol;
   public IDictionary<string,Symbol> symbol_map;
-  public ISet<Pair<Symbol,bool>> symbol_bool_pair_set;
-  public Pair<Symbol,bool> symbol_bool_pair;
   public List<Symbol> symbol_list;
+  public ISet<Symbol> symbol_set;
   public List<string> string_list;
   public Declarator declarator;
   public List<Declarator> declarator_list;
@@ -67,8 +66,8 @@
 %type <sort> struct_or_union
 
 %type <type> enum_specifier
-%type <symbol_bool_pair_set> enum_list
-%type <symbol_bool_pair> enum
+%type <symbol_set> enum_list
+%type <symbol> enum
 %type <middle_code_list> declarator_list declaration
                          declaration_list optional_declaration_list
                          initialization_bitfield_simple_declarator
@@ -251,25 +250,22 @@ enum_specifier:
 
 enum_list:
     enum {
-      ISet<Pair<Symbol,bool>> memberSet =
-        new HashSet<Pair<Symbol,bool>>();
+      ISet<Symbol> memberSet = new HashSet<Symbol>();
       memberSet.Add($1);
       $$ = memberSet;
     }
   | enum_list COMMA enum {
-      ISet<Pair<Symbol,bool>> memberSet = $1;
+      ISet<Symbol> memberSet = $1;
       memberSet.Add($3);
       $$ = memberSet;
     };
 
 enum:
     NAME {
-      Symbol symbol = MiddleCodeGenerator.EnumItem($1, null);
-      $$ = new Pair<Symbol,bool>(symbol, false);
+      $$ = MiddleCodeGenerator.EnumItem($1, null);
     }
   | NAME ASSIGN constant_integral_expression {
-      Symbol symbol = MiddleCodeGenerator.EnumItem($1, $3.Symbol);
-      $$ = new Pair<Symbol,bool>(symbol, true);
+      $$ = MiddleCodeGenerator.EnumItem($1, $3.Symbol);
     };
 
 declarator_list:
