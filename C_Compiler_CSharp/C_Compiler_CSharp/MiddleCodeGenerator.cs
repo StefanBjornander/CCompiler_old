@@ -392,7 +392,8 @@ namespace CCompiler {
       }
     
       // enum {a,b,c} extern;
-      Symbol itemSymbol = new Symbol(itemName, false, Storage.Auto, itemType, false, value);
+      Symbol itemSymbol =
+        new Symbol(itemName, false, Storage.Auto, itemType, value);
       if (optInitializerSymbol != null) {
         itemSymbol.InitializedEnum = true;
       }
@@ -649,7 +650,10 @@ namespace CCompiler {
         type.Constant = true;
       }
 
-      return (new Symbol(name, false, storage, type, true));
+      //return (new Symbol(name, false, storage, type));
+      Symbol symbol = new Symbol(name, false, storage, type);
+      symbol.Parameter = true;
+      return symbol;
     }
 
     // ---------------------------------------------------------------------------------------------------------------------
@@ -1964,8 +1968,8 @@ namespace CCompiler {
         string name = parentSymbol.Name + Symbol.SeparatorDot + memberSymbol.Name;
                       //+ Symbol.SeparatorId + memberSymbol.Offset;
         resultSymbol = new Symbol(name, parentSymbol.ExternalLinkage,
-                                  parentSymbol.Storage, memberSymbol.Type,
-                                  parentSymbol.Parameter);
+                                  parentSymbol.Storage, memberSymbol.Type);
+        resultSymbol.Parameter = parentSymbol.Parameter;
         resultSymbol.UniqueName = parentSymbol.UniqueName;
         resultSymbol.AddressSymbol = parentSymbol.AddressSymbol;
         resultSymbol.AddressOffset = parentSymbol.AddressOffset;

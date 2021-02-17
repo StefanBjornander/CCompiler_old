@@ -404,8 +404,7 @@ namespace CCompiler {
       Assert.ErrorXXX((symbol == null) || symbol.IsAutoOrRegister());
     
       if (SymbolTable.CurrentFunction.Type.IsVariadic() &&
-          (symbol != null) && !symbol.Parameter)
-      {
+          (symbol != null) && !symbol.Parameter) {
         return AssemblyCode.VariadicFrameRegister;
       }
       else {

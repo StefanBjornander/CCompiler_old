@@ -80,6 +80,27 @@ namespace CCompiler {
       return buffer.ToString();
     }
 
+    public static string CharToHex(string text) {
+      StringBuilder buffer = new StringBuilder();
+
+      for (int index = 0; index < text.Length; ++index) {
+        char theChar = text[index];
+
+        if (char.IsLetterOrDigit(theChar) || (theChar == '_')) {
+          buffer.Append(theChar);
+        }
+        else {
+          int asciiValue = (int) theChar;
+          const string hexDigits = "0123456789ABCDEF";
+          char hex1 = hexDigits[asciiValue / 16],
+               hex2 = hexDigits[asciiValue % 16];
+          buffer.Append(hex1.ToString() + hex2.ToString());
+        }
+      }
+
+      return buffer.ToString();
+    }
+
     private static bool IsOctal(char c) {
       return "01234567".Contains(c.ToString());
     }

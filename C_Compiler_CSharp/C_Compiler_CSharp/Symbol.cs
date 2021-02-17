@@ -13,24 +13,28 @@ namespace CCompiler {
     public const string SeparatorDot = ".";
     public const string FileMarker = "@";
 
-    private bool m_externalLinkage;
     private string m_name, m_uniqueName;
-    private bool m_parameter;
+    private bool m_externalLinkage;
     private Storage m_storage;
     private Type m_type;
     private object m_value;
     private int m_offset;
     private Symbol m_addressSymbol;
     private int m_addressOffset;
-    private ISet<MiddleCode> m_trueSet, m_falseSet;
     private static int UniqueNameCount = 0, TemporaryNameCount = 0;
-    public bool InitializedEnum { get; set; }
+
+    public ISet<MiddleCode> TrueSet {get; set;}
+    public ISet<MiddleCode> FalseSet {get; set;}
+
+    public bool Parameter {get; set;}
+    public bool InitializedEnum {get; set;}
 
     public Symbol(string name, bool externalLinkage, Storage storage,
-                  Type type, bool parameter = false, object value = null) {
+                  Type type, object value = null) {
       m_name = name;
       m_externalLinkage = externalLinkage;
       m_storage = storage;
+      m_type = type;
 
       if (m_externalLinkage) {
         m_uniqueName = m_name;
@@ -40,8 +44,48 @@ namespace CCompiler {
                        Symbol.SeparatorId + m_name;
       }
 
-      m_parameter = parameter;
-      m_value = CheckValue(m_type = type, value);
+      m_value = CheckValue(m_type, value);
+    }
+
+    public Symbol(Type type) {
+      m_name = Symbol.TemporaryId + "temporary" + (TemporaryNameCount++);
+      m_storage = Storage.Auto;
+      m_type = type;
+    }
+
+    public Symbol(ISet<MiddleCode> trueSet, ISet<MiddleCode> falseSet) {
+      m_name = Symbol.TemporaryId + "logical" + (TemporaryNameCount++);
+      m_storage = Storage.Auto;
+      m_type = new Type(Sort.Logical);
+      TrueSet = (trueSet != null) ? trueSet : (new HashSet<MiddleCode>());
+      FalseSet = (falseSet != null) ? falseSet
+                                      : (new HashSet<MiddleCode>());
+    }
+
+    public Symbol(Type type, object value) {
+      Assert.ErrorXXX(value != null);
+      Assert.ErrorXXX(!(value is bool));
+
+      m_storage = Storage.Static;
+      m_type = type;
+      m_value = CheckValue(m_type, value);
+
+      if (m_value is string) {
+        string text = (string) m_value;
+        m_name = "string_" + Slash.CharToHex(text) + Symbol.NumberId;
+      }
+      else if (m_value is StaticBase) {
+        StaticBase staticBase = (StaticBase) m_value;
+        m_name = m_value.GetType().Name + "_" + staticBase.UniqueName +
+                 "_" + staticBase.Offset + Symbol.NumberId;
+      }
+      else {
+        Assert.ErrorXXX(!type.IsArray());
+        m_name = Enum.GetName(typeof(Sort), type.Sort) + Symbol.SeparatorId
+                 + m_value.ToString().Replace("-", "minus") + Symbol.NumberId;
+      }
+
+      m_uniqueName = Symbol.FileMarker + (UniqueNameCount++) + m_name;
     }
 
     private static object CheckValue(Type type, object value) {
@@ -59,78 +103,6 @@ namespace CCompiler {
       }
 
       return value;
-    }
-
-    public Symbol(Type type) {
-      m_name = Symbol.TemporaryId + "temporary" + (TemporaryNameCount++);
-      m_externalLinkage = false;
-      m_storage = Storage.Auto;
-      m_type = type;
-      m_parameter = false;
-    }
-
-    public Symbol(ISet<MiddleCode> trueSet, ISet<MiddleCode> falseSet) {
-      m_name = Symbol.TemporaryId + "logical" + (TemporaryNameCount++);
-      m_storage = Storage.Auto;
-      m_type = new Type(Sort.Logical);
-      m_trueSet = (trueSet != null) ? trueSet : (new HashSet<MiddleCode>());
-      m_falseSet = (falseSet != null) ? falseSet
-                                      : (new HashSet<MiddleCode>());
-      m_parameter = false;
-    }
-
-    public Symbol(Type type, object value) {
-      Assert.ErrorXXX(!(value is bool));
-      m_name = ValueName(type, value);
-      m_uniqueName = Symbol.FileMarker + (UniqueNameCount++) +
-                     Symbol.SeparatorId + m_name;
-      m_storage = Storage.Static;
-      m_parameter = false;
-      m_value = CheckValue(m_type = type, value);
-    }
-
-    public static string ValueName(CCompiler.Type type, object value) {
-      Assert.ErrorXXX(value != null);
-
-      if (value is string) {
-        string text = (string) value;
-        StringBuilder buffer = new StringBuilder();
-
-        for (int index = 0; index < text.Length; ++index) {
-          if (char.IsLetterOrDigit(text[index]) ||
-              (text[index] == '_')) {
-            buffer.Append(text[index]);
-          }
-          else if (text[index] != '\0') {
-            int asciiValue = (int) text[index];
-            char hex1 = "0123456789ABCDEF"[asciiValue / 16],
-                 hex2 = "0123456789ABCDEF"[asciiValue % 16];
-            buffer.Append(hex1.ToString() + hex2.ToString());
-          }
-        }
-
-        return "string_" + buffer.ToString() + Symbol.NumberId;
-      }
-      else if (value is StaticAddress) {
-        StaticAddress staticAddress = (StaticAddress) value;
-        return "staticaddress" + Symbol.SeparatorId + staticAddress.UniqueName
-               + Symbol.SeparatorId + staticAddress.Offset + Symbol.NumberId;
-      }
-      else if (type.IsArray()) {
-        return "Array_" + value.ToString() + Symbol.NumberId;
-      }
-      else if (type.IsFloating()) {
-        return "float" + type.Size().ToString() + Symbol.SeparatorId +
-               value.ToString().Replace("-", "minus") + Symbol.NumberId;
-      }
-      /*else if (type.IsLogical()) {
-        return "int" + type.Size().ToString() + Symbol.SeparatorId +
-               value.ToString().Replace("-", "minus") + Symbol.NumberId;
-      }*/
-      else {
-        return "int" + type.Size().ToString() + Symbol.SeparatorId +
-               value.ToString().Replace("-", "minus") + Symbol.NumberId;
-      }
     }
 
     public string Name {
@@ -194,21 +166,6 @@ namespace CCompiler {
       return IsAuto() || IsRegister();
     }
 
-    public ISet<MiddleCode> TrueSet {
-      get { return m_trueSet; }
-      set { m_trueSet = value; }
-    }
-
-    public ISet<MiddleCode> FalseSet {
-      get { return m_falseSet; }
-      set { m_falseSet = value; }
-    }
-
-    public bool Parameter
-    {
-      get { return m_parameter; }
-    }
-          
     public object Value {
       get { return m_value; }
       set { m_value = value; }
@@ -239,6 +196,17 @@ namespace CCompiler {
     }
 
     public override string ToString() {
+      if (m_name != null) {
+        return m_name;
+      }
+      else if (m_addressSymbol != null) {
+        return m_addressSymbol.ToString();
+      }
+
+      return "";
+    }
+
+    /*public override string ToString() {
       if (m_value is String) {
         return "\"" + m_value.ToString().Replace("\n", "\\n") + "\"";
       }
@@ -261,7 +229,7 @@ namespace CCompiler {
           return "";
         }
       }
-    }
+    }*/
 
     public static string SimpleName(string name) {
       int index = name.LastIndexOf(Symbol.SeparatorId);
