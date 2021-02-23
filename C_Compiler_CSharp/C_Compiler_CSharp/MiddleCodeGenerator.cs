@@ -1520,7 +1520,7 @@ namespace CCompiler {
           new Symbol(indexExpression.Symbol.Type, new BigInteger(size));
         Expression sizeExpression = new Expression(sizeSymbol);
         indexExpression = MultiplyExpression(MiddleOperator.Multiply,
-                                             indexExpression, sizeExpression);
+                                             indexExpression, sizeExpression, false);
       }
     
       return TypeCast.ImplicitCast(indexExpression, arrayType);
@@ -1646,7 +1646,7 @@ namespace CCompiler {
             new Symbol(Type.SignedIntegerType, new BigInteger(size));
           Expression sizeExpression = new Expression(sizeSymbol);
           resultExpression = MultiplyExpression(MiddleOperator.Divide,
-                                            resultExpression, sizeExpression);
+                                            resultExpression, sizeExpression, false);
         }
       }
 
@@ -1655,7 +1655,8 @@ namespace CCompiler {
 
     public static Expression MultiplyExpression(MiddleOperator middleOp,
                                                 Expression leftExpression,
-                                                Expression rightExpression) {
+                                                Expression rightExpression,
+                                                bool typeCheck = true) {
       Expression constantExpression =
         ConstantExpression.Arithmetic(middleOp, leftExpression,
                                       rightExpression);
@@ -1665,14 +1666,17 @@ namespace CCompiler {
 
       Type leftType = leftExpression.Symbol.Type,
            rightType = rightExpression.Symbol.Type;
+      
            
-      if (middleOp == MiddleOperator.Modulo) {
-        Assert.Error(leftType.IsIntegral() && rightType.IsIntegral(),
-                     Message.Invalid_type_in_expression);
-      }
-      else {
-        Assert.Error(leftType.IsArithmetic() && rightType.IsArithmetic(),
-                     Message.Invalid_type_in_expression);
+      if (typeCheck) {
+        if (middleOp == MiddleOperator.Modulo) {
+          Assert.Error(leftType.IsIntegral() && rightType.IsIntegral(),
+                       Message.Invalid_type_in_expression);
+        }
+        else {
+          Assert.Error(leftType.IsArithmetic() && rightType.IsArithmetic(),
+                       Message.Invalid_type_in_expression);
+        }
       }
 
       Type maxType = TypeCast.MaxType(leftExpression.Symbol.Type,

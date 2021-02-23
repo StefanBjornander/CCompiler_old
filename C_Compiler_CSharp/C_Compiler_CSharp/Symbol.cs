@@ -80,7 +80,7 @@ namespace CCompiler {
                  "_" + staticBase.Offset + Symbol.NumberId;
       }
       else {
-        Assert.ErrorXXX(!type.IsArray());
+        //Assert.ErrorXXX(!type.IsArray());
         m_name = Enum.GetName(typeof(Sort), type.Sort) + Symbol.SeparatorId
                  + m_value.ToString().Replace("-", "minus") + Symbol.NumberId;
       }
