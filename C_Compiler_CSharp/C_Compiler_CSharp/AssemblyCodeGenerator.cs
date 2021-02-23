@@ -546,7 +546,7 @@ namespace CCompiler {
         }
       }*/
 
-      if (m_returnType.IsIntegralLogicalOrPointer() ||
+      if (m_returnType.IsIntegralOrPointer() || // m_returnType.IsLogical() ||
           m_returnType.IsStructOrUnion()) {
         m_returnTrack = null;
 

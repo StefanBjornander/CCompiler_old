@@ -112,7 +112,7 @@ namespace CCompiler {
 
         longList.Add(targetCode);
       }
-      else if (sourceType.IsArithmeticPointerArrayStringOrFunction() &&
+      else if ((sourceType.IsArithmetic() || sourceType.IsPointerArrayStringOrFunction()) &&
                targetType.IsLogical()) {
         object zeroValue = sourceType.IsLogical() ? ((object) decimal.Zero)
                                                   : ((object)BigInteger.Zero);

@@ -23,12 +23,12 @@ namespace CCompiler {
         {(int) Mask.Int, Sort.SignedInt},
         {(int) Mask.Signed, Sort.SignedInt},
         {(int) Mask.SignedInt, Sort.SignedInt},
-        {(int) Mask.Unsigned, Sort.Unsigned_Int},
-        {(int) Mask.UnsignedInt, Sort.Unsigned_Int},
-        {(int) Mask.Long, Sort.Signed_Long_Int},
-        {(int) Mask.LongInt, Sort.Signed_Long_Int},
-        {(int) Mask.SignedLong, Sort.Signed_Long_Int},
-        {(int) Mask.SignedLongInt, Sort.Signed_Long_Int},
+        {(int) Mask.Unsigned, Sort.UnsignedInt},
+        {(int) Mask.UnsignedInt, Sort.UnsignedInt},
+        {(int) Mask.Long, Sort.SignedLongInt},
+        {(int) Mask.LongInt, Sort.SignedLongInt},
+        {(int) Mask.SignedLong, Sort.SignedLongInt},
+        {(int) Mask.SignedLongInt, Sort.SignedLongInt},
         {(int) Mask.UnsignedLong, Sort.UnsignedLongInt},
         {(int) Mask.UnsignedLongInt, Sort.UnsignedLongInt},
         {(int) Mask.Float, Sort.Float},
@@ -122,14 +122,14 @@ namespace CCompiler {
         Only_extern____static____or_typedef_storage_allowed_in_global_scope);
       }
 
-      if ((compoundType != null) && (compoundType.EnumItemSet != null)){
+      if ((compoundType != null) && (compoundType.IsEnumerator())) {        
         if (storage == Storage.Typedef) {
           compoundType = Type.SignedIntegerType;
           storage = (SymbolTable.CurrentTable.Scope == Scope.Global)
                     ? Storage.Static : Storage.Auto;
         }
 
-        foreach (Symbol itemSymbol in compoundType.EnumItemSet){
+        foreach (Symbol itemSymbol in compoundType.EnumeratorItemSet){
           itemSymbol.Storage = storage.Value;
 
           switch (itemSymbol.Storage) {

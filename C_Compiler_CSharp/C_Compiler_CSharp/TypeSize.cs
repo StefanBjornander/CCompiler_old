@@ -42,8 +42,8 @@ namespace CCompiler {
         m_sizeMap.Add(Sort.SignedShortInt, 2);
         m_sizeMap.Add(Sort.UnsignedShortInt, 2);
         m_sizeMap.Add(Sort.SignedInt, 4);
-        m_sizeMap.Add(Sort.Unsigned_Int, 4);
-        m_sizeMap.Add(Sort.Signed_Long_Int, 8);
+        m_sizeMap.Add(Sort.UnsignedInt, 4);
+        m_sizeMap.Add(Sort.SignedLongInt, 8);
         m_sizeMap.Add(Sort.UnsignedLongInt, 8);
         m_sizeMap.Add(Sort.Float, 4);
         m_sizeMap.Add(Sort.Double, 8);
@@ -52,11 +52,11 @@ namespace CCompiler {
         m_signedMap.Add(1, Sort.SignedChar);
         m_signedMap.Add(2, Sort.SignedShortInt);
         m_signedMap.Add(4, Sort.SignedInt);
-        m_signedMap.Add(8, Sort.Signed_Long_Int);
+        m_signedMap.Add(8, Sort.SignedLongInt);
 
         m_unsignedMap.Add(1, Sort.UnsignedChar);
         m_unsignedMap.Add(2, Sort.UnsignedShortInt);
-        m_unsignedMap.Add(4, Sort.Unsigned_Int);
+        m_unsignedMap.Add(4, Sort.UnsignedInt);
         m_unsignedMap.Add(8, Sort.UnsignedLongInt);
 
         m_minValueMap.Add(Sort.Logical, 0);
@@ -65,10 +65,10 @@ namespace CCompiler {
         m_minValueMap.Add(Sort.SignedShortInt, -32768);
         m_minValueMap.Add(Sort.UnsignedShortInt, 0);
         m_minValueMap.Add(Sort.SignedInt, -2147483648);
-        m_minValueMap.Add(Sort.Unsigned_Int, 0);
+        m_minValueMap.Add(Sort.UnsignedInt, 0);
         m_minValueMap.Add(Sort.Array, 0);
         m_minValueMap.Add(Sort.Pointer, 0);
-        m_minValueMap.Add(Sort.Signed_Long_Int, -9223372036854775808);
+        m_minValueMap.Add(Sort.SignedLongInt, -9223372036854775808);
         m_minValueMap.Add(Sort.UnsignedLongInt, 0);
 
         m_maxValueMap.Add(Sort.Logical, 1);
@@ -77,10 +77,10 @@ namespace CCompiler {
         m_maxValueMap.Add(Sort.SignedShortInt, 32767);
         m_maxValueMap.Add(Sort.UnsignedShortInt, 65535);
         m_maxValueMap.Add(Sort.SignedInt, 2147483647);
-        m_maxValueMap.Add(Sort.Unsigned_Int, 4294967295);
+        m_maxValueMap.Add(Sort.UnsignedInt, 4294967295);
         m_maxValueMap.Add(Sort.Array, 4294967295);
         m_maxValueMap.Add(Sort.Pointer, 4294967295);
-        m_maxValueMap.Add(Sort.Signed_Long_Int, 9223372036854775807);
+        m_maxValueMap.Add(Sort.SignedLongInt, 9223372036854775807);
         m_maxValueMap.Add(Sort.UnsignedLongInt, 18446744073709551615);
 
         /*m_minValueFloatMap.Add(Sort.Float, decimal.
@@ -112,8 +112,8 @@ namespace CCompiler {
         m_sizeMap.Add(Sort.SignedShortInt, 1);
         m_sizeMap.Add(Sort.UnsignedShortInt, 1);
         m_sizeMap.Add(Sort.SignedInt, 2);
-        m_sizeMap.Add(Sort.Unsigned_Int, 2);
-        m_sizeMap.Add(Sort.Signed_Long_Int, 4);
+        m_sizeMap.Add(Sort.UnsignedInt, 2);
+        m_sizeMap.Add(Sort.SignedLongInt, 4);
         m_sizeMap.Add(Sort.UnsignedLongInt, 4);
         m_sizeMap.Add(Sort.Float, 4);
         m_sizeMap.Add(Sort.Double, 8);
@@ -121,10 +121,10 @@ namespace CCompiler {
 
         m_signedMap.Add(1, Sort.SignedChar);
         m_signedMap.Add(2, Sort.SignedInt);
-        m_signedMap.Add(4, Sort.Signed_Long_Int);
+        m_signedMap.Add(4, Sort.SignedLongInt);
 
         m_unsignedMap.Add(1, Sort.UnsignedChar);
-        m_unsignedMap.Add(2, Sort.Unsigned_Int);
+        m_unsignedMap.Add(2, Sort.UnsignedInt);
         m_unsignedMap.Add(4, Sort.UnsignedLongInt);
 
         m_minValueMap.Add(Sort.Logical, 0);
@@ -133,10 +133,10 @@ namespace CCompiler {
         m_minValueMap.Add(Sort.SignedShortInt, -128);
         m_minValueMap.Add(Sort.UnsignedShortInt, 0);
         m_minValueMap.Add(Sort.SignedInt, -32768);
-        m_minValueMap.Add(Sort.Unsigned_Int, 0);
+        m_minValueMap.Add(Sort.UnsignedInt, 0);
         m_minValueMap.Add(Sort.Array, 0);
         m_minValueMap.Add(Sort.Pointer, 0);
-        m_minValueMap.Add(Sort.Signed_Long_Int, -2147483648);
+        m_minValueMap.Add(Sort.SignedLongInt, -2147483648);
         m_minValueMap.Add(Sort.UnsignedLongInt, 0);
 
         m_maxValueMap.Add(Sort.Logical, 1);
@@ -145,10 +145,10 @@ namespace CCompiler {
         m_maxValueMap.Add(Sort.SignedShortInt, 127);
         m_maxValueMap.Add(Sort.UnsignedShortInt, 255);
         m_maxValueMap.Add(Sort.SignedInt, 32767);
-        m_maxValueMap.Add(Sort.Unsigned_Int, 65535);
+        m_maxValueMap.Add(Sort.UnsignedInt, 65535);
         m_maxValueMap.Add(Sort.Array, 65535);
         m_maxValueMap.Add(Sort.Pointer, 65535);
-        m_maxValueMap.Add(Sort.Signed_Long_Int, 2147483647);
+        m_maxValueMap.Add(Sort.SignedLongInt, 2147483647);
         m_maxValueMap.Add(Sort.UnsignedLongInt, 4294967295);
 
         /*m_minValueFloatMap.Add(Sort.Float, decimal.

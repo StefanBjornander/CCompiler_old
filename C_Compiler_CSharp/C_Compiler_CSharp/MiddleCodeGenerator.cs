@@ -88,7 +88,7 @@ namespace CCompiler {
     public static void FunctionDefinition() {
       Type funcType = SymbolTable.CurrentFunction.Type;
 
-      if (funcType.Style == Type.FunctionStyle.Old) {
+      if (funcType.IsOldStyle()) {
         List<string> nameList = funcType.NameList;
         IDictionary<string,Symbol> entryMap =
           SymbolTable.CurrentTable.EntryMap;
@@ -604,19 +604,13 @@ namespace CCompiler {
         }
       }
 
-      declarator.Add(new Type(null, parameterList, variadic));
+      declarator.Add(new Type(parameterList, variadic)); 
       return declarator;
     }
 
     public static Declarator OldFunctionDeclaration(Declarator declarator,
                                                     List<string> nameList) {
-      ISet<string> nameSet = new HashSet<string>();
-
-      foreach (string name in nameList) {
-        Assert.Error(nameSet.Add(name), name, Message.Name_already_defined);
-      }
-
-      declarator.Add(new Type(null, nameList));
+      declarator.Add(new Type(nameList)); 
       return declarator;
     }  
 
@@ -1124,12 +1118,10 @@ namespace CCompiler {
 
           AddMiddleCode(longList, MiddleOperator.Assign,
                         leftExpression.Symbol, rightExpression.Symbol);
-          BigInteger? bitFieldMask =
-                     leftExpression.Symbol.Type.GetBitfieldMask();
 
-          if (bitFieldMask != null) {
+          if (leftExpression.Symbol.Type.IsBitfield()) {
             Symbol maskSymbol = new Symbol(leftExpression.Symbol.Type,
-                                           bitFieldMask);
+                                    leftExpression.Symbol.Type.BitfieldMask);
             AddMiddleCode(longList, MiddleOperator.BitwiseAnd,
                           leftExpression.Symbol, leftExpression.Symbol,
                           maskSymbol);
@@ -2025,9 +2017,8 @@ namespace CCompiler {
         AddMiddleCode(expression.LongList, m_incrementMap[middleOp],
                       symbol, symbol, oneSymbol);
 
-        BigInteger? bitFieldMask = symbol.Type.GetBitfieldMask();
-        if (bitFieldMask != null) {
-          Symbol maskSymbol = new Symbol(symbol.Type, bitFieldMask.Value);
+        if (symbol.Type.IsBitfield()) {
+          Symbol maskSymbol = new Symbol(symbol.Type, symbol.Type.BitfieldMask);
           MiddleCode maskCode = new MiddleCode(MiddleOperator.BitwiseAnd,
                                                symbol, symbol, maskSymbol);
           expression.ShortList.Add(maskCode);
@@ -2076,14 +2067,15 @@ namespace CCompiler {
         AddMiddleCode(expression.LongList, m_incrementMap[middleOp],
                       symbol, symbol, oneSymbol);
 
-        BigInteger? bitFieldMask = symbol.Type.GetBitfieldMask();
-        if (bitFieldMask != null) {
-          Symbol maskSymbol = new Symbol(symbol.Type, bitFieldMask.Value);
+        if (symbol.Type.IsBitfield()) {
+          Symbol maskSymbol =
+            new Symbol(symbol.Type, symbol.Type.BitfieldMask);
           AddMiddleCode(expression.ShortList, MiddleOperator.BitwiseAnd,
                         symbol, symbol, maskSymbol);
           AddMiddleCode(expression.LongList, MiddleOperator.BitwiseAnd,
                         symbol, symbol, maskSymbol);
         }
+
 
         return (new Expression(resultSymbol, expression.ShortList,
                                expression.LongList));
@@ -2114,7 +2106,8 @@ namespace CCompiler {
 
     public static void CallHeader(Expression expression) {
       Type type = expression.Symbol.Type;
-      Assert.Error(type.IsFunction() || type.IsFunctionPointer(),
+      Assert.Error(type.IsFunction() ||
+                   type.IsPointer() && type.PointerType.IsFunction(),
                    expression.Symbol, Message.Not_a_function);
       Type functionType = type.IsFunction() ? type : type.PointerType;
       TypeListStack.Push(functionType.TypeList);

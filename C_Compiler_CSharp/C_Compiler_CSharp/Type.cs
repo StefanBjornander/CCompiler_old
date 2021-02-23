@@ -7,14 +7,83 @@ namespace CCompiler {
   public class Type {
     private Sort m_sort;
 
+    public Type(Sort sort) {
+      m_sort = sort;
+    }
+
     public Sort Sort {
       get { return m_sort; }
     }
 
-    public Type(Sort sort) { // arithmetic or logical
-      m_sort = sort;
+    public bool IsVoid() {
+      return (m_sort == Sort.Void);
+    }
+
+    public bool IsChar() {
+      return (m_sort == Sort.SignedChar) || (m_sort == Sort.UnsignedChar);
+    }
+
+    public bool IsShort() {
+      return (m_sort == Sort.SignedShortInt) ||
+             (m_sort == Sort.UnsignedShortInt);
+    }
+
+    public bool IsInteger() {
+      return (m_sort == Sort.SignedInt) || (m_sort == Sort.UnsignedInt);
+    }
+
+    public bool IsSigned() {
+      return (m_sort == Sort.SignedChar) || (m_sort == Sort.SignedShortInt) ||
+             (m_sort == Sort.SignedInt) || (m_sort == Sort.SignedLongInt);
+    }
+
+    public bool IsUnsigned() {
+      return (m_sort == Sort.UnsignedChar) || (m_sort == Sort.UnsignedShortInt)
+          || (m_sort == Sort.UnsignedInt) || (m_sort == Sort.UnsignedLongInt);
+    }
+
+    public bool IsIntegral() {
+      return IsSigned() || IsUnsigned();
+    }
+
+    public bool IsFloat() {
+      return (m_sort == Sort.Float);
     }
   
+    public bool IsFloating() {
+      return (m_sort == Sort.Float) || (m_sort == Sort.Double) ||
+             (m_sort == Sort.LongDouble);
+    }
+
+    public bool IsArithmetic() {
+      return IsIntegral() || IsFloating();
+    }
+
+    public bool IsString() {
+      return (m_sort == Sort.String);
+    }
+
+    public bool IsLogical() {
+      return (m_sort == Sort.Logical);
+    }
+
+    // ------------------------------------------------------------------------
+
+    private ISet<Symbol> m_enumeratorItemSet = null;
+
+    public Type(ISet<Symbol> EnumeratorItemSet) {
+      m_sort = Sort.SignedInt;
+      m_enumeratorItemSet = EnumeratorItemSet;
+    }
+
+    public bool IsEnumerator() {
+      return (m_enumeratorItemSet != null);
+    }
+
+    public ISet<Symbol> EnumeratorItemSet {
+      get { return m_enumeratorItemSet; }
+    }
+
     // ------------------------------------------------------------------------
   
     private BigInteger? m_bitfieldMask = null;
@@ -23,8 +92,8 @@ namespace CCompiler {
       return (m_bitfieldMask != null);
     }
 
-    public BigInteger? GetBitfieldMask() {
-      return m_bitfieldMask;
+    public BigInteger BitfieldMask {
+      get {return m_bitfieldMask.Value;}
     }
 
     public void SetBitfieldMask(int bits) {
@@ -40,9 +109,21 @@ namespace CCompiler {
       m_pointerType = pointerType;
     }
 
+    public bool IsPointer() {
+      return (m_sort == Sort.Pointer);
+    }
+
     public Type PointerType {
       get { return m_pointerType; }
       set { m_pointerType = value; }
+    }
+
+    public bool IsIntegralOrPointer() {
+      return IsIntegral() || IsPointer();
+    }
+
+    public bool IsArithmeticOrPointer() {
+      return IsArithmetic() || IsPointer();
     }
 
     // ------------------------------------------------------------------------
@@ -56,6 +137,10 @@ namespace CCompiler {
       m_arrayType = arrayType;
     }
 
+    public bool IsArray() {
+      return (m_sort == Sort.Array);
+    }
+
     public int ArraySize {
       get { return m_arraySize; }
       set { m_arraySize = value; }
@@ -66,76 +151,20 @@ namespace CCompiler {
       set { m_arrayType = value; }
     }
 
+    public bool IsPointerOrArray() {
+      return IsPointer() || IsArray();
+    }
+
     public Type PointerOrArrayType {
-      get { return (m_sort == Sort.Pointer) ? m_pointerType : m_arrayType; }
+      get { return IsPointer() ? PointerType : ArrayType; }
     }
 
-    // ------------------------------------------------------------------------
-
-    public enum FunctionStyle {Old, New};
-    private FunctionStyle m_functionStyle;
-
-    private Type m_returnType;
-    private List<string> m_nameList;
-    private List<Symbol> m_parameterList; 
-    private List<Type> m_typeList;
-    private bool m_variadic;
-
-    public Type(Type returnType, List<string> nameList) {
-      m_sort = Sort.Function;
-      m_functionStyle = FunctionStyle.Old;
-      m_returnType = returnType;
-      m_nameList = nameList;
-      m_parameterList = null;
-      m_variadic = false;
-
-      Assert.Error(nameList.Count == new HashSet<string>(nameList).Count,
-                   null, Message.Duplicate_name_in_parameter_list);
+    public bool IsPointerArrayOrString() {
+      return IsPointerOrArray() || IsString();
     }
 
-    public Type(Type returnType, List< Symbol> parameterList,
-                bool variadic) {
-      Assert.ErrorXXX(parameterList != null);
-      m_sort = Sort.Function;
-      m_functionStyle = FunctionStyle.New;
-      m_returnType = returnType;
-      m_nameList = null;
-      m_parameterList = parameterList;
-      m_variadic = variadic;
-      m_typeList = null;
-
-      if (parameterList != null) {
-        m_typeList = new List<Type>();
-
-        foreach (Symbol symbol in parameterList) {
-          m_typeList.Add(symbol.Type);
-        }
-      }
-    }
-
-    public FunctionStyle Style {
-      get { return m_functionStyle; }
-    }
-
-    public List<string> NameList {
-      get { return m_nameList; }
-    }
-
-    public List<Symbol> ParameterList {
-      get { return m_parameterList; }
-    }
-
-    public List<Type> TypeList {
-      get { return m_typeList; }
-    }
-
-    public Type ReturnType {
-      get { return m_returnType; }
-      set { m_returnType = value; }
-    }
-
-    public bool IsVariadic() {
-      return m_variadic;
+    public bool IsIntegralPointerOrArray() {
+      return IsIntegral() || IsPointerOrArray();
     }
 
     // ------------------------------------------------------------------------
@@ -160,26 +189,98 @@ namespace CCompiler {
       set { m_memberList = value; }
     }
 
+    public bool IsStructOrUnion() {
+      return (m_sort == Sort.Struct) || (m_sort == Sort.Union);
+    }
+  
     // ------------------------------------------------------------------------
 
-    private ISet<Symbol> m_enumItemSet;
+    private Type m_returnType;
+    private List<string> m_nameList;
 
-    public Type(ISet<Symbol> enumItemSet) {
-      m_sort = Sort.SignedInt;
-      m_enumItemSet = enumItemSet;
+    public Type(List<string> nameList) {
+      m_sort = Sort.Function;
+      m_nameList = nameList;
+
+      ISet<string> nameSet = new HashSet<string>();
+      foreach (string name in nameList) {
+        Assert.Error(nameSet.Add(name), name, Message.Name_already_defined);
+      }
     }
 
-    public ISet<Symbol> EnumItemSet {
-      get { return m_enumItemSet; }
+    private List<Symbol> m_parameterList;
+    private List<Type> m_typeList;
+    private bool m_variadic;
+
+    public Type(List< Symbol> parameterList, bool variadic) {
+      m_sort = Sort.Function;
+      m_parameterList = parameterList;
+      m_variadic = variadic;
+      m_nameList = null;
+
+      if (m_parameterList != null) {
+        m_typeList = new List<Type>();
+
+        foreach (Symbol symbol in m_parameterList) {
+          m_typeList.Add(symbol.Type);
+        }
+      }
+      else {
+        m_typeList = null;
+      }
+    }
+
+    public bool IsFunction() {
+      return (m_sort == Sort.Function);
+    }
+
+    public bool IsOldStyle() {
+      return (m_nameList != null);
+    }
+
+    public List<string> NameList {
+      get { return m_nameList; }
+    }
+
+    public List<Symbol> ParameterList {
+      get { return m_parameterList; }
+    }
+
+    public List<Type> TypeList {
+      get { return m_typeList; }
+    }
+
+    public Type ReturnType {
+      get { return m_returnType; }
+      set { m_returnType = value; }
+    }
+
+    public bool IsVariadic() {
+      return m_variadic;
+    }
+
+    public bool IsArrayFunctionOrString() {
+      return IsArray() || IsFunction() || IsString();
+    }
+
+    public bool IsPointerArrayStringOrFunction() {
+      return IsPointer() || IsArrayFunctionOrString ();
+    }
+
+    public bool IsIntegralPointerOrFunction() {
+      return IsIntegralOrPointer() || IsFunction();
+    }
+
+    public bool IsIntegralPointerArrayOrFunction() {
+      return IsIntegralPointerOrArray() || IsFunction();
+    }
+
+    public bool IsIntegralPointerArrayStringOrFunction() {
+      return IsIntegralPointerArrayOrFunction() || IsString();
     }
 
     // ------------------------------------------------------------------------
 
-    public static bool IsSigned(Sort sort) {
-      return (sort == Sort.SignedChar) || (sort == Sort.SignedShortInt) ||
-             (sort == Sort.SignedInt) || (sort == Sort.Signed_Long_Int);
-    }
-        
     public int Size() {
       switch (m_sort) {
         case Sort.Array:
@@ -333,167 +434,10 @@ namespace CCompiler {
 
     // ------------------------------------------------------------------------
   
-    public bool IsVoid() {
-      return (m_sort == Sort.Void);
-    }
-
-    public bool IsChar() {
-      return (m_sort == Sort.SignedChar) || (m_sort == Sort.UnsignedChar);
-    }
-
-    public bool IsShort() {
-      return (m_sort == Sort.SignedShortInt) ||
-             (m_sort == Sort.UnsignedShortInt);
-    }
-
-    public bool IsInteger() {
-      return (m_sort == Sort.SignedInt) || (m_sort == Sort.Unsigned_Int);
-    }
-
-    public bool IsIntegral() {
-      return IsSigned() || IsUnsigned();
-    }
-
-    public bool IsSigned() {
-      switch (m_sort) {
-        case Sort.SignedChar:
-        case Sort.SignedShortInt:
-        case Sort.SignedInt:
-        case Sort.Signed_Long_Int:
-          return true;
-
-        default:
-          return false;
-      }
-    }
-
-    public bool IsUnsigned() {
-      switch (m_sort) {
-        case Sort.UnsignedChar:
-        case Sort.UnsignedShortInt:
-        case Sort.Unsigned_Int:
-        case Sort.UnsignedLongInt:
-          return true;
-
-        default:
-          return false;
-      }
-    }
-
-    public bool IsFloat() {
-      return (m_sort == Sort.Float);
-    }
-  
-    public bool IsFloating() {
-      switch (m_sort) {
-        case Sort.Float:
-        case Sort.Double:
-        case Sort.LongDouble:
-          return true;
-
-        default:
-          return false;
-      }
-    }
-
-    public bool IsLogical() {
-      return (m_sort == Sort.Logical);
-    }
-
-    public bool IsPointer() {
-      return (m_sort == Sort.Pointer);
-    }
-
-    public bool IsArray() {
-      return (m_sort == Sort.Array);
-    }
-
-    public bool IsPointerOrArray() {
-      return IsPointer() || IsArray();
-    }
-
-    public bool IsPointerArrayOrString() {
-      return IsPointerOrArray() || IsString();
-    }
-
-    public bool IsFunction() {
-      return (m_sort == Sort.Function);
-    }
-
-    public bool IsPointerArrayStringOrFunction() {
-      return IsPointer() || IsArrayFunctionOrString ();
-    }
-
-    public bool IsString() {
-      return (m_sort == Sort.String);
-    }
-
-    public bool IsArrayFunctionOrString() {
-      return IsArray() || IsFunction() || IsString();
-    }
-
-    public bool IsFunctionPointer() {
-      return (m_sort == Sort.Pointer) && m_pointerType.IsFunction();
-    }
-
-    public bool IsArithmetic() {
-      return IsIntegral() || IsFloating();
-    }
-
-    public bool IsIntegralOrPointer() {
-      return IsIntegral() || IsPointer();
-    }
-
-    public bool IsIntegralLogicalOrPointer() {
-      return IsIntegral() || IsLogical() || IsPointer();
-    }
-
-    public bool IsIntegralPointerOrArray() {
-      return IsIntegral() || IsPointerOrArray();
-    }
-
-    public bool IsIntegralPointerArrayOrString() {
-      return IsIntegralPointerOrArray() || IsString();
-    }
-
-    public bool IsIntegralPointerArrayStringOrFunction() {
-      return IsIntegralPointerArrayOrFunction() || IsString();
-    }
-
-    public bool IsIntegralPointerOrFunction() {
-      return IsIntegralOrPointer() || IsFunction();
-    }
-
-    public bool IsIntegralPointerArrayOrFunction() {
-      return IsIntegralPointerOrArray() || IsFunction();
-    }
-
-    public bool IsArithmeticOrPointer() {
-      return IsArithmetic() || IsPointer();
-    }
-
-    public bool IsArithmeticPointerArrayStringOrFunction() {
-      return IsArithmeticOrPointer() || IsArray() || IsFunction() || IsString();
-    }
-
-    public bool IsStruct() {
-      return (m_sort == Sort.Struct);
-    }
-
-    public bool IsUnion() {
-      return (m_sort == Sort.Union);
-    }
-  
-    public bool IsStructOrUnion() {
-      return IsStruct() || IsUnion();
-    }
-  
-    public bool IsEnumerator() {
-      return (m_enumItemSet != null);
-    }
-
     public override string ToString() {
-      return Enum.GetName(typeof(Sort), m_sort).Replace("_", " ").ToLower();
+      return Enum.GetName(typeof(Sort), m_sort).ToLower().
+             Replace("short", "short ").Replace("long", "long ").
+             Replace("signed", "signed ");
     }
 
     public static Type SignedShortIntegerType =
@@ -501,8 +445,8 @@ namespace CCompiler {
     public static Type UnsignedShortIntegerType =
       new Type(Sort.UnsignedShortInt);
     public static Type SignedIntegerType = new Type(Sort.SignedInt);
-    public static Type UnsignedIntegerType = new Type(Sort.Unsigned_Int);
-    public static Type SignedLongIntegerType = new Type(Sort.Signed_Long_Int);
+    public static Type UnsignedIntegerType = new Type(Sort.UnsignedInt);
+    public static Type SignedLongIntegerType = new Type(Sort.SignedLongInt);
     public static Type UnsignedLongIntegerType =
       new Type(Sort.UnsignedLongInt);
     public static Type FloatType = new Type(Sort.Float);
