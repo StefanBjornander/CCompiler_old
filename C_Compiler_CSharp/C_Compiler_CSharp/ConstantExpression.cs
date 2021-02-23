@@ -4,15 +4,15 @@ using System.Collections.Generic;
 namespace CCompiler {
   public class ConstantExpression {
     public static bool IsConstant(Expression expression) {
-      Symbol resultSymbol = expression.Symbol;
+      Symbol symbol = expression.Symbol;
 
-      if (resultSymbol.Type.IsLogical()) {
-        return (resultSymbol.TrueSet.Count == 0) ||
-               (resultSymbol.FalseSet.Count == 0);
+      if (symbol.Type.IsLogical()) {
+        return (symbol.TrueSet.Count == 0) ||
+               (symbol.FalseSet.Count == 0);
       }
       else {
-        return (resultSymbol.Value is BigInteger) ||
-               (resultSymbol.Value is decimal);
+        return (symbol.Value is BigInteger) ||
+               (symbol.Value is decimal);
       }
     }
 

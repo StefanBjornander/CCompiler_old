@@ -107,7 +107,7 @@ namespace CCompiler {
           }
 
           symbol.Offset = offset;
-          offset += symbol.Type.SizeArray();
+          offset += symbol.Type.SizeAddress();
         }
       }
       else {
@@ -1513,16 +1513,18 @@ namespace CCompiler {
     public static Expression MultiplySize(Expression arrayExpression,
                                           Expression indexExpression) {
       Type arrayType = arrayExpression.Symbol.Type;
+      int arrayTypeSize = arrayType.PointerOrArrayType.Size();
 
-      if (arrayType.PointerOrArrayType.Size() > 1) {
-        int size = arrayType.PointerOrArrayType.Size();
+      if (arrayTypeSize > 1) {
         Symbol sizeSymbol =
-          new Symbol(indexExpression.Symbol.Type, new BigInteger(size));
+          new Symbol(indexExpression.Symbol.Type,
+                     new BigInteger(arrayTypeSize));
         Expression sizeExpression = new Expression(sizeSymbol);
-        indexExpression = MultiplyExpression(MiddleOperator.Multiply,
-                                             indexExpression, sizeExpression, false);
+        indexExpression =
+          MultiplyExpression(MiddleOperator.Multiply, indexExpression,
+                             sizeExpression);
       }
-    
+
       return TypeCast.ImplicitCast(indexExpression, arrayType);
     }
 
@@ -1638,15 +1640,16 @@ namespace CCompiler {
 
       if (leftType.IsPointerOrArray() && rightType.IsPointerOrArray()) {
         resultExpression =
-          TypeCast.ImplicitCast(resultExpression, Type.SignedIntegerType);
-        
-        if (leftType.PointerOrArrayType.Size() > 1) {
-          int size = leftType.PointerOrArrayType.Size();
+          TypeCast.ExplicitCast(resultExpression, Type.SignedIntegerType);
+        int arrayTypeSize = leftType.PointerOrArrayType.Size();
+
+        if (arrayTypeSize > 1) {
           Symbol sizeSymbol =
-            new Symbol(Type.SignedIntegerType, new BigInteger(size));
+            new Symbol(Type.SignedIntegerType, new BigInteger(arrayTypeSize));
           Expression sizeExpression = new Expression(sizeSymbol);
-          resultExpression = MultiplyExpression(MiddleOperator.Divide,
-                                            resultExpression, sizeExpression, false);
+          resultExpression =
+            MultiplyExpression(MiddleOperator.Divide,
+                               resultExpression, sizeExpression);
         }
       }
 
@@ -1655,8 +1658,7 @@ namespace CCompiler {
 
     public static Expression MultiplyExpression(MiddleOperator middleOp,
                                                 Expression leftExpression,
-                                                Expression rightExpression,
-                                                bool typeCheck = true) {
+                                                Expression rightExpression) {
       Expression constantExpression =
         ConstantExpression.Arithmetic(middleOp, leftExpression,
                                       rightExpression);
@@ -1666,17 +1668,14 @@ namespace CCompiler {
 
       Type leftType = leftExpression.Symbol.Type,
            rightType = rightExpression.Symbol.Type;
-      
            
-      if (typeCheck) {
-        if (middleOp == MiddleOperator.Modulo) {
-          Assert.Error(leftType.IsIntegral() && rightType.IsIntegral(),
-                       Message.Invalid_type_in_expression);
-        }
-        else {
-          Assert.Error(leftType.IsArithmetic() && rightType.IsArithmetic(),
-                       Message.Invalid_type_in_expression);
-        }
+      if (middleOp == MiddleOperator.Modulo) {
+        Assert.Error(leftType.IsIntegral() && rightType.IsIntegral(),
+                      Message.Invalid_type_in_expression);
+      }
+      else {
+        Assert.Error(leftType.IsArithmetic() && rightType.IsArithmetic(),
+                      Message.Invalid_type_in_expression);
       }
 
       Type maxType = TypeCast.MaxType(leftExpression.Symbol.Type,

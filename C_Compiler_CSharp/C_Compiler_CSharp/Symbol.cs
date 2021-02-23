@@ -79,9 +79,12 @@ namespace CCompiler {
         m_name = m_value.GetType().Name + "_" + staticBase.UniqueName +
                  "_" + staticBase.Offset + Symbol.NumberId;
       }
+      else if (m_type.IsFloating()) {
+        m_name = "floating" + m_type.Size() + Symbol.SeparatorId
+                 + m_value.ToString().Replace("-", "minus") + Symbol.NumberId;
+      }
       else {
-        //Assert.ErrorXXX(!type.IsArray());
-        m_name = Enum.GetName(typeof(Sort), type.Sort) + Symbol.SeparatorId
+        m_name = "integral" + m_type.SizeAddress() + Symbol.SeparatorId
                  + m_value.ToString().Replace("-", "minus") + Symbol.NumberId;
       }
 

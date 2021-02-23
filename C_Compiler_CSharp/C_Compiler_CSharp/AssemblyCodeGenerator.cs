@@ -800,7 +800,7 @@ namespace CCompiler {
       Symbol returnSymbol = (Symbol)middleCode[1];
       Register returnRegister =
         AssemblyCode.RegisterToSize(AssemblyCode.ReturnValueRegister,
-                                    returnSymbol.Type.SizeArray()); 
+                                    returnSymbol.Type.SizeAddress()); 
       LoadValueToRegister(returnSymbol, returnRegister);
       m_trackMap.Remove(returnSymbol);
     }
@@ -984,7 +984,7 @@ namespace CCompiler {
       Track resultTrack = null, assignTrack = null;
       m_trackMap.TryGetValue(resultSymbol, out resultTrack);
       m_trackMap.TryGetValue(assignSymbol, out assignTrack);
-      int typeSize = assignSymbol.Type.SizeArray();
+      int typeSize = assignSymbol.Type.SizeAddress();
 
       if (resultSymbol.IsTemporary()) {
         Assert.ErrorXXX(assignTrack == null);
@@ -1177,7 +1177,7 @@ namespace CCompiler {
         objectOperator = m_middleToIntegralMap[middleOperator];
       }
 
-      int typeSize = unarySymbol.Type.SizeArray();
+      int typeSize = unarySymbol.Type.SizeAddress();
       Track unaryTrack = null;
       if (unarySymbol.Value is BigInteger) {
         SymbolTable.StaticSet.Add(ConstantExpression.Value(unarySymbol));
@@ -1237,7 +1237,7 @@ namespace CCompiler {
 
     public void IntegralMultiply(MiddleCode middleCode) {
       Symbol leftSymbol = (Symbol) middleCode[1];
-      int typeSize = leftSymbol.Type.SizeArray();
+      int typeSize = leftSymbol.Type.SizeAddress();
       Register leftRegister = m_leftRegisterMap[typeSize];
       Track leftTrack = LoadValueToRegister(leftSymbol, leftRegister);
 
@@ -1680,7 +1680,7 @@ namespace CCompiler {
              fromSymbol = (Symbol) middleCode[1];
 
       Type toType = toSymbol.Type, fromType = fromSymbol.Type;
-      int toSize = toType.SizeArray(), fromSize = fromType.SizeArray();
+      int toSize = toType.SizeAddress(), fromSize = fromType.SizeAddress();
 
       //Assert.ErrorXXX(fromSize != toSize);
       Track fromTrack = LoadValueToRegister(fromSymbol);

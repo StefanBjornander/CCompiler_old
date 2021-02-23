@@ -27,30 +27,23 @@ namespace CCompiler {
       return expression;
     }
 
-
-    public static Expression ImplicitCast(Expression fromExpression,
-                                          Type toType) {
-      Expression constantExpression =
-        ConstantExpression.ConstantCast(fromExpression, toType);
-      if (constantExpression != null) {
-        return constantExpression;
+    public static Expression ImplicitCast(Expression sourceExpression,
+                                          Type targetType) {
+      Type fromType = sourceExpression.Symbol.Type;
+      if (fromType.Equals(targetType)) {
+        return sourceExpression;
       }
-      Type fromType = fromExpression.Symbol.Type;
-
-      if (fromType.Equals(toType) ||
-          (fromType.IsLogical() && toType.IsLogical()) ||
-          (fromType.IsPointerArrayStringOrFunction() &&
-           toType.IsPointerOrArray()) ||
-          (fromType.IsPointerArrayStringOrFunction() &&
-           toType.IsIntegral() && (fromType.Size() == toType.Size())) ||
-          (((fromType.IsFloating() && toType.IsFloating()) ||
-            (fromType.IsIntegralPointerOrFunction() &&
-             toType.IsIntegralPointerArrayOrFunction())) &&
-           (fromType.SizeArray() == toType.SizeArray()))) {        
-        return fromExpression;
+      else if (fromType.IsIntegralPointerArrayStringOrFunction() &&
+               targetType.IsIntegralPointerArrayStringOrFunction() &&
+               (fromType.SizeAddress() == targetType.SizeAddress())) {
+        return sourceExpression;
+      }
+      else if (fromType.IsFloating() && targetType.IsFloating() &&
+               (fromType.Size() == targetType.Size())) {
+        return sourceExpression;
       }
       else {
-        return ExplicitCast(fromExpression, toType);
+        return ExplicitCast(sourceExpression, targetType);
       }
     }
 
@@ -190,6 +183,7 @@ namespace CCompiler {
 
       Assert.Error(targetSymbol != null, sourceType + " to " +
                    targetType, Message.Invalid_type_cast);
+      //targetSymbol.Value = sourceSymbol.Value;
       return (new Expression(targetSymbol, shortList, longList));    
     }
 

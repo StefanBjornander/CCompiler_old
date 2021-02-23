@@ -334,7 +334,7 @@ namespace CCompiler {
       }
     }
 
-    public int SizeArray() {
+    public int SizeAddress() {
       switch (m_sort) {
         case Sort.Array:
         case Sort.Function:
