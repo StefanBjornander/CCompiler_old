@@ -1,5 +1,6 @@
 using System;
 using System.Text;
+using System.Numerics;
 using System.Collections.Generic;
 
 namespace CCompiler {
@@ -14,7 +15,14 @@ namespace CCompiler {
       m_operandArray[1] = operand1;
       m_operandArray[2] = operand2;
 
-      /*string s = ToString();
+      /*if (m_middleOperator == MiddleOperator.InitializerZero) {
+         int size = (int) operand0;
+         if (size == 0) {
+           int i = 1;
+         }
+      }
+
+      string s = ToString();
       if ((s != null) && s.Equals("Assign £temporary2692 \"AM\"")) {
         int i = 1;
       }*/
