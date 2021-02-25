@@ -250,22 +250,22 @@ namespace CCompiler {
 
         // ---------------------------------------------------------------------------------------------------------------------
 
-    public static Stack<BigInteger> m_enumeratorStack = new Stack<BigInteger>();
+    public static Stack<BigInteger> m_enumerationStack = new Stack<BigInteger>();
 
     public static void EnumumerationHeader() {
-      m_enumeratorStack.Push(BigInteger.Zero);
+      m_enumerationStack.Push(BigInteger.Zero);
     }
 
     public static Type EnumumerationSpecifier(string optionalName,
-                                              ISet<Symbol> enumeratorItemSet) {
-      Type enumeratorType = new Type(enumeratorItemSet);
+                                              ISet<Symbol> enumerationItemSet) {
+      Type enumerationType = new Type(enumerationItemSet);
 
       if (optionalName != null) {
-        SymbolTable.CurrentTable.AddTag(optionalName, enumeratorType);
+        SymbolTable.CurrentTable.AddTag(optionalName, enumerationType);
       }
 
-      m_enumeratorStack.Pop();
-      return enumeratorType;
+      m_enumerationStack.Pop();
+      return enumerationType;
     }
 
     public static Type EnumumerationLookup(string name) {
@@ -285,11 +285,11 @@ namespace CCompiler {
                       Message.Non__integral_enum_value);
         Assert.Error(optionalInitSymbol.Value != null, itemName,
                       Message.Non__constant_enum_value);
-        m_enumeratorStack.Pop();
+        m_enumerationStack.Pop();
         value = (BigInteger) optionalInitSymbol.Value;
       }
       else {
-        value = m_enumeratorStack.Pop();
+        value = m_enumerationStack.Pop();
       }
     
       Symbol itemSymbol =
@@ -299,145 +299,145 @@ namespace CCompiler {
       }
 
       SymbolTable.CurrentTable.AddSymbol(itemSymbol);
-      m_enumeratorStack.Push(value + 1);
+      m_enumerationStack.Push(value + 1);
       return itemSymbol;
     }
 
-        // ---------------------------------------------------------------------------------------------------------------------
+    // ---------------------------------------------------------------------------------------------------------------------
 
-        public static void Declarator(Specifier specifier, Declarator declarator){
-          declarator.Add(specifier.Type);
+    public static void Declarator(Specifier specifier, Declarator declarator){
+      declarator.Add(specifier.Type);
 
-          Storage storage = specifier.Storage;
-          if (declarator.Type.IsFunction()) {
-            Assert.Error((specifier.Storage == Storage.Static) ||
-                         (specifier.Storage == Storage.Extern),
-                         specifier.Storage, Message.
-              Only_extern_or_static_storage_allowed_for_functions);
-            storage = Storage.Extern;
-          }
+      Storage storage = specifier.Storage;
+      if (declarator.Type.IsFunction()) {
+        Assert.Error((specifier.Storage == Storage.Static) ||
+                      (specifier.Storage == Storage.Extern),
+                      specifier.Storage, Message.
+          Only_extern_or_static_storage_allowed_for_functions);
+        storage = Storage.Extern;
+      }
 
-          Symbol symbol = new Symbol(declarator.Name, specifier.ExternalLinkage,
-                                     storage, declarator.Type);
-          SymbolTable.CurrentTable.AddSymbol(symbol);
+      Symbol symbol = new Symbol(declarator.Name, specifier.ExternalLinkage,
+                                  storage, declarator.Type);
+      SymbolTable.CurrentTable.AddSymbol(symbol);
 
-          if (symbol.IsStatic() && !symbol.Type.IsFunction()) {
-            SymbolTable.StaticSet.Add(ConstantExpression.Value(symbol));
-          }
-        }
+      if (symbol.IsStatic() && !symbol.Type.IsFunction()) {
+        SymbolTable.StaticSet.Add(ConstantExpression.Value(symbol));
+      }
+    }
   
-        public static List<MiddleCode> InitializedDeclarator(Specifier specifier,
-                                       Declarator declarator, object initializer){
-          declarator.Add(specifier.Type);
-          Type type = declarator.Type;
-          Storage storage = specifier.Storage;
-          string name = declarator.Name;
+    public static List<MiddleCode> InitializedDeclarator(Specifier specifier,
+                                    Declarator declarator, object initializer){
+      declarator.Add(specifier.Type);
+      Type type = declarator.Type;
+      Storage storage = specifier.Storage;
+      string name = declarator.Name;
 
-          Assert.Error(!type.IsFunction(), null,
-                       Message.Functions_cannot_be_initialized);
-          Assert.Error(storage != Storage.Typedef, name,
-                       Message.Typedef_cannot_be_initialized);
-          Assert.Error(storage != Storage.Extern, name,
-                       Message.Extern_cannot_be_initialized);
-          Assert.Error((SymbolTable.CurrentTable.Scope != Scope.Struct) &&
-                       (SymbolTable.CurrentTable.Scope != Scope.Union),
-                       name, Message.Struct_or_union_field_cannot_be_initialized);
+      Assert.Error(!type.IsFunction(), null,
+                    Message.Functions_cannot_be_initialized);
+      Assert.Error(storage != Storage.Typedef, name,
+                    Message.Typedef_cannot_be_initialized);
+      Assert.Error(storage != Storage.Extern, name,
+                    Message.Extern_cannot_be_initialized);
+      Assert.Error((SymbolTable.CurrentTable.Scope != Scope.Struct) &&
+                    (SymbolTable.CurrentTable.Scope != Scope.Union),
+                    name, Message.Struct_or_union_field_cannot_be_initialized);
 
-          if (storage == Storage.Static) {
-            List<MiddleCode> middleCodeList =
-              GenerateStaticInitializer.GenerateStatic(type, initializer);
-            Symbol symbol = new Symbol(name, specifier.ExternalLinkage,
-                                       storage, type);
-            SymbolTable.CurrentTable.AddSymbol(symbol);
+      if (storage == Storage.Static) {
+        List<MiddleCode> middleCodeList =
+          GenerateStaticInitializer.GenerateStatic(type, initializer);
+        Symbol symbol = new Symbol(name, specifier.ExternalLinkage,
+                                    storage, type);
+        SymbolTable.CurrentTable.AddSymbol(symbol);
 
-            StaticSymbol staticSymbol =
-              ConstantExpression.Value(symbol.UniqueName, type, middleCodeList);
-            SymbolTable.StaticSet.Add(staticSymbol);
+        StaticSymbol staticSymbol =
+          ConstantExpression.Value(symbol.UniqueName, type, middleCodeList);
+        SymbolTable.StaticSet.Add(staticSymbol);
         
-            return (new List<MiddleCode>());
-          }
-          else {
-            Symbol symbol =
-              new Symbol(name, specifier.ExternalLinkage, storage, type);
-            symbol.Offset = SymbolTable.CurrentTable.CurrentOffset;
-            List<MiddleCode> codeList =
-              GenerateAutoInitializer.GenerateAuto(symbol, initializer, 0); 
-            SymbolTable.CurrentTable.AddSymbol(symbol);
-            return codeList;
-          }
-        }
+        return (new List<MiddleCode>());
+      }
+      else {
+        Symbol symbol =
+          new Symbol(name, specifier.ExternalLinkage, storage, type);
+        symbol.Offset = SymbolTable.CurrentTable.CurrentOffset;
+        List<MiddleCode> codeList =
+          GenerateAutoInitializer.GenerateAuto(symbol, initializer, 0); 
+        SymbolTable.CurrentTable.AddSymbol(symbol);
+        return codeList;
+      }
+    }
 
-        public static void BitfieldDeclarator(Specifier specifier,
-                                       Declarator declarator, Symbol bitsSymbol) {
-          Storage storage = specifier.Storage;
-          //Type specifierType = ;
+    public static void BitfieldDeclarator(Specifier specifier,
+                                    Declarator declarator, Symbol bitsSymbol) {
+      Storage storage = specifier.Storage;
+      //Type specifierType = ;
 
-          Assert.Error((SymbolTable.CurrentTable.Scope == Scope.Struct) ||
-                       (SymbolTable.CurrentTable.Scope == Scope.Union), bitsSymbol,
-                       Message.Bitfields_only_allowed_in_structs_or_unions);
-          Assert.Error((storage == Storage.Auto) || (storage == Storage.Register),
-                       null, Message.
-                       Only_auto_or_register_storage_allowed_in_struct_or_union);
+      Assert.Error((SymbolTable.CurrentTable.Scope == Scope.Struct) ||
+                    (SymbolTable.CurrentTable.Scope == Scope.Union), bitsSymbol,
+                    Message.Bitfields_only_allowed_in_structs_or_unions);
+      Assert.Error((storage == Storage.Auto) || (storage == Storage.Register),
+                    null, Message.
+                    Only_auto_or_register_storage_allowed_in_struct_or_union);
 
-          object bitsValue = bitsSymbol.Value;
-          int bits = int.Parse(bitsValue.ToString());
+      object bitsValue = bitsSymbol.Value;
+      int bits = int.Parse(bitsValue.ToString());
 
-          if (declarator != null) {
-            declarator.Add(specifier.Type);
-            Type type = declarator.Type;
-            Assert.Error(type.IsIntegral(), type,
-                         Message.Non__integral_bits_expression);
-            Assert.Error((bits >= 1) && (bits <= (8 * type.Size())),
-                          bitsValue, Message.Bits_value_out_of_range);
+      if (declarator != null) {
+        declarator.Add(specifier.Type);
+        Type type = declarator.Type;
+        Assert.Error(type.IsIntegral(), type,
+                      Message.Non__integral_bits_expression);
+        Assert.Error((bits >= 1) && (bits <= (8 * type.Size())),
+                      bitsValue, Message.Bits_value_out_of_range);
       
-            if (bits < (8 * type.Size())) {
-              type.SetBitfieldMask(bits);
-            }
-
-            Symbol symbol = new Symbol(declarator.Name, specifier.ExternalLinkage,
-                                       storage, type);
-            SymbolTable.CurrentTable.AddSymbol(symbol);
-
-            if (symbol.IsStatic()) {
-              SymbolTable.StaticSet.Add(ConstantExpression.Value(symbol));
-            }
-          }
-          else {
-            Assert.Error((bits >= 1) && (bits <= (8 * 4)), bitsValue,
-                          Message.Bits_value_out_of_range);
-          }
+        if (bits < (8 * type.Size())) {
+          type.SetBitfieldMask(bits);
         }
 
-        // ---------------------------------------------------------------------------------------------------------------------
+        Symbol symbol = new Symbol(declarator.Name, specifier.ExternalLinkage,
+                                    storage, type);
+        SymbolTable.CurrentTable.AddSymbol(symbol);
 
-        public static Declarator PointerDeclarator(List<Type> typeList,
-                                                   Declarator declarator) {
-          if (declarator == null) {
-            declarator = new Declarator(null);
-          }
-    
-          foreach (Type type in typeList) {
-            Type pointerType = new Type((Type) null);
-            pointerType.Constant = type.Constant;
-            pointerType.Volatile = type.Volatile;
-            declarator.Add(pointerType);
-          }
-
-          return declarator;
+        if (symbol.IsStatic()) {
+          SymbolTable.StaticSet.Add(ConstantExpression.Value(symbol));
         }
+      }
+      else {
+        Assert.Error((bits >= 1) && (bits <= (8 * 4)), bitsValue,
+                      Message.Bits_value_out_of_range);
+      }
+    }
 
-        /*public static Declarator PointerListDeclarator
-                      (List<Pair<bool,bool>> pointerList, Declarator declarator) {
-          foreach (Pair<bool,bool> pair in pointerList) {
-            Type pointerType = new Type((Type) null);
-            bool isConstant = pair.First, isVolatile = pair.Second;
-            pointerType.Constant = isConstant;
-            pointerType.Volatile = isVolatile;
-            declarator.Add(pointerType);
-          }
+    // ---------------------------------------------------------------------------------------------------------------------
+
+    public static Declarator PointerDeclarator(List<Type> typeList,
+                                                Declarator declarator) {
+      if (declarator == null) {
+        declarator = new Declarator(null);
+      }
     
-          return declarator;
-        }*/
+      foreach (Type type in typeList) {
+        Type pointerType = new Type((Type) null);
+        pointerType.Constant = type.Constant;
+        pointerType.Volatile = type.Volatile;
+        declarator.Add(pointerType);
+      }
+
+      return declarator;
+    }
+
+    /*public static Declarator PointerListDeclarator
+                  (List<Pair<bool,bool>> pointerList, Declarator declarator) {
+      foreach (Pair<bool,bool> pair in pointerList) {
+        Type pointerType = new Type((Type) null);
+        bool isConstant = pair.First, isVolatile = pair.Second;
+        pointerType.Constant = isConstant;
+        pointerType.Volatile = isVolatile;
+        declarator.Add(pointerType);
+      }
+    
+      return declarator;
+    }*/
 
     // ---------------------------------------------------------------------------------------------------------------------
   
