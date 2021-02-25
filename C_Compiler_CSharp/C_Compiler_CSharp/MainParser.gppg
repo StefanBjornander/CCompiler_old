@@ -6,7 +6,6 @@
 
 %{
   public static Stack<Specifier> SpecifierStack = new Stack<Specifier>();
-  public static Stack<BigInteger> EnumValueStack = new Stack<BigInteger>();
   public static Stack<Scope> ScopeStack = new Stack<Scope>();
 %}
 
@@ -202,21 +201,13 @@ declaration_specifier:
 
 struct_or_union_specifier:
     struct_or_union optional_name {
-      //MiddleCodeGenerator.StructUnionHeader($2, $1);
-      if ($2 != null) {
-        SymbolTable.CurrentTable.AddTag($2, new CCompiler.Type($1));
-      }
-
-      SymbolTable.CurrentTable =
-        new SymbolTable(SymbolTable.CurrentTable, (Scope) $1);
+      MiddleCodeGenerator.StructOrUnionHeader($1, $2);
     }
     LEFT_BLOCK declaration_list RIGHT_BLOCK {
-      $$ = MiddleCodeGenerator.StructUnionSpecifier($2, $1);
-      SymbolTable.CurrentTable =
-        SymbolTable.CurrentTable.ParentTable;
+      $$ = MiddleCodeGenerator.StructOrUnionSpecifier();
     }
   | struct_or_union NAME {
-      $$ = MiddleCodeGenerator.LookupStructUnionSpecifier($2, $1);
+      $$ = MiddleCodeGenerator.StructOrUnionLookup($1, $2);
     };
 
 struct_or_union:
@@ -238,14 +229,13 @@ declaration_list:
 
 enum_specifier:
     ENUM optional_name {
-      EnumValueStack.Push(BigInteger.Zero);
+      MiddleCodeGenerator.EnumumerationHeader();
     }
     LEFT_BLOCK enum_list RIGHT_BLOCK {
-      EnumValueStack.Pop();
-      $$ = MiddleCodeGenerator.EnumSpecifier($2, $5);
+      $$ = MiddleCodeGenerator.EnumumerationSpecifier($2, $5);
     }
   | ENUM NAME {
-      $$ = MiddleCodeGenerator.LookupEnum($2);
+      $$ = MiddleCodeGenerator.EnumumerationLookup($2);
     };
 
 enum_list:
@@ -262,10 +252,10 @@ enum_list:
 
 enum:
     NAME {
-      $$ = MiddleCodeGenerator.EnumItem($1, null);
+      $$ = MiddleCodeGenerator.EnumerationItem($1, null);
     }
   | NAME ASSIGN constant_integral_expression {
-      $$ = MiddleCodeGenerator.EnumItem($1, $3.Symbol);
+      $$ = MiddleCodeGenerator.EnumerationItem($1, $3.Symbol);
     };
 
 declarator_list:

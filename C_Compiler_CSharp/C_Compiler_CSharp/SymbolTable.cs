@@ -124,9 +124,10 @@ namespace CCompiler {
       return null;
     }
 
-    public void AddTag(string name, Type newType) {
-      if (m_tagMap.ContainsKey(name)) {
-        Type oldType = m_tagMap[name];
+    public Type AddTag(string name, Type newType) {
+      Type oldType;
+
+      if (m_tagMap.TryGetValue(name, out oldType)) {
         Assert.Error(!oldType.IsEnumerator() &&
                      (oldType.Sort == newType.Sort), name,
                      Message.Name_already_defined);
@@ -139,9 +140,12 @@ namespace CCompiler {
           Assert.Error(newType.MemberMap == null, name,
                        Message.Name_already_defined);
         }
+
+        return oldType;
       }
       else {
         m_tagMap.Add(name, newType);
+        return newType;
       }
     }
 

@@ -214,91 +214,94 @@ namespace CCompiler {
       SymbolTable.CurrentFunction = null;
     }
 
-    public static Type StructUnionSpecifier(string optionalName, Sort sort) {
+    private static Stack<Type> m_structOrUnionTypeStack = new Stack<Type>();
+
+    public static void StructOrUnionHeader(Sort sort, string optionalName) {
+      Type type = new CCompiler.Type(sort, null, null);
+
       if (optionalName != null) {
-        Type type = SymbolTable.CurrentTable.LookupTag(optionalName, sort);
-        type.MemberMap = SymbolTable.CurrentTable.EntryMap;
-        type.MemberList = SymbolTable.CurrentTable.EntryList;
-        return type;
+        type = SymbolTable.CurrentTable.AddTag(optionalName, type);
       }
-      else {
-        return (new Type(sort, SymbolTable.CurrentTable.EntryMap,
-                         SymbolTable.CurrentTable.EntryList));
-      }
+
+      m_structOrUnionTypeStack.Push(type);
+      SymbolTable.CurrentTable =
+        new SymbolTable(SymbolTable.CurrentTable, (Scope) sort);
     }
 
-/*
-         public static Type StructUnionSpecifier(string optionalName, Sort sort) {
-          Type type = new Type(sort, SymbolTable.CurrentTable.EntryMap,
-                               SymbolTable.CurrentTable.EntryList);
+    public static Type StructOrUnionSpecifier() {
+      Type type = m_structOrUnionTypeStack.Pop();
+      type.MemberMap = SymbolTable.CurrentTable.EntryMap;
+      type.MemberList = SymbolTable.CurrentTable.EntryList;
+      SymbolTable.CurrentTable =
+        SymbolTable.CurrentTable.ParentTable;
+      return type;
+    }
 
-          if (optionalName != null) {
-            SymbolTable.CurrentTable.AddTag(optionalName, type);
-          }
+    public static Type StructOrUnionLookup(Sort sort, string name) {
+      Type type = SymbolTable.CurrentTable.LookupTag(name, sort);
 
-          return type;
-        }
-*/
-        public static Type LookupStructUnionSpecifier(string name,
-                                                      Sort sort) {
-          Type type = SymbolTable.CurrentTable.LookupTag(name, sort);
+      if (type == null) {
+        type = new Type(sort, null, null);
+        SymbolTable.CurrentTable.AddTag(name, type);
+      }
 
-          if (type == null) {
-            type = new Type(sort, null, null);
-            SymbolTable.CurrentTable.AddTag(name, type);
-          }
-    
-          return type;
-        }
+      return type;
+    }
 
         // ---------------------------------------------------------------------------------------------------------------------
-  
-        public static Symbol EnumItem(string itemName,
-                                      Symbol optInitializerSymbol) {
-          Type itemType = new Type(Sort.SignedInt);      
-          itemType.Constant = true;
 
-          BigInteger value;
-          if (optInitializerSymbol != null) {
-            Assert.Error(optInitializerSymbol.Type.IsIntegral(), itemName,
-                         Message.Non__integral_enum_value);
-            Assert.Error(optInitializerSymbol.Value != null, itemName,
-                         Message.Non__constant_enum_value);
-            CCompiler_Main.Parser.EnumValueStack.Pop();
-            value = (BigInteger) optInitializerSymbol.Value;
-          }
-          else {
-            value = CCompiler_Main.Parser.EnumValueStack.Pop();
-          }
+    public static Stack<BigInteger> m_enumeratorStack = new Stack<BigInteger>();
+
+    public static void EnumumerationHeader() {
+      m_enumeratorStack.Push(BigInteger.Zero);
+    }
+
+    public static Type EnumumerationSpecifier(string optionalName,
+                                              ISet<Symbol> enumeratorItemSet) {
+      Type enumeratorType = new Type(enumeratorItemSet);
+
+      if (optionalName != null) {
+        SymbolTable.CurrentTable.AddTag(optionalName, enumeratorType);
+      }
+
+      m_enumeratorStack.Pop();
+      return enumeratorType;
+    }
+
+    public static Type EnumumerationLookup(string name) {
+      Type type = SymbolTable.CurrentTable.LookupTag(name, Sort.SignedInt);
+      Assert.Error(type != null, name, Message.Tag_not_found); 
+      return type;
+    }
+
+    public static Symbol EnumerationItem(string itemName,
+                                         Symbol optionalInitSymbol) {
+      Type itemType = new Type(Sort.SignedInt);      
+      itemType.Constant = true;
+
+      BigInteger value;
+      if (optionalInitSymbol != null) {
+        Assert.Error(optionalInitSymbol.Type.IsIntegral(), itemName,
+                      Message.Non__integral_enum_value);
+        Assert.Error(optionalInitSymbol.Value != null, itemName,
+                      Message.Non__constant_enum_value);
+        m_enumeratorStack.Pop();
+        value = (BigInteger) optionalInitSymbol.Value;
+      }
+      else {
+        value = m_enumeratorStack.Pop();
+      }
     
-          // enum {a,b,c} extern;
-          Symbol itemSymbol =
-            new Symbol(itemName, false, Storage.Auto, itemType, value);
-          if (optInitializerSymbol != null) {
-            itemSymbol.InitializedEnum = true;
-          }
+      Symbol itemSymbol =
+        new Symbol(itemName, false, Storage.Auto, itemType, value);
+      if (optionalInitSymbol != null) {
+        itemSymbol.InitializedEnum = true;
+      }
 
-          SymbolTable.CurrentTable.AddSymbol(itemSymbol);
-          CCompiler_Main.Parser.EnumValueStack.Push(value + 1);
-          return itemSymbol;
-        }
-  
-        public static Type EnumSpecifier(string optionalName,
-                                         ISet<Symbol> enumSet) {
-          Type enumType = new Type(enumSet);
-
-          if (optionalName != null) {
-            SymbolTable.CurrentTable.AddTag(optionalName, enumType);
-          }
-
-          return enumType;
-        }
-
-        public static Type LookupEnum(string name) {
-          Type type = SymbolTable.CurrentTable.LookupTag(name, Sort.SignedInt);
-          Assert.Error(type != null, name, Message.Tag_not_found); 
-          return type;
-        }
+      SymbolTable.CurrentTable.AddSymbol(itemSymbol);
+      m_enumeratorStack.Push(value + 1);
+      return itemSymbol;
+    }
 
         // ---------------------------------------------------------------------------------------------------------------------
 

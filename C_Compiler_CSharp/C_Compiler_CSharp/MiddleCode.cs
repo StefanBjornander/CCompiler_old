@@ -15,14 +15,11 @@ namespace CCompiler {
       m_operandArray[1] = operand1;
       m_operandArray[2] = operand2;
 
-      /*if (m_middleOperator == MiddleOperator.InitializerZero) {
+      if (m_middleOperator == MiddleOperator.InitializerZero) {
          int size = (int) operand0;
-         if (size == 0) {
-           int i = 1;
-         }
       }
 
-      string s = ToString();
+      /*string s = ToString();
       if ((s != null) && s.Equals("Assign £temporary2692 \"AM\"")) {
         int i = 1;
       }*/
