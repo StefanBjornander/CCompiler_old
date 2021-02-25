@@ -69,7 +69,7 @@ namespace CCompiler {
       set { m_currentOffset = value; }
     }
 
-    public void AddSymbol(Symbol newSymbol) {
+    public void AddSymbol(Symbol newSymbol, bool increaseOffset = true) {
       string name = newSymbol.Name;
 
       if (name != null) {
@@ -93,14 +93,17 @@ namespace CCompiler {
         }
       }
 
-      if (!newSymbol.Type.IsFunction()) {    
+      if (!newSymbol.Type.IsFunction()) {
         if (newSymbol.IsAutoOrRegister()) {
           if (m_scope == Scope.Union) {
             newSymbol.Offset = 0;
           }
           else if (!newSymbol.Type.IsEnumerator()) {
             newSymbol.Offset = m_currentOffset;
-            m_currentOffset += newSymbol.Type.Size();
+
+            if (increaseOffset) {
+              m_currentOffset += newSymbol.Type.Size();
+            }
           }
         }
       }

@@ -4,9 +4,9 @@ using System.Collections.Generic;
 namespace CCompiler {
   class GenerateAutoInitializer {
     public static List<MiddleCode> GenerateAuto(Symbol toSymbol,
-                                                object fromInitializer, int extraOffset) {
+                                                object fromInitializer, int extraOffset,
+                                                List<MiddleCode> codeList) {
       Type toType = toSymbol.Type;
-      List<MiddleCode> codeList = new List<MiddleCode>();
 
       if (fromInitializer is Expression) {
         Expression fromExpression = (Expression) fromInitializer;
@@ -23,7 +23,7 @@ namespace CCompiler {
             list.Add(charExpression);
           }
 
-          return GenerateAuto(toSymbol, list, extraOffset);
+          return GenerateAuto(toSymbol, list, extraOffset, codeList);
         }
         else {
           fromExpression = TypeCast.ImplicitCast(fromExpression, toType);
@@ -76,8 +76,7 @@ namespace CCompiler {
                 indexSymbol.Offset = toSymbol.Offset +
                                     (index * toType.ArrayType.Size());
                 indexSymbol.Name = toSymbol.Name + "[" + index + "]";
-                codeList.AddRange(GenerateAuto(indexSymbol, fromList[index],
-                                               extraOffset));
+                GenerateAuto(indexSymbol, fromList[index], extraOffset, codeList);
                 extraOffset += toType.ArrayType.Size();
               }
             }
@@ -93,8 +92,7 @@ namespace CCompiler {
                 Symbol subSymbol = new Symbol(memberList[index].Type); 
                 subSymbol.Name = toSymbol.Name + "." + memberSymbol.Name;
                 subSymbol.Offset = toSymbol.Offset + memberSymbol.Offset;
-                codeList.AddRange(GenerateAuto(subSymbol, fromList[index],
-                                               extraOffset));
+                GenerateAuto(subSymbol, fromList[index], extraOffset, codeList);
                 extraOffset += memberSymbol.Type.Size();
               }
             }
@@ -108,8 +106,7 @@ namespace CCompiler {
               Symbol subSymbol = new Symbol(memberSymbol.Type); 
               subSymbol.Name = toSymbol.Name + "." + memberSymbol.Name;
               subSymbol.Offset = toSymbol.Offset;
-              codeList.AddRange(GenerateAuto(subSymbol, fromList[0],
-                                             extraOffset));
+              GenerateAuto(subSymbol, fromList[0], extraOffset, codeList);
             }
             break;
 
