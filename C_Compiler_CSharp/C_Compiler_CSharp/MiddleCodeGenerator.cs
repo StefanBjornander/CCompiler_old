@@ -53,10 +53,10 @@ namespace CCompiler {
       }
 
       declarator.Add(returnType);
-      Assert.Error(declarator.Name != null,
-                   Message.Unnamed_function_definition);
       Assert.Error(declarator.Type.IsFunction(), declarator.Name,
                    Message.Not_a_function);
+      Assert.Error(declarator.Name != null,
+                   Message.Unnamed_function_definition);
 
       SymbolTable.CurrentFunction=new Symbol(declarator.Name, externalLinkage,
                                              Storage.Static, declarator.Type);
@@ -80,7 +80,7 @@ namespace CCompiler {
           SymbolTable.CurrentTable.EntryMap;
 
         Assert.Error(nameList.Count == entryMap.Count,
-                     SymbolTable.CurrentFunction.Name, Message.
+                     SymbolTable.CurrentFunction.Name, Message. 
           Unmatched_number_of_parameters_in_old__style_function_definition);
 
         int offset = SymbolTable.FunctionHeaderSize;
@@ -109,7 +109,6 @@ namespace CCompiler {
         AssemblyCodeGenerator.InitializationCodeList();
         List<Type> typeList =
           SymbolTable.CurrentFunction.Type.TypeList;
-
         if ((typeList != null) && (typeList.Count == 2)) {
           Assert.Error(typeList[0].IsInteger() &&
                        typeList[1].IsPointer() &&
@@ -133,7 +132,7 @@ namespace CCompiler {
       if (SymbolTable.CurrentFunction.Type.ReturnType.IsVoid()) {
         AddMiddleCode(statement.CodeList, MiddleOperator.Return);
 
-        if (SymbolTable.CurrentFunction.UniqueName.Equals("main")) {          
+        if (SymbolTable.CurrentFunction.UniqueName.Equals("main")) {
           AddMiddleCode(statement.CodeList, MiddleOperator.Exit);
         }
       }
@@ -180,6 +179,7 @@ namespace CCompiler {
 
         if (SymbolTable.CurrentFunction.UniqueName.Equals("main")) {
           textList.AddRange(SymbolTable.InitSymbol.TextList);
+
           if (SymbolTable.ArgsSymbol != null) {
             textList.AddRange(SymbolTable.ArgsSymbol.TextList);
           }
@@ -248,17 +248,18 @@ namespace CCompiler {
       return type;
     }
 
-        // ---------------------------------------------------------------------------------------------------------------------
+    // ---------------------------------------------------------------------------------------------------------------------
 
-    public static Stack<BigInteger> m_enumerationStack = new Stack<BigInteger>();
+    public static Stack<BigInteger> m_enumerationStack =
+      new Stack<BigInteger>();
 
     public static void EnumumerationHeader() {
       m_enumerationStack.Push(BigInteger.Zero);
     }
 
     public static Type EnumumerationSpecifier(string optionalName,
-                                              ISet<Symbol> enumerationItemSet) {
-      Type enumerationType = new Type(enumerationItemSet);
+                                              ISet<Symbol> enumerationItemSet)
+    { Type enumerationType = new Type(enumerationItemSet);
 
       if (optionalName != null) {
         SymbolTable.CurrentTable.AddTag(optionalName, enumerationType);
@@ -310,11 +311,10 @@ namespace CCompiler {
 
       Storage storage = specifier.Storage;
       if (declarator.Type.IsFunction()) {
-        Assert.Error((specifier.Storage == Storage.Static) ||
-                      (specifier.Storage == Storage.Extern),
-                      specifier.Storage, Message.
-          Only_extern_or_static_storage_allowed_for_functions);
-        storage = Storage.Extern;
+        Assert.Error((storage == Storage.Static) ||
+                     (storage == Storage.Extern),  storage, Message.
+        Only_extern_or_static_storage_allowed_for_functions);
+          storage = Storage.Extern;
       }
 
       Symbol symbol = new Symbol(declarator.Name, specifier.ExternalLinkage,
@@ -325,9 +325,9 @@ namespace CCompiler {
         SymbolTable.StaticSet.Add(ConstantExpression.Value(symbol));
       }
     }
-  
+
     public static List<MiddleCode> InitializedDeclarator(Specifier specifier,
-                                    Declarator declarator, object initializer){
+                                   Declarator declarator, object initializer){
       declarator.Add(specifier.Type);
       Type type = declarator.Type;
       Storage storage = specifier.Storage;
@@ -335,13 +335,14 @@ namespace CCompiler {
 
       Assert.Error(!type.IsFunction(), null,
                    Message.Functions_cannot_be_initialized);
-      Assert.Error(storage != Storage.Typedef, name,
-                   Message.Typedef_cannot_be_initialized);
       Assert.Error(storage != Storage.Extern, name,
                    Message.Extern_cannot_be_initialized);
+      Assert.Error(storage != Storage.Typedef, name,
+                   Message.Typedef_cannot_be_initialized);
       Assert.Error((SymbolTable.CurrentTable.Scope != Scope.Struct) &&
-                    (SymbolTable.CurrentTable.Scope != Scope.Union),
-                    name, Message.Struct_or_union_fields_cannot_be_initialized);
+                   (SymbolTable.CurrentTable.Scope != Scope.Union),
+                   name, Message.
+                   Struct_or_union_fields_cannot_be_initialized);
 
       Symbol symbol = new Symbol(name, specifier.ExternalLinkage,
                                  storage, type);
@@ -356,7 +357,8 @@ namespace CCompiler {
         SymbolTable.StaticSet.Add(staticSymbol);
       }
       else {
-        GenerateAutoInitializer.GenerateAuto(symbol, initializer, 0, codeList);
+        GenerateAutoInitializer.GenerateAuto(symbol, initializer,
+                                             0, codeList);
         SymbolTable.CurrentTable.CurrentOffset += symbol.Type.Size();
       }
     
@@ -462,7 +464,7 @@ namespace CCompiler {
                                                     List<string> nameList) {
       declarator.Add(new Type(nameList));
       return declarator;
-    }  
+    }
 
     public static Declarator NewFunctionDeclaration(Declarator declarator,
                                                    List<Symbol> parameterList,
@@ -485,8 +487,7 @@ namespace CCompiler {
                        Message.Invalid_void_parameter);
         }
       }
-
-      declarator.Add(new Type(parameterList, variadic)); 
+      declarator.Add(new Type(parameterList, variadic));
       return declarator;
     }
 
