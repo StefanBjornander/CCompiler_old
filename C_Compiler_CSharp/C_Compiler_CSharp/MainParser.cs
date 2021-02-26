@@ -4,9 +4,9 @@
 
 // GPPG version 1.5.2
 // Machine:  STEFAN1968
-// DateTime: 2021-02-26 17:56:03
+// DateTime: 2021-02-26 23:24:41
 // UserName: Stefan
-// Input file <MainParser.gppg - 2021-02-25 17:12:47>
+// Input file <MainParser.gppg - 2021-02-26 22:59:01>
 
 // options: lines gplex
 
@@ -87,12 +87,12 @@ public class ScanObj {
 [GeneratedCodeAttribute( "Gardens Point Parser Generator", "1.5.2")]
 public partial class Parser: ShiftReduceParser<ValueType, LexLocation>
 {
-  // Verbatim content from MainParser.gppg - 2021-02-25 17:12:47
+  // Verbatim content from MainParser.gppg - 2021-02-26 22:59:01
 #line 8 "MainParser.gppg"
   public static Stack<Specifier> SpecifierStack = new Stack<Specifier>();
   public static Stack<Scope> ScopeStack = new Stack<Scope>();
 #line default
-  // End verbatim content from MainParser.gppg - 2021-02-25 17:12:47
+  // End verbatim content from MainParser.gppg - 2021-02-26 22:59:01
 
 #pragma warning disable 649
   private static Dictionary<int, string> aliases;
@@ -1805,7 +1805,7 @@ public partial class Parser: ShiftReduceParser<ValueType, LexLocation>
                 //                          logical_and_expression
 #line 633 "MainParser.gppg"
                                                             {
-      CurrentSemanticValue.expression = MiddleCodeGenerator.LogicalOrExpression(ValueStack[ValueStack.Depth-3].expression, ValueStack[ValueStack.Depth-1].expression);
+      CurrentSemanticValue.expression = MiddleCodeGenerator.LogicalExpression(MiddleOperator.LogicalOr, ValueStack[ValueStack.Depth-3].expression, ValueStack[ValueStack.Depth-1].expression);
     }
 #line default
         break;
@@ -1820,7 +1820,7 @@ public partial class Parser: ShiftReduceParser<ValueType, LexLocation>
                 //                           bitwise_or_expression
 #line 641 "MainParser.gppg"
                                                              {
-      CurrentSemanticValue.expression = MiddleCodeGenerator.LogicalAndExpression(ValueStack[ValueStack.Depth-3].expression, ValueStack[ValueStack.Depth-1].expression);
+      CurrentSemanticValue.expression = MiddleCodeGenerator.LogicalExpression(MiddleOperator.LogicalAnd, ValueStack[ValueStack.Depth-3].expression, ValueStack[ValueStack.Depth-1].expression);
     }
 #line default
         break;
@@ -1941,7 +1941,7 @@ public partial class Parser: ShiftReduceParser<ValueType, LexLocation>
       case 177: // shift_expression -> shift_expression, shift_operator, add_expression
 #line 702 "MainParser.gppg"
                                                    {
-      CurrentSemanticValue.expression = MiddleCodeGenerator.ShiftExpression(ValueStack[ValueStack.Depth-2].middleOperator, ValueStack[ValueStack.Depth-3].expression, ValueStack[ValueStack.Depth-1].expression);
+      CurrentSemanticValue.expression = MiddleCodeGenerator.BitwiseExpression(ValueStack[ValueStack.Depth-2].middleOperator, ValueStack[ValueStack.Depth-3].expression, ValueStack[ValueStack.Depth-1].expression);
     }
 #line default
         break;

@@ -580,10 +580,10 @@ namespace CCompiler {
       List<MiddleCode> codeList = switchExpression.LongList;
 
       Type switchType = switchExpression.Symbol.Type;
-      foreach (KeyValuePair<BigInteger,MiddleCode> entry
+      foreach (KeyValuePair<BigInteger,MiddleCode> pair
                in m_caseMapStack.Pop()) {
-        BigInteger caseValue = entry.Key;
-        MiddleCode caseTarget = entry.Value;
+        BigInteger caseValue = pair.Key;
+        MiddleCode caseTarget = pair.Value;
         Symbol caseSymbol = new Symbol(switchType, caseValue);
         AddMiddleCode(codeList, MiddleOperator.Case, caseTarget,
                       switchExpression.Symbol, caseSymbol);
@@ -629,7 +629,8 @@ namespace CCompiler {
     }
 
     public static Statement BreakStatement() {
-      Assert.Error(m_breakSetStack.Count > 0, Message.Break_without_switch____while____do____or____for);
+      Assert.Error(m_breakSetStack.Count > 0,
+                   Message.Break_without_switch____while____do____or____for);
       List<MiddleCode> codeList = new List<MiddleCode>();
       MiddleCode breakCode = AddMiddleCode(codeList, MiddleOperator.Jump);
       m_breakSetStack.Peek().Add(breakCode);
@@ -639,17 +640,9 @@ namespace CCompiler {
     private static Stack<ISet<MiddleCode>> m_continueSetStack =
       new Stack<ISet<MiddleCode>>();
   
-    public static Statement ContinueStatement() {
-      Assert.Error(m_continueSetStack.Count > 0, Message.Continue_without_while____do____or____for);
-      List<MiddleCode> codeList = new List<MiddleCode>();
-      MiddleCode continueCode = AddMiddleCode(codeList, MiddleOperator.Jump);
-      m_continueSetStack.Peek().Add(continueCode);
-      return (new Statement(codeList));
-    }
-  
     public static void LoopHeader() {
       m_breakSetStack.Push(new HashSet<MiddleCode>());
-      m_continueSetStack.Push(new HashSet<MiddleCode>());    
+      m_continueSetStack.Push(new HashSet<MiddleCode>());
     }
   
     public static Statement WhileStatement(Expression expression,
@@ -721,6 +714,15 @@ namespace CCompiler {
       nextSet.UnionWith(m_breakSetStack.Pop());
     
       return (new Statement(codeList, nextSet));
+    }
+
+    public static Statement ContinueStatement() {
+      Assert.Error(m_continueSetStack.Count > 0,
+                   Message.Continue_without_while____do____or____for);
+      List<MiddleCode> codeList = new List<MiddleCode>();
+      MiddleCode continueCode = AddMiddleCode(codeList, MiddleOperator.Jump);
+      m_continueSetStack.Peek().Add(continueCode);
+      return (new Statement(codeList));
     }
 
     public static IDictionary<string, MiddleCode> m_labelMap =
@@ -923,15 +925,9 @@ namespace CCompiler {
           return Assignment(leftExpression,
             MultiplyExpression(middleOp, leftExpression, rightExpression));
 
-        case MiddleOperator.BitwiseAnd:
-        case MiddleOperator.BitwiseOr:
-        case MiddleOperator.BitwiseXOr:
+        default:
           return Assignment(leftExpression,
             BitwiseExpression(middleOp, leftExpression, rightExpression));
-
-        default: // shift left, shift right
-          return Assignment(leftExpression,
-            ShiftExpression(middleOp, leftExpression, rightExpression));
       }
     }
 
@@ -1000,7 +996,7 @@ namespace CCompiler {
       }
     }
 
-    private static bool IsEmpty(List<MiddleCode> codeList) {
+    private static bool IsCodeListEmpty(List<MiddleCode> codeList) {
       foreach (MiddleCode middleCode in codeList) {
         if (middleCode.Operator != MiddleOperator.Empty) {
           return false;
@@ -1033,8 +1029,8 @@ namespace CCompiler {
 
         List<MiddleCode> shortList = new List<MiddleCode>();
        
-        if (IsEmpty(trueExpression.ShortList) &&
-            IsEmpty(falseExpression.ShortList)) {
+        if (IsCodeListEmpty(trueExpression.ShortList) &&
+            IsCodeListEmpty(falseExpression.ShortList)) {
           shortList.AddRange(testExpression.ShortList);
         }
         else {
@@ -1100,8 +1096,8 @@ namespace CCompiler {
         }
 
         List<MiddleCode> shortList = new List<MiddleCode>();
-        if (IsEmpty(trueExpression.ShortList) &&
-            IsEmpty(falseExpression.ShortList)) {
+        if (IsCodeListEmpty(trueExpression.ShortList) &&
+            IsCodeListEmpty(falseExpression.ShortList)) {
           shortList.AddRange(testExpression.ShortList); // Obs: ShortList
         }
         else {
@@ -1138,14 +1134,60 @@ namespace CCompiler {
       }
     }*/
 
-    public static Expression ConstantIntegralExpression(Expression expression) {
-      expression = ConstantExpression.ConstantCast(expression, Type.SignedLongIntegerType);
-      Assert.Error(expression != null, expression, Message.Non__constant_expression);
-      Assert.Error(expression.Symbol.Type.IsIntegralOrPointer(), expression.Symbol, Message.Non__integral_expression);
+    public static Expression ConstantIntegralExpression(Expression expression) 
+    { expression = ConstantExpression.ConstantCast(expression,
+                                                  Type.SignedLongIntegerType);
+      Assert.Error(expression != null, expression,
+                   Message.Non__constant_expression);
+      Assert.Error(expression.Symbol.Type.IsIntegralOrPointer(),
+                   expression.Symbol, Message.Non__integral_expression);
       return expression;
     }
 
-    public static Expression LogicalOrExpression(Expression leftExpression,
+    public static Expression LogicalExpression(MiddleOperator middleOp, 
+                                               Expression leftExpression,
+                                               Expression rightExpression) {
+      Expression constantExpression =
+        ConstantExpression.Logical(MiddleOperator.LogicalOr,
+                                   leftExpression, rightExpression);
+
+      if (constantExpression != null) {
+        return constantExpression;
+      }
+
+      leftExpression = TypeCast.ToLogical(leftExpression);
+      rightExpression = TypeCast.ToLogical(rightExpression);
+
+      Symbol resultSymbol;
+      if (middleOp == MiddleOperator.LogicalOr) {
+        ISet<MiddleCode> trueSet = new HashSet<MiddleCode>();
+        trueSet.UnionWith(leftExpression.Symbol.TrueSet);
+        trueSet.UnionWith(rightExpression.Symbol.TrueSet);
+
+        Backpatch(leftExpression.Symbol.FalseSet, rightExpression.LongList);
+        resultSymbol = new Symbol(trueSet, rightExpression.Symbol.FalseSet);
+      }
+      else {
+        ISet<MiddleCode> falseSet = new HashSet<MiddleCode>();
+        falseSet.UnionWith(leftExpression.Symbol.FalseSet);
+        falseSet.UnionWith(rightExpression.Symbol.FalseSet);
+
+        Backpatch(leftExpression.Symbol.TrueSet, rightExpression.LongList);
+        resultSymbol = new Symbol(rightExpression.Symbol.TrueSet, falseSet);
+      }
+
+      List<MiddleCode> shortList = new List<MiddleCode>();
+      shortList.AddRange(leftExpression.ShortList);
+      shortList.AddRange(rightExpression.ShortList);
+
+      List<MiddleCode> longList = new List<MiddleCode>();
+      longList.AddRange(leftExpression.LongList);
+      longList.AddRange(rightExpression.LongList);
+
+      return (new Expression(resultSymbol, shortList, longList));
+    }
+
+/*    public static Expression LogicalOrExpression(Expression leftExpression,
                                                  Expression rightExpression) {
       Expression constantExpression =
         ConstantExpression.Logical(MiddleOperator.LogicalOr,
@@ -1161,6 +1203,7 @@ namespace CCompiler {
       ISet<MiddleCode> trueSet = new HashSet<MiddleCode>();
       trueSet.UnionWith(leftExpression.Symbol.TrueSet);
       trueSet.UnionWith(rightExpression.Symbol.TrueSet);
+
       Backpatch(leftExpression.Symbol.FalseSet, rightExpression.LongList);
       Symbol symbol = new Symbol(trueSet, rightExpression.Symbol.FalseSet);
 
@@ -1204,7 +1247,7 @@ namespace CCompiler {
       shortList.AddRange(rightExpression.ShortList);
 
       return (new Expression(symbol, shortList, longList));
-    }
+    }*/
 
     public static Expression BitwiseExpression(MiddleOperator middleOp,
                                                Expression leftExpression,
@@ -1216,15 +1259,26 @@ namespace CCompiler {
         return constantExpression;
       }
 
-      Type maxType = TypeCast.MaxType(leftExpression.Symbol.Type,
-                                      rightExpression.Symbol.Type);
-      Symbol resultSymbol = new Symbol(maxType);
+      Assert.Error(leftExpression.Symbol.Type.IsIntegral(),
+                   leftExpression,
+                   Message.Invalid_type_in_bitwise_expression);
+      Assert.Error(rightExpression.Symbol.Type.IsIntegral(),
+                   rightExpression,
+                   Message.Invalid_type_in_bitwise_expression);
 
-      Assert.Error(maxType.IsIntegralPointerArrayStringOrFunction(),
-                   maxType, Message.Invalid_type_in_bitwise_expression);
-
-      leftExpression = TypeCast.ImplicitCast(leftExpression, maxType);
-      rightExpression = TypeCast.ImplicitCast(rightExpression, maxType);
+      Symbol resultSymbol;
+      if (MiddleCode.IsShift(middleOp)) {
+        rightExpression =
+          TypeCast.ImplicitCast(rightExpression, Type.UnsignedCharType);
+        resultSymbol = new Symbol(leftExpression.Symbol.Type);
+      }
+      else {
+        Type maxType = TypeCast.MaxType(leftExpression.Symbol.Type,
+                                        rightExpression.Symbol.Type);
+        resultSymbol = new Symbol(maxType);
+        leftExpression = TypeCast.ImplicitCast(leftExpression, maxType);
+        rightExpression = TypeCast.ImplicitCast(rightExpression, maxType);
+      }
 
       List<MiddleCode> shortList = new List<MiddleCode>();
       shortList.AddRange(leftExpression.ShortList);
@@ -1239,7 +1293,49 @@ namespace CCompiler {
       return (new Expression(resultSymbol, shortList, longList));
     }
 
-    public static Expression ShiftExpression(MiddleOperator middleOp,
+/*    public static Expression BitwiseExpressionX(MiddleOperator middleOp,
+                                               Expression leftExpression,
+                                               Expression rightExpression) {
+      Expression constantExpression = ConstantExpression.
+         Arithmetic(middleOp, leftExpression, rightExpression);
+
+      if (constantExpression != null) {
+        return constantExpression;
+      }
+
+      Assert.Error(leftExpression.Symbol.Type.IsIntegral(),
+                   leftExpression.Symbol.Type, Message.Invalid_type_in_bitwise_expression);
+      Assert.Error(rightExpression.Symbol.Type.IsIntegral(),
+                   rightExpression, Message.Invalid_type_in_bitwise_expression);
+
+      Symbol resultSymbol;
+      if (MiddleCode.IsShift(middleOp)) {
+        rightExpression =
+          TypeCast.ImplicitCast(rightExpression, Type.UnsignedCharType);
+        resultSymbol = new Symbol(leftExpression.Symbol.Type);
+      }
+      else {
+        Type maxType = TypeCast.MaxType(leftExpression.Symbol.Type,
+                                        rightExpression.Symbol.Type);
+        resultSymbol = new Symbol(maxType);
+        leftExpression = TypeCast.ImplicitCast(leftExpression, maxType);
+        rightExpression = TypeCast.ImplicitCast(rightExpression, maxType);
+      }
+
+      List<MiddleCode> shortList = new List<MiddleCode>();
+      shortList.AddRange(leftExpression.ShortList);
+      shortList.AddRange(rightExpression.ShortList);
+
+      List<MiddleCode> longList = new List<MiddleCode>();
+      longList.AddRange(leftExpression.LongList);
+      longList.AddRange(rightExpression.LongList);
+
+      AddMiddleCode(longList, middleOp, resultSymbol,
+                    leftExpression.Symbol, rightExpression.Symbol);
+      return (new Expression(resultSymbol, shortList, longList));
+    }
+
+    public static Expression ShiftExpressionX(MiddleOperator middleOp,
                                              Expression leftExpression,
                                              Expression rightExpression) {
       Assert.Error(leftExpression.Symbol.Type.
@@ -1268,7 +1364,7 @@ namespace CCompiler {
       AddMiddleCode(longList, middleOp, resultSymbol,
                     leftExpression.Symbol, rightExpression.Symbol);
       return (new Expression(resultSymbol, shortList, longList));
-    }
+    }*/
 
     public static Expression RelationalExpression(MiddleOperator middleOp,
                                                   Expression leftExpression,
@@ -1449,6 +1545,7 @@ namespace CCompiler {
                     leftExpression.Symbol, rightExpression.Symbol);
       return (new Expression(resultSymbol, shortList, longList));
     }
+
     public static Expression SubtractionExpression(Expression leftExpression,
                                                    Expression rightExpression)
     { Type leftType = leftExpression.Symbol.Type,
@@ -1577,8 +1674,7 @@ namespace CCompiler {
     // ---------------------------------------------------------------------------------------------------------------------
 
     public static Type TypeName(Specifier specifier, Declarator declarator)
-    {
-      Type specifierType = specifier.Type;
+    { Type specifierType = specifier.Type;
 
       if (declarator != null) {
         declarator.Add(specifierType);
