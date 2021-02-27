@@ -895,18 +895,6 @@ namespace CCompiler {
     public static Expression AssignmentExpression(MiddleOperator middleOp,
                                                   Expression leftExpression,
                                                   Expression rightExpression){
-/*    if (!leftExpression.Symbol.Temporary) {
-        Assert.Error(leftExpression.Symbol.Assignable,
-                     leftExpression.Symbol.Name, Message.Not_assignable);
-      }*/
-
-      /*if (leftExpression.Symbol.Name.Contains("hour")) {
-        int i = 1;
-      }*/
-
-      //rightExpression =
-      //  TypeCast.ImplicitCast(rightExpression, leftExpression.Symbol.Type);
-
       switch (middleOp) {
         case MiddleOperator.Assign:
           return Assignment(leftExpression, rightExpression, true);
@@ -931,6 +919,18 @@ namespace CCompiler {
       }
     }
 
+    /*    public static Expression AssignntRegister(Register register, Expression expression) {
+      Symbol rightSymbol = expression.Symbol;
+      Assert.Error(AssemblyCode.SizeOfRegister(register) ==
+                   expression.Symbol.Type.Size(),
+                   Message.Unmatched_register_size);
+      List<MiddleCode> longList = new List<MiddleCode>();
+      longList.AddRange(expression.LongList);
+      AddMiddleCode(longList, MiddleOperator.AssignRegister,
+                    register, expression.Symbol);
+      return (new Expression(expression.Symbol, longList, longList));
+    }*/
+
     public static Expression Assignment(Expression leftExpression,
                                         Expression rightExpression,
                                         bool simpleAssignment = false) {
@@ -946,7 +946,7 @@ namespace CCompiler {
         List<MiddleCode> longList = new List<MiddleCode>();
         longList.AddRange(rightExpression.LongList);
         AddMiddleCode(longList, MiddleOperator.AssignRegister,
-                      register, rightExpression.Symbol);
+                      register.Value, rightExpression.Symbol);
         return (new Expression(rightExpression.Symbol, longList, longList));
       }
       else {
@@ -962,16 +962,16 @@ namespace CCompiler {
           }
         }
 
-        //rightExpression = TypeCast.ImplicitCast(rightExpression,
-        //                                        leftExpression.Symbol.Type);
         longList.AddRange(rightExpression.LongList);
 
         if (leftExpression.Symbol.Type.IsFloating()) {
-          AddMiddleCode(longList, MiddleOperator.TopFloat,
-                        leftExpression.Symbol);
           List<MiddleCode> shortList = new List<MiddleCode>();
           shortList.AddRange(longList);
-          AddMiddleCode(shortList, MiddleOperator.PopFloat);
+
+          AddMiddleCode(longList, MiddleOperator.TopFloat,
+                        leftExpression.Symbol);
+          AddMiddleCode(shortList, MiddleOperator.PopFloat,
+                        leftExpression.Symbol);
           return (new Expression(leftExpression.Symbol, shortList, longList));
         }
         else {
@@ -996,17 +996,77 @@ namespace CCompiler {
       }
     }
 
-    private static bool IsCodeListEmpty(List<MiddleCode> codeList) {
-      foreach (MiddleCode middleCode in codeList) {
-        if (middleCode.Operator != MiddleOperator.Empty) {
-          return false;
+    public static Expression ConditionalExpression(Expression testExpression,
+                                                   Expression trueExpression,
+                                                   Expression falseExpression) {
+      testExpression = TypeCast.ToLogical(testExpression);
+      if (ConstantExpression.IsConstant(testExpression)) {
+        return ConstantExpression.IsTrue(testExpression)
+               ? trueExpression : falseExpression;
+      }
+
+      Type maxType = TypeCast.MaxType(trueExpression.Symbol.Type,
+                                      falseExpression.Symbol.Type);
+      trueExpression = TypeCast.ImplicitCast(trueExpression, maxType);
+      Backpatch(testExpression.Symbol.TrueSet, trueExpression.LongList);
+
+      Symbol resultSymbol = new Symbol(maxType);
+      if (maxType.IsFloating()) {
+        AddMiddleCode(trueExpression.LongList,
+                      MiddleOperator.DecreaseStack);
+      }
+      else {
+        if (trueExpression.Symbol.IsTemporary()) {            
+          foreach (MiddleCode middleCode in trueExpression.LongList) {
+            if (middleCode[0] == trueExpression.Symbol) {
+              middleCode[0] = resultSymbol;
+            }
+          }
+        }
+        else {
+          AddMiddleCode(trueExpression.LongList, MiddleOperator.Assign,
+                        resultSymbol, trueExpression.Symbol);
         }
       }
-    
-      return true;
+
+      falseExpression = TypeCast.ImplicitCast(falseExpression, maxType);
+      Backpatch(testExpression.Symbol.FalseSet, falseExpression.LongList);
+        
+      if (!maxType.IsFloating()) {
+        if (falseExpression.Symbol.IsTemporary()) {
+          foreach (MiddleCode middleCode in falseExpression.LongList) {
+            if (middleCode[0] == falseExpression.Symbol) {
+              middleCode[0] = resultSymbol;
+            }
+          }
+        }
+        else {
+          AddMiddleCode(falseExpression.LongList, MiddleOperator.Assign,
+                        resultSymbol, falseExpression.Symbol);
+        }
+      }
+
+      MiddleCode targetCode = new MiddleCode(MiddleOperator.Empty);
+      MiddleCode jumpCode = new MiddleCode(MiddleOperator.Jump, targetCode);
+
+      List<MiddleCode> shortList = new List<MiddleCode>();
+      shortList.AddRange(testExpression.LongList); // Obs: LongList
+      shortList.AddRange(trueExpression.ShortList);
+      shortList.Add(jumpCode);
+      shortList.AddRange(falseExpression.ShortList);
+      shortList.Add(targetCode);
+
+      List<MiddleCode> longList = new List<MiddleCode>();
+      longList.AddRange(testExpression.LongList);
+      longList.AddRange(trueExpression.LongList);
+      longList.Add(jumpCode);
+      longList.AddRange(falseExpression.LongList);
+      longList.Add(targetCode);
+
+      return (new Expression(resultSymbol, shortList, longList));
     }
 
-    public static Expression ConditionalExpression(Expression testExpression,
+/*    public static Expression ConditionalExpressionX(Expression testExpression,
                                                    Expression trueExpression,
                                                    Expression falseExpression) {
       testExpression = TypeCast.ToLogical(testExpression);
@@ -1115,7 +1175,7 @@ namespace CCompiler {
 
         return (new Expression(symbol, shortList, longList));
       }
-    }
+    }*/
 
     /*private static void Replace(List<MiddleCode> middleCodeList, 
                                 Symbol fromSymbol, Symbol toSymbol) {
@@ -1960,15 +2020,57 @@ namespace CCompiler {
       return TypeCast.ExplicitCast(expression, type);
     }
   
-    private static IDictionary<MiddleOperator,MiddleOperator> m_incrementMap =
+    /*private static IDictionary<MiddleOperator,MiddleOperator> m_incrementMap =
       new Dictionary<MiddleOperator, MiddleOperator>() {
-        {MiddleOperator.Increment, MiddleOperator.Add},
-        {MiddleOperator.Decrement, MiddleOperator.Subtract}};
+        {MiddleOperator.Add, MiddleOperator.Add},
+        {MiddleOperator.Subtract, MiddleOperator.Subtract}};*/
 
     private static IDictionary<MiddleOperator,MiddleOperator>
       m_incrementInverseMap = new Dictionary<MiddleOperator,MiddleOperator>(){
-        {MiddleOperator.Increment, MiddleOperator.Subtract},
-        {MiddleOperator.Decrement, MiddleOperator.Add}};
+        {MiddleOperator.Add, MiddleOperator.Subtract},
+        {MiddleOperator.Subtract, MiddleOperator.Add}};
+
+    // ++i <=> i += 1 <=> i = i + 1
+    // --i <=> i -= 1 <=> i = i - 1
+
+    public static Expression PrefixIncrementExpressionX
+                             (MiddleOperator middleOp, Expression expression){
+      object oneValue;
+      if (expression.Symbol.Type.IsFloating()) {
+        oneValue = (decimal) 1;
+      }
+      else {
+        oneValue = BigInteger.One;
+      }
+
+      Symbol oneSymbol = new Symbol(expression.Symbol.Type, oneValue);
+      Expression oneExpression = new Expression(oneSymbol);
+      return AssignmentExpression(middleOp, expression, oneExpression);
+    }
+
+    public static Expression PostfixIncrementExpressionX
+                             (MiddleOperator middleOp, Expression expression){
+      Symbol resultSymbol = new Symbol(expression.Symbol.Type);
+      Expression resultExpression = new Expression(resultSymbol);
+
+      /*Expression assignExpression = Assignment(resultExpression, expression);
+      Expression prefixExpression = PrefixIncrementExpression(middleOp, expression);
+
+      List<MiddleCode> shortList = new List<MiddleCode>();
+      shortList.AddRange(assignExpression.ShortList);
+      shortList.AddRange(prefixExpression.ShortList);
+
+      List<MiddleCode> longList = new List<MiddleCode>();
+      longList.AddRange(assignExpression.LongList);
+      longList.AddRange(prefixExpression.LongList);
+
+      return (new Expression(resultSymbol, shortList, longList));*/
+
+      List<MiddleCode> longList = new List<MiddleCode>();
+      longList.AddRange(Assignment(resultExpression, expression).LongList);
+      longList.AddRange(PrefixIncrementExpression(middleOp, expression).LongList);
+      return (new Expression(resultSymbol, longList, longList));
+    }
 
     public static Expression PrefixIncrementExpression
                              (MiddleOperator middleOp, Expression expression){
@@ -1979,9 +2081,9 @@ namespace CCompiler {
 
       if (symbol.Type.IsIntegralOrPointer()) {
         Symbol oneSymbol = new Symbol(symbol.Type, BigInteger.One);
-        AddMiddleCode(expression.ShortList, m_incrementMap[middleOp],
+        AddMiddleCode(expression.ShortList, middleOp,
                       symbol, symbol, oneSymbol);
-        AddMiddleCode(expression.LongList, m_incrementMap[middleOp],
+        AddMiddleCode(expression.LongList, middleOp,
                       symbol, symbol, oneSymbol);
 
         if (symbol.Type.IsBitfield()) {
@@ -2002,12 +2104,12 @@ namespace CCompiler {
       else {
         AddMiddleCode(expression.ShortList, MiddleOperator.PushOne);
         Symbol oneSymbol = new Symbol(symbol.Type, (decimal) 1);
-        AddMiddleCode(expression.ShortList, m_incrementMap[middleOp],
+        AddMiddleCode(expression.ShortList, middleOp,
                       symbol, symbol, oneSymbol);
         AddMiddleCode(expression.ShortList, MiddleOperator.PopFloat, symbol);
 
         AddMiddleCode(expression.LongList, MiddleOperator.PushOne);
-        AddMiddleCode(expression.LongList, m_incrementMap[middleOp],
+        AddMiddleCode(expression.LongList, middleOp,
                       symbol, symbol, oneSymbol);
         AddMiddleCode(expression.LongList, MiddleOperator.TopFloat, symbol);
 
@@ -2029,9 +2131,9 @@ namespace CCompiler {
         AddMiddleCode(expression.LongList, MiddleOperator.Assign,
                       resultSymbol, symbol);
         Symbol oneSymbol = new Symbol(symbol.Type, BigInteger.One);
-        AddMiddleCode(expression.ShortList, m_incrementMap[middleOp],
+        AddMiddleCode(expression.ShortList, middleOp,
                       symbol, symbol, oneSymbol);
-        AddMiddleCode(expression.LongList, m_incrementMap[middleOp],
+        AddMiddleCode(expression.LongList, middleOp,
                       symbol, symbol, oneSymbol);
 
         if (symbol.Type.IsBitfield()) {
@@ -2050,12 +2152,12 @@ namespace CCompiler {
       else {
         AddMiddleCode(expression.ShortList, MiddleOperator.PushOne);
         Symbol oneSymbol = new Symbol(symbol.Type, (decimal) 1);
-        AddMiddleCode(expression.ShortList, m_incrementMap[middleOp],
+        AddMiddleCode(expression.ShortList, middleOp,
                       symbol, symbol, oneSymbol);
         AddMiddleCode(expression.ShortList, MiddleOperator.PopFloat, symbol);
 
         AddMiddleCode(expression.LongList, MiddleOperator.PushOne);
-        AddMiddleCode(expression.LongList, m_incrementMap[middleOp],
+        AddMiddleCode(expression.LongList, middleOp,
                       symbol, symbol, oneSymbol);
         AddMiddleCode(expression.LongList, MiddleOperator.TopFloat, symbol);
 

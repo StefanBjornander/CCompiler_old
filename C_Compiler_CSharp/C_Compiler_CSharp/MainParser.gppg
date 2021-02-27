@@ -790,8 +790,8 @@ prefix_add_operator:
   | MINUS { $$ = MiddleOperator.Minus; };
 
 increment_operator:
-    INCREMENT { $$ = MiddleOperator.Increment; }
-  | DECREMENT { $$ = MiddleOperator.Decrement; };
+    INCREMENT { $$ = MiddleOperator.Add; }
+  | DECREMENT { $$ = MiddleOperator.Subtract; };
 
 postfix_expression:
     primary_expression {
