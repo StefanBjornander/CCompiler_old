@@ -20,7 +20,7 @@ namespace CCompiler {
       }
 
       /*string s = ToString();
-      if ((s != null) && s.Equals("PushFloat index")) {
+      if ((s != null) && s.Equals("PopEmpty")) {
         int i = 1;
       }*/
     }

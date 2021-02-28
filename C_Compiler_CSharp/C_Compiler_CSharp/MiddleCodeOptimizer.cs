@@ -14,7 +14,7 @@ namespace CCompiler {
     public void Optimize() {
       ObjectToIntegerAddresses();
 
-      if (SymbolTable.CurrentFunction.Name.Equals("strftime")) {
+      if (SymbolTable.CurrentFunction.Name.Equals("log")) {
         string name = @"C:\Users\Stefan\Documents\vagrant\homestead\code\code\" +
                       SymbolTable.CurrentFunction.Name + ".middlenumber";
         StreamWriter streamWriter = new StreamWriter(name);
@@ -35,7 +35,7 @@ namespace CCompiler {
         ClearUnreachableCode();
         RemovePushPop();
         //MergePopPushToTop();
-        MergeTopPopToPop();
+        MergeTopPopEmptyToPop();
         //AssignFloat(); // XXX
         MergeBinary(); // XXX
         //MergeDoubleAssign(); // XXX
@@ -247,8 +247,9 @@ namespace CCompiler {
         MiddleCode thisCode = m_middleCodeList[index],
                    nextCode = m_middleCodeList[index + 1];
         if ((thisCode.Operator == MiddleOperator.PushFloat) &&
-            (nextCode.Operator == MiddleOperator.PopFloat) &&
-            ((thisCode[0] == nextCode[0]) || (nextCode[0] == null))) {
+            ((nextCode.Operator == MiddleOperator.PopEmpty) ||
+             ((nextCode.Operator == MiddleOperator.PopFloat) &&
+              (thisCode[0] == nextCode[0])))) {
           thisCode.Clear();
           nextCode.Clear();
           m_update = true;
@@ -285,14 +286,13 @@ namespace CCompiler {
 
     // pop x
 
-    public void MergeTopPopToPop() {
+    public void MergeTopPopEmptyToPop() {
       for (int index = 0; index < (m_middleCodeList.Count - 1); ++index) {
         MiddleCode thisCode = m_middleCodeList[index],
                    nextCode = m_middleCodeList[index + 1];
 
         if ((thisCode.Operator == MiddleOperator.TopFloat) &&
-            (nextCode.Operator == MiddleOperator.PopFloat) &&
-            (nextCode[0] == null)) {
+            (nextCode.Operator == MiddleOperator.PopEmpty)) {
           thisCode.Operator = MiddleOperator.PopFloat;
           nextCode.Clear();
           m_update = true;
