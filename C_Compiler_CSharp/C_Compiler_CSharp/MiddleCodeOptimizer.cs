@@ -56,7 +56,8 @@ namespace CCompiler {
         new Dictionary<MiddleCode,int>();
     
       for (int index = 0; index < m_middleCodeList.Count; ++index) {
-        addressMap.Add(m_middleCodeList[index], index);
+        MiddleCode middleCode = m_middleCodeList[index];
+        addressMap.Add(middleCode, index);
       }
     
       for (int index = 0; index < m_middleCodeList.Count; ++index) {

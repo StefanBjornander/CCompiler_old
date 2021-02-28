@@ -140,7 +140,7 @@ namespace CCompiler {
       AddMiddleCode(statement.CodeList, MiddleOperator.FunctionEnd,
                     SymbolTable.CurrentFunction);
 
-      if (SymbolTable.CurrentFunction.Name.Equals("strftime")) {
+      if (SymbolTable.CurrentFunction.Name.Equals("log")) {
         string name = @"C:\Users\Stefan\Documents\vagrant\homestead\code\code\" +
                       SymbolTable.CurrentFunction.Name + ".middlebefore";
         StreamWriter streamWriter = new StreamWriter(name);
@@ -157,7 +157,7 @@ namespace CCompiler {
         new MiddleCodeOptimizer(statement.CodeList);
       middleCodeOptimizer.Optimize();
 
-      if (SymbolTable.CurrentFunction.Name.Equals("strftime")) {
+      if (SymbolTable.CurrentFunction.Name.Equals("log")) {
         string name = @"C:\Users\Stefan\Documents\vagrant\homestead\code\code\" +
                       SymbolTable.CurrentFunction.Name + ".middleafter";
         StreamWriter streamWriter = new StreamWriter(name);
@@ -2033,25 +2033,47 @@ namespace CCompiler {
     // ++i <=> i += 1 <=> i = i + 1
     // --i <=> i -= 1 <=> i = i - 1
 
-    public static Expression PrefixIncrementExpressionX
+    public static Expression PrefixIncrementExpression
                              (MiddleOperator middleOp, Expression expression){
-      object oneValue;
+      List<MiddleCode> longList = new List<MiddleCode>();
+
+      Symbol oneSymbol;
       if (expression.Symbol.Type.IsFloating()) {
-        oneValue = (decimal) 1;
+        oneSymbol = new Symbol(expression.Symbol.Type);
+        AddMiddleCode(longList, MiddleOperator.PushOne);
       }
       else {
-        oneValue = BigInteger.One;
+        oneSymbol = new Symbol(expression.Symbol.Type, BigInteger.One);
       }
 
-      Symbol oneSymbol = new Symbol(expression.Symbol.Type, oneValue);
-      Expression oneExpression = new Expression(oneSymbol);
+      Expression oneExpression = new Expression(oneSymbol, null, longList);
       return AssignmentExpression(middleOp, expression, oneExpression);
     }
 
-    public static Expression PostfixIncrementExpressionX
+    public static Expression PostfixIncrementExpressionY
                              (MiddleOperator middleOp, Expression expression){
+      /*if (expression.Symbol.Type.IsFloating()) {
+        List<MiddleCode> longList = new List<MiddleCode>();
+        AddMiddleCode(longList, MiddleOperator.PushFloat, expression.Symbol);
+        AddMiddleCode(longList, MiddleOperator.PushFloat, expression.Symbol);
+        AddMiddleCode(longList, MiddleOperator.PushOne);
+        Symbol oneSymbol = new Symbol(expression.Symbol.Type, (decimal) 1);
+        AddMiddleCode(longList, middleOp, expression.Symbol, expression.Symbol, oneSymbol);
+        AddMiddleCode(longList, MiddleOperator.PopFloat, expression.Symbol);
+        List<MiddleCode> shortList = new List<MiddleCode>();
+        shortList.AddRange(longList);
+        AddMiddleCode(shortList, MiddleOperator.PopEmpty);
+        Symbol resultSymbol = new Symbol(expression.Symbol.Type);
+        return (new Expression(resultSymbol, shortList, longList));
+      }
+      else*/ {
       Symbol resultSymbol = new Symbol(expression.Symbol.Type);
       Expression resultExpression = new Expression(resultSymbol);
+
+      MiddleCode m1 = new MiddleCode(MiddleOperator.PushFloat, expression.Symbol),
+                 m2 = new MiddleCode(MiddleOperator.PushFloat, expression.Symbol);
+      bool b = m1.Equals(m2);
+      int i = m1.GetHashCode(), j = m2.GetHashCode();
 
       /*Expression assignExpression = Assignment(resultExpression, expression);
       Expression prefixExpression = PrefixIncrementExpression(middleOp, expression);
@@ -2066,13 +2088,70 @@ namespace CCompiler {
 
       return (new Expression(resultSymbol, shortList, longList));*/
 
+      // x++
+      // t = x
+      // ++x
+      // return t
+
+      List<MiddleCode> shortList = new List<MiddleCode>();
+      shortList.AddRange(Assignment(resultExpression, expression).ShortList);
+      shortList.AddRange(PrefixIncrementExpression(middleOp, expression).ShortList);
+
       List<MiddleCode> longList = new List<MiddleCode>();
-      longList.AddRange(Assignment(resultExpression, expression).LongList);
-      longList.AddRange(PrefixIncrementExpression(middleOp, expression).LongList);
-      return (new Expression(resultSymbol, longList, longList));
+      longList.AddRange(shortList);
+
+      if (expression.Symbol.Type.IsFloating()) {
+        AddMiddleCode(longList, MiddleOperator.PushFloat, resultSymbol);
+      }
+      
+      return (new Expression(resultSymbol, shortList, longList));
+      }
     }
 
-    public static Expression PrefixIncrementExpression
+    public static Expression PostfixIncrementExpression
+                             (MiddleOperator middleOp, Expression expression){
+      Symbol resultSymbol = new Symbol(expression.Symbol.Type);
+
+      if (expression.Symbol.Type.IsFloating()) {
+        List<MiddleCode> longList = new List<MiddleCode>();
+        longList.AddRange(expression.LongList);
+
+        AddMiddleCode(longList, MiddleOperator.PushFloat, expression.Symbol);
+        AddMiddleCode(longList, MiddleOperator.PushOne);
+        Symbol oneSymbol = new Symbol(expression.Symbol.Type, (decimal) 1);
+        AddMiddleCode(longList, middleOp, expression.Symbol, expression.Symbol, oneSymbol);
+        AddMiddleCode(longList, MiddleOperator.PopFloat, expression.Symbol);
+
+        List<MiddleCode> shortList = new List<MiddleCode>();
+        shortList.AddRange(longList);
+        AddMiddleCode(shortList, MiddleOperator.PopEmpty);
+        return (new Expression(resultSymbol, shortList, longList));
+
+        /*List<MiddleCode> longList = new List<MiddleCode>();
+        longList.AddRange(expression.LongList);
+        AddMiddleCode(longList, MiddleOperator.PopFloat, resultSymbol);
+
+        AddMiddleCode(longList, MiddleOperator.PushFloat, expression.Symbol);
+        AddMiddleCode(longList, MiddleOperator.PushOne);
+        Symbol oneSymbol = new Symbol(expression.Symbol.Type, (decimal) 1);
+        AddMiddleCode(longList, middleOp, expression.Symbol, expression.Symbol, oneSymbol);
+        AddMiddleCode(longList, MiddleOperator.PopFloat, expression.Symbol);
+
+        List<MiddleCode> shortList = new List<MiddleCode>();
+        shortList.AddRange(longList);
+        AddMiddleCode(longList, MiddleOperator.PushFloat, resultSymbol);
+        return (new Expression(resultSymbol, shortList, longList));*/
+      }
+      else {
+        List<MiddleCode> codeList = new List<MiddleCode>();
+        Expression resultExpression = new Expression(resultSymbol, codeList, codeList);
+        codeList.AddRange(Assignment(resultExpression, expression).ShortList);
+        codeList.AddRange(PrefixIncrementExpression(middleOp, expression).ShortList);
+        return resultExpression;
+      }
+    }
+
+    public static Expression PrefixIncrementExpressionX
                              (MiddleOperator middleOp, Expression expression){
       Symbol symbol = expression.Symbol;
       Assert.Error(symbol.IsAssignable(),  Message.Not_assignable);
@@ -2119,7 +2198,7 @@ namespace CCompiler {
       }
     }
 
-    public static Expression PostfixIncrementExpression
+    public static Expression PostfixIncrementExpressionX
                              (MiddleOperator middleOp, Expression expression){
       Symbol symbol = expression.Symbol;
       Assert.Error(symbol.IsAssignable(), Message.Not_assignable);
@@ -2356,7 +2435,7 @@ namespace CCompiler {
                        longList = new List<MiddleCode>(); 
 
       if (symbol.Type.IsFloating()) {
-        AddMiddleCode(shortList, MiddleOperator.PushFloat, symbol);
+        //AddMiddleCode(shortList, MiddleOperator.PushFloat, symbol);
         AddMiddleCode(longList, MiddleOperator.PushFloat, symbol);
       }
 

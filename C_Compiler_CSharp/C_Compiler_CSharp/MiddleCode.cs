@@ -20,7 +20,7 @@ namespace CCompiler {
       }
 
       /*string s = ToString();
-      if ((s != null) && s.Equals("Assign £temporary2692 \"AM\"")) {
+      if ((s != null) && s.Equals("PushFloat index")) {
         int i = 1;
       }*/
     }
