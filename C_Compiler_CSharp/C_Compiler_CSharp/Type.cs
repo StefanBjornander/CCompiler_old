@@ -163,6 +163,10 @@ namespace CCompiler {
       return IsPointerOrArray() || IsString();
     }
 
+    public Type PointerArrayOrStringType {
+      get { return IsString() ? Type.SignedCharType : PointerOrArrayType; }
+    }
+
     public bool IsIntegralPointerOrArray() {
       return IsIntegral() || IsPointerOrArray();
     }

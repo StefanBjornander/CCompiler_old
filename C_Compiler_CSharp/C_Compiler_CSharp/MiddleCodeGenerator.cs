@@ -1864,6 +1864,20 @@ namespace CCompiler {
     //int *p = &a[3];
     //int *p = a + 2;
 
+    public static Expression DereferenceExpression(Expression expression) {
+      if (expression.Symbol.Type.IsString()) {
+        Symbol resultSymbol = new Symbol(Type.SignedCharType);
+        return Dereference(expression, resultSymbol, 0);
+      }
+      else {
+        Assert.Error(expression.Symbol.Type.IsPointerOrArray(),
+                     Message.Invalid_dereference_of_non__pointer);
+        Symbol resultSymbol =
+          new Symbol(expression.Symbol.Type.PointerOrArrayType);
+        return Dereference(expression, resultSymbol, 0);
+      }
+    }
+
     private static Expression Dereference(Expression expression,
                                           Symbol resultSymbol, int offset) {
       resultSymbol.AddressSymbol = expression.Symbol;
@@ -1878,14 +1892,6 @@ namespace CCompiler {
 
       return (new Expression(resultSymbol, expression.ShortList,
                              expression.LongList));
-    }
-
-    public static Expression DereferenceExpression(Expression expression) {
-      Assert.Error(expression.Symbol.Type.IsPointerArrayOrString(),
-                   Message.Invalid_dereference_of_non__pointer);
-      Symbol resultSymbol =
-        new Symbol(expression.Symbol.Type.PointerOrArrayType);
-      return Dereference(expression, resultSymbol, 0);
     }
 
     public static Expression ArrowExpression(Expression expression,
@@ -1927,8 +1933,10 @@ namespace CCompiler {
         return staticExpression;
       }
 
-      Expression arrayExpression, indexExpression;
+      // a[i] <=> *(a+i)
+      //return DereferenceExpression(AdditionExpression(leftExpression, rightExpression));
 
+      Expression arrayExpression, indexExpression;
       if (leftExpression.Symbol.Type.IsPointerOrArray()) {
         arrayExpression = leftExpression;
         indexExpression = rightExpression;
