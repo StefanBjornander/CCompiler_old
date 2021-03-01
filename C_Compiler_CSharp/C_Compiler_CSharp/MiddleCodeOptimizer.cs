@@ -38,6 +38,7 @@ namespace CCompiler {
         MergeTopPopEmptyToPop();
         //AssignFloat(); // XXX
         MergeBinary(); // XXX
+        DereferenceToIndex();
         //MergeDoubleAssign(); // XXX
         SematicOptimization();
         //OptimizeRelation(); // XXX
@@ -360,7 +361,50 @@ namespace CCompiler {
         }
       }
     }
-  
+
+    private void DereferenceToIndex() {
+      for (int index = 0; index < (m_middleCodeList.Count - 1); ++index) {
+        MiddleCode thisCode = m_middleCodeList[index],
+                   nextCode = m_middleCodeList[index + 1];
+
+        // *(a + 3) <=> a[3] <=> *(3 + a) <=> 3[a]
+        if ((thisCode.Operator == MiddleOperator.Add) &&
+            (nextCode.Operator == MiddleOperator.Dereference) &&
+            (thisCode[0] == nextCode[1])) {
+          Symbol leftSymbol = (Symbol) thisCode[1],
+                 rightSymbol = (Symbol) thisCode[2];
+
+          if (leftSymbol.Value is BigInteger) {
+            Symbol resultSymbol = (Symbol) nextCode[0];
+            resultSymbol.AddressSymbol = rightSymbol;
+            resultSymbol.AddressOffset = ((int) ((BigInteger) leftSymbol.Value));
+            thisCode.Clear();
+          }
+          else if (rightSymbol.Value is BigInteger) {
+            Symbol resultSymbol = (Symbol) nextCode[0];
+            resultSymbol.AddressSymbol = leftSymbol;
+            resultSymbol.AddressOffset = ((int) ((BigInteger) rightSymbol.Value));
+            thisCode.Clear();
+          }
+        }
+        // *(a - 3) <=> a[-3]
+        else if ((thisCode.Operator == MiddleOperator.Subtract) &&
+                 (nextCode.Operator == MiddleOperator.Dereference) &&
+                 (thisCode[0] == nextCode[1])) {
+          Symbol leftSymbol = (Symbol) thisCode[1],
+                 rightSymbol = (Symbol) thisCode[2];
+
+          if (rightSymbol.Value is BigInteger) {
+            Symbol resultSymbol = (Symbol) nextCode[0];
+            resultSymbol.AddressSymbol = leftSymbol;
+            resultSymbol.AddressOffset = -((int) ((BigInteger) rightSymbol.Value));
+            thisCode.Clear();
+          }
+        }
+      }
+    }
+
+
     private void SematicOptimization() {
       for (int index = 0; index < m_middleCodeList.Count; ++index) {
         MiddleCode thisCode = m_middleCodeList[index];

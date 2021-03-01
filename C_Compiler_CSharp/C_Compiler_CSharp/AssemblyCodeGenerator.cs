@@ -349,6 +349,7 @@ namespace CCompiler {
             break;
 
           case MiddleOperator.Dot:
+          case MiddleOperator.Index:
           case MiddleOperator.SetReturnValue:
           case MiddleOperator.FunctionEnd:
           case MiddleOperator.Empty:
