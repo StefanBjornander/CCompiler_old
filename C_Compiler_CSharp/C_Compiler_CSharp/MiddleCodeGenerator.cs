@@ -1970,29 +1970,31 @@ namespace CCompiler {
                    TryGetValue(memberName, out memberSymbol),
                    memberName, Message.Unknown_member_in_dot_expression);
 
-      Symbol resultSymbol;
-      if (parentSymbol.AddressSymbol != null) {
-        string name = parentSymbol.Name + Symbol.SeparatorDot + memberSymbol.Name;
+      string name = parentSymbol.Name + Symbol.SeparatorDot + memberSymbol.Name;
+      Symbol resultSymbol = new Symbol(name, parentSymbol.ExternalLinkage,
+                                       parentSymbol.Storage, memberSymbol.Type);
+
+      /*if (parentSymbol.AddressSymbol != null) {
         resultSymbol = new Symbol(name, parentSymbol.ExternalLinkage,
                                   parentSymbol.Storage, memberSymbol.Type);
-        resultSymbol.Parameter = parentSymbol.Parameter;
-        resultSymbol.UniqueName = parentSymbol.UniqueName;
-        resultSymbol.AddressSymbol = parentSymbol.AddressSymbol;
-        resultSymbol.AddressOffset = parentSymbol.AddressOffset;
-        resultSymbol.Offset = parentSymbol.Offset + memberSymbol.Offset;
-        /*resultSymbol.Assignable = !parentSymbol.Type.Constant &&
-                                  !memberSymbol.Type.IsConstantRecursive() &&
-                                  !memberSymbol.Type.IsArrayOrFunction();*/
-        /*resultSymbol.Addressable = !parentSymbol.IsRegister() &&
-                                   !memberSymbol.Type.IsBitfield();*/
       }
       else {
-        resultSymbol = new Symbol(memberSymbol.Type); 
+        resultSymbol = new Symbol(memberSymbol.Type);
         resultSymbol.Name = parentSymbol.Name + Symbol.SeparatorDot + memberName;
-        resultSymbol.UniqueName = parentSymbol.UniqueName;
         resultSymbol.Storage = parentSymbol.Storage;
-        resultSymbol.Offset = parentSymbol.Offset + memberSymbol.Offset;
-      }
+      }*/
+
+      resultSymbol.Parameter = parentSymbol.Parameter;
+      resultSymbol.UniqueName = parentSymbol.UniqueName;
+      resultSymbol.Offset = parentSymbol.Offset + memberSymbol.Offset;
+      resultSymbol.AddressSymbol = parentSymbol.AddressSymbol;
+      resultSymbol.AddressOffset = parentSymbol.AddressOffset + memberSymbol.Offset;
+
+      /*resultSymbol.Assignable = !parentSymbol.Type.Constant &&
+                                !memberSymbol.Type.IsConstantRecursive() &&
+                                !memberSymbol.Type.IsArrayOrFunction();*/
+      /*resultSymbol.Addressable = !parentSymbol.IsRegister() &&
+                                  !memberSymbol.Type.IsBitfield();*/
 
       return (new Expression(resultSymbol, expression.ShortList,
                              expression.LongList));
