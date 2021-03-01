@@ -1537,7 +1537,7 @@ namespace CCompiler {
     public static Expression MultiplySize(Expression arrayExpression,
                                           Expression indexExpression) {
       Type arrayType = arrayExpression.Symbol.Type;
-      int arrayTypeSize = arrayType.PointerOrArrayType.Size();
+      int arrayTypeSize = arrayType.PointerArrayOrStringType.Size();
 
       if (arrayTypeSize > 1) {
         Symbol sizeSymbol =
@@ -1549,21 +1549,27 @@ namespace CCompiler {
                              sizeExpression);
       }
 
-      return TypeCast.ImplicitCast(indexExpression, arrayType);
+      return indexExpression;
+      //return TypeCast.ImplicitCast(indexExpression, arrayType);
     }
 
     public static Expression AdditionExpression(Expression leftExpression,
                                                 Expression rightExpression) {
+      if ((SymbolTable.CurrentFunction != null) &&
+          SymbolTable.CurrentFunction.Name.Equals("setlocale")) {
+        int i = 1;
+      }
+
       Type leftType = leftExpression.Symbol.Type,
            rightType = rightExpression.Symbol.Type;
 
       Assert.Error((leftType.IsArithmetic() && rightType.IsArithmetic()) ||
-                   (leftType.IsPointerOrArray() && rightType.IsIntegral() &&
+                   (leftType.IsPointerArrayOrString() && rightType.IsIntegral() &&
                     !leftType.PointerOrArrayType.IsVoid() &&
-                    !leftType.PointerOrArrayType.IsFunction()) ||
+                    !leftType.PointerArrayOrStringType.IsFunction()) ||
                    (leftType.IsIntegral() && rightType.IsPointerOrArray() &&
-                    !rightType.PointerOrArrayType.IsVoid() &&
-                    !rightType.PointerOrArrayType.IsFunction()),
+                    !rightType.PointerArrayOrStringType.IsVoid() &&
+                    !rightType.PointerArrayOrStringType.IsFunction()),
                    leftExpression, Message.Non__arithmetic_expression);
 
       Expression constantExpression =
@@ -1580,15 +1586,19 @@ namespace CCompiler {
         return staticExpression;
       }
 
-      if (leftType.IsPointerOrArray()) {
+      Type maxType;
+      if (leftType.IsPointerArrayOrString()) {
         rightExpression = MultiplySize(leftExpression, rightExpression);
-      }
-      
-      if (rightType.IsPointerOrArray()) {
+        maxType = leftType;
+      }      
+      else if (rightType.IsPointerArrayOrString()) {
         leftExpression = MultiplySize(rightExpression, leftExpression);
+        maxType = rightType;
+      }
+      else {
+        maxType = TypeCast.MaxType(leftType, rightType);
       }
 
-      Type maxType = TypeCast.MaxType(leftType, rightType);
       leftExpression = TypeCast.ImplicitCast(leftExpression, maxType);
       rightExpression = TypeCast.ImplicitCast(rightExpression, maxType);
 
@@ -1612,22 +1622,22 @@ namespace CCompiler {
            rightType = rightExpression.Symbol.Type;
 
       Assert.Error((leftType.IsArithmetic() && rightType.IsArithmetic()) ||
-                   (leftType.IsPointerOrArray() && rightType.IsIntegral()) ||
-                   (leftType.IsPointerOrArray() &&
-                    rightType.IsPointerOrArray() &&
-                    (leftType.PointerOrArrayType.Size() ==
-                     rightType.PointerOrArrayType.Size())),
+                   (leftType.IsPointerArrayOrString() && rightType.IsIntegral()) ||
+                   (leftType.IsPointerArrayOrString() &&
+                    rightType.IsPointerArrayOrString() &&
+                    (leftType.PointerArrayOrStringType.Size() ==
+                     rightType.PointerArrayOrStringType.Size())),
                    leftExpression, Message.Non__arithmetic_expression);
 
-      if (leftType.IsPointerOrArray()) {
-        Assert.Error(!leftType.PointerOrArrayType.IsVoid() &&
-                     !leftType.PointerOrArrayType.IsFunction(), 
+      if (leftType.IsPointerArrayOrString()) {
+        Assert.Error(!leftType.PointerArrayOrStringType.IsVoid() &&
+                     !leftType.PointerArrayOrStringType.IsFunction(), 
                      leftExpression, Message.Non__arithmetic_expression);
       }
 
-      if (rightType.IsPointerOrArray()) {
-        Assert.Error(!rightType.PointerOrArrayType.IsVoid() &&
-                     !rightType.PointerOrArrayType.IsFunction(), 
+      if (rightType.IsPointerArrayOrString()) {
+        Assert.Error(!rightType.PointerArrayOrStringType.IsVoid() &&
+                     !rightType.PointerArrayOrStringType.IsFunction(), 
                      rightExpression, Message.Non__arithmetic_expression);
       }
 
@@ -1645,7 +1655,16 @@ namespace CCompiler {
         return staticExpression;
       }
 
-      Type maxType = TypeCast.MaxType(leftType, rightType);
+      Type maxType;
+      if (leftType.IsPointerArrayOrString() &&
+          !rightType.IsPointerArrayOrString()) {
+        maxType = leftType;
+        rightExpression = MultiplySize(leftExpression, rightExpression);
+      }
+      else {
+        maxType = TypeCast.MaxType(leftType, rightType);
+      }
+
       leftExpression = TypeCast.ImplicitCast(leftExpression, maxType);
       rightExpression = TypeCast.ImplicitCast(rightExpression, maxType);
 
@@ -1865,17 +1884,11 @@ namespace CCompiler {
     //int *p = a + 2;
 
     public static Expression DereferenceExpression(Expression expression) {
-      if (expression.Symbol.Type.IsString()) {
-        Symbol resultSymbol = new Symbol(Type.SignedCharType);
-        return Dereference(expression, resultSymbol, 0);
-      }
-      else {
-        Assert.Error(expression.Symbol.Type.IsPointerOrArray(),
-                     Message.Invalid_dereference_of_non__pointer);
-        Symbol resultSymbol =
-          new Symbol(expression.Symbol.Type.PointerOrArrayType);
-        return Dereference(expression, resultSymbol, 0);
-      }
+      Assert.Error(expression.Symbol.Type.IsPointerArrayOrString(),
+                   Message.Invalid_dereference_of_non__pointer);
+      Symbol resultSymbol =
+        new Symbol(expression.Symbol.Type.PointerArrayOrStringType);
+      return Dereference(expression, resultSymbol, 0);
     }
 
     private static Expression Dereference(Expression expression,
@@ -1915,6 +1928,11 @@ namespace CCompiler {
 
     public static Expression IndexExpression(Expression leftExpression,
                                              Expression rightExpression) {
+      if ((SymbolTable.CurrentFunction != null) &&
+          SymbolTable.CurrentFunction.Name.Equals("setlocale")) {
+        int i = 1;
+      }
+
       Type leftType = leftExpression.Symbol.Type,
            rightType = rightExpression.Symbol.Type;
 
@@ -1958,6 +1976,7 @@ namespace CCompiler {
       }
       else {
         indexExpression = MultiplySize(arrayExpression, indexExpression);
+        indexExpression = TypeCast.ImplicitCast(indexExpression, arrayType);
 
         List<MiddleCode> shortList = new List<MiddleCode>();
         shortList.AddRange(arrayExpression.ShortList);
