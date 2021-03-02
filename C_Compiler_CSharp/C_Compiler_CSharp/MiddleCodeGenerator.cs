@@ -1575,7 +1575,7 @@ namespace CCompiler {
       }
 
       Expression staticExpression =
-        StaticExpression.Binary(MiddleOperator.Subtract,
+        StaticExpression.Binary(MiddleOperator.Add,
                                 leftExpression, rightExpression);
       if (staticExpression != null) {
         return staticExpression;
@@ -1881,6 +1881,13 @@ namespace CCompiler {
     public static Expression DereferenceExpression(Expression expression) {
       Assert.Error(expression.Symbol.Type.IsPointerArrayOrString(),
                    Message.Invalid_dereference_of_non__pointer);
+
+      Expression staticExpression =
+        StaticExpression.Unary(MiddleOperator.Dereference, expression);
+      if (staticExpression != null) {
+        return staticExpression;
+      }
+
       Symbol resultSymbol =
         new Symbol(expression.Symbol.Type.PointerArrayOrStringType);
       return Dereference(expression, resultSymbol, 0);
@@ -1902,7 +1909,13 @@ namespace CCompiler {
                              expression.LongList));
     }
 
+    // p->m <=> (*p).m
     public static Expression ArrowExpression(Expression expression,
+                                             string memberName) {
+      return DotExpression(DereferenceExpression(expression), memberName);
+    }
+
+    /*public static Expression ArrowExpressionX(Expression expression,
                                              string memberName) {
       Assert.Error(expression.Symbol.Type.IsPointer() &&
                    expression.Symbol.Type.PointerType.IsStructOrUnion(),
@@ -1919,11 +1932,17 @@ namespace CCompiler {
 
       Symbol resultSymbol = new Symbol(memberSymbol.Type);
       return Dereference(expression, resultSymbol, memberSymbol.Offset);
-    }
+    }*/
 
+    // i[j] => i + j
+    // p->m => (*p).m 
     public static Expression IndexExpression(Expression leftExpression,
                                              Expression rightExpression) {
-      Type leftType = leftExpression.Symbol.Type,
+      Assert.Error(leftExpression.Symbol.Type.IsPointerArrayOrString() ||
+                   rightExpression.Symbol.Type.IsPointerArrayOrString(),
+                   Message.Invalid_type_in_index_expression);
+
+      /*Type leftType = leftExpression.Symbol.Type,
            rightType = rightExpression.Symbol.Type;
 
       Assert.Error((leftType.IsPointerArrayOrString() &&
@@ -1941,7 +1960,7 @@ namespace CCompiler {
         return staticExpression;
       }
 
-      /*if (rightExpression.Symbol.Value is BigInteger) {
+      if (rightExpression.Symbol.Value is BigInteger) {
         int index = (int) ((BigInteger) rightExpression.Symbol.Value);
         int offset = index * leftType.PointerArrayOrStringType.Size();
         Symbol resultSymbol = new Symbol(leftType.PointerArrayOrStringType);
