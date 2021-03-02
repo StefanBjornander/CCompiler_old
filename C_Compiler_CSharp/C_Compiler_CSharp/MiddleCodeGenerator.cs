@@ -1941,7 +1941,7 @@ namespace CCompiler {
         return staticExpression;
       }
 
-      if (rightExpression.Symbol.Value is BigInteger) {
+      /*if (rightExpression.Symbol.Value is BigInteger) {
         int index = (int) ((BigInteger) rightExpression.Symbol.Value);
         int offset = index * leftType.PointerArrayOrStringType.Size();
         Symbol resultSymbol = new Symbol(leftType.PointerArrayOrStringType);
@@ -1953,7 +1953,7 @@ namespace CCompiler {
         Symbol resultSymbol = new Symbol(rightType.PointerArrayOrStringType);
         return Dereference(rightExpression, resultSymbol, offset);
       }
-      else {
+      else*/ {
         return DereferenceExpression(AdditionExpression(leftExpression, rightExpression));
       }
     }
