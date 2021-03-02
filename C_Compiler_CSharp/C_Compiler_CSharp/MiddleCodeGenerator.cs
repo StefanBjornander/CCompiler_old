@@ -1877,7 +1877,6 @@ namespace CCompiler {
     //int *p = &i;
     //int *p = &a[3];
     //int *p = a + 2;
-
     public static Expression DereferenceExpression(Expression expression) {
       Assert.Error(expression.Symbol.Type.IsPointerArrayOrString(),
                    Message.Invalid_dereference_of_non__pointer);
@@ -1890,10 +1889,21 @@ namespace CCompiler {
 
       Symbol resultSymbol =
         new Symbol(expression.Symbol.Type.PointerArrayOrStringType);
-      return Dereference(expression, resultSymbol, 0);
+      resultSymbol.AddressSymbol = expression.Symbol;
+      resultSymbol.AddressOffset = 0;
+      AddMiddleCode(expression.LongList, MiddleOperator.Dereference,
+                    resultSymbol, expression.Symbol, 0);
+
+      if (resultSymbol.Type.IsFloating()) {
+        AddMiddleCode(expression.LongList, MiddleOperator.PushFloat,
+                      resultSymbol);
+      }
+
+      return (new Expression(resultSymbol, expression.ShortList,
+                             expression.LongList));
     }
 
-    private static Expression Dereference(Expression expression,
+/*    private static Expression DereferenceX(Expression expression,
                                           Symbol resultSymbol, int offset) {
       resultSymbol.AddressSymbol = expression.Symbol;
       resultSymbol.AddressOffset = offset;
@@ -1907,9 +1917,9 @@ namespace CCompiler {
 
       return (new Expression(resultSymbol, expression.ShortList,
                              expression.LongList));
-    }
+    }*/
 
-    // p->m <=> (*p).m
+    // p->m <=> (*p).m 
     public static Expression ArrowExpression(Expression expression,
                                              string memberName) {
       return DotExpression(DereferenceExpression(expression), memberName);
@@ -1934,15 +1944,15 @@ namespace CCompiler {
       return Dereference(expression, resultSymbol, memberSymbol.Offset);
     }*/
 
-    // i[j] => i + j
-    // p->m => (*p).m 
+    // a[i] <=> *(a + i)
     public static Expression IndexExpression(Expression leftExpression,
                                              Expression rightExpression) {
-      Assert.Error(leftExpression.Symbol.Type.IsPointerArrayOrString() ||
-                   rightExpression.Symbol.Type.IsPointerArrayOrString(),
-                   Message.Invalid_type_in_index_expression);
+      return DereferenceExpression(AdditionExpression(leftExpression, rightExpression));
+    }
 
-      /*Type leftType = leftExpression.Symbol.Type,
+    /*public static Expression IndexExpression(Expression leftExpression,
+                                             Expression rightExpression) {
+      Type leftType = leftExpression.Symbol.Type,
            rightType = rightExpression.Symbol.Type;
 
       Assert.Error((leftType.IsPointerArrayOrString() &&
@@ -1972,10 +1982,10 @@ namespace CCompiler {
         Symbol resultSymbol = new Symbol(rightType.PointerArrayOrStringType);
         return Dereference(rightExpression, resultSymbol, offset);
       }
-      else*/ {
+      else {
         return DereferenceExpression(AdditionExpression(leftExpression, rightExpression));
       }
-    }
+    }*/
 
     public static Expression DotExpression(Expression expression,
                                            string memberName) {
