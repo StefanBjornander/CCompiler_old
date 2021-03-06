@@ -859,9 +859,6 @@ namespace CCompiler {
 
     // ---------------------------------------------------------------------------------------------------------------------
 
-    public static Stack<List<Type>> TypeListStack = new Stack<List<Type>>();
-    public static Stack<int> ParameterOffsetStack = new Stack<int>();
-
     public static Expression CommaExpression(Expression leftExpression,
                                              Expression rightExpression) {
       List<MiddleCode> shortList = new List<MiddleCode>();
@@ -996,9 +993,9 @@ namespace CCompiler {
       }
     }
 
-    public static Expression ConditionalExpression(Expression testExpression,
-                                                   Expression trueExpression,
-                                                   Expression falseExpression) {
+    public static Expression ConditionExpression(Expression testExpression,
+                                                 Expression trueExpression,
+                                                 Expression falseExpression) {
       testExpression = TypeCast.ToLogical(testExpression);
       if (ConstantExpression.IsConstant(testExpression)) {
         return ConstantExpression.IsTrue(testExpression)
@@ -1208,8 +1205,7 @@ namespace CCompiler {
                                                Expression leftExpression,
                                                Expression rightExpression) {
       Expression constantExpression =
-        ConstantExpression.Logical(MiddleOperator.LogicalOr,
-                                   leftExpression, rightExpression);
+        ConstantExpression.Logical(middleOp, leftExpression, rightExpression);
 
       if (constantExpression != null) {
         return constantExpression;
@@ -1453,15 +1449,6 @@ namespace CCompiler {
       shortList.AddRange(leftExpression.ShortList);
       shortList.AddRange(rightExpression.ShortList);
 
-      if (leftExpression.Symbol.Type.IsSigned() &&
-          rightExpression.Symbol.Type.IsUnsigned()) {
-        rightExpression.Symbol.Type = leftExpression.Symbol.Type;
-      }
-      else if (leftExpression.Symbol.Type.IsUnsigned() &&
-               rightExpression.Symbol.Type.IsSigned()) {
-        leftExpression.Symbol.Type = rightExpression.Symbol.Type;
-      }
-
       List<MiddleCode> longList = new List<MiddleCode>();
       longList.AddRange(leftExpression.LongList);
       longList.AddRange(rightExpression.LongList);
@@ -1537,8 +1524,13 @@ namespace CCompiler {
     public static Expression MultiplySize(Expression arrayExpression,
                                           Expression indexExpression) {
       Type arrayType = arrayExpression.Symbol.Type;
-      int arrayTypeSize = arrayType.PointerArrayOrStringType.Size();
 
+      Assert.Error(!arrayType.PointerOrArrayType.IsVoid() &&
+                   !arrayType.PointerArrayOrStringType.IsFunction(),
+                   arrayExpression, Message.
+                   Invalid_pointer_type_in_addition_expression);
+
+      int arrayTypeSize = arrayType.PointerArrayOrStringType.Size();
       if (arrayTypeSize > 1) {
         Symbol sizeSymbol =
           new Symbol(indexExpression.Symbol.Type,
@@ -1559,13 +1551,11 @@ namespace CCompiler {
            rightType = rightExpression.Symbol.Type;
 
       Assert.Error((leftType.IsArithmetic() && rightType.IsArithmetic()) ||
-                   (leftType.IsPointerArrayOrString() && rightType.IsIntegral() &&
-                    !leftType.PointerOrArrayType.IsVoid() &&
-                    !leftType.PointerArrayOrStringType.IsFunction()) ||
-                   (leftType.IsIntegral() && rightType.IsPointerOrArray() &&
-                    !rightType.PointerArrayOrStringType.IsVoid() &&
-                    !rightType.PointerArrayOrStringType.IsFunction()),
-                   leftExpression, Message.Non__arithmetic_expression);
+                   (leftType.IsPointerArrayOrString() &&
+                    rightType.IsIntegral()) ||
+                   (leftType.IsIntegral() &&
+                    rightType.IsPointerArrayOrString()),
+                   null, Message.Invalid_addition_expression);
 
       Expression constantExpression =
         ConstantExpression.Arithmetic(MiddleOperator.Add,
@@ -1619,21 +1609,19 @@ namespace CCompiler {
       Assert.Error((leftType.IsArithmetic() && rightType.IsArithmetic()) ||
                    (leftType.IsPointerArrayOrString() && rightType.IsIntegral()) ||
                    (leftType.IsPointerArrayOrString() &&
-                    rightType.IsPointerArrayOrString() &&
-                    (leftType.PointerArrayOrStringType.Size() ==
-                     rightType.PointerArrayOrStringType.Size())),
-                   leftExpression, Message.Non__arithmetic_expression);
+                    rightType.IsPointerArrayOrString()),
+                   null, Message.Invalid_subtraction_expression);
 
       if (leftType.IsPointerArrayOrString()) {
         Assert.Error(!leftType.PointerArrayOrStringType.IsVoid() &&
-                     !leftType.PointerArrayOrStringType.IsFunction(), 
-                     leftExpression, Message.Non__arithmetic_expression);
+                     !leftType.PointerArrayOrStringType.IsFunction(),
+                     leftExpression, Message.Invalid_subtraction_expression);
       }
 
       if (rightType.IsPointerArrayOrString()) {
         Assert.Error(!rightType.PointerArrayOrStringType.IsVoid() &&
-                     !rightType.PointerArrayOrStringType.IsFunction(), 
-                     rightExpression, Message.Non__arithmetic_expression);
+                     !rightType.PointerArrayOrStringType.IsFunction(),
+                     rightExpression, Message.Invalid_subtraction_expression);
       }
 
       Expression constantExpression =
@@ -1677,9 +1665,13 @@ namespace CCompiler {
       Expression resultExpression =
         new Expression(resultSymbol, shortList, longList);
 
-      if (leftType.IsPointerOrArray() && rightType.IsPointerOrArray()) {
+      if (leftType.IsPointerArrayOrString() &&
+          rightType.IsPointerArrayOrString ()) {
+        Assert.Error(leftType.PointerArrayOrStringType.Size() ==
+                     rightType.PointerArrayOrStringType.Size(),
+                     null, Message.Different_pointer_sizes_in_subtraction_expression);
         resultExpression =
-          TypeCast.ExplicitCast(resultExpression, Type.SignedIntegerType);
+          TypeCast.ExplicitCast(resultExpression, Type.SignedIntegerType); 
         int arrayTypeSize = leftType.PointerOrArrayType.Size();
 
         if (arrayTypeSize > 1) {
@@ -1721,16 +1713,15 @@ namespace CCompiler {
                                       rightExpression.Symbol.Type);
       leftExpression = TypeCast.ImplicitCast(leftExpression, maxType);
       rightExpression = TypeCast.ImplicitCast(rightExpression, maxType);
-      Symbol resultSymbol = new Symbol(maxType);
 
-      if (leftExpression.Symbol.Type.IsSigned() &&
+      /*if (leftExpression.Symbol.Type.IsSigned() &&
           rightExpression.Symbol.Type.IsUnsigned()) {
         rightExpression.Symbol.Type = leftExpression.Symbol.Type;
       }
       else if (leftExpression.Symbol.Type.IsUnsigned() &&
                rightExpression.Symbol.Type.IsSigned()) {
         leftExpression.Symbol.Type = rightExpression.Symbol.Type;
-      }
+      }*/
 
       List<MiddleCode> shortList = new List<MiddleCode>();
       shortList.AddRange(leftExpression.ShortList);
@@ -1740,6 +1731,7 @@ namespace CCompiler {
       longList.AddRange(leftExpression.LongList);
       longList.AddRange(rightExpression.LongList);
 
+      Symbol resultSymbol = new Symbol(maxType);
       AddMiddleCode(longList, middleOp, resultSymbol,
                     leftExpression.Symbol, rightExpression.Symbol);
       return (new Expression(resultSymbol, shortList, longList));
@@ -1763,16 +1755,22 @@ namespace CCompiler {
 
     public static Expression UnaryExpression(MiddleOperator middleOp,
                                              Expression expression) {
-      Type type = expression.Symbol.Type;
-      Assert.Error(type.IsLogical() || type.IsArithmetic(),
-                   expression, Message.Non__arithmetic_expression);
+      expression = TypeCast.LogicalToIntegral(expression);
+      if (middleOp == MiddleOperator.BitwiseNot) {
+        Assert.Error(expression.Symbol.Type.IsIntegral(),
+                     expression, Message.Invalid_unary_expression);
+      }
+      else {
+        Assert.Error(expression.Symbol.Type.IsArithmetic(),
+                     expression, Message.Invalid_unary_expression);
+      }
 
       Expression constantExpression =
         ConstantExpression.Arithmetic(middleOp, expression);    
       if (constantExpression != null) {
         return constantExpression;
       }
-    
+
       Symbol resultSymbol = new Symbol(expression.Symbol.Type);
       AddMiddleCode(expression.LongList, middleOp,
                     resultSymbol, expression.Symbol);
@@ -1794,7 +1792,7 @@ namespace CCompiler {
                              expression.LongList));
     }
 
-    public static Expression BitwiseNotExpression(Expression expression) {
+/*    public static Expression BitwiseNotExpressionX(Expression expression) {
       expression = TypeCast.LogicalToIntegral(expression);      
       Assert.Error(expression.Symbol.Type.IsIntegral(),
                    Message.Only_integral_values_for_bitwise_not);
@@ -1810,33 +1808,25 @@ namespace CCompiler {
                     resultSymbol, expression.Symbol);
       return (new Expression(resultSymbol, expression.ShortList,
                              expression.LongList));
-    }
+    }*/
 
     public static Expression SizeOfExpression(Expression expression) {
-      Assert.Error(!expression.Symbol.IsRegister(), expression,
-                   Message.Register_storage_not_allowed_in_sizof_expression);
-
-      Type type = expression.Symbol.Type;
-      Assert.Error(!type.IsFunction(),
-                   Message.Sizeof_applied_to_function_not_allowed);
-      Assert.Error(!type.IsBitfield(),
-                   Message.Sizeof_applied_to_bitfield_not_allowed);
+      Assert.Error(!expression.Symbol.IsRegister() &&
+                   !expression.Symbol.Type.IsFunction() &&
+                   !expression.Symbol.Type.IsFunction() &&
+                   !expression.Symbol.Type.IsBitfield(),
+                   expression, Message.Invalid_sizeof_expression);
 
       Symbol symbol = new Symbol(Type.SignedIntegerType,
-                                (BigInteger)(expression.Symbol.Type.Size()));
-      /*symbol.StaticSymbol =
-        ConstantExpression.Value(symbol.UniqueName, Type.SignedIntegerType,
                                 (BigInteger) (expression.Symbol.Type.Size()));
-      SymbolTable.StaticSet.Add(staticSymbol);*/
       return (new Expression(symbol, new List<MiddleCode>(),
                              new List<MiddleCode>()));
     }
 
     public static Expression SizeOfType(Type type) {
-      Assert.Error(!type.IsFunction(),
-                   Message.Sizeof_applied_to_function_not_allowed);
-      Assert.Error(!type.IsBitfield(), 
-                   Message.Sizeof_applied_to_bitfield_not_allowed);
+      Assert.Error(!type.IsFunction() && !type.IsFunction() &&
+                   !type.IsBitfield(), type,
+                   Message.Invalid_sizeof_expression);
 
       Symbol symbol =
         new Symbol(Type.SignedIntegerType, (BigInteger)type.Size());
@@ -1859,13 +1849,13 @@ namespace CCompiler {
         AddMiddleCode(expression.LongList, MiddleOperator.PopEmpty);
       }
 
-      Symbol resultSymbol = new Symbol(new Type(expression.Symbol.Type)); 
+      Symbol resultSymbol = new Symbol(new Type(expression.Symbol.Type));
       AddMiddleCode(expression.LongList, MiddleOperator.Address,
                     resultSymbol, expression.Symbol);
       return (new Expression(resultSymbol, expression.ShortList,
                              expression.LongList));
     }
-    
+
     /*
      *p = 1;
      a[1] = 2;
@@ -2083,14 +2073,17 @@ namespace CCompiler {
 
     // ---------------------------------------------------------------------------------------------------------------------
 
+    public static Stack<List<Type>> m_typeListStack = new Stack<List<Type>>();
+    public static Stack<int> m_parameterOffsetStack = new Stack<int>();
+
     public static void CallHeader(Expression expression) {
       Type type = expression.Symbol.Type;
       Assert.Error(type.IsFunction() ||
                    type.IsPointer() && type.PointerType.IsFunction(),
                    expression.Symbol, Message.Not_a_function);
       Type functionType = type.IsFunction() ? type : type.PointerType;
-      TypeListStack.Push(functionType.TypeList);
-      ParameterOffsetStack.Push(0);
+      m_typeListStack.Push(functionType.TypeList);
+      m_parameterOffsetStack.Push(0);
 
       AddMiddleCode(expression.LongList, MiddleOperator.PreCall,
                     SymbolTable.CurrentTable.CurrentOffset);
@@ -2098,11 +2091,11 @@ namespace CCompiler {
 
     public static Expression CallExpression(Expression functionExpression,
                                             List<Expression> argumentList){
-      TypeListStack.Pop();
-      ParameterOffsetStack.Pop();
+      m_typeListStack.Pop();
+      m_parameterOffsetStack.Pop();
 
       int totalOffset = 0;
-      foreach (int currentOffset in ParameterOffsetStack) {
+      foreach (int currentOffset in m_parameterOffsetStack) {
         if (currentOffset > 0) {
           totalOffset += (SymbolTable.FunctionHeaderSize + currentOffset);
         }
@@ -2184,31 +2177,17 @@ namespace CCompiler {
 
     public static Expression ArgumentExpression(int index,
                                                 Expression expression) {
-      List<Type> typeList = TypeListStack.Peek();
+      List<Type> typeList = m_typeListStack.Peek();
 
       if ((typeList != null) && (index < typeList.Count)) {
         expression = TypeCast.ImplicitCast(expression, typeList[index]);
       }
       else {
-        Type type = expression.Symbol.Type;
-        
-        if (type.IsChar() || type.IsShort()) {
-          if (type.IsSigned()) {
-            expression =
-              TypeCast.ImplicitCast(expression, Type.SignedIntegerType);
-          }
-          else {
-            expression =
-              TypeCast.ImplicitCast(expression, Type.UnsignedIntegerType);
-          }      
-        }
-        else if (type.IsFloat()) {
-          expression = TypeCast.ImplicitCast(expression, Type.DoubleType);
-        }
+        expression = TypeCast.TypePromotion(expression);
       }
 
-      int offset = ParameterOffsetStack.Pop();
-      ParameterOffsetStack.Push(offset +
+      int offset = m_parameterOffsetStack.Pop();
+      m_parameterOffsetStack.Push(offset +
                                 ParameterType(expression.Symbol).Size());
       return (new Expression(expression.Symbol, expression.LongList,
                              expression.LongList));

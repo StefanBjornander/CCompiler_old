@@ -378,5 +378,24 @@ namespace CCompiler {
         return (leftType.Size() > rightType.Size()) ? leftType : rightType;
       }
     }
+
+    public static Expression TypePromotion(Expression expression) {
+      Type type = expression.Symbol.Type;
+
+      if (type.IsChar() || type.IsShort()) {
+        if (type.IsSigned()) {
+          return ImplicitCast(expression, Type.SignedIntegerType);
+        }
+        else {
+          return ImplicitCast(expression, Type.UnsignedIntegerType);
+        }      
+      }
+      else if (type.IsFloat()) {
+        return TypeCast.ImplicitCast(expression, Type.DoubleType);
+      }
+      else {
+        return expression;
+      }
+    }
   }
 }

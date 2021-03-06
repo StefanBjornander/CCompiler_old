@@ -91,7 +91,7 @@
 
 %type <middleOperator> assignment_operator equality_operator
                        relation_operator shift_operator 
-                       multiply_operator prefix_add_operator
+                       multiply_operator prefix_unary_operator
                        increment_operator
 
 %type <expression> optional_constant_integral_expression
@@ -614,7 +614,7 @@ condition_expression:
       $$ = $1;
     }
   | logical_or_expression QUESTION_MARK expression COLON condition_expression{
-      $$ = MiddleCodeGenerator.ConditionalExpression($1, $3, $5);
+      $$ = MiddleCodeGenerator.ConditionExpression($1, $3, $5);
     };
 
 optional_constant_integral_expression:
@@ -760,14 +760,11 @@ prefix_expression:
     postfix_expression {
       $$ = $1; 
     }
-  | prefix_add_operator type_cast_expression {
+  | prefix_unary_operator type_cast_expression {
       $$ = MiddleCodeGenerator.UnaryExpression($1, $2);
     }
   | LOGICAL_NOT type_cast_expression {
       $$ = MiddleCodeGenerator.LogicalNotExpression($2);
-    }
-  | BITWISE_NOT type_cast_expression {
-      $$ = MiddleCodeGenerator.BitwiseNotExpression($2);
     }
   | SIZEOF prefix_expression {
       $$ = MiddleCodeGenerator.SizeOfExpression($2);
@@ -785,9 +782,10 @@ prefix_expression:
       $$ = MiddleCodeGenerator.PrefixIncrementExpression($1, $2);
     };
 
-prefix_add_operator:
-    PLUS  { $$ = MiddleOperator.Plus;  }
-  | MINUS { $$ = MiddleOperator.Minus; };
+prefix_unary_operator:
+    PLUS        { $$ = MiddleOperator.Plus;       }
+  | MINUS       { $$ = MiddleOperator.Minus;      }
+  | BITWISE_NOT { $$ = MiddleOperator.BitwiseNot; };
 
 increment_operator:
     INCREMENT { $$ = MiddleOperator.Add; }
