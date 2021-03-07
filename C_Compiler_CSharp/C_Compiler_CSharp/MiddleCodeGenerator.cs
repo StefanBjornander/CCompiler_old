@@ -333,16 +333,12 @@ namespace CCompiler {
       Storage storage = specifier.Storage;
       string name = declarator.Name;
 
-      Assert.Error(!type.IsFunction(), null,
-                   Message.Functions_cannot_be_initialized);
-      Assert.Error(storage != Storage.Extern, name,
-                   Message.Extern_cannot_be_initialized);
-      Assert.Error(storage != Storage.Typedef, name,
-                   Message.Typedef_cannot_be_initialized);
-      Assert.Error((SymbolTable.CurrentTable.Scope != Scope.Struct) &&
+      Assert.Error(!type.IsFunction() &&
+                   (storage != Storage.Extern) &&
+                   (storage != Storage.Typedef) &&
+                   (SymbolTable.CurrentTable.Scope != Scope.Struct) &&
                    (SymbolTable.CurrentTable.Scope != Scope.Union),
-                   name, Message.
-                   Struct_or_union_fields_cannot_be_initialized);
+                   name, Message.Invalid_initialization);
 
       Symbol symbol = new Symbol(name, specifier.ExternalLinkage,
                                  storage, type);
@@ -395,12 +391,27 @@ namespace CCompiler {
                     Message.Bitfields_only_allowed_in_structs_or_unions);
 
       Type type;
+      Storage storage;
+
       if (declarator != null) {
-        declarator.Add(specifier.Type);
+        if (specifier != null) {
+          declarator.Add(specifier.Type);          
+          storage = specifier.Storage;
+        }
+        else {
+          declarator.Add(Type.SignedIntegerType);
+          storage = Storage.Auto;
+        }
+
         type = declarator.Type;
+      }
+      else if (specifier != null) {
+        type = specifier.Type;
+        storage = Storage.Auto;
       }
       else {
         type = specifier.Type;
+        storage = Storage.Auto;
       }
 
       Assert.Error(type.IsIntegral(), type,
@@ -412,7 +423,7 @@ namespace CCompiler {
 
       if (declarator != null) {
         Symbol symbol = new Symbol(declarator.Name, specifier.ExternalLinkage,
-                                   specifier.Storage, type);
+                                   storage, type);
         SymbolTable.CurrentTable.AddSymbol(symbol);
       }
     }
@@ -547,17 +558,17 @@ namespace CCompiler {
 
       Backpatch(expression.Symbol.TrueSet, trueStatement.CodeList);
       Backpatch(expression.Symbol.FalseSet, falseStatement.CodeList);
-      codeList.AddRange(trueStatement.CodeList);
 
-      MiddleCode trueNextCode = AddMiddleCode(codeList, MiddleOperator.Jump);
+      codeList.AddRange(trueStatement.CodeList);
+      MiddleCode jumpTrue = AddMiddleCode(codeList, MiddleOperator.Jump);
       codeList.AddRange(falseStatement.CodeList);
-      MiddleCode falseGotoCode = AddMiddleCode(codeList, MiddleOperator.Jump);
+      MiddleCode jumpFalse = AddMiddleCode(codeList, MiddleOperator.Jump);
 
       ISet<MiddleCode> nextSet = new HashSet<MiddleCode>();
       nextSet.UnionWith(trueStatement.NextSet);
       nextSet.UnionWith(falseStatement.NextSet);
-      nextSet.Add(trueNextCode);
-      nextSet.Add(falseGotoCode);
+      nextSet.Add(jumpTrue);
+      nextSet.Add(jumpFalse);
 
       return (new Statement(codeList, nextSet));
     }
@@ -613,7 +624,9 @@ namespace CCompiler {
       expression = TypeCast.LogicalToIntegral(expression);
       Assert.Error(expression.Symbol.Value != null, expression.Symbol.Name,
                    Message.Non__constant_case_value);
-      BigInteger caseValue = (BigInteger) expression.Symbol.Value;
+      Assert.Error(expression.Symbol.Value is BigInteger, expression.Symbol.Name,
+                   Message.Non__integral_case_value);
+      BigInteger caseValue = (BigInteger)expression.Symbol.Value;
       IDictionary<BigInteger, MiddleCode> caseMap = m_caseMapStack.Peek();
       Assert.Error(!caseMap.ContainsKey(caseValue), caseValue,
                    Message.Repeated_case_value);

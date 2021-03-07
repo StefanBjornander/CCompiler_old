@@ -446,14 +446,14 @@ namespace CCompiler {
           }
           // t0 = 0 * i
           else if ((thisCode.Operator == MiddleOperator.Multiply)  &&
-                    (leftSymbol.Value is BigInteger) &&
-                    (leftSymbol.Value.Equals(BigInteger.Zero))) {
+                   (leftSymbol.Value is BigInteger) &&
+                   (leftSymbol.Value.Equals(BigInteger.Zero))) {
             newSymbol = new Symbol(resultSymbol.Type, BigInteger.Zero);
           }
           // t0 = 1 * i
           else if ((thisCode.Operator == MiddleOperator.Multiply) &&
-                    (leftSymbol.Value is BigInteger) &&
-                    (leftSymbol.Value.Equals(BigInteger.One))) {
+                   (leftSymbol.Value is BigInteger) &&
+                   (leftSymbol.Value.Equals(BigInteger.One))) {
             newSymbol = rightSymbol;
           }
           // t0 = i * 0
@@ -462,6 +462,23 @@ namespace CCompiler {
                     (rightSymbol.Value.Equals(BigInteger.Zero))) {
             newSymbol = new Symbol(resultSymbol.Type, BigInteger.Zero);
           }
+
+          // t0 = -1 * i
+          else if ((thisCode.Operator == MiddleOperator.Multiply) &&
+                    (leftSymbol.Value is BigInteger) &&
+                    (leftSymbol.Value.Equals(BigInteger.MinusOne))) {
+            thisCode.Operator = MiddleOperator.Minus;
+            thisCode[0] = thisCode[1];
+            thisCode[1] = null;
+          }
+          // t0 = i * -1
+          else if ((thisCode.Operator == MiddleOperator.Multiply) &&
+                    (rightSymbol.Value is BigInteger) &&
+                    (rightSymbol.Value.Equals(BigInteger.MinusOne))) {
+            thisCode.Operator = MiddleOperator.Minus;
+            thisCode[1] = null;
+          }
+
           // t0 = i * 1
           // t0 = i / 1
           // t0 = i % 1
