@@ -211,14 +211,6 @@ namespace CCompiler {
             }
             break;
         
-          case MiddleOperator.Case:
-            Case(middleCode);
-            break;
-
-          case MiddleOperator.CaseEnd:
-            CaseEnd(middleCode);
-            break;
-
           case MiddleOperator.Plus:
           case MiddleOperator.Minus:
           case MiddleOperator.BitwiseNot: {
@@ -232,21 +224,21 @@ namespace CCompiler {
               }
             }
             break;
-          
+
+          case MiddleOperator.Case:
+            Case(middleCode);
+            break;
+
+          case MiddleOperator.CaseEnd:
+            CaseEnd(middleCode);
+            break;
+
           case MiddleOperator.Address:
             Address(middleCode);
             break;
 
-          case MiddleOperator.Dereference: {
-              Symbol symbol = (Symbol) middleCode[1];
-
-              if (symbol.Type.IsFloating()) {
-                FloatingDereference(middleCode);
-              }
-              else {
-                IntegralDereference(middleCode);
-              }
-            }
+          case MiddleOperator.Dereference:
+            Dereference(middleCode);
             break;
 
           case MiddleOperator.DecreaseStack:
@@ -995,7 +987,7 @@ namespace CCompiler {
           m_trackMap.Add(resultSymbol, resultTrack);
         }
 
-        if (assignSymbol.Value is BigInteger) {
+        if (assignSymbol.Value is BigInteger) {          
           AddAssemblyCode(AssemblyOperator.mov, resultTrack,
                           assignSymbol.Value);
         }
@@ -1079,7 +1071,18 @@ namespace CCompiler {
         }
         else if (assignSymbol.Type.IsArrayFunctionOrString() ||
                  (assignSymbol.Value is StaticAddress)) {
-          if (assignSymbol.AddressSymbol != null) {
+          AddAssemblyCode(AssemblyOperator.mov, Base(resultSymbol),
+                          Offset(resultSymbol), Base(assignSymbol),
+                          TypeSize.PointerSize);
+
+          int assignOffset = Offset(assignSymbol);
+          if (assignOffset != 0) {
+            AddAssemblyCode(AssemblyOperator.add, Base(resultSymbol),
+                            Offset(resultSymbol), (BigInteger) assignOffset,
+                            typeSize);
+          }
+          
+          /*if (assignSymbol.AddressSymbol != null) {
             Track addressTrack = LoadValueToRegister(assignSymbol.AddressSymbol);
             addressTrack.Pointer = true;
             AddAssemblyCode(AssemblyOperator.mov, Base(resultSymbol),
@@ -1102,7 +1105,7 @@ namespace CCompiler {
                               Offset(resultSymbol), (BigInteger) assignOffset,
                               typeSize);
             }
-          }
+          }*/
         }
         /*else if (assignSymbol.AddressSymbol != null) {
           Track addressTrack = LoadValueToRegister(assignSymbol.AddressSymbol);
@@ -1493,14 +1496,7 @@ namespace CCompiler {
       m_trackMap.Remove(addressSymbol);
     }
 
-    public void IntegralDereference(MiddleCode middleCode) {
-      Symbol resultSymbol = (Symbol) middleCode[0];
-      Assert.ErrorXXX(resultSymbol.AddressSymbol != null);
-      Track addressTrack = LoadValueToRegister(resultSymbol.AddressSymbol);
-      m_trackMap.Add(resultSymbol.AddressSymbol, addressTrack);
-    }
-
-    public void FloatingDereference(MiddleCode middleCode) {
+    public void Dereference(MiddleCode middleCode) {
       Symbol resultSymbol = (Symbol) middleCode[0];
       Assert.ErrorXXX(resultSymbol.AddressSymbol != null);
       Track addressTrack = LoadValueToRegister(resultSymbol.AddressSymbol);
@@ -1557,8 +1553,8 @@ namespace CCompiler {
 
     // Floating Push and Pop
 
-    public static IDictionary<Pair<bool, int>, AssemblyOperator>
-      m_floatPushMap = new Dictionary<Pair<bool, int>, AssemblyOperator>() {
+    public static IDictionary<Pair<bool,int>, AssemblyOperator>
+      m_floatPushMap = new Dictionary<Pair<bool,int>, AssemblyOperator>() {
         {new Pair<bool,int>(false, 2), AssemblyOperator.fild_word},
         {new Pair<bool,int>(false, 4), AssemblyOperator.fild_dword},
         {new Pair<bool,int>(false, 8), AssemblyOperator.fild_qword},
@@ -1570,15 +1566,14 @@ namespace CCompiler {
       Assert.ErrorXXX((++m_floatStackSize) <= FloatingStackMaxSize);
       Track track;
 
-      if (((symbol.Value is BigInteger) &&
-          (((BigInteger) symbol.Value).IsZero)) ||
-          ((symbol.Value is decimal) && (((decimal) symbol.Value) == 0))) {
+      if ((symbol.Value != null) && 
+          (symbol.Value.Equals(BigInteger.Zero) ||
+           symbol.Value.Equals((decimal) 0))) {
         AddAssemblyCode(AssemblyOperator.fldz);
       }
-      else if (((symbol.Value is BigInteger) &&
-                (((BigInteger) symbol.Value).IsOne)) ||
-               ((symbol.Value is decimal) &&
-                (((decimal) symbol.Value) == 1))) {
+      else if ((symbol.Value != null) && 
+               (symbol.Value.Equals(BigInteger.One) ||
+                symbol.Value.Equals((decimal) 1))) {
         AddAssemblyCode(AssemblyOperator.fld1);
       }
       else {
@@ -1797,7 +1792,8 @@ namespace CCompiler {
       AddAssemblyCode(assemblyCodeList, AssemblyOperator.comment,
                       "Initializerialize Stack Pointer");
       AddAssemblyCode(assemblyCodeList, AssemblyOperator.mov,
-                      AssemblyCode.RegularFrameRegister, Linker.StackStart);
+                      AssemblyCode.RegularFrameRegister,
+                      Linker.StackStart);
 
       if (Start.Linux) {
         AddAssemblyCode(assemblyCodeList, AssemblyOperator.comment,
