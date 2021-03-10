@@ -1326,7 +1326,7 @@ namespace CCompiler {
 
     public void IntegralBinary(MiddleOperator middleOperator,
                                Symbol resultSymbol,  Symbol leftSymbol,
-                                Symbol rightSymbol) {
+                               Symbol rightSymbol) {
       Assert.ErrorXXX((resultSymbol != null) || (middleOperator == MiddleOperator.Compare));
 
       Track leftTrack = null, rightTrack = null;
@@ -1347,9 +1347,8 @@ namespace CCompiler {
       }
 
       if ((rightTrack == null) &&
-          (middleOperator != MiddleOperator.Assign) &&
           (middleOperator != MiddleOperator.Add) &&
-          // (middleOperator != MiddleOperator.BinarySubtract) && // XXX
+          (middleOperator != MiddleOperator.Subtract) &&
           ((rightSymbol.Type.IsArrayFunctionOrString() &&
            (rightSymbol.Offset != 0)) ||
            ((rightSymbol.Value is StaticAddress) &&
@@ -1390,10 +1389,15 @@ namespace CCompiler {
         }
         else if (rightSymbol.Type.IsArrayFunctionOrString() ||
                  (rightSymbol.Value is StaticAddress)) {
-          AddAssemblyCode(objectOperator, leftTrack, Base(rightSymbol)); // XXX
+          AddAssemblyCode(objectOperator, leftTrack, Base(rightSymbol));
 
           int rightOffset = Offset(rightSymbol);
           if (rightOffset != 0) {
+            AddAssemblyCode(objectOperator, leftTrack,
+                            (BigInteger) rightOffset);
+          }
+
+          /*if (rightOffset != 0) {
             if (middleOperator == MiddleOperator.Assign) {
               AddAssemblyCode(AssemblyOperator.add, leftTrack,
                               (BigInteger) rightOffset);
@@ -1402,7 +1406,7 @@ namespace CCompiler {
               AddAssemblyCode(objectOperator, leftTrack,
                               (BigInteger) rightOffset);
             }
-          }
+          }*/
         }
         else {
           if (middleOperator == MiddleOperator.Assign) {
@@ -1463,6 +1467,12 @@ namespace CCompiler {
 
           int rightOffset = Offset(rightSymbol);
           if (rightOffset != 0) {
+            AddAssemblyCode(objectOperator, Base(leftSymbol),
+                            Offset(leftSymbol), (BigInteger) rightOffset,
+                            typeSize);
+          }
+
+          /*if (rightOffset != 0) {
             if (middleOperator == MiddleOperator.Assign) {
               AddAssemblyCode(AssemblyOperator.add, Base(leftSymbol),
                               Offset(leftSymbol), (BigInteger) rightOffset,
@@ -1473,7 +1483,7 @@ namespace CCompiler {
                               Offset(leftSymbol), (BigInteger) rightOffset,
                               typeSize);
             }
-          }
+          }*/
         }
         else {
           rightTrack = LoadValueToRegister(rightSymbol);
